@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 import re
 
 import license_expression
@@ -72,12 +73,12 @@ def lint_bom(metafile):
             filtered_licenses.append(license)
 
     with open(
-        os.path.join(os.path.dirname(__file__), "data/licenses.txt"), "r"
+        os.path.join(os.path.dirname(__file__), Path("data", "licenses.txt")), "r"
     ) as f:
         expected_licenses = f.readlines()
         expected_licenses = set([l.strip() for l in expected_licenses])
     with open(
-        os.path.join(os.path.dirname(__file__), "data/license_exceptions.txt"), "r"
+        os.path.join(os.path.dirname(__file__), Path("data", "license_exceptions.txt")), "r"
     ) as f:
         expected_exceptions = f.readlines()
         expected_exceptions = set([l.strip() for l in expected_exceptions])

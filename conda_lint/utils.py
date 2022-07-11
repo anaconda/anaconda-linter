@@ -1,5 +1,6 @@
 import argparse, os
 from collections import Counter
+from pathlib import Path
 from typing import Set
 
 LICENSES = 'conda_lint/data/licenses.txt'
