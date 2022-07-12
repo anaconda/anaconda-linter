@@ -13,3 +13,7 @@ correct metadata to create a valid SPDX-standard SBOM file. It may be extended
 to make sure a package's file structure and metadata also conform to various
 other package building standards as defined by the Anaconda build team.
 """
+
+sub_commands = [
+    'lint'
+]
