@@ -1,8 +1,9 @@
 import argparse, os
 from collections import Counter
+from pathlib import Path
 from typing import Set
 
-LICENSES = 'conda_lint/data/licenses.txt'
+LICENSES = Path('conda_lint', 'data', 'licenses.txt')
 
 def file_path(string: str) -> str:
     if os.path.isfile(string):
