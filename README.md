@@ -15,9 +15,9 @@ that this can grow into being able to lint more files in accordance with Anacond
 
 ## TODO:
 - Auto-make a conda env and download dependencies
-- Add finding of meta.yaml files in packages
+- ~Add finding of meta.yaml files in packages~
 - Add linting tests
-- Refactor argparsing
+- ~Refactor argparsing~ (Probably need to re-refactor this though)
 - Turn main utils.py functions into a class
 - Test with Prefect Flow
 
