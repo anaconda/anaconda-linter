@@ -15,6 +15,7 @@ that this can grow into being able to lint more files in accordance with Anacond
 
 ## TODO:
 - Auto-make a conda env and download dependencies
+- Set up CI.
 - ~Add finding of meta.yaml files in packages~
 - Add linting tests
 - ~Refactor argparsing~ (Probably need to re-refactor this though)
