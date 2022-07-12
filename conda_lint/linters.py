@@ -9,10 +9,11 @@ import license_expression
 from ruamel.yaml import YAML
 yaml = YAML(typ="safe", pure=True)
 
-from conda_lint.utils import *
+from conda_lint.utils import dir_path, file_path, find_closest_match
 
 LICENSES_PATH = Path("data", "licenses.txt")
 EXCEPTIONS_PATH = Path("data", "license_exceptions.txt")
+
 
 class BasicLinter(ArgumentParser):
     def __init__(self, args: List):
@@ -29,27 +30,33 @@ class BasicLinter(ArgumentParser):
             "-p",
             "--package",
             type=dir_path,
-            help="Searches for a meta.yaml file or index.json file in a directory and lints for SPDX compatibility."
+            help="Searches for a filename in a directory and lints for SPDX compatibility. Specify filename with -fn"
         )
-        # returns namespace
-        if not args:
-            self.args = self.parse_args(["--help"])
-        else:
-            self.args = self.parse_args(args)
 
 class SBOMLinter(BasicLinter):
     def __init__(self, *args):
         super(SBOMLinter, self).__init__(*args)
         self.description = "a tool to validate SPDX license standards"
+        self.add_argument(
+            "-fn",
+            "--filename",
+            nargs="?",
+            default="meta.yaml",
+            help="Specifies the filename to use when searching a --package."
+        )
 
-    def lint(self):
-        if self.args.file:
-            for file in self.args.file:
+    def lint(self, args):
+        if args.file:
+            for file in args.file:
                 linted = self.lint_bom(file)
                 if linted:
                     print(linted)
-        elif self.args.package:
-            pass
+        elif args.package:
+            files = glob.glob(str(Path(args.package, '**', args.filename)), recursive=True)
+            for file in files:
+                linted = self.lint_bom(file)
+                if linted:
+                    print(linted)
         else:
             print("No files found to lint")
 
