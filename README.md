@@ -9,9 +9,9 @@ that this can grow into being able to lint more files in accordance with Anacond
 2. Navigate to the same directory as this readme and run `python3 setup.py install`.
 
 ## Usage
-`conda lint -f path/to/your/file/meta.yml` (currently bugged, needs to use `conda lint lint`)
+`conda lint -f path/to/your/file/meta.yml`
 
-`conda lint -p path/to/your/package` (not currently implemented)
+`conda lint -p path/to/your/package`
 
 ## TODO:
 - Auto-make a conda env and download dependencies
