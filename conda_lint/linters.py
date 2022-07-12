@@ -45,7 +45,9 @@ class SBOMLinter(BasicLinter):
     def lint(self):
         if self.args.file:
             for file in self.args.file:
-                print(self.lint_bom(file))
+                linted = self.lint_bom(file)
+                if linted:
+                    print(linted)
         elif self.args.package:
             pass
         else:
@@ -58,7 +60,6 @@ class SBOMLinter(BasicLinter):
 
         about_section = meta.get("about")
         license = about_section.get("license", "")
-        print(f"Checking if '{license}' is valid")
         licensing = license_expression.Licensing()
         parsed_exceptions = []
         try:
