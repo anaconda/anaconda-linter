@@ -24,7 +24,8 @@ def main():
         },
         install_requires=[
             "ruamel.yaml>=0.16.1",
-            "license-expression"
+            "license-expression",
+            "jinja2>=3.0.3"
         ],
     )
     setup(**run_lint)

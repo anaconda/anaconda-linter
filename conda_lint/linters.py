@@ -5,6 +5,7 @@ from pathlib import Path
 import re
 from typing import List
 
+from jinja2 import Environment, BaseLoader
 import license_expression
 from ruamel.yaml import YAML
 yaml = YAML(typ="safe", pure=True)
@@ -16,7 +17,7 @@ EXCEPTIONS_PATH = Path("data", "license_exceptions.txt")
 
 
 class BasicLinter(ArgumentParser):
-    def __init__(self, args: List):
+    def __init__(self, *args):
         super(BasicLinter, self).__init__(*args)
         self.add_argument(
             "-f",
@@ -32,9 +33,42 @@ class BasicLinter(ArgumentParser):
             type=dir_path,
             help="Searches for a filename in a directory and lints for SPDX compatibility. Specify filename with -fn"
         )
+    
+
+class JinjaLinter(BasicLinter):
+    def __init__(self, args=[]):
+        super(JinjaLinter, self).__init__(*args)
+        self.add_argument(
+            "--return_yaml",
+            action="store_true"
+        )
+
+    def lint(self, args):
+        lints = []
+        # figure out jinja lint logic later
+        # also add -f and -p logic
+        if args.return_yaml:
+            text = self.remove_jinja(args.file[0])    
+            return lints, text
+    
+    def remove_jinja(self, file: str) -> str:
+        with open(file, "r") as f:
+            text = f.read()
+            no_curlies = text.replace('{{ ', '{{ "').replace(' }}', '" }}')
+        try:
+            content = yaml.load(
+                                Environment(loader=BaseLoader())
+                                .from_string(no_curlies).render()
+                                )
+            return content
+        except Exception as e:
+            print(e)
+            return None
+
+
 
 class SBOMLinter(BasicLinter):
-    def __init__(self, *args):
+    def __init__(self, args=[]):
         super(SBOMLinter, self).__init__(*args)
         self.description = "a tool to validate SPDX license standards"
         self.add_argument(
@@ -48,22 +82,26 @@ class SBOMLinter(BasicLinter):
     def lint(self, args):
         if args.file:
             for file in args.file:
-                linted = self.lint_bom(file)
+                linted = self.lint_license(file)
                 if linted:
                     print(linted)
         elif args.package:
             files = glob.glob(str(Path(args.package, '**', args.filename)), recursive=True)
             for file in files:
-                linted = self.lint_bom(file)
+                linted = self.lint_license(file)
                 if linted:
                     print(linted)
         else:
             print("No files found to lint")
 
-    def lint_bom(self, metafile):
+    def lint_license(self, metafile):
+        lints = []
+        jlint = JinjaLinter()
+        args = jlint.parse_args(["-f", f"{metafile}", "--return_yaml"])
+        jlints, jinja_check = jlint.lint(args)
+        lints.extend(jlints)
+        meta = jinja_check
         hints = []
-        with open(metafile, "r") as f:
-            meta = yaml.load(f)
 
         about_section = meta.get("about")
         license = about_section.get("license", "")
