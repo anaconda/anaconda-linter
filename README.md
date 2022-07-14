@@ -20,6 +20,7 @@ that this can grow into being able to lint more files in accordance with Anacond
 - ~Refactor argparsing~ (Probably need to re-refactor this though)
 - Turn main utils.py functions into a class
 - Get the lint command to be recognized by conda again (this broke for some reason)
+- Turn this into a real linter (with rows and cols, not just loading yaml)
 - Test with Prefect Flow
 
 ## Contributions
