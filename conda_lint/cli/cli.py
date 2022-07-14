@@ -8,7 +8,7 @@ def execute(args):
     if not args:
         args = linter.parse_args(["--help"])
     else:
-        args = linter.parse_args(args)
+        args = linter.parse_args()
     linter.lint(args)
 
 def main():

@@ -5,6 +5,7 @@ from pathlib import Path
 import re
 from typing import List
 
+from jinja2 import Environment, BaseLoader
 import license_expression
 from ruamel.yaml import YAML
 yaml = YAML(typ="safe", pure=True)
@@ -16,7 +17,7 @@ EXCEPTIONS_PATH = Path("data", "license_exceptions.txt")
 
 
 class BasicLinter(ArgumentParser):
-    def __init__(self, args: List):
+    def __init__(self, *args):
         super(BasicLinter, self).__init__(*args)
         self.add_argument(
             "-f",
@@ -32,11 +33,44 @@ class BasicLinter(ArgumentParser):
             type=dir_path,
             help="Searches for a filename in a directory and lints for SPDX compatibility. Specify filename with -fn"
         )
+    
+
+class JinjaLinter(BasicLinter):
+    def __init__(self, args=[]):
+        super(JinjaLinter, self).__init__(*args)
+        self.add_argument(
+            "--return_yaml",
+            action="store_true"
+        )
+
+    def lint(self, args):
+        lints = []
+        # figure out jinja lint logic later
+        # also add -f and -p logic
+        if args.return_yaml:
+            text = self.remove_jinja(args.file[0])    
+            return lints, text
+    
+    def remove_jinja(self, file: str) -> str:
+        with open(file, "r") as f:
+            text = f.read()
+            no_curlies = text.replace('{{ ', '{{ "').replace(' }}', '" }}')
+        try:
+            content = yaml.load(
+                                Environment(loader=BaseLoader())
+                                .from_string(no_curlies).render()
+                                )
+            return content
+        except Exception as e:
+            print(e)
+            return None
+
+
 
 class SBOMLinter(BasicLinter):
-    def __init__(self, *args):
+    def __init__(self, args=[]):
         super(SBOMLinter, self).__init__(*args)
-        self.description = "a tool to validate SPDX license standards"
+        self.description = "a linter to validate SPDX license standards"
         self.add_argument(
             "-fn",
             "--filename",
@@ -48,22 +82,27 @@ class SBOMLinter(BasicLinter):
     def lint(self, args):
         if args.file:
             for file in args.file:
-                linted = self.lint_bom(file)
-                if linted:
-                    print(linted)
+                lints = self.lint_license(file)
+                if lints:
+                    print(lints)
         elif args.package:
             files = glob.glob(str(Path(args.package, '**', args.filename)), recursive=True)
             for file in files:
-                linted = self.lint_bom(file)
-                if linted:
-                    print(linted)
+                lints = self.lint_license(file)
+                if lints:
+                    print(lints)
         else:
             print("No files found to lint")
 
-    def lint_bom(self, metafile):
-        hints = []
-        with open(metafile, "r") as f:
-            meta = yaml.load(f)
+    def lint_license(self, metafile):
+        lints = []
+        # Before linting a license, remove jinja from the text if there is any.
+        jlint = JinjaLinter()
+        args = jlint.parse_args(["-f", f"{metafile}", "--return_yaml"])
+        jlints, jinja_check = jlint.lint(args)
+        lints.extend(jlints)
+        meta = jinja_check
+        
 
         about_section = meta.get("about")
         license = about_section.get("license", "")
@@ -101,7 +140,7 @@ class SBOMLinter(BasicLinter):
             expected_exceptions = set([l.strip() for l in expected_exceptions])
         non_spdx_licenses = set(filtered_licenses) - expected_licenses
         if non_spdx_licenses:
-            hints.append(
+            lints.append(
                 "License is not an SPDX identifier (or a custom LicenseRef) nor an SPDX license expression.\n\n"
                 "Documentation on acceptable licenses can be found "
                 "[here]( https://conda-forge.org/docs/maintainer/adding_pkgs.html#spdx-identifiers-and-expressions )."
@@ -109,15 +148,15 @@ class SBOMLinter(BasicLinter):
             for license in non_spdx_licenses:
                 closest = find_closest_match(license)
                 if closest:
-                    hints.append(f"Original license name: {license}. Closest SPDX identifier found: {closest}")
+                    lints.append(f"Original license name: {license}. Closest SPDX identifier found: {closest}")
                 else:
                     continue    
         non_spdx_exceptions = set(parsed_exceptions) - expected_exceptions
         if non_spdx_exceptions:
-            hints.append(
+            lints.append(
                 "License exception is not an SPDX exception.\n\n"
                 "Documentation on acceptable licenses can be found "
                 "[here]( https://conda-forge.org/docs/maintainer/adding_pkgs.html#spdx-identifiers-and-expressions )."
             )
         
-        return hints
+        return lints
