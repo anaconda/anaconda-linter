@@ -79,20 +79,20 @@ class SBOMLinter(BasicLinter):
             help="Specifies the filename to use when searching a --package."
         )
 
-    def lint(self, args):
+    def lint(self, args) -> List:
+        lints = []
         if args.file:
             for file in args.file:
-                lints = self.lint_license(file)
-                if lints:
-                    print(lints)
+                results = self.lint_license(file)
+                lints.extend(results)
         elif args.package:
             files = glob.glob(str(Path(args.package, '**', args.filename)), recursive=True)
             for file in files:
-                lints = self.lint_license(file)
-                if lints:
-                    print(lints)
+                results = self.lint_license(file)
+                lints.extend(results)
         else:
             print("No files found to lint")
+        return lints
 
     def lint_license(self, metafile):
         lints = []
@@ -102,7 +102,7 @@ class SBOMLinter(BasicLinter):
         jlints, jinja_check = jlint.lint(args)
         lints.extend(jlints)
         meta = jinja_check
-        
+        breakpoint()
 
         about_section = meta.get("about")
         license = about_section.get("license", "")
