@@ -148,7 +148,7 @@ class SBOMLinter(BasicLinter):
         non_spdx_licenses = set(filtered_licenses) - expected_licenses
         if non_spdx_licenses:
             lints.append(
-                prelint + "WARNING: License is not an SPDX identifier"
+                prelint + "ERROR: License is not an SPDX identifier"
                 " (or a custom LicenseRef) nor an SPDX license expression."
             )
             for license in non_spdx_licenses:
@@ -161,7 +161,7 @@ class SBOMLinter(BasicLinter):
         non_spdx_exceptions = set(parsed_exceptions) - expected_exceptions
         if non_spdx_exceptions:
             lints.append(
-               prelint + "WARNING: License exception is not an SPDX exception."
+               prelint + "ERROR: License exception is not an SPDX exception."
             )
 
         return lints
