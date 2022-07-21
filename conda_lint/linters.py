@@ -153,8 +153,8 @@ class SBOMLinter(BasicLinter):
             for license in non_spdx_licenses:
                 closest = find_closest_match(license)
                 if closest:
-                    lints.append(f"Original license name: {license}. "
-                                 f"Did you mean: {closest}?")
+                    lints.append(f"Current license value found: '{license}'. "
+                                 f"Did you mean: '{closest}'?")
                 else:
                     continue
         non_spdx_exceptions = set(parsed_exceptions) - expected_exceptions
