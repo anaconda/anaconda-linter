@@ -1,3 +1,10 @@
+from conda_lint.utils import (
+    dir_path,
+    file_path,
+    find_closest_match,
+    find_location
+    )
+
 from argparse import ArgumentParser
 import glob
 import os
@@ -10,12 +17,6 @@ import license_expression
 from ruamel.yaml import YAML
 yaml = YAML(typ="safe", pure=True)
 
-from conda_lint.utils import (
-    dir_path,
-    file_path,
-    find_closest_match,
-    find_location
-    )
 
 LICENSES_PATH = Path("data", "licenses.txt")
 EXCEPTIONS_PATH = Path("data", "license_exceptions.txt")
@@ -36,9 +37,10 @@ class BasicLinter(ArgumentParser):
             "-p",
             "--package",
             type=dir_path,
-            help="Searches for a filename in a directory and lints for SPDX compatibility. Specify filename with -fn"
+            help=("Searches for a filename in a directory and lints for"
+                  " SPDX compatibility. Specify filename with -fn")
         )
-    
+
 
 class JinjaLinter(BasicLinter):
     def __init__(self, args=[]):
@@ -53,9 +55,9 @@ class JinjaLinter(BasicLinter):
         # figure out jinja lint logic later
         # also add -f and -p logic
         if args.return_yaml:
-            text = self.remove_jinja(args.file[0])    
+            text = self.remove_jinja(args.file[0])
             return lints, text
-    
+
     def remove_jinja(self, file: str) -> str:
         with open(file, "r") as f:
             text = f.read()
@@ -69,7 +71,6 @@ class JinjaLinter(BasicLinter):
         except Exception as e:
             print(e)
             return None
-
 
 
 class SBOMLinter(BasicLinter):
@@ -153,13 +154,13 @@ class SBOMLinter(BasicLinter):
                 closest = find_closest_match(license)
                 if closest:
                     lints.append(f"Original license name: {license}. "
-                    f"Did you mean: {closest}?")
+                                 f"Did you mean: {closest}?")
                 else:
-                    continue    
+                    continue
         non_spdx_exceptions = set(parsed_exceptions) - expected_exceptions
         if non_spdx_exceptions:
             lints.append(
                prelint + "License exception is not an SPDX exception."
             )
-        
+
         return lints

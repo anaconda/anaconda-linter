@@ -1,4 +1,4 @@
-import argparse, logging, sys
+import sys
 
 from conda_lint.linters import SBOMLinter
 
@@ -17,10 +17,11 @@ def execute(args):
         lints.extend(linter.lint(args))
     for line in lints:
         print(line)
-    
+
 
 def main():
     return execute(sys.argv[1:])
+
 
 if __name__ == "__main__":
     main()
