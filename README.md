@@ -23,6 +23,7 @@ that this can grow into being able to lint more files in accordance with Anacond
 - Get the lint command to be recognized by conda again (this broke for some reason)
 - Turn this into a real linter (with rows and cols, not just loading yaml)
 - Test with Prefect Flow
+- Look into combining this with CVETool
 
 ## Contributions
 This package is heavily inspired by conda-forge's conda-smithy [linter](https://github.com/conda-forge/conda-smithy/blob/5deae3b50c88eaf16a1514288b4dba8fe02dbf72/conda_smithy/lint_recipe.py).

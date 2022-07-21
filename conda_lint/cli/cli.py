@@ -9,7 +9,6 @@ def execute(args):
         SBOMLinter,
     ]
     for l in linters:
-        breakpoint()
         linter = l(args)
         if not args:
             args = linter.parse_args(["--help"])

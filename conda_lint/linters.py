@@ -10,7 +10,12 @@ import license_expression
 from ruamel.yaml import YAML
 yaml = YAML(typ="safe", pure=True)
 
-from conda_lint.utils import dir_path, file_path, find_closest_match
+from conda_lint.utils import (
+    dir_path,
+    file_path,
+    find_closest_match,
+    find_location
+    )
 
 LICENSES_PATH = Path("data", "licenses.txt")
 EXCEPTIONS_PATH = Path("data", "license_exceptions.txt")
@@ -102,12 +107,13 @@ class SBOMLinter(BasicLinter):
         jlints, jinja_check = jlint.lint(args)
         lints.extend(jlints)
         meta = jinja_check
-        breakpoint()
 
         about_section = meta.get("about")
         license = about_section.get("license", "")
+        license_line = find_location(metafile, "license", license)
         licensing = license_expression.Licensing()
         parsed_exceptions = []
+        prelint = f"{metafile}: line {license_line}: "
         try:
             parsed_licenses = []
             parsed_licenses_with_exception = licensing.license_symbols(
@@ -141,22 +147,19 @@ class SBOMLinter(BasicLinter):
         non_spdx_licenses = set(filtered_licenses) - expected_licenses
         if non_spdx_licenses:
             lints.append(
-                "License is not an SPDX identifier (or a custom LicenseRef) nor an SPDX license expression.\n\n"
-                "Documentation on acceptable licenses can be found "
-                "[here]( https://conda-forge.org/docs/maintainer/adding_pkgs.html#spdx-identifiers-and-expressions )."
+                prelint + "License is not an SPDX identifier (or a custom LicenseRef) nor an SPDX license expression."
             )
             for license in non_spdx_licenses:
                 closest = find_closest_match(license)
                 if closest:
-                    lints.append(f"Original license name: {license}. Closest SPDX identifier found: {closest}")
+                    lints.append(f"Original license name: {license}. "
+                    f"Did you mean: {closest}?")
                 else:
                     continue    
         non_spdx_exceptions = set(parsed_exceptions) - expected_exceptions
         if non_spdx_exceptions:
             lints.append(
-                "License exception is not an SPDX exception.\n\n"
-                "Documentation on acceptable licenses can be found "
-                "[here]( https://conda-forge.org/docs/maintainer/adding_pkgs.html#spdx-identifiers-and-expressions )."
+               prelint + "License exception is not an SPDX exception."
             )
         
         return lints

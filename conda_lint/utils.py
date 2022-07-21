@@ -1,6 +1,7 @@
 import argparse, os
 from collections import Counter
 from pathlib import Path
+import tokenize
 from typing import Set
 
 LICENSES = Path('conda_lint', 'data', 'licenses.txt')
@@ -60,9 +61,27 @@ def generate_correction(pkg_license, compfile=LICENSES):
     return correction(pkg_license)
     
 
-
 def find_closest_match(string: str) -> str:
     closest_match = generate_correction(string)
     if closest_match == string:
         return None
     return closest_match
+
+def find_location(filename, key: str, val: str) -> int:
+    """
+    Currently finds the line number of a key, after verifying the val is the same
+    """
+    # TODO: Refactor how this works to deal with multiple keys
+    line = -1
+    term = key if ":" in key else f"{key}:"
+    with open(filename) as f:
+        line_iter = iter(f.readlines())
+        tokens = list(tokenize.generate_tokens(lambda: next(line_iter)))
+    matches = [t for t in tokens if t.line.strip().startswith(term)]
+    for m in matches:
+        k, v = m.line.strip().split(":")
+        if v.strip() != val:
+            continue
+        else:
+            line = m.start[0]
+    return line
