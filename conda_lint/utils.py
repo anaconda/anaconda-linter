@@ -1,4 +1,4 @@
-import argparse
+
 from collections import Counter
 import os
 from pathlib import Path
@@ -11,14 +11,14 @@ def file_path(string: str) -> str:
     if os.path.isfile(string):
         return string
     else:
-        raise argparse.ArgumentTypeError(f"{string} is not a valid file path.")
+        raise FileNotFoundError(f"path '{string}' is not a valid file path.")
 
 
 def dir_path(string: str) -> str:
     if os.path.isdir(string):
         return string
     else:
-        raise argparse.ArgumentTypeError(f"{string} is not a valid directory path.")
+        raise FileNotFoundError(f"path '{string}' is not a valid directory path.")
 
 
 # TODO: Make a LicenseChecker class for this
