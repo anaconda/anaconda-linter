@@ -5,6 +5,7 @@ from conda_lint.utils import (
     find_location
     )
 
+import argparse
 from argparse import ArgumentParser
 import glob
 import os
@@ -43,6 +44,9 @@ class BasicLinter(ArgumentParser):
 
 
 class JinjaLinter(BasicLinter):
+    """
+    Currently only lints one file, no package linting at the moment.
+    """
     def __init__(self, args=[]):
         super(JinjaLinter, self).__init__(*args)
         self.add_argument(
@@ -59,9 +63,13 @@ class JinjaLinter(BasicLinter):
             return lints, text
 
     def remove_jinja(self, file: str) -> str:
-        with open(file, "r") as f:
-            text = f.read()
-            no_curlies = text.replace('{{ ', '{{ "').replace(' }}', '" }}')
+        try:
+            with open(file, "r") as f:
+                text = f.read()
+                no_curlies = text.replace('{{ ', '{{ "').replace(' }}', '" }}')
+        except FileNotFoundError:
+            raise argparse.ArgumentError(self, f"path '{file}' is not a valid file path.")
+
         try:
             content = yaml.load(
                                 Environment(loader=BaseLoader())
@@ -105,6 +113,7 @@ class SBOMLinter(BasicLinter):
         # Before linting a license, remove jinja from the text if there is any.
         jlint = JinjaLinter()
         args = jlint.parse_args(["-f", f"{metafile}", "--return_yaml"])
+
         jlints, jinja_check = jlint.lint(args)
         lints.extend(jlints)
         meta = jinja_check
@@ -148,7 +157,7 @@ class SBOMLinter(BasicLinter):
         non_spdx_licenses = set(filtered_licenses) - expected_licenses
         if non_spdx_licenses:
             lints.append(
-                prelint + "WARNING: License is not an SPDX identifier"
+                prelint + "ERROR: License is not an SPDX identifier"
                 " (or a custom LicenseRef) nor an SPDX license expression."
             )
             for license in non_spdx_licenses:
@@ -161,7 +170,7 @@ class SBOMLinter(BasicLinter):
         non_spdx_exceptions = set(parsed_exceptions) - expected_exceptions
         if non_spdx_exceptions:
             lints.append(
-               prelint + "WARNING: License exception is not an SPDX exception."
+               prelint + "ERROR: License exception is not an SPDX exception."
             )
 
         return lints

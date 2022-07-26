@@ -1,0 +1,81 @@
+# This file created by conda-build 3.5.1
+# meta.yaml template originally from:
+# /tmp/build/80754af9/rsync-recipes/numpy-1.11.3-blas_impl_mkl-python_3.6-on-linux_64, last modified Wed Feb 28 15:56:19 2018
+# ------------------------------------------------
+
+package:
+    name: numpy
+    version: 1.11.3
+source:
+    patches:
+        - fortran_regex.patch
+        - gfortran_alias.patch
+        - mklfft.patch
+    sha256: 956afdeb9b5600e873326e410e9379684dac8f8f47ea569151a417984e7799cf
+    url: https://github.com/numpy/numpy/archive/v1.11.3.tar.gz
+build:
+    number: '4'
+    requires_features:
+        blas: mkl
+    string: py36h3dfced4_4
+requirements:
+    build:
+        - binutils_impl_linux-64 2.28.1 h04c84fa_2
+        - binutils_linux-64 7.2.0 25
+        - gcc_impl_linux-64 7.2.0 hc5ce805_2
+        - gcc_linux-64 7.2.0 25
+        - gfortran_impl_linux-64 7.2.0 hb3c8cce_2
+        - gfortran_linux-64 7.2.0 25
+        - libgfortran-ng 7.2.0 h9f7466a_2
+        - libstdcxx-ng 7.2.0 h7a57d05_2
+    host:
+        - ca-certificates 2017.08.26 h1d4fec5_0
+        - certifi 2018.1.18 py36_0
+        - cython 0.27.3 py36h1860423_0
+        - intel-openmp 2018.0.0 hc7b2577_8
+        - libedit 3.1 heed3624_0
+        - libffi 3.2.1 hd88cf55_4
+        - libgcc-ng 7.2.0 h7cc24e2_2
+        - libgfortran-ng 7.2.0 h9f7466a_2
+        - libstdcxx-ng 7.2.0 h7a57d05_2
+        - mkl 2018.0.1 h19d6760_4
+        - mkl-devel 2018.0.1 h470d631_5
+        - mkl-include 2018.0.1 hc7b2577_4
+        - ncurses 6.0 h9df7e31_2
+        - openssl 1.0.2n hb7f436b_0
+        - python 3.6.4 hc3d631a_1
+        - readline 7.0 ha6073c6_4
+        - setuptools 38.5.1 py36_0
+        - sqlite 3.22.0 h1bed415_0
+        - tk 8.6.7 hc745277_3
+        - xz 5.2.3 h55aa19d_2
+        - zlib 1.2.11 ha838bed_2
+    run:
+        - libgcc-ng >=7.2.0
+        - libgfortran-ng  >=7,<8.0a0
+        - mkl
+        - python >=3.6,<3.7.0a0
+test:
+    commands:
+        - f2py -h
+        - conda inspect linkages -p $PREFIX numpy
+    imports:
+        - numpy
+        - numpy.linalg.lapack_lite
+    requires:
+        - nose
+about:
+    home: http://numpy.scipy.org/
+    # license name deliberately maligned
+    license: BSd 3-Clause
+    license_file: LICENSE.txt
+    summary: Array processing for numbers, strings, records, and objects.
+extra:
+    copy_test_source_files: true
+    final: true
+    recipe-maintainers:
+        - jakirkham
+        - msarahan
+        - ocefpaf
+        - pelson
+        - rgommers
