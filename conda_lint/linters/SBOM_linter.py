@@ -1,87 +1,20 @@
-from conda_lint.utils import (
-    dir_path,
-    file_path,
-    find_closest_match,
-    find_location
-    )
+from conda_lint.linters import BaseLinter, JinjaLinter
+from conda_lint.utils import find_closest_match, find_location
 
-import argparse
-from argparse import ArgumentParser
 import glob
 import os
 from pathlib import Path
 import re
 from typing import List
 
-from jinja2 import Environment, BaseLoader
 import license_expression
-from ruamel.yaml import YAML
-yaml = YAML(typ="safe", pure=True)
 
 
 LICENSES_PATH = Path("data", "licenses.txt")
 EXCEPTIONS_PATH = Path("data", "license_exceptions.txt")
 
 
-class BasicLinter(ArgumentParser):
-    def __init__(self, *args):
-        super(BasicLinter, self).__init__(*args)
-        self.add_argument(
-            "-f",
-            "--file",
-            action="extend",
-            nargs="+",
-            type=file_path,
-            help="Lints one or more files in a given path for SPDX compatibility.",
-        )
-        self.add_argument(
-            "-p",
-            "--package",
-            type=dir_path,
-            help=("Searches for a filename in a directory and lints for"
-                  " SPDX compatibility. Specify filename with -fn")
-        )
-
-
-class JinjaLinter(BasicLinter):
-    """
-    Currently only lints one file, no package linting at the moment.
-    """
-    def __init__(self, args=[]):
-        super(JinjaLinter, self).__init__(*args)
-        self.add_argument(
-            "--return_yaml",
-            action="store_true"
-        )
-
-    def lint(self, args):
-        lints = []
-        # figure out jinja lint logic later
-        # also add -f and -p logic
-        if args.return_yaml:
-            text = self.remove_jinja(args.file[0])
-            return lints, text
-
-    def remove_jinja(self, file: str) -> str:
-        try:
-            with open(file, "r") as f:
-                text = f.read()
-                no_curlies = text.replace('{{ ', '{{ "').replace(' }}', '" }}')
-        except FileNotFoundError:
-            raise argparse.ArgumentError(self, f"path '{file}' is not a valid file path.")
-
-        try:
-            content = yaml.load(
-                                Environment(loader=BaseLoader())
-                                .from_string(no_curlies).render()
-                                )
-            return content
-        except Exception as e:
-            print(e)
-            return None
-
-
-class SBOMLinter(BasicLinter):
+class SBOMLinter(BaseLinter):
     def __init__(self, args=[]):
         super(SBOMLinter, self).__init__(*args)
         self.description = "a linter to validate SPDX license standards"
