@@ -1,5 +1,4 @@
 import sys
-from tkinter import W
 from conda_lint.linters import SBOMLinter
 
 def execute(args):
