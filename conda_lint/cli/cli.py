@@ -1,7 +1,5 @@
 import sys
-
 from conda_lint.linters import SBOMLinter
-
 
 def execute(args):
     lints = []
