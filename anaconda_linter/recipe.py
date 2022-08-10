@@ -819,6 +819,6 @@ def load_parallel_iter(recipe_folder, packages):
             yield recipe
 
 if __name__ == "__main__":
-    recipe = Recipe.from_file("/Users/cbousseau/work/recipes/aggregate/", f"/Users/cbousseau/work/recipes/aggregate/{sys.argv[1]}-feedstock/recipe/", False)
+    recipe = Recipe.from_file(f"{sys.argv[1]}", f"{sys.argv[1]}/{sys.argv[2]}-feedstock/recipe/", False)
     print(recipe.meta)
     print(recipe.conda_render())
