@@ -4,7 +4,7 @@ This package is currently a very rough draft of a pure Python linter specificall
 that packages' meta.yaml files adhere to certain Anaconda standards.
 
 ## Installation
-1. conda create --name lint_test --file ./req.txt -c conda-forge -c bioconda
+1. `conda create --name lint_test --file ./req.txt -c conda-forge -c bioconda`
 2. *Currently*: Navigate to the anaconda_linter directory and run `python recipe.py`.
 
 ## Usage
