@@ -498,12 +498,13 @@ def check_url(url):
     response_data = {'url': url}
     try:
         response = urllib.request.urlopen(url)
-        response_data['message'] = 'URL valid'
         if (url != respons.url):  # For redirects
             response_data['code'] = 301
+            response_data['message'] = 'URL redirects'
             response_data['url'] = response.url
         else:
             response_data['code'] = response.code
+            response_data['message'] = 'URL valid'
     except urllib.error.HTTPError as e:
         response_data['code'] = e.code
         response_data['message'] = e.reason
