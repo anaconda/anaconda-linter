@@ -1,6 +1,6 @@
 type: object
 properties:
-    blacklists:
+    blocklists:
         type: array
     channels:
         type: array

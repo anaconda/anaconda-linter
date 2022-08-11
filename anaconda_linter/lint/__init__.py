@@ -30,8 +30,8 @@ Briefly, each class becomes a check by:
   ensure that asumptions made by your check are met by the recipe.
 
 - Each class is instantiated once per linting run. Do slow preparation
-  work in the constructor. E.g. the `recipe_is_blacklisted` check
-  loads and parses the blacklist here.
+  work in the constructor. E.g. the `recipe_in_blocklist` check
+  loads and parses the blocklist here.
 
 - As each recipe is linted, your check will get called on three
   functions: `check_recipe <LintCheck.check_recipe>`, `check_deps
@@ -489,9 +489,9 @@ class Linter:
     def reload_checks(self):
         self.check_instances = {str(check): check(self) for check in get_checks()}
 
-    def get_blacklist(self) -> Set[str]:
-        """Loads the blacklist as per linter configuration"""
-        return utils.get_blacklist(self.config, self.recipe_folder)
+    def get_blocklist(self) -> Set[str]:
+        """Loads the blocklist as per linter configuration"""
+        return utils.get_blocklist(self.config, self.recipe_folder)
 
     def get_messages(self) -> List[LintMessage]:
         """Returns the lint messages collected during linting"""
