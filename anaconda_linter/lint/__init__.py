@@ -462,13 +462,14 @@ class Linter:
       nocatch: Don't catch exceptions in lint checks and turn them into
                linter_error lint messages. Used by tests.
     """
-    def __init__(self, config: Dict, recipe_folder: str,
+    def __init__(self, config: Dict, recipe_folder: str, verbose: bool,
                  exclude: List[str] = None, nocatch: bool=False) ->None:
         self.config = config
         self.recipe_folder = recipe_folder
         self.skip = self.load_skips()
         self.exclude = exclude or []
         self.nocatch = nocatch
+        self.verbose = verbose
         self._messages = []
 
         dag = nx.DiGraph()
@@ -615,7 +616,13 @@ class Linter:
         messages = []
         for check in self.checks_ordered:
             if str(check) in checks_to_skip:
+                if self.verbose:
+                    print("Skipping check: " + check)
                 continue
+
+            if self.verbose:
+                print("Running check: " + check)
+
             try:
                 res = self.check_instances[check].run(recipe, fix)
             except Exception:
