@@ -12,6 +12,9 @@ environment:       ## Handles environment creation
 	conda env create -f environment.yaml --name $(CONDA_ENV_NAME) --force
 	conda run --name $(CONDA_ENV_NAME) pip install -e .
 
+pre-commit:        ## Runs pre-commit against files
+	pre-commit run --all-files
+
 test:              ## Run tests
 	mkdir -p $(ARTIFACTS_PATH)
 	python -m pytest \
