@@ -8,7 +8,7 @@ from conda_lint.linters import SBOMLinter
 def test_clean_lint_license(good_metafile):
     s = SBOMLinter()
     result = s.lint_license(good_metafile)
-    assert result == [] 
+    assert result == []
 
 @pytest.mark.parametrize("bad_metafile", [
     "tests/bad-feedstock-meta.yaml",

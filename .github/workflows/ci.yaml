@@ -1,0 +1,43 @@
+on:
+  push:
+    branches:
+      - main
+      - devel
+  pull_request:
+
+
+name: Test
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
+      - name: Cache conda env
+        id: cache-conda
+        uses: actions/cache@f4278025ab0f432ce369118909e46deec636f50c # tag=v3
+        env:
+          cache-name: conda-env-cache
+        with:
+          path: '/usr/share/miniconda/envs'
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/environment.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
+      - name: Create Environment
+        if: ${{ steps.cache-conda.outputs.cache-hit == false }}
+        run: |
+          source $CONDA/bin/activate
+          make environment
+      - name: Run tests
+        run: |
+          source $CONDA/bin/activate
+          conda activate conda-lint
+          make test
+      - name: Archive CI Artefacts
+        uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8
+        with:
+          name: ci-artifacts
+          path: artifacts/**
+          retention-days: 5
