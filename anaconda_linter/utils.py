@@ -12,6 +12,7 @@ import subprocess as sp
 import sys
 import queue
 import glob
+import urllib
 from pathlib import Path
 
 from threading import Thread
@@ -477,3 +478,37 @@ def load_config(path):
             default_config[arch] = yaml.safe_load(text.read())
 
     return default_config
+
+
+def check_url(url):
+    """
+    Validate a URL to see if a response is available
+
+    Parameters
+    ----------
+    url: str
+        URL to validate
+
+    Return
+    ------
+    response_data: dict
+        Limited set of response data
+    """
+
+    response_data = {'url': url}
+    try:
+        response = urllib.request.urlopen(url)
+        response_data['message'] = 'URL valid'
+        if (url != respons.url):  # For redirects
+            response_data['code'] = 301
+            response_data['url'] = response.url
+        else:
+            response_data['code'] = response.code
+    except urllib.error.HTTPError as e:
+        response_data['code'] = e.code
+        response_data['message'] = e.reason
+    except Exception as e:
+        response_data['code'] = -1
+        response_data['message'] = e.reason
+
+    return response_data
