@@ -817,8 +817,4 @@ def load_parallel_iter(recipe_folder, packages):
             logger.error("Could not load recipe %s", recipe)
         else:
             yield recipe
-
-if __name__ == "__main__":
-    recipe = Recipe.from_file(f"{sys.argv[1]}", f"{sys.argv[1]}/{sys.argv[2]}-feedstock/recipe/", False)
-    print(recipe.meta)
-    print(recipe.conda_render())
+            

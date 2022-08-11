@@ -11,7 +11,6 @@ source:
         - fortran_regex.patch
         - gfortran_alias.patch
         - mklfft.patch
-    sha256: 956afdeb9b5600e873326e410e9379684dac8f8f47ea569151a417984e7799cf
     url: https://github.com/numpy/numpy/archive/v1.11.3.tar.gz
 build:
     number: '4'

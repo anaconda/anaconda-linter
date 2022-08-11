@@ -43,6 +43,7 @@ llvm-openmp=12.0.0=haf9daa7_1
 lz4-c=1.9.3=hc377ac9_0
 markupsafe=2.0.1=py310h1a28f6b_0
 multidict=5.1.0=py310h1a28f6b_2
+networkx=2.8.5=pyhd8ed1ab_0
 ncurses=6.3=h1a28f6b_3
 numexpr=2.8.3=py310h5a06f4b_0
 numpy=1.23.1=py310h220015d_0

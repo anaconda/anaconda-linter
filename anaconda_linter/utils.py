@@ -1174,9 +1174,7 @@ def validate_config(config):
     """
     if not isinstance(config, dict):
         config = yaml.safe_load(open(config))
-    fn = pkg_resources.resource_filename(
-        'bioconda_utils', 'config.schema.yaml'
-    )
+    fn = './config.schema.yaml'
     schema = yaml.safe_load(open(fn))
     validate(config, schema)
 
