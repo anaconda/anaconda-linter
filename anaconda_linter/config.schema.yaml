@@ -2,10 +2,6 @@ type: object
 properties:
     blacklists:
         type: array
-    docker_image:
-        type: string
-    upload_channel:
-        type: string
     channels:
         type: array
     conda_build_version:
