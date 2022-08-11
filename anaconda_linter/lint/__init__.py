@@ -352,7 +352,7 @@ class LintCheck(metaclass=LintCheckMeta):
 class linter_failure(LintCheck):
     """An unexpected exception was raised during linting
 
-    Please file an issue at the bioconda-utils repo
+    Please file an issue at the conda-lint repo
     """
 
 
@@ -395,7 +395,7 @@ class missing_build(LintCheck):
 class unknown_selector(LintCheck):
     """The recipe failed to parse due to selector lines
 
-    Please request help from @bioconda/core.
+    Please request help from conda-lint.
     """
 
 
@@ -410,7 +410,7 @@ class missing_meta_yaml(LintCheck):
 class conda_render_failure(LintCheck):
     """The recipe was not understood by conda-build
 
-    Please request help from @bioconda/core.
+    Please request help from cconda-lint.
     """
 
 
@@ -426,7 +426,7 @@ class jinja_render_failure(LintCheck):
 class unknown_check(LintCheck):
     """Something went wrong inside the linter
 
-    Please request help from @bioconda/core
+    Please request help from conda-lint.
     """
 
 
