@@ -5,6 +5,9 @@ import utils
 import argparse
 import textwrap
 
+from typing import List
+
+
 def parseArguments(argv: list[str]) -> argparse.Namespace:
     def checkPath(value):
         if not os.path.isdir(value):
