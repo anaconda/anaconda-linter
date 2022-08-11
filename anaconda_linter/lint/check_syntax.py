@@ -6,7 +6,8 @@ section that is otherwise free-form.
 """
 import re
 
-from . import LintCheck, ERROR, WARNING, INFO
+# from . import ERROR, INFO, WARNING
+from . import LintCheck
 
 
 class version_constraints_missing_whitespace(LintCheck):
@@ -18,10 +19,11 @@ class version_constraints_missing_whitespace(LintCheck):
             python >=3
 
     """
+
     def check_recipe(self, recipe):
         check_paths = []
-        for section in ('build', 'run', 'host'):
-            check_paths.append(f'requirements/{section}')
+        for section in ("build", "run", "host"):
+            check_paths.append(f"requirements/{section}")
 
         constraints = re.compile("(.*?)([<=>].*)")
         for path in check_paths:
@@ -34,8 +36,8 @@ class version_constraints_missing_whitespace(LintCheck):
 
     def fix(self, _message, _data):
         check_paths = []
-        for section in ('build', 'run', 'host'):
-            check_paths.append(f'requirements/{section}')
+        for section in ("build", "run", "host"):
+            check_paths.append(f"requirements/{section}")
 
         constraints = re.compile("(.*?)([<=>].*)")
         for path in check_paths:
@@ -45,5 +47,5 @@ class version_constraints_missing_whitespace(LintCheck):
                     space_separated = has_constraints[1].endswith(" ")
                     if not space_separated:
                         dep, ver = has_constraints.groups()
-                        self.recipe.replace(spec, f"{dep} {ver}", within='requirements')
+                        self.recipe.replace(spec, f"{dep} {ver}", within="requirements")
         return True
