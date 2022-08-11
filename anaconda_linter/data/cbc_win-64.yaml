@@ -1,0 +1,18 @@
+arch: 64       # ppc64le aarch64 ppc64 s390x win
+platform: win  # linux os win
+compiler: vs2017
+vc: 14
+target_platform: win-64
+build_platform: win-32
+ccache_method: None
+lang_c: vs2017
+lang_cxx: vs2017
+lang_vc: 14
+lang_fortran: gfortran
+win: 1
+osx: 0
+unix: 0
+linux: 0
+linux-64: 0
+
+

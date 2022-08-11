@@ -130,8 +130,7 @@ class Recipe():
      1. Selecting lines using ``# [expression]``
      2. Rendering as Jinja2 template
 
-    (1) is currently unhandled, leading to recipes with repeated mapping keys
-    (commonly two ``url`` keys). Those recipes are ignored for the time being.
+    (1) is currently handled using apply_selector
 
     Arguments:
       recipe_folder: base recipes folder
@@ -202,9 +201,9 @@ class Recipe():
     def __repr__(self) -> str:
         return f'{self.__class__.__name__} "{self.reldir}"'
 
-    def load_from_string(self, data) -> "Recipe":
+    def load_from_string(self, data, selector_dict) -> "Recipe":
         """Load and `render` recipe contents from disk"""
-        self.meta_yaml = data.splitlines()
+        self.meta_yaml = self.apply_selector(data, selector_dict)
         if not self.meta_yaml:
             raise EmptyRecipe(self)
         self.render()
@@ -237,7 +236,7 @@ class Recipe():
             self.build_scripts[script] = content
 
     @classmethod
-    def from_file(cls, recipe_dir, recipe_fname, return_exceptions=False) -> "Recipe":
+    def from_file(cls, recipe_dir, recipe_fname, selector_dict={}, return_exceptions=False) -> "Recipe":
         """Create new `Recipe` object from file
 
         Args:
@@ -249,7 +248,7 @@ class Recipe():
         recipe = cls(recipe_fname, recipe_dir)
         try:
             with open(os.path.join(recipe_fname, 'meta.yaml')) as text:
-                recipe.load_from_string(text.read())
+                recipe.load_from_string(text.read(), selector_dict)
         except FileNotFoundError:
             exc = MissingMetaYaml(recipe_fname)
             if return_exceptions:
@@ -335,6 +334,19 @@ class Recipe():
 
         lines[block_top:block_top+block_height] = new_lines
         return "\n".join(lines)
+
+    def apply_selector(self, data, selector_dict):
+        """Apply selectors # [...]"""
+        print(selector_dict)
+        updated_data = []
+        for line in data.splitlines():
+            if (match := re.search('[^#].*#\s*\[([^\]]*)\]', line)) is not None:
+                cond_str = match.group(1)
+                if not eval(cond_str, None, selector_dict):
+                    line = f'# {line}'
+            updated_data.append(line)
+        print(updated_data)
+        return updated_data
 
     def get_template(self):
         """Create a Jinja2 template from the current raw recipe"""

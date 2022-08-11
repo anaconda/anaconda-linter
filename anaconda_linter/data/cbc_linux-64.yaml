@@ -1,0 +1,16 @@
+arch: 64       # ppc64le aarch64 ppc64 s390x win
+platform: linux  # linux os win
+target_platform: linux-64
+build_platform: linux-64
+ccache_method: None
+lang_c: gcc
+lang_cxx: gxx
+lang_fortran: gfortran
+win: 0
+unix: 1
+osx: 0
+linux: 1
+linux-64: 1
+x86_64: 1
+
+

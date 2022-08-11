@@ -535,7 +535,7 @@ class Linter:
             skip_dict[recipe].append(func)
         return skip_dict
 
-    def lint(self, recipe_names: List[str], fix: bool = False) -> bool:
+    def lint(self, recipe_names: List[str], arch_name: str = 'linux-64', fix: bool = False) -> bool:
         """Run linter on multiple recipes
 
         Lint messages are collected in the linter. They can be retrieved
@@ -551,7 +551,7 @@ class Linter:
         """
         for recipe_name in utils.tqdm(sorted(recipe_names)):
             try:
-                msgs = self.lint_one(recipe_name, fix=fix)
+                msgs = self.lint_one(recipe_name, arch_name=arch_name, fix=fix)
             except Exception:
                 if self.nocatch:
                     raise
@@ -570,11 +570,12 @@ class Linter:
 
         return result
 
-    def lint_one(self, recipe_name: str, fix: bool = False) -> List[LintMessage]:
+    def lint_one(self, recipe_name: str, arch_name: str = 'linux-64', fix: bool = False) -> List[LintMessage]:
         """Run the linter on a single recipe
 
         Args:
-          recipe_name: Mames of recipe to lint
+          recipe_name: Nname of recipe to lint
+          arch_name: Architecture to consider
           fix: Whether checks should attempt to fix detected issues
 
         Returns:
@@ -582,7 +583,7 @@ class Linter:
         """
     
         try:
-            recipe = _recipe.Recipe.from_file(self.recipe_folder, recipe_name)
+            recipe = _recipe.Recipe.from_file(self.recipe_folder, recipe_name, self.config[arch_name])
         except _recipe.RecipeError as exc:
             recipe = _recipe.Recipe(recipe_name, self.recipe_folder)
             check_cls = recipe_error_to_lint_check.get(exc.__class__, linter_failure)

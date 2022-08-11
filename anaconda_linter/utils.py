@@ -11,6 +11,8 @@ import os
 import subprocess as sp
 import sys
 import queue
+import glob
+from pathlib import Path
 
 from threading import Thread
 from functools import partial
@@ -466,5 +468,12 @@ def load_config(path):
         config['channels'] = get_list('channels')
 
     default_config.update(config)
+
+    # store architecture information
+    data_path = Path(__file__).parent / 'data'
+    for arch_config_path in data_path.glob('cbc_*.yaml'):
+        arch = arch_config_path.stem.split('cbc_')[1]
+        with open(arch_config_path) as text:
+            default_config[arch] = yaml.safe_load(text.read())
 
     return default_config
