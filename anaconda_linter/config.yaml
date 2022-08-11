@@ -1,5 +1,5 @@
 requirements: requirements.txt
-blacklists:
-    - build-fail-blacklist
+blocklists:
+    - build-fail-blocklist
 channels:
     - defaults

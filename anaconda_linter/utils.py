@@ -391,24 +391,24 @@ def get_recipes(recipe_folder, package="*", exclude=None):
             if not meta_yaml_found_or_excluded and os.path.isdir(new_dir):
                 logger.warn(
                     "No meta.yaml found in %s."
-                    " If you want to ignore this directory, add it to the blacklist.",
+                    " If you want to ignore this directory, add it to the blocklist.",
                     new_dir
                 )
                 yield new_dir
 
 
-def get_blacklist(config: Dict[str, Any], recipe_folder: str) -> set:
-    "Return list of recipes to skip from blacklists"
-    blacklist = set()
-    for p in config.get('blacklists', []):
-        blacklist.update(
+def get_blocklist(config: Dict[str, Any], recipe_folder: str) -> set:
+    "Return list of recipes to skip from blocklists"
+    blocklist = set()
+    for p in config.get('blocklists', []):
+        blocklist.update(
             [
                 os.path.relpath(i.strip(), recipe_folder)
                 for i in open(p, encoding='utf8')
                 if not i.startswith('#') and i.strip()
             ]
         )
-    return blacklist
+    return blocklist
 
 
 def validate_config(config):
@@ -430,7 +430,7 @@ def validate_config(config):
 
 def load_config(path):
     """
-    Parses config file, building paths to relevant blacklists
+    Parses config file, building paths to relevant blocklists
 
     Parameters
     ----------
@@ -456,12 +456,12 @@ def load_config(path):
         return value
 
     default_config = {
-        'blacklists': [],
+        'blocklists': [],
         'channels': ['defaults'],
         'requirements': None
     }
-    if 'blacklists' in config:
-        config['blacklists'] = [relpath(p) for p in get_list('blacklists')]
+    if 'blocklists' in config:
+        config['blocklists'] = [relpath(p) for p in get_list('blocklists')]
     if 'channels' in config:
         config['channels'] = get_list('channels')
 
