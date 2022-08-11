@@ -95,7 +95,6 @@ import abc
 import os
 import pkgutil
 import re
-import itertools
 import logging
 import inspect
 import importlib
@@ -103,8 +102,6 @@ from collections import defaultdict
 from enum import IntEnum
 from typing import Any, Dict, List, NamedTuple, Set, Tuple
 
-import pandas as pd
-import ruamel_yaml as yaml
 import networkx as nx
 
 import utils

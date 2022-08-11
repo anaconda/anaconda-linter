@@ -37,10 +37,7 @@ except ModuleNotFoundError:
     from ruamel_yaml.constructor import DuplicateKeyError
     from ruamel_yaml.error import YAMLError
 
-#from . import utils
-#from .aiopipe import EndProcessingItem
 import utils
-from aiopipe import EndProcessingItem
 
 
 yaml = YAML(typ="rt")  # pylint: disable=invalid-name
@@ -54,7 +51,7 @@ for digit in '0123456789':
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
 
-class RecipeError(EndProcessingItem):
+class RecipeError():
     def __init__(self, item, message=None, line=None, column=None):
         self.line = line
         self.column = column
