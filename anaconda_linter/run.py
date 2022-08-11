@@ -1,5 +1,8 @@
-import utils, lint, sys, os
+import lint
+import os
+import sys
 from typing import List
+import utils
 
 
 if __name__ == "__main__":
