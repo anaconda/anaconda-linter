@@ -21,5 +21,7 @@ if __name__ == "__main__":
 
     if not result:
         print("All checks OK")
+    elif result == lint.WARNING:
+        print("Warnings were found")
     else:
         sys.exit("Errors were found")
