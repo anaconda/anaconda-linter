@@ -3,6 +3,7 @@ channels:
   - conda-forge
 
 dependencies:
+  - python
   # build
   - setuptools
   # run
@@ -12,3 +13,6 @@ dependencies:
   # test
   - make
   - pytest
+  # plug ins
+  - pytest-cov
+  - pytest-html
