@@ -5,15 +5,22 @@ that packages' meta.yaml files adhere to certain Anaconda standards.
 
 ## Installation
 1. conda create --name lint_test --file ./req.txt -c conda-forge -c bioconda
-2. *Currently*: Navigate to the anaconda_linter directory and run `python run.py [directory containing meta.yaml]`. E.g.: `python run.py ../tests/bad`.
+2. *Currently*: Navigate to the anaconda_linter directory and run `python run.py base/directory/of/file feedstock_name`.
 
 ## Usage
 TBD
 
+## Testing conda lint
+
+`python run.py ../tests bad` - some tests fail
+`python run.py ../tests good` - all tests pass
+
 ## TODO:
 - Create a Makefile to auto-create a conda env and download dependencies
 - Set up CI.
-- Add linting tests
+- Increase number of errors in bad-feedstock so that all lints are covered
+- Add further lints
+- Remove unneeded codes
 - Test with Prefect Flow
 
 ## Contributions
