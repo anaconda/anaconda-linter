@@ -1,0 +1,61 @@
+# Apply to all files without commiting:
+#   pre-commit run --all-files
+# Update this file:
+#   pre-commit autoupdate
+exclude: ^(.*/versioneer\.py|.*/_version\.py|.*/.*\.svg)
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.3.0
+    hooks:
+    -   id: check-added-large-files
+    -   id: check-ast
+    -   id: fix-byte-order-marker
+    -   id: check-case-conflict
+    -   id: check-executables-have-shebangs
+    -   id: check-merge-conflict
+    -   id: check-shebang-scripts-are-executable
+    -   id: check-yaml
+        exclude: (cookbook/tests/abs_invalid.yaml|cli/recipe/meta.yaml)
+    -   id: debug-statements
+    -   id: detect-private-key
+    -   id: end-of-file-fixer
+    -   id: mixed-line-ending
+    -   id: trailing-whitespace
+-   repo: https://github.com/PyCQA/isort
+    rev: 5.10.1
+    hooks:
+    -   id: isort
+-   repo: https://github.com/psf/black
+    rev: 22.6.0
+    hooks:
+    -   id: black
+-   repo: https://github.com/asottile/pyupgrade
+    rev: v2.37.3
+    hooks:
+    -   id: pyupgrade
+        args: [--py37-plus, --keep-runtime-typing]
+-   repo: https://github.com/pycqa/flake8
+    rev: 5.0.4
+    hooks:
+    -   id: flake8
+- repo: https://github.com/lovesegfault/beautysh
+  rev: v6.2.1
+  hooks:
+  - id: beautysh
+- repo: https://github.com/koalaman/shellcheck-precommit
+  rev: v0.8.0
+  hooks:
+  - id: shellcheck
+- repo: local
+  hooks:
+  - id: packer_fmt
+    name: Packer Format
+    entry: .github/packer-fmt.sh
+    language: system
+    files: (\.pkr\.hcl)$
+    pass_filenames: true
+- repo: https://github.com/PyCQA/bandit
+  rev: 1.7.4
+  hooks:
+  -   id: bandit
+      files: '^gh-bridge/ghpeb/webhook.py'
