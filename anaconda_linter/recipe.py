@@ -337,7 +337,6 @@ class Recipe():
 
     def apply_selector(self, data, selector_dict):
         """Apply selectors # [...]"""
-        print(selector_dict)
         updated_data = []
         for line in data.splitlines():
             if (match := re.search('[^#].*#\s*\[([^\]]*)\]', line)) is not None:
@@ -345,7 +344,6 @@ class Recipe():
                 if not eval(cond_str, None, selector_dict):
                     line = f'# {line}'
             updated_data.append(line)
-        print(updated_data)
         return updated_data
 
     def get_template(self):

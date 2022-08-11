@@ -8,7 +8,7 @@ if __name__ == "__main__":
     aggregate_folder = f"{sys.argv[1]}"
     recipes = [f"{aggregate_folder}/{sys.argv[2]}-feedstock/recipe/"]
     linter = lint.Linter(config, aggregate_folder, None, True)
-    result = linter.lint(recipes)
+    result = linter.lint(recipes, 'linux-64')
     messages = linter.get_messages()
 
     if messages:
