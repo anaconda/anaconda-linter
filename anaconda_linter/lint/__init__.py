@@ -560,8 +560,15 @@ class Linter:
                 msgs = [linter_failure.make_message(recipe=recipe)]
             self._messages.extend(msgs)
 
-        return any(message.severity >= ERROR
-                   for message in self._messages)
+        result = 0
+        for message in self._messages:
+            if message.severity == ERROR:
+                result = ERROR
+                break
+            elif message.severity == WARNING:
+                result = WARNING
+
+        return result
 
     def lint_one(self, recipe_name: str, fix: bool = False) -> List[LintMessage]:
         """Run the linter on a single recipe
