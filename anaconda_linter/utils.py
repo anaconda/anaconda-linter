@@ -167,7 +167,7 @@ def load_conda_build_config(platform=None, trim_skip=True):
         set_build_id=False)
 
     # # get environment root
-    # env_root = PurePath(shutil.which("bioconda-utils")).parents[1]
+    # env_root = PurePath(shutil.which("conda-lint")).parents[1]
     # # set path to pinnings from conda forge package
     # config.exclusive_config_files = [
     #     os.path.join(env_root, "conda_build_config.yaml"),
