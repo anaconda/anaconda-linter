@@ -13,6 +13,10 @@ TBD
 
 ## Testing conda lint
 
+navigate into the `anaconda_linter` folder:
+`cd anaconda_linter`
+
+execute the run.py file:
 `python run.py ../tests bad` - some tests fail
 `python run.py ../tests good` - all tests pass
 
