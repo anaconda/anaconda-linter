@@ -1,8 +1,5 @@
-# from pathlib import Path
-
-from setuptools import setup
-
 import conda_lint
+from setuptools import setup
 
 
 def main():

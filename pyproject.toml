@@ -5,3 +5,4 @@ target-version = ['py37', 'py38', 'py39']
 [tool.isort]
 profile = "black"
 line_length = 100
+src_paths = ["anaconda_linter"]
