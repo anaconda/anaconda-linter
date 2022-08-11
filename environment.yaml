@@ -1,0 +1,18 @@
+name: conda-lint
+channels:
+  - conda-forge
+
+dependencies:
+  - python
+  # build
+  - setuptools
+  # run
+  - ruamel.yaml
+  - license-expression
+  - jinja2
+  # test
+  - make
+  - pytest
+  # plug ins
+  - pytest-cov
+  - pytest-html

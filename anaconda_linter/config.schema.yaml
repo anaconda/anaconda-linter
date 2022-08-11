@@ -1,0 +1,8 @@
+type: object
+properties:
+    blocklists:
+        type: array
+    channels:
+        type: array
+    conda_build_version:
+        type: string

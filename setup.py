@@ -14,7 +14,7 @@ def main():
         long_description=conda_lint.__long_description__,
         url=conda_lint.__url__,
         python_requires=">=3.8",
-        packages=["conda_lint", "conda_lint.cli"],
+        packages=["conda_lint", "conda_lint.cli", "conda_lint.lint"],
         package_dir={"conda_lint": "conda_lint"},
         package_data={"conda_lint": ["data/*.txt"]},
         entry_points={
