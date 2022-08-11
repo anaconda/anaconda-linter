@@ -136,6 +136,8 @@ class missing_doc_source_url(LintCheck):
 
     """
 
+    severity = WARNING
+
     def check_recipe(self, recipe):
         if not recipe.get('about/doc_source_url', ''):
             self.message(section='about')
@@ -163,6 +165,8 @@ class missing_description(LintCheck):
             description: some-description
 
     """
+
+    severity = WARNING
 
     def check_recipe(self, recipe):
         if not recipe.get('about/description', ''):
