@@ -1,32 +1,37 @@
 # Conda Lint
 
 This package is currently a very rough draft of a pure Python linter specifically to make sure
-that packages' meta.yaml files adhere to SPDX standards. In the future, I hope
-that this can grow into being able to lint more files in accordance with Anaconda standards.
+that packages' meta.yaml files adhere to certain Anaconda standards.
 
 ## Installation
-1. Create a conda environment or Python venv.
-2. Navigate to the same directory as this readme and run `python3 setup.py install`.
+1. conda env create -f environment.yml
+2. conda activate linter
+3. *Currently*: Navigate to the anaconda_linter directory and run `python run.py base/directory/of/file feedstock_name`.
 
 ## Usage
-`conda lint -f path/to/your/file/meta.yml`
+TBD
 
-`conda lint -p path/to/your/package`
+## Testing conda lint
+
+navigate into the `anaconda_linter` folder:
+`cd anaconda_linter`
+
+execute the run.py file:
+`python run.py ../tests bad` - some tests fail
+`python run.py ../tests good` - all tests pass
 
 ## TODO:
-- Auto-make a conda env and download dependencies
+- Create a Makefile to auto-create a conda env and download dependencies
 - Set up CI.
-- ~Add finding of meta.yaml files in packages~
-- Add linting tests
-- ~Refactor argparsing~ (Probably need to re-refactor this though)
-- Turn main utils.py functions into a class
-- Get the lint command to be recognized by conda again (this broke for some reason)
-- Turn this into a real linter (with rows and cols, not just loading yaml)
+- Increase number of errors in bad-feedstock so that all lints are covered
+- Add further lints
+- Remove unneeded codes
 - Test with Prefect Flow
-- Look into combining this with CVETool
 
 ## Contributions
 This package is heavily inspired by conda-forge's conda-smithy [linter](https://github.com/conda-forge/conda-smithy/blob/5deae3b50c88eaf16a1514288b4dba8fe02dbf72/conda_smithy/lint_recipe.py).
+
+This new package is more inspired by bioconda's [linter](https://github.com/bioconda/bioconda-utils/blob/master/bioconda_utils/lint/__init__.py).
 
 Some of the code for suggesting hints comes from [Peter Norvig](http://norvig.com/spell-correct.html).
 
