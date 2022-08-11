@@ -576,6 +576,7 @@ class Linter:
         Returns:
           List of collected messages
         """
+    
         try:
             recipe = _recipe.Recipe.from_file(self.recipe_folder, recipe_name)
         except _recipe.RecipeError as exc:
