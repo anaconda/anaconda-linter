@@ -423,7 +423,7 @@ def validate_config(config):
     """
     if not isinstance(config, dict):
         config = yaml.safe_load(open(config))
-    fn = './config.schema.yaml'
+    fn = os.path.abspath(os.path.dirname(__file__)) + '/config.schema.yaml'
     schema = yaml.safe_load(open(fn))
     validate(config, schema)
 
