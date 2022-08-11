@@ -111,3 +111,59 @@ class missing_hash(LintCheck):
         if not any(source.get(chk) for chk in self.checksum_names):
             self.message(section=section)
 
+
+class missing_doc_url(LintCheck):
+    """The recipe is missing a doc_url
+
+    Please add::
+
+        about:
+            doc_url: some_documentation_url
+
+    """
+
+    def check_recipe(self, recipe):
+        if not recipe.get('about/doc_url', ''):
+            self.message(section='about')
+
+class missing_doc_source_url(LintCheck):
+    """The recipe is missing a doc_source_url
+
+    Please add::
+
+        about:
+            doc_source_url: some-documentation-source-url
+
+    """
+
+    def check_recipe(self, recipe):
+        if not recipe.get('about/doc_source_url', ''):
+            self.message(section='about')
+
+class missing_dev_url(LintCheck):
+    """The recipe is missing a dev_url
+
+    Please add::
+
+        about:
+            dev_url: some-dev-url
+
+    """
+
+    def check_recipe(self, recipe):
+        if not recipe.get('about/dev_url', ''):
+            self.message(section='about')
+
+class missing_description(LintCheck):
+    """The recipe is missing a description
+
+    Please add::
+
+        about:
+            description: some-description
+
+    """
+
+    def check_recipe(self, recipe):
+        if not recipe.get('about/description', ''):
+            self.message(section='about')
