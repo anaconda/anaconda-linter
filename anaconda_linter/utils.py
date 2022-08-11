@@ -1,38 +1,34 @@
 """
 Utility Functions and Classes
-
-This module collects small pieces of code used throughout :py:mod:`bioconda_utils`.
+This module collects small pieces of code used throughout
+:py:mod:`bioconda_utils`.
 """
 
 import fnmatch
 import glob
 import logging
 import os
+import queue
 import subprocess as sp
 import sys
-import queue
-import glob
-from pathlib import Path
-
-from threading import Thread
 from functools import partial
-from typing import Sequence, List, Dict, Any
 from multiprocessing import Pool
-
-import tqdm as _tqdm
-import yaml
-import jinja2
-from jinja2 import Environment
+from pathlib import Path
+from threading import Thread
+from typing import Any, Dict, List, Sequence
 
 # FIXME(upstream): For conda>=4.7.0 initialize_logging is (erroneously) called
 #                  by conda.core.index.get_index which messes up our logging.
 # => Prevent custom conda logging init before importing anything conda-related.
 import conda.gateways.logging
-conda.gateways.logging.initialize_logging = lambda: None
-
+import jinja2
+import tqdm as _tqdm
+import yaml
 from conda_build import api
-
+from jinja2 import Environment
 from jsonschema import validate
+
+conda.gateways.logging.initialize_logging = lambda: None
 
 
 logger = logging.getLogger(__name__)
@@ -44,10 +40,12 @@ class TqdmHandler(logging.StreamHandler):
     Passes all log writes through tqdm to allow progress bars and log
     messages to coexist without clobbering terminal
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-         # initialise internal tqdm lock so that we can use tqdm.write
+        # initialise internal tqdm lock so that we can use tqdm.write
         _tqdm.tqdm(disable=True, total=0)
+
     def emit(self, record):
         _tqdm.tqdm.write(self.format(record))
 
@@ -65,14 +63,16 @@ def tqdm(*args, **kwargs):
       loglevel: logging loglevel (the number, so logging.INFO)
       logger: local logger (in case it has different effective log level)
     """
-    term_ok = (sys.stderr.isatty()
-               and os.environ.get("TERM", "") != "dumb"
-               and os.environ.get("CIRCLECI", "") != "true")
-    loglevel_ok = (kwargs.get('logger', logger).getEffectiveLevel()
-                   <= kwargs.get('loglevel', logging.INFO))
-    kwargs['disable'] = not (term_ok and loglevel_ok)
+    term_ok = (
+        sys.stderr.isatty()
+        and os.environ.get("TERM", "") != "dumb"
+        and os.environ.get("CIRCLECI", "") != "true"
+    )
+    loglevel_ok = kwargs.get("logger", logger).getEffectiveLevel() <= kwargs.get(
+        "loglevel", logging.INFO
+    )
+    kwargs["disable"] = not (term_ok and loglevel_ok)
     return _tqdm.tqdm(*args, **kwargs)
-
 
 
 def ensure_list(obj):
@@ -87,28 +87,59 @@ def ensure_list(obj):
         return obj
     return [obj]
 
+
 class JinjaSilentUndefined(jinja2.Undefined):
     def _fail_with_undefined_error(self, *args, **kwargs):
         return ""
 
-    __add__ = __radd__ = __mul__ = __rmul__ = __div__ = __rdiv__ = \
-        __truediv__ = __rtruediv__ = __floordiv__ = __rfloordiv__ = \
-        __mod__ = __rmod__ = __pos__ = __neg__ = __call__ = \
-        __getitem__ = __lt__ = __le__ = __gt__ = __ge__ = __int__ = \
-        __float__ = __complex__ = __pow__ = __rpow__ = \
-        _fail_with_undefined_error
+    __add__ = (
+        __radd__
+    ) = (
+        __mul__
+    ) = (
+        __rmul__
+    ) = (
+        __div__
+    ) = (
+        __rdiv__
+    ) = (
+        __truediv__
+    ) = (
+        __rtruediv__
+    ) = (
+        __floordiv__
+    ) = (
+        __rfloordiv__
+    ) = (
+        __mod__
+    ) = (
+        __rmod__
+    ) = (
+        __pos__
+    ) = (
+        __neg__
+    ) = (
+        __call__
+    ) = (
+        __getitem__
+    ) = (
+        __lt__
+    ) = (
+        __le__
+    ) = (
+        __gt__
+    ) = __ge__ = __int__ = __float__ = __complex__ = __pow__ = __rpow__ = _fail_with_undefined_error
 
 
 jinja = Environment(
-    #loader=PackageLoader('bioconda_utils', 'templates'),
+    # loader=PackageLoader('bioconda_utils', 'templates'),
     trim_blocks=True,
-    lstrip_blocks=True
+    lstrip_blocks=True,
 )
 
 
-jinja_silent_undef = Environment(
-    undefined=JinjaSilentUndefined
-)
+jinja_silent_undef = Environment(undefined=JinjaSilentUndefined)
+
 
 def load_all_meta(recipe, config=None, finalize=True):
     """
@@ -122,7 +153,7 @@ def load_all_meta(recipe, config=None, finalize=True):
         via conda and also download of those packages (to inspect possible
         run_exports). For fast-running tasks like linting, set to False.
     """
-    #insert_mambabuild()
+    # insert_mambabuild()
 
     if config is None:
         config = load_conda_build_config()
@@ -164,9 +195,7 @@ def load_conda_build_config(platform=None, trim_skip=True):
     """
     Load conda build config while considering global pinnings from conda-forge.
     """
-    config = api.Config(
-        no_download_source=True,
-        set_build_id=False)
+    config = api.Config(no_download_source=True, set_build_id=False)
 
     # # get environment root
     # env_root = PurePath(shutil.which("conda-lint")).parents[1]
@@ -181,9 +210,16 @@ def load_conda_build_config(platform=None, trim_skip=True):
     config.trim_skip = trim_skip
     return config
 
-def run(cmds: List[str], env: Dict[str, str]=None, mask: List[str]=None, live: bool=True,
-        mylogger: logging.Logger=logger, loglevel: int=logging.INFO,
-        **kwargs: Dict[Any, Any]) -> sp.CompletedProcess:
+
+def run(
+    cmds: List[str],
+    env: Dict[str, str] = None,
+    mask: List[str] = None,
+    live: bool = True,
+    mylogger: logging.Logger = logger,
+    loglevel: int = logging.INFO,
+    **kwargs: Dict[Any, Any],
+) -> sp.CompletedProcess:
     """
     Run a command (with logging, masking, etc)
 
@@ -212,7 +248,7 @@ def run(cmds: List[str], env: Dict[str, str]=None, mask: List[str]=None, live: b
     def pushqueue(out, pipe):
         """Reads from a pipe and pushes into a queue, pushing "None" to
         indicate closed pipe"""
-        for line in iter(pipe.readline, b''):
+        for line in iter(pipe.readline, b""):
             out.put((pipe, line))
         out.put(None)  # End-of-data-token
 
@@ -221,20 +257,21 @@ def run(cmds: List[str], env: Dict[str, str]=None, mask: List[str]=None, live: b
         if mask is None:
             # caller has not considered masking, hide the entire command
             # for security reasons
-            return '<hidden>'
+            return "<hidden>"
         if mask is False:
             # masking has been deactivated
             return arg
         for mitem in mask:
-            arg = arg.replace(mitem, '<hidden>')
+            arg = arg.replace(mitem, "<hidden>")
         return arg
 
-    mylogger.log(loglevel, "(COMMAND) %s", ' '.join(do_mask(arg) for arg in cmds))
+    mylogger.log(loglevel, "(COMMAND) %s", " ".join(do_mask(arg) for arg in cmds))
 
     # bufsize=4 result of manual experimentation. Changing it can
     # drop performance drastically.
-    with sp.Popen(cmds, stdout=sp.PIPE, stderr=sp.PIPE,
-                  close_fds=True, env=env, bufsize=4, **kwargs) as proc:
+    with sp.Popen(
+        cmds, stdout=sp.PIPE, stderr=sp.PIPE, close_fds=True, env=env, bufsize=4, **kwargs
+    ) as proc:
         # Start threads reading stdout/stderr and pushing it into queue q
         out_thread = Thread(target=pushqueue, args=(logq, proc.stdout))
         err_thread = Thread(target=pushqueue, args=(logq, proc.stderr))
@@ -247,7 +284,7 @@ def run(cmds: List[str], env: Dict[str, str]=None, mask: List[str]=None, live: b
         try:
             for _ in range(2):  # Run until we've got both `None` tokens
                 for pipe, line in iter(logq.get, None):
-                    line = do_mask(line.decode(errors='replace').rstrip())
+                    line = do_mask(line.decode(errors="replace").rstrip())
                     output_lines.append(line)
                     if live:
                         if pipe == proc.stdout:
@@ -267,14 +304,20 @@ def run(cmds: List[str], env: Dict[str, str]=None, mask: List[str]=None, live: b
             masked_cmds = [do_mask(c) for c in cmds]
 
         if proc.poll() is None:
-            mylogger.log(loglevel, 'Command closed STDOUT/STDERR but is still running')
+            mylogger.log(loglevel, "Command closed STDOUT/STDERR but is still running")
             waitfor = 30
             waittimes = 5
             for attempt in range(waittimes):
-                mylogger.log(loglevel, "Waiting %s seconds (%i/%i)", waitfor, attempt+1, waittimes)
+                mylogger.log(
+                    loglevel,
+                    "Waiting %s seconds (%i/%i)",
+                    waitfor,
+                    attempt + 1,
+                    waittimes,
+                )
                 try:
                     proc.wait(timeout=waitfor)
-                    break;
+                    break
                 except sp.TimeoutExpired:
                     pass
             else:
@@ -284,9 +327,9 @@ def run(cmds: List[str], env: Dict[str, str]=None, mask: List[str]=None, live: b
         returncode = proc.poll()
 
         if returncode:
-            logger.error('COMMAND FAILED (exited with %s): %s', returncode, ' '.join(masked_cmds))
+            logger.error("COMMAND FAILED (exited with %s): %s", returncode, " ".join(masked_cmds))
             if not live:
-                logger.error('STDOUT+STDERR:\n%s', output)
+                logger.error("STDOUT+STDERR:\n%s", output)
             raise sp.CalledProcessError(returncode, masked_cmds, output=output)
 
         return sp.CompletedProcess(returncode, masked_cmds, output)
@@ -310,6 +353,8 @@ def get_deps(recipe=None, build=True):
     build : bool
         If True yield build dependencies, if False yield run dependencies.
     """
+    # TODO: Fix this. Setting Meta to None to fix linting
+    meta = None
     if recipe is not None:
         assert isinstance(recipe, str)
         metadata = load_all_meta(recipe, finalize=False)
@@ -321,9 +366,9 @@ def get_deps(recipe=None, build=True):
     all_deps = set()
     for meta in metadata:
         if build:
-            deps = meta.get_value('requirements/build', [])
+            deps = meta.get_value("requirements/build", [])
         else:
-            deps = meta.get_value('requirements/run', [])
+            deps = meta.get_value("requirements/run", [])
         all_deps.update(dep.split()[0] for dep in deps)
     return all_deps
 
@@ -338,7 +383,7 @@ def set_max_threads(n):
 
 def threads_to_use():
     """Returns the number of cores we are allowed to run on"""
-    if hasattr(os, 'sched_getaffinity'):
+    if hasattr(os, "sched_getaffinity"):
         cores = len(os.sched_getaffinity(0))
     else:
         cores = os.cpu_count()
@@ -348,13 +393,7 @@ def threads_to_use():
 def parallel_iter(func, items, desc, *args, **kwargs):
     pfunc = partial(func, *args, **kwargs)
     with Pool(threads_to_use()) as pool:
-        yield from tqdm(
-            pool.imap_unordered(pfunc, items),
-            desc=desc,
-            total=len(items)
-        )
-
-
+        yield from tqdm(pool.imap_unordered(pfunc, items), desc=desc, total=len(items))
 
 
 def get_recipes(recipe_folder, package="*", exclude=None):
@@ -378,13 +417,12 @@ def get_recipes(recipe_folder, package="*", exclude=None):
     if exclude is None:
         exclude = []
     for p in package:
-        logger.debug("get_recipes(%s, package='%s'): %s",
-                     recipe_folder, package, p)
+        logger.debug("get_recipes(%s, package='%s'): %s", recipe_folder, package, p)
         path = os.path.join(recipe_folder, p)
         for new_dir in glob.glob(path):
             meta_yaml_found_or_excluded = False
             for dir_path, dir_names, file_names in os.walk(new_dir):
-                if any(fnmatch.fnmatch(dir_path[len(recipe_folder):], pat) for pat in exclude):
+                if any(fnmatch.fnmatch(dir_path[len(recipe_folder) :], pat) for pat in exclude):
                     meta_yaml_found_or_excluded = True
                     continue
                 if "meta.yaml" in file_names:
@@ -394,7 +432,7 @@ def get_recipes(recipe_folder, package="*", exclude=None):
                 logger.warn(
                     "No meta.yaml found in %s."
                     " If you want to ignore this directory, add it to the blocklist.",
-                    new_dir
+                    new_dir,
                 )
                 yield new_dir
 
@@ -402,12 +440,12 @@ def get_recipes(recipe_folder, package="*", exclude=None):
 def get_blocklist(config: Dict[str, Any], recipe_folder: str) -> set:
     "Return list of recipes to skip from blocklists"
     blocklist = set()
-    for p in config.get('blocklists', []):
+    for p in config.get("blocklists", []):
         blocklist.update(
             [
                 os.path.relpath(i.strip(), recipe_folder)
-                for i in open(p, encoding='utf8')
-                if not i.startswith('#') and i.strip()
+                for i in open(p, encoding="utf8")
+                if not i.startswith("#") and i.strip()
             ]
         )
     return blocklist
@@ -425,7 +463,7 @@ def validate_config(config):
     """
     if not isinstance(config, dict):
         config = yaml.safe_load(open(config))
-    fn = os.path.abspath(os.path.dirname(__file__)) + '/config.schema.yaml'
+    fn = os.path.abspath(os.path.dirname(__file__)) + "/config.schema.yaml"
     schema = yaml.safe_load(open(fn))
     validate(config, schema)
 
@@ -442,12 +480,16 @@ def load_config(path):
     validate_config(path)
 
     if isinstance(path, dict):
+
         def relpath(p):
             return p
+
         config = path
     else:
+
         def relpath(p):
             return os.path.join(os.path.dirname(path), p)
+
         config = yaml.safe_load(open(path))
 
     def get_list(key):
@@ -457,22 +499,18 @@ def load_config(path):
             return []
         return value
 
-    default_config = {
-        'blocklists': [],
-        'channels': ['defaults'],
-        'requirements': None
-    }
-    if 'blocklists' in config:
-        config['blocklists'] = [relpath(p) for p in get_list('blocklists')]
-    if 'channels' in config:
-        config['channels'] = get_list('channels')
+    default_config = {"blocklists": [], "channels": ["defaults"], "requirements": None}
+    if "blocklists" in config:
+        config["blocklists"] = [relpath(p) for p in get_list("blocklists")]
+    if "channels" in config:
+        config["channels"] = get_list("channels")
 
     default_config.update(config)
 
     # store architecture information
-    data_path = Path(__file__).parent / 'data'
-    for arch_config_path in data_path.glob('cbc_*.yaml'):
-        arch = arch_config_path.stem.split('cbc_')[1]
+    data_path = Path(__file__).parent / "data"
+    for arch_config_path in data_path.glob("cbc_*.yaml"):
+        arch = arch_config_path.stem.split("cbc_")[1]
         with open(arch_config_path) as text:
             default_config[arch] = yaml.safe_load(text.read())
 

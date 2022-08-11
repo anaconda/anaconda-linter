@@ -1,7 +1,9 @@
+# from pathlib import Path
+
+from setuptools import setup
+
 import conda_lint
 
-from pathlib import Path
-from setuptools import setup
 
 def main():
     run_lint = dict(
@@ -22,11 +24,7 @@ def main():
                 "conda-lint = conda_lint.cli.cli:main",
             ]
         },
-        install_requires=[
-            "ruamel.yaml>=0.16.1",
-            "license-expression",
-            "jinja2>=3.0.3"
-        ],
+        install_requires=["ruamel.yaml>=0.16.1", "license-expression", "jinja2>=3.0.3"],
     )
     setup(**run_lint)
 
