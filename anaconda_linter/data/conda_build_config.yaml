@@ -239,4 +239,3 @@ zip_keys:
     - fortran_compiler_version  # [win]
     - python                    # [win]
     - geos                      # [win]
-py: 1
