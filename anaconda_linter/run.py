@@ -1,11 +1,11 @@
-import lint
 import os
 import sys
+
+import lint
 import utils
+
 import argparse
 import textwrap
-
-from typing import List
 
 
 def parseArguments(argv: list[str]) -> argparse.Namespace:
@@ -30,10 +30,10 @@ def parseArguments(argv: list[str]) -> argparse.Namespace:
 
     return parser.parse_args(argv)
 
+
 if __name__ == "__main__":
     config_file = os.path.abspath(os.path.dirname(__file__) + "/config.yaml")
     config = utils.load_config(config_file)
-
     args = vars(parseArguments(sys.argv[1:]))
     aggregatePath = args['aggregatePath']
     recipes = [f"{aggregatePath}/{args['feedstockDir']}/recipe/"]

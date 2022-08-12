@@ -36,4 +36,3 @@ This new package is more inspired by bioconda's [linter](https://github.com/bioc
 Some of the code for suggesting hints comes from [Peter Norvig](http://norvig.com/spell-correct.html).
 
 This README will continue to be fleshed out as time goes on.
-
