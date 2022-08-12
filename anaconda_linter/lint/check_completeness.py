@@ -189,6 +189,9 @@ class missing_license_url(LintCheck):
 
     """
 
+
+    severity = WARNING
+
     def check_recipe(self, recipe):
         if not recipe.get('about/license_url', ''):
             self.message(section='about')
