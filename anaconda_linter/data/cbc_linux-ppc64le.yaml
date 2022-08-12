@@ -12,3 +12,4 @@ osx: 0
 linux: 1
 linux-ppc64le: 1
 ppc64le: 1
+py: 1

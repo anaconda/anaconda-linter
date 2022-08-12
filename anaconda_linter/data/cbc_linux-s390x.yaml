@@ -12,3 +12,4 @@ osx: 0
 linux: 1
 linux-s390x: 1
 s390x: 1
+py: 1

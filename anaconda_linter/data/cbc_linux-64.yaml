@@ -12,3 +12,4 @@ osx: 0
 linux: 1
 linux-64: 1
 x86_64: 1
+py: 1
