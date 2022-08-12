@@ -351,8 +351,12 @@ class Recipe:
         for line in data.splitlines():
             if (match := re.search(r"[^#].*#\s*\[([^\]]*)\]", line)) is not None:
                 cond_str = match.group(1)
-                if not eval(cond_str, None, selector_dict):
-                    line = f"# {line}"
+                try:
+                    if not eval(cond_str, None, selector_dict):
+                        line = f"# {line}"
+                except Exception:
+                    # todo: load selector with cbc content
+                    continue
             updated_data.append(line)
         return updated_data
 

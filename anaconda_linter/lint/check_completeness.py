@@ -5,6 +5,8 @@ Verify that the recipe is not missing anything essential.
 
 import os
 
+import conda_build.license_family
+
 # from . import ERROR, INFO
 from . import WARNING, LintCheck
 
@@ -68,6 +70,61 @@ class missing_license(LintCheck):
             self.message(section="about")
 
 
+class missing_license_file(LintCheck):
+    """The recipe is missing the ``about/license_file`` key.
+
+    Please add::
+
+        about:
+           license_file: <license file name>
+
+    or::
+
+        about:
+           license_file:
+                - <license file name>
+                - <license file name>
+
+    """
+
+    def check_recipe(self, recipe):
+        if not recipe.get("about/license_file", ""):
+            self.message(section="about")
+
+
+class missing_license_family(LintCheck):
+    """The recipe is missing the ``about/license_family`` key.
+
+    Please add::
+
+        about:
+           license_family: <license_family>
+
+    """
+
+    def check_recipe(self, recipe):
+        if not recipe.get("about/license_family", ""):
+            self.message(section="about")
+
+
+class invalid_license_family(LintCheck):
+    """The recipe has an incorrect ``about/license_family`` value.
+
+    Please change::
+
+        about:
+           license_family: <license_family>
+
+    """
+
+    def check_recipe(self, recipe):
+        license_family = recipe.get("about/license_family", "")
+        if license_family and not license_family.lower() in [
+            x.lower() for x in conda_build.license_family.allowed_license_families
+        ]:
+            self.message(section="about")
+
+
 class missing_tests(LintCheck):
     """The recipe is missing tests.
 
@@ -119,6 +176,27 @@ class missing_hash(LintCheck):
             self.message(section=section)
 
 
+class missing_source(LintCheck):
+    """The recipe is missing a URL for the source
+
+    Please add::
+
+        source:
+            url: <URL to source>
+
+    Or::
+        source:
+            - url: <URL to source>
+
+    """
+
+    source_types = ["url", "git_url"]
+
+    def check_source(self, source, section):
+        if not any(source.get(chk) for chk in self.source_types):
+            self.message(section=section)
+
+
 class missing_doc_url(LintCheck):
     """The recipe is missing a doc_url
 
@@ -163,6 +241,23 @@ class missing_dev_url(LintCheck):
 
     def check_recipe(self, recipe):
         if not recipe.get("about/dev_url", ""):
+            self.message(section="about")
+
+
+class missing_license_url(LintCheck):
+    """The recipe is missing a license_url
+
+    Please add::
+
+        about:
+            dev_url: some-dev-url
+
+    """
+
+    severity = WARNING
+
+    def check_recipe(self, recipe):
+        if not recipe.get("about/license_url", ""):
             self.message(section="about")
 
 

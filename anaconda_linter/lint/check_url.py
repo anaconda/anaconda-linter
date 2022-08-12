@@ -1,77 +1,99 @@
 """
 Check URL
 
-Verify that the url sent is reachable
-
-We assume that a URL exist
+Verify that the URLs in the recipe are valid
 """
 
-import urllib
-from urllib import request
-from urllib.error import HTTPError
+from utils import check_url
 
-class check_url:
+from . import LintCheck
+
+
+class invalid_source_url(LintCheck):
+    """The license_url is not valid.
+
+    Please add a valid URL.
+
     """
-    The following class verifies if a url is valid or not
 
-    Please add a valid url:
+    def check_recipe(self, recipe):
+        url = recipe.get("source/url", "")
+        if url:
+            response_data = check_url(url)
+            if response_data["code"] < 0 or response_data["code"] >= 400:
+                self.message(section="source")
+
+
+class invalid_home(LintCheck):
+    """The home URL is not valid.
+
+    Please add a valid URL.
 
     """
 
-    def __init__(self,url):
-        self.url=url
-
-    def validate_url(url):
-        """
-        validate a url to see if a response is available  
-        """
-        
-        print("\n------------------")
-        print("verify the url")
-        print(url)
-
-        try:
-
-            response = request.urlopen(url)
-            #response = request.
-            response_code = response.code
-            print("the response code is : {0}".format(response_code))
-            
-            # compare urls to see if a redirect has occured
-            final_url = response.url 
-            if(url != final_url):
-                print("Warning: The URL is a Redirect")
-            print("----------------")
-
-        except HTTPError as e:
-                        # display the internal HTTP error
-            print(e.reason)
-            response_error = e.code
-            print("Error: the response code is: {0}".format(response_error))
-            response_error = 400
-            print("----------------")
-        except (ValueError) as e:
-            # display the internal HTTP error
-            print(e)
-            response_error = "Invalid URL"
-            print("Error: the response code is: {0}".format(response_error))
-            print("----------------")
+    def check_recipe(self, recipe):
+        url = recipe.get("about/home", "")
+        if url:
+            response_data = check_url(url)
+            if response_data["code"] < 0 or response_data["code"] >= 400:
+                self.message(section="about")
 
 
+class invalid_doc_url(LintCheck):
+    """The doc_url is not valid.
 
-# check if the url is a redirect
+    Please add a valid URL.
+
+    """
+
+    def check_recipe(self, recipe):
+        url = recipe.get("about/doc_url", "")
+        if url:
+            response_data = check_url(url)
+            if response_data["code"] < 0 or response_data["code"] >= 400:
+                self.message(section="about")
 
 
-# check if the url passes
-url1 = "https://www.google.com"
-url2 = "https://github.com/conda-forg"
-url3 = "http://astroid.readthedocs.io/en/latest/?badge=latest"
-url4 = "google.com"
+class invalid_doc_source_url(LintCheck):
+    """The doc_source_url is not valid.
+
+    Please add a valid URL.
+
+    """
+
+    def check_recipe(self, recipe):
+        url = recipe.get("about/doc_source_url", "")
+        if url:
+            response_data = check_url(url)
+            if response_data["code"] < 0 or response_data["code"] >= 400:
+                self.message(section="about")
 
 
-if __name__ == "__main__":
+class invalid_dev_url(LintCheck):
+    """The dev_url is not valid.
 
-    check_url.validate_url(url1)
-    check_url.validate_url(url2)
-    check_url.validate_url(url3)
-    check_url.validate_url(url4)
+    Please add a valid URL.
+
+    """
+
+    def check_recipe(self, recipe):
+        url = recipe.get("about/dev_url", "")
+        if url:
+            response_data = check_url(url)
+            if response_data["code"] < 0 or response_data["code"] >= 400:
+                self.message(section="about")
+
+
+class invalid_license_url(LintCheck):
+    """The license_url is not valid.
+
+    Please add a valid URL.
+
+    """
+
+    def check_recipe(self, recipe):
+        url = recipe.get("about/license_url", "")
+        if url:
+            response_data = check_url(url)
+            if response_data["code"] < 0 or response_data["code"] >= 400:
+                self.message(section="about")

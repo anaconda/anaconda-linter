@@ -30,13 +30,16 @@ APSL-1.0
 APSL-1.1
 APSL-1.2
 APSL-2.0
+Arphic-1999
 Artistic-1.0
 Artistic-1.0-cl8
 Artistic-1.0-Perl
 Artistic-2.0
+Baekmuk
 Bahyph
 Barr
 Beerware
+Bitstream-Vera
 BitTorrent-1.0
 BitTorrent-1.1
 blessing
@@ -76,6 +79,7 @@ CC-BY-2.5-AU
 CC-BY-3.0
 CC-BY-3.0-AT
 CC-BY-3.0-DE
+CC-BY-3.0-IGO
 CC-BY-3.0-NL
 CC-BY-3.0-US
 CC-BY-4.0
@@ -267,7 +271,10 @@ LPPL-1.1
 LPPL-1.2
 LPPL-1.3a
 LPPL-1.3c
+LZMA-SDK-9.11-to-9.20
+LZMA-SDK-9.22
 MakeIndex
+Minpack
 MirOS
 MIT
 MIT-0
@@ -279,11 +286,14 @@ MIT-Modern-Variant
 MIT-open-group
 MITNFA
 Motosoto
+mpi-permissive
 mpich2
 MPL-1.0
 MPL-1.1
 MPL-2.0
 MPL-2.0-no-copyleft-exception
+mplus
+MS-LPL
 MS-PL
 MS-RL
 MTLL
@@ -301,6 +311,7 @@ Net-SNMP
 NetCDF
 Newsletr
 NGPL
+NICTA-1.0
 NIST-PD
 NIST-PD-fallback
 NLOD-1.0
@@ -372,6 +383,7 @@ PSF-2.0
 psfrag
 psutils
 Python-2.0
+Python-2.0.1
 Qhull
 QPL-1.0
 Rdisc
