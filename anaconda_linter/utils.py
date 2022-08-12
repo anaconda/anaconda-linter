@@ -1,7 +1,8 @@
 """
 Utility Functions and Classes
+
 This module collects small pieces of code used throughout
-:py:mod:`bioconda_utils`.
+:py:mod:`anaconda_linter`.
 """
 
 import fnmatch
@@ -16,6 +17,7 @@ from multiprocessing import Pool
 from pathlib import Path
 from threading import Thread
 from typing import Any, Dict, List, Sequence
+import urllib
 
 # FIXME(upstream): For conda>=4.7.0 initialize_logging is (erroneously) called
 #                  by conda.core.index.get_index which messes up our logging.
@@ -519,3 +521,38 @@ def load_config(path):
                     default_config[arch].update(yaml.safe_load(text.read()))
 
     return default_config
+
+
+def check_url(url):
+    """
+    Validate a URL to see if a response is available
+
+    Parameters
+    ----------
+    url: str
+        URL to validate
+
+    Return
+    ------
+    response_data: dict
+        Limited set of response data
+    """
+
+    response_data = {"url": url}
+    try:
+        response = urllib.request.urlopen(url)
+        if (url != response.url):  # For redirects
+            response_data["code"] = 301
+            response_data["message"] = "URL redirects"
+            response_data["url"] = response.url
+        else:
+            response_data["code"] = response.code
+            response_data["message"] = "URL valid"
+    except urllib.error.HTTPError as e:
+        response_data["code"] = e.code
+        response_data["message"] = e.reason
+    except Exception as e:
+        response_data["code"] = -1
+        response_data["message"] = e.reason
+
+    return response_data
