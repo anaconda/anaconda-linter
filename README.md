@@ -6,7 +6,7 @@ that packages' meta.yaml files adhere to certain Anaconda standards.
 ## Installation
 1. conda env create -f environment.yml
 2. conda activate linter
-3. *Currently*: Navigate to the anaconda_linter directory and run `python run.py base/directory/of/file feedstock_name`.
+3. *Currently*: Navigate to the anaconda_linter directory and run `python run.py base/directory/of/feedstock feedstockname-feedstock`.
 
 ## Usage
 TBD
@@ -17,8 +17,8 @@ navigate into the `anaconda_linter` folder:
 `cd anaconda_linter`
 
 execute the run.py file:
-`python run.py ../tests bad` - some tests fail
-`python run.py ../tests good` - all tests pass
+`python run.py ../tests bad-feedstock` - some tests fail
+`python run.py ../tests good-feedstock` - all tests pass
 
 ## TODO:
 - Create a Makefile to auto-create a conda env and download dependencies
