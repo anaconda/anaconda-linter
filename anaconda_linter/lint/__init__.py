@@ -476,7 +476,7 @@ class Linter:
         self,
         config: Dict,
         recipe_folder: str,
-        verbose: bool,
+        verbose: bool = False,
         exclude: List[str] = None,
         nocatch: bool = False,
     ) -> None:
