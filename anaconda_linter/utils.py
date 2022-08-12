@@ -498,7 +498,7 @@ def check_url(url):
     response_data = {"url": url}
     try:
         response = urllib.request.urlopen(url)
-        if (url != respons.url):  # For redirects
+        if (url != response.url):  # For redirects
             response_data["code"] = 301
             response_data["message"] = "URL redirects"
             response_data["url"] = response.url
