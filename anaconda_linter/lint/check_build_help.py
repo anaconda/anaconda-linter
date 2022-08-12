@@ -141,8 +141,7 @@ class cython_needs_compiler(LintCheck):
             self.message()
 
 class avoid_noarch(LintCheck):
-    """noarch packages should be avoided because it is difficult to
-        assess if a package actually includes no architecture specific binaries.
+    """noarch packages should be avoided
 
     Please remove::
 
@@ -160,6 +159,8 @@ class avoid_noarch(LintCheck):
             run:
                 - python
 
+    noarch packages should be avoided because it is difficult to
+    assess if a package actually includes no architecture specific binaries.
     Note:: Keep noarch if this is a rebuild of a package version
     that is currently noarch. 
 
