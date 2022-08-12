@@ -140,6 +140,7 @@ class cython_needs_compiler(LintCheck):
         if "cython" in deps and "compiler_c" not in deps:
             self.message()
 
+
 class avoid_noarch(LintCheck):
     """noarch packages should be avoided
 
@@ -162,12 +163,12 @@ class avoid_noarch(LintCheck):
     noarch packages should be avoided because it is difficult to
     assess if a package actually includes no architecture specific binaries.
     Note:: Keep noarch if this is a rebuild of a package version
-    that is currently noarch. 
+    that is currently noarch.
 
     """
 
     severity = WARNING
 
     def check_recipe(self, recipe):
-        if recipe.get('build/noarch', ''):
-            self.message(section='build')
+        if recipe.get("build/noarch", ""):
+            self.message(section="build")

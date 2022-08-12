@@ -6,7 +6,7 @@ Verify that the URLs in the recipe are valid
 
 from utils import check_url
 
-from . import LintCheck, ERROR, WARNING, INFO
+from . import LintCheck
 
 
 class invalid_source_url(LintCheck):
@@ -15,12 +15,13 @@ class invalid_source_url(LintCheck):
     Please add a valid URL.
 
     """
+
     def check_recipe(self, recipe):
-        url = recipe.get('source/url', '')
+        url = recipe.get("source/url", "")
         if url:
             response_data = check_url(url)
-            if response_data['code'] < 0 or response_data['code'] >= 400:
-                self.message(section='source')
+            if response_data["code"] < 0 or response_data["code"] >= 400:
+                self.message(section="source")
 
 
 class invalid_home(LintCheck):
@@ -31,11 +32,11 @@ class invalid_home(LintCheck):
     """
 
     def check_recipe(self, recipe):
-        url = recipe.get('about/home', '')
+        url = recipe.get("about/home", "")
         if url:
             response_data = check_url(url)
-            if response_data['code'] < 0 or response_data['code'] >= 400:
-                self.message(section='about')
+            if response_data["code"] < 0 or response_data["code"] >= 400:
+                self.message(section="about")
 
 
 class invalid_doc_url(LintCheck):
@@ -46,11 +47,11 @@ class invalid_doc_url(LintCheck):
     """
 
     def check_recipe(self, recipe):
-        url = recipe.get('about/doc_url', '')
+        url = recipe.get("about/doc_url", "")
         if url:
             response_data = check_url(url)
-            if response_data['code'] < 0 or response_data['code'] >= 400:
-                self.message(section='about')
+            if response_data["code"] < 0 or response_data["code"] >= 400:
+                self.message(section="about")
 
 
 class invalid_doc_source_url(LintCheck):
@@ -61,11 +62,11 @@ class invalid_doc_source_url(LintCheck):
     """
 
     def check_recipe(self, recipe):
-        url = recipe.get('about/doc_source_url', '')
+        url = recipe.get("about/doc_source_url", "")
         if url:
             response_data = check_url(url)
-            if response_data['code'] < 0 or response_data['code'] >= 400:
-                self.message(section='about')
+            if response_data["code"] < 0 or response_data["code"] >= 400:
+                self.message(section="about")
 
 
 class invalid_dev_url(LintCheck):
@@ -74,12 +75,13 @@ class invalid_dev_url(LintCheck):
     Please add a valid URL.
 
     """
+
     def check_recipe(self, recipe):
-        url = recipe.get('about/dev_url', '')
+        url = recipe.get("about/dev_url", "")
         if url:
             response_data = check_url(url)
-            if response_data['code'] < 0 or response_data['code'] >= 400:
-                self.message(section='about')
+            if response_data["code"] < 0 or response_data["code"] >= 400:
+                self.message(section="about")
 
 
 class invalid_license_url(LintCheck):
@@ -88,9 +90,10 @@ class invalid_license_url(LintCheck):
     Please add a valid URL.
 
     """
+
     def check_recipe(self, recipe):
-        url = recipe.get('about/license_url', '')
+        url = recipe.get("about/license_url", "")
         if url:
             response_data = check_url(url)
-            if response_data['code'] < 0 or response_data['code'] >= 400:
-                self.message(section='about')
+            if response_data["code"] < 0 or response_data["code"] >= 400:
+                self.message(section="about")

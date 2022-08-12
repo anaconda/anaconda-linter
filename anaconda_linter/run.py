@@ -1,11 +1,10 @@
+import argparse
 import os
 import sys
+import textwrap
 
 import lint
 import utils
-
-import argparse
-import textwrap
 
 
 def parseArguments(argv: list[str]) -> argparse.Namespace:
@@ -14,19 +13,27 @@ def parseArguments(argv: list[str]) -> argparse.Namespace:
             raise argparse.ArgumentTypeError("The specified directory does not exist")
         return os.path.abspath(value)
 
-    parser = argparse.ArgumentParser(prog="anaconda-lint",
+    parser = argparse.ArgumentParser(
+        prog="anaconda-lint",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog=textwrap.dedent('''\
+        epilog=textwrap.dedent(
+            """\
                 anaconda-lint:
-                Performs linting on conda recipes.'''))
-    parser.add_argument("aggregatePath",
-        type=checkPath,
-        help="Location of the aggregate directory.")
-    parser.add_argument("feedstockDir",
-        help="Feedstock directory, located inside the aggregate directory.")
-    parser.add_argument("-v", "--verbose",
+                Performs linting on conda recipes."""
+        ),
+    )
+    parser.add_argument(
+        "aggregatePath", type=checkPath, help="Location of the aggregate directory."
+    )
+    parser.add_argument(
+        "feedstockDir", help="Feedstock directory, located inside the aggregate directory."
+    )
+    parser.add_argument(
+        "-v",
+        "--verbose",
         action="store_true",
-        help="Enable verbose output. This displays all of the checks that the linter is running.")
+        help="Enable verbose output. This displays all of the checks that the linter is running.",
+    )
 
     return parser.parse_args(argv)
 
@@ -35,10 +42,10 @@ if __name__ == "__main__":
     config_file = os.path.abspath(os.path.dirname(__file__) + "/config.yaml")
     config = utils.load_config(config_file)
     args = vars(parseArguments(sys.argv[1:]))
-    aggregatePath = args['aggregatePath']
+    aggregatePath = args["aggregatePath"]
     recipes = [f"{aggregatePath}/{args['feedstockDir']}/recipe/"]
-    linter = lint.Linter(config, aggregatePath, args['verbose'], None, True)
-    result = linter.lint(recipes, 'linux-64')
+    linter = lint.Linter(config, aggregatePath, args["verbose"], None, True)
+    result = linter.lint(recipes, "linux-64")
     messages = linter.get_messages()
 
     if messages:
