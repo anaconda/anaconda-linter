@@ -36,8 +36,7 @@ if __name__ == "__main__":
 
     args = vars(parseArguments(sys.argv[1:]))
     aggregatePath = args['aggregatePath']
-    # TODO: Make our running of this a bit more robust
-    recipes = [f"{aggregatePath}/{args['feedstockDir']}-feedstock/recipe/"]
+    recipes = [f"{aggregatePath}/{args['feedstockDir']}/recipe/"]
     linter = lint.Linter(config, aggregatePath, args['verbose'], None, True)
     result = linter.lint(recipes, 'linux-64')
     messages = linter.get_messages()
