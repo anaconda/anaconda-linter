@@ -176,6 +176,11 @@ class missing_source(LintCheck):
 
         source:
             url: <URL to source>
+
+    Or::
+        source:
+            - url: <URL to source>
+
     """
 
     source_types = ["url", "git_url"]
