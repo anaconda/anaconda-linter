@@ -49,7 +49,7 @@ class incorrect_license(LintCheck):
                 something other than None.
         """
         message = self.make_message(self.recipe, section, fname, line, data is not None)
-
+        # TODO: Find a better way to add this hint, probably as its own LintMessage
         if hint:
             print(hint)
         if data is not None and self.try_fix and self.fix(message, data):
@@ -93,8 +93,9 @@ class incorrect_license(LintCheck):
                 closest = utils.find_closest_match(license)
                 if closest:
                     hint = (
-                        f"HINT: Current license value found: '{license}'. "
-                        f"Did you mean: '{closest}'?"
+                        "\n\033[96mHINT\033[0m: Current license value found: "
+                        f"\033[1;31m'{license}'\033[0m. "
+                        f"Did you mean: \033[92m'{closest}'\033[0m?"
                     )
                 self.message(section="about/license", hint=hint)
         non_spdx_exceptions = set(parsed_exceptions) - expected_exceptions
