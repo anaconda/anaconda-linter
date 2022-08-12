@@ -83,11 +83,8 @@ Module Autodocs
 
    check_build_help
    check_completeness
-   check_deprecation
-   check_noarch
-   check_policy
-   check_repo
    check_syntax
+   check_url
 
 """
 
