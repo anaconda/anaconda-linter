@@ -9,6 +9,20 @@ from utils import check_url
 from . import LintCheck, ERROR, WARNING, INFO
 
 
+class invalid_source_url(LintCheck):
+    """The license_url is not valid.
+
+    Please add a valid URL.
+
+    """
+    def check_recipe(self, recipe):
+        url = recipe.get('source/url', '')
+        if url:
+            response_data = check_url(url)
+            if response_data['code'] < 0 or response_data['code'] >= 400:
+                self.message(section='source')
+
+
 class invalid_home(LintCheck):
     """The home URL is not valid.
 
