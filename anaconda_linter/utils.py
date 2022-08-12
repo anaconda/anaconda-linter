@@ -510,11 +510,15 @@ def load_config(path):
     default_config.update(config)
 
     # store architecture information
-    data_path = Path(__file__).parent / "data"
-    for arch_config_path in data_path.glob("cbc_*.yaml"):
-        arch = arch_config_path.stem.split("cbc_")[1]
-        with open(arch_config_path) as text:
-            default_config[arch] = yaml.safe_load(text.read())
+    with open(Path(__file__).parent / 'data' / 'cbc_default.yaml') as text:
+        init_arch = yaml.safe_load(text.read())
+        data_path = Path(__file__).parent / 'data'
+        for arch_config_path in data_path.glob('cbc_*.yaml'):
+            arch = arch_config_path.stem.split('cbc_')[1]
+            if arch != 'default':
+                with open(arch_config_path) as text:
+                    default_config[arch] = init_arch
+                    default_config[arch].update(yaml.safe_load(text.read()))
 
     return default_config
 
