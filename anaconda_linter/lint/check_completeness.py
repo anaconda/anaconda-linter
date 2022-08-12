@@ -120,22 +120,6 @@ class invalid_license_family(LintCheck):
         if license_family and not license_family.lower() in [x.lower() for x in conda_build.license_family.allowed_license_families]:
             self.message(section="about")
 
-class missing_license_url(LintCheck):
-    """The recipe is missing the ``about/license_url`` key.
-
-    Please add::
-
-        about:
-           license_url: <license_url>
-                
-    """
-
-    severity = WARNING
-
-    def check_recipe(self, recipe):
-        if not recipe.get("about/license_url", ""):
-            self.message(section="about")
-
 class missing_tests(LintCheck):
     """The recipe is missing tests.
 
