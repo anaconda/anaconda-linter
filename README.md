@@ -1,4 +1,4 @@
-# Conda Lint
+# Anaconda Linter
 
 This package is currently a very rough draft of a pure Python linter specifically to make sure
 that packages' meta.yaml files adhere to certain Anaconda standards.
