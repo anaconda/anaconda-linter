@@ -153,20 +153,6 @@ class missing_tests(LintCheck):
         else:
             self.message()
 
-
-class missing_source(LintCheck):
-    """The recipe is missing a URL for the source
-
-    Please add::
-
-        source:
-            url: <URL to source>
-    """
-    def check_recipe(self, recipe):
-        if not recipe.get("source/url", ""):
-            self.message(section="source")
-
-
 class missing_hash(LintCheck):
     """The recipe is missing a checksum for a source file
 
@@ -183,6 +169,25 @@ class missing_hash(LintCheck):
         if not any(source.get(chk) for chk in self.checksum_names):
             self.message(section=section)
 
+class missing_source(LintCheck):
+    """The recipe is missing a URL for the source
+
+    Please add::
+
+        source:
+            url: <URL to source>
+
+    Or::
+        source:
+            - url: <URL to source>
+
+    """
+
+    source_types = ["url", "git_url"]
+
+    def check_source(self, source, section):
+        if not any(source.get(chk) for chk in self.source_types):
+            self.message(section=section)
 
 class missing_doc_url(LintCheck):
     """The recipe is missing a doc_url
