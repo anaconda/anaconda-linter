@@ -1,0 +1,11 @@
+name: linter
+channels:
+  - defaults
+dependencies:
+  - python
+  - tqdm
+  - pyyaml
+  - jinja2
+  - conda-build
+  - jsonschema
+  - networkx

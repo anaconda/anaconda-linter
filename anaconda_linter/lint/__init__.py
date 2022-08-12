@@ -487,6 +487,7 @@ class Linter:
         self.skip = self.load_skips()
         self.exclude = exclude or []
         self.nocatch = nocatch
+        self.verbose = verbose
         self._messages = []
 
         dag = nx.DiGraph()
@@ -630,7 +631,13 @@ class Linter:
         messages = []
         for check in self.checks_ordered:
             if str(check) in checks_to_skip:
+                if self.verbose:
+                    print("Skipping check: " + check)
                 continue
+
+            if self.verbose:
+                print("Running check: " + check)
+
             try:
                 res = self.check_instances[check].run(recipe, fix)
             except Exception:
