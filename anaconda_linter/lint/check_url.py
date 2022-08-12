@@ -8,6 +8,7 @@ from utils import check_url
 
 from . import LintCheck, ERROR, WARNING, INFO
 
+
 class invalid_home(LintCheck):
     """The home URL is not valid.
 
