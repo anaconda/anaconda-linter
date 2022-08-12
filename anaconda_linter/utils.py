@@ -12,12 +12,13 @@ import os
 import queue
 import subprocess as sp
 import sys
+import urllib
+from collections import Counter
 from functools import partial
 from multiprocessing import Pool
 from pathlib import Path
 from threading import Thread
 from typing import Any, Dict, List, Sequence
-import urllib
 
 # FIXME(upstream): For conda>=4.7.0 initialize_logging is (erroneously) called
 #                  by conda.core.index.get_index which messes up our logging.
@@ -510,12 +511,12 @@ def load_config(path):
     default_config.update(config)
 
     # store architecture information
-    with open(Path(__file__).parent / 'data' / 'cbc_default.yaml') as text:
+    with open(Path(__file__).parent / "data" / "cbc_default.yaml") as text:
         init_arch = yaml.safe_load(text.read())
-        data_path = Path(__file__).parent / 'data'
-        for arch_config_path in data_path.glob('cbc_*.yaml'):
-            arch = arch_config_path.stem.split('cbc_')[1]
-            if arch != 'default':
+        data_path = Path(__file__).parent / "data"
+        for arch_config_path in data_path.glob("cbc_*.yaml"):
+            arch = arch_config_path.stem.split("cbc_")[1]
+            if arch != "default":
                 with open(arch_config_path) as text:
                     default_config[arch] = init_arch
                     default_config[arch].update(yaml.safe_load(text.read()))
@@ -541,7 +542,7 @@ def check_url(url):
     response_data = {"url": url}
     try:
         response = urllib.request.urlopen(url)
-        if (url != response.url):  # For redirects
+        if url != response.url:  # For redirects
             response_data["code"] = 301
             response_data["message"] = "URL redirects"
             response_data["url"] = response.url
@@ -556,3 +557,52 @@ def check_url(url):
         response_data["message"] = e.reason
 
     return response_data
+
+
+def generate_correction(pkg_license, compfile=Path("data", "licenses.txt")):
+    with open(compfile) as f:
+        words = f.readlines()
+
+    words = [w.strip("\n") for w in words]
+    WORDS = Counter(words)
+
+    def P(word, N=sum(WORDS.values())):
+        "Probability of `word`."
+        return WORDS[word] / N
+
+    def correction(word):
+        "Most probable spelling correction for word."
+        return max(candidates(word), key=P)
+
+    def candidates(word):
+        "Generate possible spelling corrections for word."
+        return known([word]) or known(edits1(word)) or known(edits2(word)) or [word]
+
+    def known(words):
+        "The subset of `words` that appear in the dictionary of WORDS."
+        return {w for w in words if w in WORDS}
+
+    def edits1(word):
+        "All edits that are one edit away from `word`."
+        letters = "abcdefghijklmnopqrstuvwxyz"
+        symbols = "-.0123456789"
+        letters += letters.upper() + symbols
+        splits = [(word[:i], word[i:]) for i in range(len(word) + 1)]
+        deletes = [L + R[1:] for L, R in splits if R]
+        transposes = [L + R[1] + R[0] + R[2:] for L, R in splits if len(R) > 1]
+        replaces = [L + c + R[1:] for L, R in splits if R for c in letters]
+        inserts = [L + c + R for L, R in splits for c in letters]
+        return set(deletes + transposes + replaces + inserts)
+
+    def edits2(word):
+        "All edits that are two edits away from `word`."
+        return (e2 for e1 in edits1(word) for e2 in edits1(e1))
+
+    return correction(pkg_license)
+
+
+def find_closest_match(string: str) -> str:
+    closest_match = generate_correction(string)
+    if closest_match == string:
+        return None
+    return closest_match
