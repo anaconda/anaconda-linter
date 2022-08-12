@@ -36,7 +36,7 @@ requirements:
     - jpeg
     - zlib
     # Optional dependencies
-    # (also can be incuded libwebp, libimagequant, libraqm, 
+    # (also can be incuded libwebp, libimagequant, libraqm,
     # libxcb, openjpeg (it causes build errors on win32),
     # see https://pillow.readthedocs.io/en/latest/installation.html#external-libraries)
     - freetype
@@ -67,7 +67,7 @@ test:
 about:
   home: https://pillow.readthedocs.io
   license: LicenseRef-PIL
-  license_family: Other 
+  license_family: Other
   license_file: LICENSE
   summary: Pillow is the friendly PIL fork by Alex Clark and Contributors
   description: |
