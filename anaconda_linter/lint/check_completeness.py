@@ -4,6 +4,7 @@ Verify that the recipe is not missing anything essential.
 """
 
 import os
+import conda_build.license_family
 
 # from . import ERROR, INFO
 from . import WARNING, LintCheck
@@ -67,6 +68,73 @@ class missing_license(LintCheck):
         if not recipe.get("about/license", ""):
             self.message(section="about")
 
+
+class missing_license_file(LintCheck):
+    """The recipe is missing the ``about/license_file`` key.
+
+    Please add::
+
+        about:
+           license_file: <license file name>
+
+    or::
+
+        about:
+           license_file: 
+                - <license file name> 
+                - <license file name> 
+
+    """
+
+    def check_recipe(self, recipe):
+        if not recipe.get("about/license_file", ""):
+            self.message(section="about")
+
+
+class missing_license_family(LintCheck):
+    """The recipe is missing the ``about/license_family`` key.
+
+    Please add::
+
+        about:
+           license_family: <license_family>
+                
+    """
+
+    def check_recipe(self, recipe):
+        if not recipe.get("about/license_family", ""):
+            self.message(section="about")
+
+class invalid_license_family(LintCheck):
+    """The recipe has an incorrect ``about/license_family`` value.
+
+    Please change::
+
+        about:
+           license_family: <license_family>
+                
+    """
+
+    def check_recipe(self, recipe):
+        license_family = recipe.get("about/license_family", "")
+        if license_family and not license_family.lower() in [x.lower() for x in conda_build.license_family.allowed_license_families]:
+            self.message(section="about")
+
+class missing_license_url(LintCheck):
+    """The recipe is missing the ``about/license_url`` key.
+
+    Please add::
+
+        about:
+           license_url: <license_url>
+                
+    """
+
+    severity = WARNING
+
+    def check_recipe(self, recipe):
+        if not recipe.get("about/license_url", ""):
+            self.message(section="about")
 
 class missing_tests(LintCheck):
     """The recipe is missing tests.
