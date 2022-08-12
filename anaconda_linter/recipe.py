@@ -354,7 +354,7 @@ class Recipe:
                 try:
                     if not eval(cond_str, None, selector_dict):
                         line = f"# {line}"
-                except:
+                except Exception:
                     # todo: load selector with cbc content
                     continue
             updated_data.append(line)
