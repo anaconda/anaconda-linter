@@ -1,6 +1,6 @@
 SHELL := /bin/bash -o pipefail -o errexit
 
-CONDA_ENV_NAME ?= conda-lint
+CONDA_ENV_NAME ?= anaconda-linter
 
 # Folder for all the build artefacts to be archived by CI.
 ARTIFACTS_PATH ?= artifacts
