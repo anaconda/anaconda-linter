@@ -1,0 +1,7 @@
+__version__ = "0.0.1"
+__author__ = ""
+__email__ = ""
+__license__ = ""
+__summary__ = ""
+__long_description__ = ""
+__url__ = ""

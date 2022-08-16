@@ -1,24 +1,25 @@
-import conda_lint
 from setuptools import setup
+
+import anaconda_linter
 
 
 def main():
     run_lint = dict(
-        name=conda_lint.__name__,
-        version=conda_lint.__version__,
-        author=conda_lint.__author__,
-        author_email=conda_lint.__email__,
-        license=conda_lint.__license__,
-        description=conda_lint.__summary__,
-        long_description=conda_lint.__long_description__,
-        url=conda_lint.__url__,
+        name=anaconda_linter.__name__,
+        version=anaconda_linter.__version__,
+        author=anaconda_linter.__author__,
+        author_email=anaconda_linter.__email__,
+        license=anaconda_linter.__license__,
+        description=anaconda_linter.__summary__,
+        long_description=anaconda_linter.__long_description__,
+        url=anaconda_linter.__url__,
         python_requires=">=3.8",
-        packages=["conda_lint", "conda_lint.cli", "conda_lint.lint"],
-        package_dir={"conda_lint": "conda_lint"},
-        package_data={"conda_lint": ["data/*.txt"]},
+        packages=["anaconda_linter", "anaconda_linter.cli", "anaconda_linter.lint"],
+        package_dir={"anaconda_linter": "anaconda_linter"},
+        package_data={"anaconda_linter": ["data/*.txt"]},
         entry_points={
             "console_scripts": [
-                "conda-lint = conda_lint.cli.cli:main",
+                "conda-lint = anaconda_linter.cli.cli:main",
             ]
         },
         install_requires=["ruamel.yaml>=0.16.1", "license-expression", "jinja2>=3.0.3"],
