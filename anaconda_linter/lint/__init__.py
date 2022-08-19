@@ -510,7 +510,7 @@ class Linter:
 
     def get_messages(self) -> List[LintMessage]:
         """Returns the lint messages collected during linting"""
-        return self._messages
+        return sorted(self._messages, key=lambda d: (d.fname,d.end_line)) 
 
     def clear_messages(self):
         """Clears the lint messages stored in linter"""
