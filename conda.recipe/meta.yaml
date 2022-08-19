@@ -1,0 +1,32 @@
+package:
+  name: anaconda-linter
+  version: 0.0.1
+source:
+  git_url: ../
+build:
+  number: 0
+  script: {{ PYTHON }} -m pip install . --no-deps --ignore-installed --no-cache-dir -vvv
+requirements:
+  host:
+    - python
+    - pip
+    - setuptools
+  run:
+    - python
+    - ruamel.yaml
+    - pyyaml
+    - license-expression
+    - jinja2
+    - tqdm
+    - conda-build
+    - jsonschema
+    - networkx
+test:
+  source_files:
+    - tests
+  requires:
+    - pytest
+    - pytest-cov
+    - pytest-html
+  commands:
+    - python -m pytest -vv tests
