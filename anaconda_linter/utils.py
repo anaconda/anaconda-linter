@@ -546,13 +546,15 @@ def check_url(url):
     else:
         try:
             response = requests.head(url, allow_redirects=False)
-            if response.status_code >=300 and response.status_code <400:
+            if response.status_code >= 300 and response.status_code < 400:
                 origin_domain = requests.utils.urlparse(url).netloc
-                redirect_domain = requests.utils.urlparse(response.headers['Location']).netloc
+                redirect_domain = requests.utils.urlparse(response.headers["Location"]).netloc
                 if origin_domain != redirect_domain:  # For redirects to other domain
                     response_data["code"] = -1
-                    response_data["message"] = f"URL domain redirect {origin_domain} ->  {redirect_domain}"
-                    response_data["url"] = response.headers['Location']
+                    response_data[
+                        "message"
+                    ] = f"URL domain redirect {origin_domain} ->  {redirect_domain}"
+                    response_data["url"] = response.headers["Location"]
             else:
                 response_data["code"] = response.status_code
                 response_data["message"] = "URL valid"
