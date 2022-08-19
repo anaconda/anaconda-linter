@@ -185,6 +185,8 @@ class patch_must_be_in_build(LintCheck):
           - m2-patch    # [win]
     """
 
+    has_patches = False
+    
     def check_source(self, source, section):
         if source.get("patches", ""):
             self.has_patches = True

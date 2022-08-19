@@ -38,7 +38,6 @@ class invalid_url(LintCheck):
             url = recipe.get(url_field, "")
             if url:
                 response_data = check_url(url)
-                print(response_data)
                 if response_data["code"] < 0 or response_data["code"] >= 400:
                     self.__class__.__doc__ = self.__class__.__doc__.format(
                         url, response_data["message"]
