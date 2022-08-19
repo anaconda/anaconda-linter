@@ -5,7 +5,7 @@ on:
     tags:
       - v*
 
-name: Test
+name: Build Conda Package
 
 jobs:
   pre-commit:
