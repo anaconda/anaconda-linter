@@ -12,7 +12,6 @@ import os
 import queue
 import subprocess as sp
 import sys
-import requests
 from collections import Counter
 from functools import partial
 from multiprocessing import Pool
@@ -25,6 +24,7 @@ from typing import Any, Dict, List, Sequence
 # => Prevent custom conda logging init before importing anything conda-related.
 import conda.gateways.logging
 import jinja2
+import requests
 import tqdm as _tqdm
 import yaml
 from conda_build import api
@@ -542,7 +542,7 @@ def check_url(url):
     response_data = {"url": url}
     if url.startswith("http://"):
         response_data["code"] = -1
-        response_data["message"] = f"URL is not https"
+        response_data["message"] = "URL is not https"
     else:
         try:
             response = requests.head(url, allow_redirects=False)
