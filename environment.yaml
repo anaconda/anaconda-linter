@@ -15,6 +15,7 @@ dependencies:
   - conda-build
   - jsonschema
   - networkx
+  - requests
   # test
   - make
   - pytest

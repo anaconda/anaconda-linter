@@ -21,6 +21,7 @@ class invalid_source_url(LintCheck):
         if url:
             response_data = check_url(url)
             if response_data["code"] < 0 or response_data["code"] >= 400:
+                self.__class__.__doc__ += "HINT: {}".format(response_data["message"])
                 self.message(section="source")
 
 
@@ -36,6 +37,7 @@ class invalid_home(LintCheck):
         if url:
             response_data = check_url(url)
             if response_data["code"] < 0 or response_data["code"] >= 400:
+                self.__class__.__doc__ += "HINT: {}".format(response_data["message"])
                 self.message(section="about")
 
 
@@ -51,6 +53,7 @@ class invalid_doc_url(LintCheck):
         if url:
             response_data = check_url(url)
             if response_data["code"] < 0 or response_data["code"] >= 400:
+                self.__class__.__doc__ += "HINT: {}".format(response_data["message"])
                 self.message(section="about")
 
 
@@ -66,6 +69,7 @@ class invalid_doc_source_url(LintCheck):
         if url:
             response_data = check_url(url)
             if response_data["code"] < 0 or response_data["code"] >= 400:
+                self.__class__.__doc__ += "HINT: {}".format(response_data["message"])
                 self.message(section="about")
 
 
@@ -81,6 +85,7 @@ class invalid_dev_url(LintCheck):
         if url:
             response_data = check_url(url)
             if response_data["code"] < 0 or response_data["code"] >= 400:
+                self.__class__.__doc__ += "HINT: {}".format(response_data["message"])
                 self.message(section="about")
 
 
@@ -96,4 +101,5 @@ class invalid_license_url(LintCheck):
         if url:
             response_data = check_url(url)
             if response_data["code"] < 0 or response_data["code"] >= 400:
+                self.__class__.__doc__ += "HINT: {}".format(response_data["message"])
                 self.message(section="about")

@@ -518,7 +518,7 @@ class Linter:
 
     def get_report(self) -> str:
         return "\n".join(
-            f"{msg.severity.name}: {msg.fname}:{msg.end_line}: {msg.check}: {msg.title}"
+            f"{msg.severity.name}: {msg.fname}:{msg.end_line}: {msg.check}: {msg.title}\n\t{msg.body}"
             for msg in self.get_messages()
         )
 
