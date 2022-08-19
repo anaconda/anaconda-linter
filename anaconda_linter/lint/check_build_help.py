@@ -172,3 +172,29 @@ class avoid_noarch(LintCheck):
     def check_recipe(self, recipe):
         if recipe.get("build/noarch", ""):
             self.message(section="build")
+
+
+class patch_must_be_in_build(LintCheck):
+    """patch must be in build when source/patches is set.
+
+    Add patch to ``build``::
+
+      requirements:
+        build:
+          - patch       # [not win]
+          - m2-patch    # [win]
+    """
+
+    has_patches = False
+
+    def check_source(self, source, section):
+        if source.get("patches", ""):
+            self.has_patches = True
+
+    def check_deps(self, deps):
+        if self.has_patches:
+            if "patch" in deps:
+                if any("build" not in location for location in deps["patch"]):
+                    self.message(section="build")
+            else:
+                self.message(section="build")

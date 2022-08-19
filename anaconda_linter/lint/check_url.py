@@ -6,94 +6,70 @@ Verify that the URLs in the recipe are valid
 
 from utils import check_url
 
-from . import LintCheck
+from . import WARNING, LintCheck
 
 
-class invalid_source_url(LintCheck):
-    """The license_url is not valid.
-
-    Please add a valid URL.
-
-    """
-
-    def check_recipe(self, recipe):
-        url = recipe.get("source/url", "")
-        if url:
-            response_data = check_url(url)
-            if response_data["code"] < 0 or response_data["code"] >= 400:
-                self.message(section="source")
-
-
-class invalid_home(LintCheck):
-    """The home URL is not valid.
+class invalid_url(LintCheck):
+    """{} : {}
 
     Please add a valid URL.
 
     """
 
-    def check_recipe(self, recipe):
-        url = recipe.get("about/home", "")
+    def check_source(self, source, section):
+        url = source.get("url", "")
         if url:
             response_data = check_url(url)
             if response_data["code"] < 0 or response_data["code"] >= 400:
-                self.message(section="about")
+                self.__class__.__doc__ = self.__class__.__doc__.format(
+                    url, response_data["message"]
+                )
+                self.message(section=section)
+
+    def check_recipe(self, recipe):
+        url_fields = [
+            "about/home",
+            "about/doc_url",
+            "about/doc_source_url",
+            "about/license_url",
+            "about/dev_url",
+        ]
+        for url_field in url_fields:
+            url = recipe.get(url_field, "")
+            if url:
+                response_data = check_url(url)
+                if response_data["code"] < 0 or response_data["code"] >= 400:
+                    self.__class__.__doc__ = self.__class__.__doc__.format(
+                        url, response_data["message"]
+                    )
+                    self.message(section=url_field)
 
 
-class invalid_doc_url(LintCheck):
-    """The doc_url is not valid.
+class http_url(LintCheck):
+    """{} is not https
 
-    Please add a valid URL.
+    Please replace with https if possible.
 
     """
 
-    def check_recipe(self, recipe):
-        url = recipe.get("about/doc_url", "")
-        if url:
-            response_data = check_url(url)
-            if response_data["code"] < 0 or response_data["code"] >= 400:
-                self.message(section="about")
+    severity = WARNING
 
-
-class invalid_doc_source_url(LintCheck):
-    """The doc_source_url is not valid.
-
-    Please add a valid URL.
-
-    """
+    def check_source(self, source, section):
+        url = source.get("url", "")
+        if url.lower().startswith("http://"):
+            self.__class__.__doc__ = self.__class__.__doc__.format(url)
+            self.message(section=section)
 
     def check_recipe(self, recipe):
-        url = recipe.get("about/doc_source_url", "")
-        if url:
-            response_data = check_url(url)
-            if response_data["code"] < 0 or response_data["code"] >= 400:
-                self.message(section="about")
-
-
-class invalid_dev_url(LintCheck):
-    """The dev_url is not valid.
-
-    Please add a valid URL.
-
-    """
-
-    def check_recipe(self, recipe):
-        url = recipe.get("about/dev_url", "")
-        if url:
-            response_data = check_url(url)
-            if response_data["code"] < 0 or response_data["code"] >= 400:
-                self.message(section="about")
-
-
-class invalid_license_url(LintCheck):
-    """The license_url is not valid.
-
-    Please add a valid URL.
-
-    """
-
-    def check_recipe(self, recipe):
-        url = recipe.get("about/license_url", "")
-        if url:
-            response_data = check_url(url)
-            if response_data["code"] < 0 or response_data["code"] >= 400:
-                self.message(section="about")
+        url_fields = [
+            "about/home",
+            "about/doc_url",
+            "about/doc_source_url",
+            "about/license_url",
+            "about/dev_url",
+        ]
+        for url_field in url_fields:
+            url = recipe.get(url_field, "")
+            if url.lower().startswith("http://"):
+                self.__class__.__doc__ = self.__class__.__doc__.format(url)
+                self.message(section=url_field.split("/")[0])

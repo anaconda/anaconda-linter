@@ -12,7 +12,6 @@ import os
 import queue
 import subprocess as sp
 import sys
-import urllib
 from collections import Counter
 from functools import partial
 from multiprocessing import Pool
@@ -25,6 +24,7 @@ from typing import Any, Dict, List, Sequence
 # => Prevent custom conda logging init before importing anything conda-related.
 import conda.gateways.logging
 import jinja2
+import requests
 import tqdm as _tqdm
 import yaml
 from conda_build import api
@@ -541,21 +541,30 @@ def check_url(url):
 
     response_data = {"url": url}
     try:
-        response = urllib.request.urlopen(url)
-        if url != response.url:  # For redirects
-            response_data["code"] = 301
-            response_data["message"] = "URL redirects"
-            response_data["url"] = response.url
+        response = requests.head(url, allow_redirects=False)
+        if response.status_code >= 200 and response.status_code < 400:
+            origin_domain = requests.utils.urlparse(url).netloc
+            redirect_domain = origin_domain
+            if "Location" in response.headers:
+                redirect_domain = requests.utils.urlparse(response.headers["Location"]).netloc
+            if origin_domain != redirect_domain:  # For redirects to other domain
+                response_data["code"] = -1
+                response_data[
+                    "message"
+                ] = f"URL domain redirect {origin_domain} ->  {redirect_domain}"
+                response_data["url"] = response.headers["Location"]
+            else:
+                response_data["code"] = response.status_code
+                response_data["message"] = "URL valid"
         else:
-            response_data["code"] = response.code
-            response_data["message"] = "URL valid"
-    except urllib.error.HTTPError as e:
-        response_data["code"] = e.code
-        response_data["message"] = e.reason
+            response_data["code"] = response.status_code
+            response_data["message"] = f"Not reachable: {response.status_code}"
+    except requests.HTTPError as e:
+        response_data["code"] = e.response.status_code
+        response_data["message"] = e.response.text
     except Exception as e:
         response_data["code"] = -1
-        response_data["message"] = e.reason
-
+        response_data["message"] = str(e)
     return response_data
 
 

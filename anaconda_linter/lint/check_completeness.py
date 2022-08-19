@@ -160,16 +160,18 @@ class missing_tests(LintCheck):
 
 
 class missing_hash(LintCheck):
-    """The recipe is missing a checksum for a source file
+    """The recipe is missing a sha256 checksum for a source file
 
     Please add::
 
        source:
          sha256: checksum-value
 
+    Note: md5 and sha1 are deprecated.
+
     """
 
-    checksum_names = ("md5", "sha1", "sha256")
+    checksum_names = "sha256"
 
     def check_source(self, source, section):
         if not any(source.get(chk) for chk in self.checksum_names):
@@ -190,7 +192,26 @@ class missing_source(LintCheck):
 
     """
 
-    source_types = ["url", "git_url"]
+    source_types = ["url", "git_url", "hg_url", "svn_url"]
+
+    def check_source(self, source, section):
+        if not any(source.get(chk) for chk in self.source_types):
+            self.message(section=section)
+
+
+class non_url_source(LintCheck):
+    """A source of the recipe is not url of url type.
+
+    Please change to::
+
+        source:
+            url: <URL to source>
+
+    """
+
+    severity = WARNING
+
+    source_types = ["git_url", "hg_url", "svn_url"]
 
     def check_source(self, source, section):
         if not any(source.get(chk) for chk in self.source_types):

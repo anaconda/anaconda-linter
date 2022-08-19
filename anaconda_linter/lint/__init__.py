@@ -510,17 +510,24 @@ class Linter:
 
     def get_messages(self) -> List[LintMessage]:
         """Returns the lint messages collected during linting"""
-        return self._messages
+        return sorted(self._messages, key=lambda d: (d.fname, d.end_line))
 
     def clear_messages(self):
         """Clears the lint messages stored in linter"""
         self._messages = []
 
     def get_report(self) -> str:
-        return "\n".join(
-            f"{msg.severity.name}: {msg.fname}:{msg.end_line}: {msg.check}: {msg.title}"
-            for msg in self.get_messages()
-        )
+        if self.verbose:
+            return "\n".join(
+                f"{msg.severity.name}: {msg.fname}:{msg.end_line}: {msg.check}: {msg.title}\
+                    \n\t{msg.body}"
+                for msg in self.get_messages()
+            )
+        else:
+            return "\n".join(
+                f"{msg.severity.name}: {msg.fname}:{msg.end_line}: {msg.check}: {msg.title}"
+                for msg in self.get_messages()
+            )
 
     def load_skips(self):
         """Parses lint skips
