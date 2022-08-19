@@ -517,11 +517,17 @@ class Linter:
         self._messages = []
 
     def get_report(self) -> str:
-        return "\n".join(
-            f"{msg.severity.name}: {msg.fname}:{msg.end_line}: {msg.check}: {msg.title}\
-                \n\t{msg.body}"
-            for msg in self.get_messages()
-        )
+        if self.verbose:
+            return "\n".join(
+                f"{msg.severity.name}: {msg.fname}:{msg.end_line}: {msg.check}: {msg.title}\
+                    \n\t{msg.body}"
+                for msg in self.get_messages()
+            )
+        else:
+            return "\n".join(
+                f"{msg.severity.name}: {msg.fname}:{msg.end_line}: {msg.check}: {msg.title}"
+                for msg in self.get_messages()
+            )
 
     def load_skips(self):
         """Parses lint skips
