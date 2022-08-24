@@ -51,7 +51,7 @@ for digit in "0123456789":
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
 
-class RecipeError:
+class RecipeError(Exception):
     def __init__(self, item, message=None, line=None, column=None):
         self.line = line
         self.column = column
