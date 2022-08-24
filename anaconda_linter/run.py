@@ -10,7 +10,7 @@ import utils
 def parseArguments(argv: list[str]) -> argparse.Namespace:
     def checkPath(value):
         if not os.path.isdir(value):
-            raise argparse.ArgumentTypeError("The specified directory does not exist")
+            raise argparse.ArgumentTypeError(f"The specified directory {value} does not exist")
         return os.path.abspath(value)
 
     parser = argparse.ArgumentParser(
