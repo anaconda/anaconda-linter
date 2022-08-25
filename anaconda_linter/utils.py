@@ -523,7 +523,7 @@ def load_config(path):
 
     return default_config
 
-
+check_url_cache = {}
 def check_url(url):
     """
     Validate a URL to see if a response is available
@@ -539,33 +539,35 @@ def check_url(url):
         Limited set of response data
     """
 
-    response_data = {"url": url}
-    try:
-        response = requests.head(url, allow_redirects=False)
-        if response.status_code >= 200 and response.status_code < 400:
-            origin_domain = requests.utils.urlparse(url).netloc
-            redirect_domain = origin_domain
-            if "Location" in response.headers:
-                redirect_domain = requests.utils.urlparse(response.headers["Location"]).netloc
-            if origin_domain != redirect_domain:  # For redirects to other domain
-                response_data["code"] = -1
-                response_data[
-                    "message"
-                ] = f"URL domain redirect {origin_domain} ->  {redirect_domain}"
-                response_data["url"] = response.headers["Location"]
+    if not url in check_url_cache:
+        response_data = {"url": url}
+        try:
+            response = requests.head(url, allow_redirects=False)
+            if response.status_code >= 200 and response.status_code < 400:
+                origin_domain = requests.utils.urlparse(url).netloc
+                redirect_domain = origin_domain
+                if "Location" in response.headers:
+                    redirect_domain = requests.utils.urlparse(response.headers["Location"]).netloc
+                if origin_domain != redirect_domain:  # For redirects to other domain
+                    response_data["code"] = -1
+                    response_data[
+                        "message"
+                    ] = f"URL domain redirect {origin_domain} ->  {redirect_domain}"
+                    response_data["url"] = response.headers["Location"]
+                else:
+                    response_data["code"] = response.status_code
+                    response_data["message"] = "URL valid"
             else:
                 response_data["code"] = response.status_code
-                response_data["message"] = "URL valid"
-        else:
-            response_data["code"] = response.status_code
-            response_data["message"] = f"Not reachable: {response.status_code}"
-    except requests.HTTPError as e:
-        response_data["code"] = e.response.status_code
-        response_data["message"] = e.response.text
-    except Exception as e:
-        response_data["code"] = -1
-        response_data["message"] = str(e)
-    return response_data
+                response_data["message"] = f"Not reachable: {response.status_code}"
+        except requests.HTTPError as e:
+            response_data["code"] = e.response.status_code
+            response_data["message"] = e.response.text
+        except Exception as e:
+            response_data["code"] = -1
+            response_data["message"] = str(e)
+        check_url_cache[url] = response_data
+    return check_url_cache[url]
 
 
 def generate_correction(pkg_license, compfile=Path("data", "licenses.txt")):
