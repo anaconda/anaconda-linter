@@ -6,7 +6,7 @@ that packages' meta.yaml files adhere to certain Anaconda standards.
 ## Installation
 1. conda env create -f environment.yml
 2. conda activate linter
-3. *Currently*: See Usage.
+3. *Currently*: `python ./anaconda_linter/run.py -v ../wip/airflow-feedstock`
 
 ## Usage
 

@@ -631,7 +631,7 @@ def find_config_files(metadata_or_path, variant_config_files, exclusive_config_f
     """
 
     def resolve(p):
-        os.path.abspath(os.path.expanduser(os.path.expandvars(p)))
+        return os.path.abspath(os.path.expanduser(os.path.expandvars(p)))
 
     # exclusive configs
     files = [resolve(f) for f in ensure_list(exclusive_config_files)]
