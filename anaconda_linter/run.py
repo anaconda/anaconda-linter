@@ -3,8 +3,8 @@ import os
 import sys
 import textwrap
 
-import lint
-import utils
+from . import lint
+from . import utils
 
 
 def lint_parser() -> argparse.ArgumentParser:
@@ -74,8 +74,7 @@ def lint_parser() -> argparse.ArgumentParser:
     return parser
 
 
-if __name__ == "__main__":
-
+def main():
     # parse arguments
     parser = lint_parser()
     args, _ = parser.parse_known_args()
