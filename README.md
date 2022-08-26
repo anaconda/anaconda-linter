@@ -6,10 +6,21 @@ that packages' meta.yaml files adhere to certain Anaconda standards.
 ## Installation
 1. conda env create -f environment.yml
 2. conda activate linter
-3. *Currently*: Navigate to the anaconda_linter directory and run `python run.py base/directory/of/feedstock feedstockname-feedstock`.
+3. *Currently*: `python ./anaconda_linter/run.py -v ../wip/airflow-feedstock`
 
 ## Usage
-TBD
+
+The usage is similar to conda-build.
+
+navigate into the folder of your main conda_build_config.yaml file:
+`cd <path/to/aggregate/>`
+
+execute the run.py file:
+`python <path_to_conda_lint>/anaconda_linter/run.py <path_to_feedstock>`
+
+Concrete example:
+`cd ~/work/recipes/aggregate/`
+`python ~/work/hackdays/conda-lint/anaconda_linter/run.py -v ../wip/airflow-feedstock`
 
 ## Testing conda lint
 
@@ -17,8 +28,8 @@ navigate into the `anaconda_linter` folder:
 `cd anaconda_linter`
 
 execute the run.py file:
-`python run.py ../tests bad-feedstock` - some tests fail
-`python run.py ../tests good-feedstock` - all tests pass
+`python run.py ../tests/bad-feedstock` - some tests fail
+`python run.py ../tests/good-feedstock` - all tests pass
 
 ## TODO:
 - Create a Makefile to auto-create a conda env and download dependencies
