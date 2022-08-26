@@ -142,7 +142,6 @@ class Recipe:
     (1) is currently handled using apply_selector
 
     Arguments:
-      recipe_folder: base recipes folder
       recipe_dir: path to specific recipe
     """
 
@@ -154,18 +153,16 @@ class Recipe:
         "cdt": lambda x: x,
     }
 
-    def __init__(self, recipe_dir, recipe_folder):
-        if not recipe_dir.startswith(recipe_folder):
-            raise RuntimeError(f"'{recipe_dir}' not inside '{recipe_folder}'")
+    def __init__(self, recipe_dir):
 
-        #: path to folder containing recipes
-        self.basedir = recipe_folder
-        #: relative path to recipe dir from folder containing recipes
-        self.reldir = recipe_dir[len(recipe_folder) :].strip("/")
+        #: recipe dir
+        self.recipe_dir = recipe_dir
 
         # Filled in by render()
         #: Parsed recipe YAML
         self.meta: Dict[str, Any] = {}
+
+        self.conda_build_config_files = []
 
         self.conda_build_config: str = ""
         self.build_scripts: Dict[str, str] = {}
@@ -189,23 +186,18 @@ class Recipe:
     @property
     def path(self):
         """Full path to ``meta.yaml``"""
-        return os.path.join(self.basedir, self.reldir, "meta.yaml")
-
-    @property
-    def relpath(self):
-        """Relative path to ``meta.yaml`` (from ``basedir``)"""
-        return os.path.join(self.reldir, "meta.yaml")
+        return os.path.join(self.recipe_dir, "meta.yaml")
 
     @property
     def dir(self):
         """Path to recipe folder"""
-        return os.path.join(self.basedir, self.reldir)
+        return self.recipe_dir
 
     def __str__(self) -> str:
-        return self.reldir
+        return self.recipe_dir
 
     def __repr__(self) -> str:
-        return f'{self.__class__.__name__} "{self.reldir}"'
+        return f'{self.__class__.__name__} "{self.recipe_dir}"'
 
     def load_from_string(self, data, selector_dict) -> "Recipe":
         """Load and `render` recipe contents from disk"""
@@ -215,9 +207,15 @@ class Recipe:
         self.render()
         return self
 
-    def read_conda_build_config(self):
+    def read_conda_build_config(
+        self, variant_config_files: List[str] = [], exclusive_config_files: List[str] = []
+    ):
+        # List conda_build_config files for linter render.
+        self.conda_build_config_files = utils.find_config_files(
+            self.recipe_dir, variant_config_files, exclusive_config_files
+        )
         # Cache contents of conda_build_config.yaml for conda_render.
-        path = Path(self.dir, "conda_build_config.yaml")
+        path = Path(self.recipe_dir, "conda_build_config.yaml")
         if path.is_file():
             self.conda_build_config = path.read_text()
         else:
@@ -241,17 +239,21 @@ class Recipe:
 
     @classmethod
     def from_file(
-        cls, recipe_dir, recipe_fname, selector_dict={}, return_exceptions=False
+        cls,
+        recipe_fname,
+        selector_dict={},
+        variant_config_files: List[str] = [],
+        exclusive_config_files: List[str] = [],
+        return_exceptions=False,
     ) -> "Recipe":
         """Create new `Recipe` object from file
 
         Args:
-           recipe_dir: Path to recipes folder
            recipe_fname: Relative path to recipe (folder or meta.yaml)
         """
         if recipe_fname.endswith("meta.yaml"):
             recipe_fname = os.path.dirname(recipe_fname)
-        recipe = cls(recipe_fname, recipe_dir)
+        recipe = cls(recipe_fname)
         try:
             with open(os.path.join(recipe_fname, "meta.yaml")) as text:
                 recipe.load_from_string(text.read(), selector_dict)
@@ -265,7 +267,7 @@ class Recipe:
                 return exc
             raise exc
         try:
-            recipe.read_conda_build_config()
+            recipe.read_conda_build_config(variant_config_files, exclusive_config_files)
         except Exception as exc:
             if return_exceptions:
                 return exc
@@ -836,20 +838,3 @@ class Recipe:
         if self._conda_tempdir:
             self._conda_tempdir.cleanup()
             self._conda_tempdir = None
-
-
-def load_parallel_iter(recipe_folder, packages):
-    recipes = list(utils.get_recipes(recipe_folder, packages))
-    for recipe in utils.parallel_iter(
-        Recipe.from_file,
-        recipes,
-        "Loading Recipes...",
-        recipe_folder,
-        return_exceptions=True,
-    ):
-        if isinstance(recipe, RecipeError):
-            recipe.log()
-        elif isinstance(recipe, Exception):
-            logger.error("Could not load recipe %s", recipe)
-        else:
-            yield recipe

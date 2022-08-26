@@ -97,7 +97,7 @@ import pkgutil
 import re
 from collections import defaultdict
 from enum import IntEnum
-from typing import Any, Dict, List, NamedTuple, Set, Tuple
+from typing import Any, Dict, List, NamedTuple, Tuple
 
 import networkx as nx
 
@@ -162,6 +162,30 @@ class LintMessage(NamedTuple):
         if self.severity < ERROR:
             return "warning"
         return "failure"
+
+    def __eq__(self, other):
+        return (
+            self.check == other.check
+            and self.severity == other.severity
+            and self.title == other.title
+            and self.body == other.body
+            and self.start_line == other.start_line
+            and self.end_line == other.end_line
+            and self.fname == other.fname
+        )
+
+    def __hash__(self):
+        return hash(
+            (
+                self.check,
+                self.severity,
+                self.title,
+                self.body,
+                self.start_line,
+                self.end_line,
+                self.fname,
+            )
+        )
 
 
 class LintCheckMeta(abc.ABCMeta):
@@ -459,7 +483,6 @@ class Linter:
 
     Arguments:
       config: Configuration dict as provided by `utils.load_config()`.
-      recipe_folder: Folder which recipes are located.
       exclude: List of function names in ``registry`` to skip globally.
                When running on CI, this will be merged with anything
                else detected from the commit message or LINT_SKIP
@@ -475,19 +498,20 @@ class Linter:
     def __init__(
         self,
         config: Dict,
-        recipe_folder: str,
         verbose: bool = False,
         exclude: List[str] = None,
         nocatch: bool = False,
     ) -> None:
         self.config = config
-        self.recipe_folder = recipe_folder
         self.skip = self.load_skips()
         self.exclude = exclude or []
         self.nocatch = nocatch
         self.verbose = verbose
         self._messages = []
 
+        self.reload_checks()
+
+    def reload_checks(self):
         dag = nx.DiGraph()
         dag.add_nodes_from(str(check) for check in get_checks())
         dag.add_edges_from(
@@ -499,14 +523,7 @@ class Linter:
             self.checks_ordered = reversed(list(nx.topological_sort(dag)))
         except nx.NetworkXUnfeasible:
             raise RuntimeError("Cycle in LintCheck requirements!")
-        self.reload_checks()
-
-    def reload_checks(self):
         self.check_instances = {str(check): check(self) for check in get_checks()}
-
-    def get_blocklist(self) -> Set[str]:
-        """Loads the blocklist as per linter configuration"""
-        return utils.get_blocklist(self.config, self.recipe_folder)
 
     def get_messages(self) -> List[LintMessage]:
         """Returns the lint messages collected during linting"""
@@ -516,17 +533,23 @@ class Linter:
         """Clears the lint messages stored in linter"""
         self._messages = []
 
-    def get_report(self) -> str:
-        if self.verbose:
+    @classmethod
+    def get_report(
+        cls,
+        messages: List[LintMessage],
+        verbose: bool = False,
+    ) -> LintMessage:
+        messages = sorted(messages, key=lambda d: (d.fname, d.end_line))
+        if verbose:
             return "\n".join(
                 f"{msg.severity.name}: {msg.fname}:{msg.end_line}: {msg.check}: {msg.title}\
                     \n\t{msg.body}"
-                for msg in self.get_messages()
+                for msg in messages
             )
         else:
             return "\n".join(
                 f"{msg.severity.name}: {msg.fname}:{msg.end_line}: {msg.check}: {msg.title}"
-                for msg in self.get_messages()
+                for msg in messages
             )
 
     def load_skips(self):
@@ -556,7 +579,14 @@ class Linter:
             skip_dict[recipe].append(func)
         return skip_dict
 
-    def lint(self, recipe_names: List[str], arch_name: str = "linux-64", fix: bool = False) -> bool:
+    def lint(
+        self,
+        recipe_names: List[str],
+        arch_name: str = "linux-64",
+        variant_config_files: List[str] = [],
+        exclusive_config_files: List[str] = [],
+        fix: bool = False,
+    ) -> bool:
         """Run linter on multiple recipes
 
         Lint messages are collected in the linter. They can be retrieved
@@ -572,12 +602,18 @@ class Linter:
         """
         for recipe_name in utils.tqdm(sorted(recipe_names)):
             try:
-                msgs = self.lint_one(recipe_name, arch_name=arch_name, fix=fix)
+                msgs = self.lint_one(
+                    recipe_name,
+                    arch_name=arch_name,
+                    variant_config_files=variant_config_files,
+                    exclusive_config_files=exclusive_config_files,
+                    fix=fix,
+                )
             except Exception:
                 if self.nocatch:
                     raise
                 logger.exception("Unexpected exception in lint")
-                recipe = _recipe.Recipe(recipe_name, self.recipe_folder)
+                recipe = _recipe.Recipe(recipe_name)
                 msgs = [linter_failure.make_message(recipe=recipe)]
             self._messages.extend(msgs)
 
@@ -592,7 +628,12 @@ class Linter:
         return result
 
     def lint_one(
-        self, recipe_name: str, arch_name: str = "linux-64", fix: bool = False
+        self,
+        recipe_name: str,
+        arch_name: str = "linux-64",
+        variant_config_files: List[str] = [],
+        exclusive_config_files: List[str] = [],
+        fix: bool = False,
     ) -> List[LintMessage]:
         """Run the linter on a single recipe
 
@@ -605,12 +646,15 @@ class Linter:
           List of collected messages
         """
 
+        if self.verbose:
+            print(f"Linting subdir:{arch_name} recipe:{recipe_name}")
+
         try:
             recipe = _recipe.Recipe.from_file(
-                self.recipe_folder, recipe_name, self.config[arch_name]
+                recipe_name, self.config[arch_name], variant_config_files, exclusive_config_files
             )
         except _recipe.RecipeError as exc:
-            recipe = _recipe.Recipe(recipe_name, self.recipe_folder)
+            recipe = _recipe.Recipe(recipe_name)
             check_cls = recipe_error_to_lint_check.get(exc.__class__, linter_failure)
             return [check_cls.make_message(recipe=recipe, line=getattr(exc, "line"))]
 
@@ -634,6 +678,7 @@ class Linter:
 
         # run checks
         messages = []
+        self.reload_checks()
         for check in self.checks_ordered:
             if str(check) in checks_to_skip:
                 if self.verbose:
