@@ -399,7 +399,7 @@ def parallel_iter(func, items, desc, *args, **kwargs):
         yield from tqdm(pool.imap_unordered(pfunc, items), desc=desc, total=len(items))
 
 
-def get_recipes(recipe_folder, package="*", exclude=None):
+def get_recipes(aggregate_folder, package="*", exclude=None):
     """
     Generator of recipes.
 
@@ -407,7 +407,7 @@ def get_recipes(recipe_folder, package="*", exclude=None):
 
     Parameters
     ----------
-    recipe_folder : str
+    aggregate_folder : str
         Top-level dir of the recipes
 
     package : str or iterable
@@ -420,12 +420,12 @@ def get_recipes(recipe_folder, package="*", exclude=None):
     if exclude is None:
         exclude = []
     for p in package:
-        logger.debug("get_recipes(%s, package='%s'): %s", recipe_folder, package, p)
-        path = os.path.join(recipe_folder, p)
+        logger.debug("get_recipes(%s, package='%s'): %s", aggregate_folder, package, p)
+        path = os.path.join(aggregate_folder, p)
         for new_dir in glob.glob(path):
             meta_yaml_found_or_excluded = False
             for dir_path, dir_names, file_names in os.walk(new_dir):
-                if any(fnmatch.fnmatch(dir_path[len(recipe_folder) :], pat) for pat in exclude):
+                if any(fnmatch.fnmatch(dir_path[len(aggregate_folder) :], pat) for pat in exclude):
                     meta_yaml_found_or_excluded = True
                     continue
                 if "meta.yaml" in file_names:
@@ -438,20 +438,6 @@ def get_recipes(recipe_folder, package="*", exclude=None):
                     new_dir,
                 )
                 yield new_dir
-
-
-def get_blocklist(config: Dict[str, Any], recipe_folder: str) -> set:
-    "Return list of recipes to skip from blocklists"
-    blocklist = set()
-    for p in config.get("blocklists", []):
-        blocklist.update(
-            [
-                os.path.relpath(i.strip(), recipe_folder)
-                for i in open(p, encoding="utf8")
-                if not i.startswith("#") and i.strip()
-            ]
-        )
-    return blocklist
 
 
 def validate_config(config):
@@ -570,7 +556,7 @@ def check_url(url):
     return check_url_cache[url]
 
 
-def generate_correction(pkg_license, compfile=Path("data", "licenses.txt")):
+def generate_correction(pkg_license, compfile=Path(__file__).parent / "data" / "licenses.txt"):
     with open(compfile) as f:
         words = f.readlines()
 
@@ -617,3 +603,53 @@ def find_closest_match(string: str) -> str:
     if closest_match == string:
         return None
     return closest_match
+
+#copied and adapted from conda-build
+def find_config_files(metadata_or_path, variant_config_files, exclusive_config_files):
+    """
+    Find config files to load. Config files are stacked in the following order:
+        1. exclusive config files (see config.exclusive_config_files)
+        2. user config files
+           (see context.conda_build["config_file"] or ~/conda_build_config.yaml)
+        3. cwd config files (see ./conda_build_config.yaml)
+        4. recipe config files (see ${RECIPE_DIR}/conda_build_config.yaml)
+        5. additional config files (see config.variant_config_files)
+
+    .. note::
+        Order determines clobbering with later files clobbering earlier ones.
+
+    :param metadata_or_path: the metadata or path within which to find recipe config files
+    :type metadata_or_path:
+    :param exclusive_config_files
+    :param variant_config_files
+    :return: List of config files
+    :rtype: `list` of paths (`str`)
+    """
+    resolve = lambda p: os.path.abspath(os.path.expanduser(os.path.expandvars(p)))
+
+    # exclusive configs
+    files = [resolve(f) for f in ensure_list(exclusive_config_files)]
+
+    if not files:
+    #if not files and not config.ignore_system_variants:
+        # user config
+        # if cc_conda_build.get('config_file'):
+        #     cfg = resolve(cc_conda_build['config_file'])
+        # else:
+        #     cfg = resolve(os.path.join('~', "conda_build_config.yaml"))
+        cfg = resolve(os.path.join('~', "conda_build_config.yaml"))
+        if os.path.isfile(cfg):
+            files.append(cfg)
+
+        cfg = resolve('conda_build_config.yaml')
+        if os.path.isfile(cfg):
+            files.append(cfg)
+
+    path = getattr(metadata_or_path, "path", metadata_or_path)
+    cfg = resolve(os.path.join(path, "conda_build_config.yaml"))
+    if os.path.isfile(cfg):
+        files.append(cfg)
+
+    files.extend([resolve(f) for f in ensure_list(variant_config_files)])
+
+    return files
