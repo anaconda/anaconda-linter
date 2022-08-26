@@ -97,7 +97,7 @@ import pkgutil
 import re
 from collections import defaultdict
 from enum import IntEnum
-from typing import Any, Dict, List, NamedTuple, Set, Tuple
+from typing import Any, Dict, List, NamedTuple, Tuple
 
 import networkx as nx
 
@@ -164,16 +164,29 @@ class LintMessage(NamedTuple):
         return "failure"
 
     def __eq__(self, other):
-        return self.check == other.check and \
-                self.severity == other.severity and \
-                self.title == other.title and \
-                self.body == other.body and \
-                self.start_line == other.start_line and \
-                self.end_line == other.end_line and \
-                self.fname == other.fname
+        return (
+            self.check == other.check
+            and self.severity == other.severity
+            and self.title == other.title
+            and self.body == other.body
+            and self.start_line == other.start_line
+            and self.end_line == other.end_line
+            and self.fname == other.fname
+        )
 
     def __hash__(self):
-        return hash((self.check, self.severity, self.title, self.body, self.start_line, self.end_line, self.fname))
+        return hash(
+            (
+                self.check,
+                self.severity,
+                self.title,
+                self.body,
+                self.start_line,
+                self.end_line,
+                self.fname,
+            )
+        )
+
 
 class LintCheckMeta(abc.ABCMeta):
     """Meta class for lint checks
@@ -566,7 +579,14 @@ class Linter:
             skip_dict[recipe].append(func)
         return skip_dict
 
-    def lint(self, recipe_names: List[str], arch_name: str = "linux-64", variant_config_files: List[str] = [], exclusive_config_files: List[str] = [], fix: bool = False) -> bool:
+    def lint(
+        self,
+        recipe_names: List[str],
+        arch_name: str = "linux-64",
+        variant_config_files: List[str] = [],
+        exclusive_config_files: List[str] = [],
+        fix: bool = False,
+    ) -> bool:
         """Run linter on multiple recipes
 
         Lint messages are collected in the linter. They can be retrieved
@@ -582,7 +602,13 @@ class Linter:
         """
         for recipe_name in utils.tqdm(sorted(recipe_names)):
             try:
-                msgs = self.lint_one(recipe_name, arch_name=arch_name, variant_config_files=variant_config_files, exclusive_config_files=exclusive_config_files, fix=fix)
+                msgs = self.lint_one(
+                    recipe_name,
+                    arch_name=arch_name,
+                    variant_config_files=variant_config_files,
+                    exclusive_config_files=exclusive_config_files,
+                    fix=fix,
+                )
             except Exception:
                 if self.nocatch:
                     raise
@@ -602,7 +628,12 @@ class Linter:
         return result
 
     def lint_one(
-        self, recipe_name: str, arch_name: str = "linux-64", variant_config_files: List[str] = [], exclusive_config_files: List[str] = [], fix: bool = False
+        self,
+        recipe_name: str,
+        arch_name: str = "linux-64",
+        variant_config_files: List[str] = [],
+        exclusive_config_files: List[str] = [],
+        fix: bool = False,
     ) -> List[LintMessage]:
         """Run the linter on a single recipe
 
@@ -619,7 +650,8 @@ class Linter:
             print(f"Linting subdir:{arch_name} recipe:{recipe_name}")
 
         try:
-            recipe = _recipe.Recipe.from_file(recipe_name, self.config[arch_name], variant_config_files, exclusive_config_files
+            recipe = _recipe.Recipe.from_file(
+                recipe_name, self.config[arch_name], variant_config_files, exclusive_config_files
             )
         except _recipe.RecipeError as exc:
             recipe = _recipe.Recipe(recipe_name)

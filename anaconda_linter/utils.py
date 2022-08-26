@@ -509,7 +509,10 @@ def load_config(path):
 
     return default_config
 
+
 check_url_cache = {}
+
+
 def check_url(url):
     """
     Validate a URL to see if a response is available
@@ -525,7 +528,7 @@ def check_url(url):
         Limited set of response data
     """
 
-    if not url in check_url_cache:
+    if url not in check_url_cache:
         response_data = {"url": url}
         try:
             response = requests.head(url, allow_redirects=False)
@@ -604,7 +607,8 @@ def find_closest_match(string: str) -> str:
         return None
     return closest_match
 
-#copied and adapted from conda-build
+
+# copied and adapted from conda-build
 def find_config_files(metadata_or_path, variant_config_files, exclusive_config_files):
     """
     Find config files to load. Config files are stacked in the following order:
@@ -625,23 +629,25 @@ def find_config_files(metadata_or_path, variant_config_files, exclusive_config_f
     :return: List of config files
     :rtype: `list` of paths (`str`)
     """
-    resolve = lambda p: os.path.abspath(os.path.expanduser(os.path.expandvars(p)))
+
+    def resolve(p):
+        os.path.abspath(os.path.expanduser(os.path.expandvars(p)))
 
     # exclusive configs
     files = [resolve(f) for f in ensure_list(exclusive_config_files)]
 
     if not files:
-    #if not files and not config.ignore_system_variants:
+        # if not files and not config.ignore_system_variants:
         # user config
         # if cc_conda_build.get('config_file'):
         #     cfg = resolve(cc_conda_build['config_file'])
         # else:
         #     cfg = resolve(os.path.join('~', "conda_build_config.yaml"))
-        cfg = resolve(os.path.join('~', "conda_build_config.yaml"))
+        cfg = resolve(os.path.join("~", "conda_build_config.yaml"))
         if os.path.isfile(cfg):
             files.append(cfg)
 
-        cfg = resolve('conda_build_config.yaml')
+        cfg = resolve("conda_build_config.yaml")
         if os.path.isfile(cfg):
             files.append(cfg)
 

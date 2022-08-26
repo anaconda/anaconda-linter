@@ -187,6 +187,7 @@ class Recipe:
     def path(self):
         """Full path to ``meta.yaml``"""
         return os.path.join(self.recipe_dir, "meta.yaml")
+
     @property
     def dir(self):
         """Path to recipe folder"""
@@ -206,9 +207,13 @@ class Recipe:
         self.render()
         return self
 
-    def read_conda_build_config(self, variant_config_files: List[str] = [], exclusive_config_files: List[str] = []):
+    def read_conda_build_config(
+        self, variant_config_files: List[str] = [], exclusive_config_files: List[str] = []
+    ):
         # List conda_build_config files for linter render.
-        self.conda_build_config_files = utils.find_config_files(self.recipe_dir ,variant_config_files, exclusive_config_files)
+        self.conda_build_config_files = utils.find_config_files(
+            self.recipe_dir, variant_config_files, exclusive_config_files
+        )
         # Cache contents of conda_build_config.yaml for conda_render.
         path = Path(self.recipe_dir, "conda_build_config.yaml")
         if path.is_file():
@@ -234,7 +239,12 @@ class Recipe:
 
     @classmethod
     def from_file(
-        cls, recipe_fname, selector_dict={}, variant_config_files: List[str] = [], exclusive_config_files: List[str] = [], return_exceptions=False
+        cls,
+        recipe_fname,
+        selector_dict={},
+        variant_config_files: List[str] = [],
+        exclusive_config_files: List[str] = [],
+        return_exceptions=False,
     ) -> "Recipe":
         """Create new `Recipe` object from file
 
@@ -828,4 +838,3 @@ class Recipe:
         if self._conda_tempdir:
             self._conda_tempdir.cleanup()
             self._conda_tempdir = None
-

@@ -23,42 +23,56 @@ def lint_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
-        '-m', '--variant-config-files',
+        "-m",
+        "--variant-config-files",
         action="append",
         default=[],
         help="""Additional variant config files to add.  These yaml files can contain
-        keys such as `c_compiler` and `target_platform` to form a build matrix."""
+        keys such as `c_compiler` and `target_platform` to form a build matrix.""",
     )
     parser.add_argument(
-        '-e', '--exclusive-config-files', '--exclusive-config-file',
+        "-e",
+        "--exclusive-config-files",
+        "--exclusive-config-file",
         action="append",
         default=[],
         help="""Exclusive variant config files to add. Providing files here disables
         searching in your home directory and in cwd.  The files specified here come at the
         start of the order, as opposed to the end with --variant-config-files.  Any config
         files in recipes and any config files specified with --variant-config-files will
-        override values from these files."""
+        override values from these files.""",
     )
     parser.add_argument(
-        '-s', '--subdirs',
-        default=['linux-64', 'linux-aarch64', 'linux-ppc64le', 'linux-s390x', 'osx-64', 'osx-arm64', 'win-64'],
+        "-s",
+        "--subdirs",
+        default=[
+            "linux-64",
+            "linux-aarch64",
+            "linux-ppc64le",
+            "linux-s390x",
+            "osx-64",
+            "osx-arm64",
+            "win-64",
+        ],
         action="append",
-        help="""List subdir to lint. Example: linux-64, win-64..."""
+        help="""List subdir to lint. Example: linux-64, win-64...""",
     )
     # we do this one separately because we only allow one entry to conda render
     parser.add_argument(
-        'recipe',
+        "recipe",
         type=check_path,
-        metavar='RECIPE_PATH',
+        metavar="RECIPE_PATH",
         help="Path to recipe directory.",
     )
     # this is here because we have a different default than build
     parser.add_argument(
-        '-v', '--verbose',
-        action='store_true',
-        help='Enable verbose output. This displays all of the checks that the linter is running.',
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="Enable verbose output. This displays all of the checks that the linter is running.",
     )
     return parser
+
 
 if __name__ == "__main__":
 
@@ -78,7 +92,9 @@ if __name__ == "__main__":
     messages = set()
     overall_result = 0
     for subdir in args.subdirs:
-        result = linter.lint(recipes, subdir, args.variant_config_files, args.exclusive_config_files)
+        result = linter.lint(
+            recipes, subdir, args.variant_config_files, args.exclusive_config_files
+        )
         if result > overall_result:
             overall_result = result
         messages = messages | set(linter.get_messages())
