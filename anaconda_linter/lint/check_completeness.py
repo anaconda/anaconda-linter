@@ -214,7 +214,7 @@ class non_url_source(LintCheck):
     source_types = ["git_url", "hg_url", "svn_url"]
 
     def check_source(self, source, section):
-        if not any(source.get(chk) for chk in self.source_types):
+        if any(source.get(chk) for chk in self.source_types):
             self.message(section=section)
 
 
