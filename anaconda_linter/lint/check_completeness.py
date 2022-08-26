@@ -171,7 +171,7 @@ class missing_hash(LintCheck):
 
     """
 
-    checksum_names = "sha256"
+    checksum_names = ["sha256"]
 
     def check_source(self, source, section):
         if not any(source.get(chk) for chk in self.checksum_names):
