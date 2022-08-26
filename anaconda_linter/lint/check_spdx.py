@@ -10,7 +10,8 @@ from typing import Any
 
 import license_expression
 
-from . import LintCheck, utils
+from . import LintCheck
+from .. import utils
 
 LICENSES_PATH = Path("..", "data", "licenses.txt")
 EXCEPTIONS_PATH = Path("..", "data", "license_exceptions.txt")
