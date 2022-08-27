@@ -3,8 +3,7 @@ import os
 import sys
 import textwrap
 
-from . import lint
-from . import utils
+from . import lint, utils
 
 
 def lint_parser() -> argparse.ArgumentParser:
