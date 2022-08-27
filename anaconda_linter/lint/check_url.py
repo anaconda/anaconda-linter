@@ -5,7 +5,6 @@ Verify that the URLs in the recipe are valid
 """
 
 from .. import utils
-
 from . import WARNING, LintCheck
 
 
