@@ -38,7 +38,7 @@ except ModuleNotFoundError:
 
     # from ruamel_yaml.error import YAMLError
 
-import utils
+from . import utils
 
 yaml = YAML(typ="rt")  # pylint: disable=invalid-name
 

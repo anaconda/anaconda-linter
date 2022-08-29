@@ -69,11 +69,12 @@ about:
   license: LicenseRef-PIL
   license_family: Other
   license_file: LICENSE
+  license_url: https://github.com/python-pillow/Pillow/blob/main/LICENSE
   summary: Pillow is the friendly PIL fork by Alex Clark and Contributors
   description: |
     Pillow is the friendly PIL fork. PIL is the Python Imaging Library,
     adds image processing capabilities to your Python interpreter.
-  doc_url: https://pillow.readthedocs.io/en/4.2.x/
+  doc_url: https://pillow.readthedocs.io/en/stable/
   doc_source_url: https://github.com/python-pillow/Pillow/blob/4.2.x/docs/index.rst
   dev_url: https://github.com/python-pillow/Pillow
 

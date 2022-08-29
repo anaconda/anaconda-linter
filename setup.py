@@ -16,10 +16,12 @@ def main():
         python_requires=">=3.8",
         packages=["anaconda_linter", "anaconda_linter.cli", "anaconda_linter.lint"],
         package_dir={"anaconda_linter": "anaconda_linter"},
-        package_data={"anaconda_linter": ["data/*.txt"]},
+        package_data={
+            "anaconda_linter": ["data/*.txt", "data/*.yaml", "config*.yaml", "build-fail-blocklist"]
+        },
         entry_points={
             "console_scripts": [
-                "conda-lint = anaconda_linter.cli.cli:main",
+                "conda-lint = anaconda_linter.run:main",
             ]
         },
         install_requires=["ruamel.yaml>=0.16.1", "license-expression", "jinja2>=3.0.3"],

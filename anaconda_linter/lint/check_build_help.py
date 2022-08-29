@@ -142,7 +142,7 @@ class cython_needs_compiler(LintCheck):
 
 
 class avoid_noarch(LintCheck):
-    """noarch packages should be avoided
+    """noarch: python packages should be avoided
 
     Please remove::
 
@@ -170,7 +170,8 @@ class avoid_noarch(LintCheck):
     severity = WARNING
 
     def check_recipe(self, recipe):
-        if recipe.get("build/noarch", ""):
+        noarch = recipe.get("build/noarch", "")
+        if noarch == "python":
             self.message(section="build")
 
 
