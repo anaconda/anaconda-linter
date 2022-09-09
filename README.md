@@ -24,7 +24,7 @@ Concrete example:
 
 ## Skipping Lints
 
-In order to force the linter to ignore a certain type of lint, you can use the top-level `extra` key in a `meta.yaml file`. To skip lints invidually, add lints from this [list of current lints](lint_names.md) to the `extra` key as a list with a `skip-lints` key. For example:
+In order to force the linter to ignore a certain type of lint, you can use the top-level `extra` key in a `meta.yaml file`. To skip lints invidually, add lints from this [list of current lints](anaconda_linter/lint_names.md) to the `extra` key as a list with a `skip-lints` key. For example:
 
     extra:
       skip-lints:
