@@ -56,7 +56,7 @@ Note: if you have both `skip-lints` and `only-lint`, any lints in `skip-lint` wi
 - Set up Sphinx Docs
 
 ## Contributions
-This new package is more inspired by bioconda's [linter](https://github.com/bioconda/bioconda-utils/blob/master/bioconda_utils/lint/__init__.py).
+This new package is inspired by bioconda's [linter](https://github.com/bioconda/bioconda-utils/blob/master/bioconda_utils/lint/__init__.py).
 
 Some of the code for suggesting hints comes from [Peter Norvig](http://norvig.com/spell-correct.html).
 
