@@ -661,10 +661,13 @@ class Linter:
         # collect checks to skip
         checks_to_skip = set(self.skip[recipe_name])
         checks_to_skip.update(self.exclude)
-        if isinstance(recipe.get("extra/skip-lints", []), list):
-            # If they are not, the extra_skip_lints_not_list check
-            # will be found and issued.
-            checks_to_skip.update(recipe.get("extra/skip-lints", []))
+        # currently skip-lints will overwrite only-lint, we can check for the key
+        # being in checks_to_skip, but I think letting the user do this is best?
+        checks_to_skip.update(recipe.get("extra/skip-lints", []))
+        if only_lint := recipe.get("extra/only-lint", []):
+            # getting the symmetric difference between all checks and only_lint
+            all_other_checks = set(only_lint) ^ self.checks_dag.nodes
+            checks_to_skip.update(all_other_checks)
 
         # also skip dependent checks
         for check in list(checks_to_skip):

@@ -22,7 +22,25 @@ Concrete example:
 `cd ~/work/recipes/aggregate/`
 `conda-lint -v ../wip/airflow-feedstock`
 
-## Testing conda lint
+## Skipping Lints
+
+In order to force the linter to ignore a certain type of lint, you can use the top-level `extra` key in a `meta.yaml file`. To skip lints invidually, add lints from this [list of current lints](anaconda_linter/lint_names.md) to the `extra` key as a list with a `skip-lints` key. For example:
+
+    extra:
+      skip-lints:
+        - unknown_selector
+        - invalid_url
+
+You can also do the opposite of this, and skip all other lints *except* the lints you want, with `only-lint`. For example:
+
+    extra:
+      only-lint:
+        - missing_license
+        - incorrect_license
+
+Note: if you have both `skip-lints` and `only-lint`, any lints in `skip-lint` will override identical lints in `only-lint`.
+
+## Testing the Anaconda Linter
 
 `conda-lint ../tests/bad-feedstock` - some tests fail
 
@@ -35,11 +53,10 @@ Concrete example:
 - Add further lints
 - Remove unneeded codes
 - Test with Prefect Flow
+- Set up Sphinx Docs
 
 ## Contributions
-This package is heavily inspired by conda-forge's conda-smithy [linter](https://github.com/conda-forge/conda-smithy/blob/5deae3b50c88eaf16a1514288b4dba8fe02dbf72/conda_smithy/lint_recipe.py).
-
-This new package is more inspired by bioconda's [linter](https://github.com/bioconda/bioconda-utils/blob/master/bioconda_utils/lint/__init__.py).
+This new package is inspired by bioconda's [linter](https://github.com/bioconda/bioconda-utils/blob/master/bioconda_utils/lint/__init__.py).
 
 Some of the code for suggesting hints comes from [Peter Norvig](http://norvig.com/spell-correct.html).
 
