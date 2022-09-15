@@ -4,8 +4,8 @@ This package is currently a very rough draft of a pure Python linter specificall
 that packages' meta.yaml files adhere to certain Anaconda standards.
 
 ## Installation
-1. conda env create -f environment.yml
-2. conda activate conda-lint
+1. `conda env create -f environment.yaml`
+2. `conda activate anaconda-linter`
 3. `python setup.py install`
 
 ## Usage

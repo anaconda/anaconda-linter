@@ -1,6 +1,4 @@
-name: conda-lint
-channels:
-  - conda-forge
+name: anaconda-linter
 
 dependencies:
   - python
