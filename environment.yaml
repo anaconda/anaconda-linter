@@ -1,4 +1,4 @@
-name: conda-lint
+name: anaconda-linter
 
 dependencies:
   - python
