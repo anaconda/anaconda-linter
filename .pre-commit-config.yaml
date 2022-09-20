@@ -15,7 +15,7 @@ repos:
     -   id: check-merge-conflict
     -   id: check-shebang-scripts-are-executable
     -   id: check-yaml
-        exclude: (anaconda_linter/data/conda_build_config.yaml|tests/bad-feedstock/recipe/meta.yaml|tests/good-feedstock/recipe/meta.yaml|conda.recipe/meta.yaml)
+        exclude: (anaconda_linter/data/conda_build_config.yaml|tests/bad-feedstock/recipe/meta.yaml|tests/good-feedstock/recipe/meta.yaml|recipe/meta.yaml)
     -   id: debug-statements
     -   id: detect-private-key
     -   id: end-of-file-fixer

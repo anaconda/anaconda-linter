@@ -46,7 +46,7 @@ jobs:
         run: |
           source $CONDA/bin/activate
           conda activate anaconda-linter
-          python anaconda_linter/run.py ./anaconda_linter/data/ ./conda.recipe/
+          python anaconda_linter/run.py ./anaconda_linter/data/ ./recipe/
       - name: Archive CI Artefacts
         uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8
         with:
