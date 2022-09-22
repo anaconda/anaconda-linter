@@ -19,13 +19,13 @@ class invalid_url(LintCheck):
         url = source.get("url", "")
         if url:
             response_data = utils.check_url(url)
-            acceptable_redirects = [
-              ('pypi.io', 'pypi.org')
-            ]
-            if response_data['code'] < 0 and 'domain_redirect' in response_data:
+            acceptable_redirects = [("pypi.io", "pypi.org")]
+            if response_data["code"] < 0 and "domain_redirect" in response_data:
                 for redir in acceptable_redirects:
-                    if response_data['domain_origin'] == redir[0] \
-                      and response_data['domain_redirect'] == redir[1]:
+                    if (
+                        response_data["domain_origin"] == redir[0]
+                        and response_data["domain_redirect"] == redir[1]
+                    ):
                         return
             if response_data["code"] < 0 or response_data["code"] >= 400:
                 self.__class__.__doc__ = self.__class__.__doc__.format(
