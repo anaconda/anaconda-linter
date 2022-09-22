@@ -46,3 +46,4 @@ about:
 extra:
   skip-lints:
     - invalid_url
+    - missing_hash
