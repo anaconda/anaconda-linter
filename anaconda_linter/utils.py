@@ -543,6 +543,8 @@ def check_url(url):
                         "message"
                     ] = f"URL domain redirect {origin_domain} ->  {redirect_domain}"
                     response_data["url"] = response.headers["Location"]
+                    response_data['domain_origin'] = origin_domain
+                    response_data['domain_redirect'] = redirect_domain
                 else:
                     response_data["code"] = response.status_code
                     response_data["message"] = "URL valid"
