@@ -1,14 +1,22 @@
 {
     "version": "0.2.0",
     "configurations": [
-        
         {
-            "name": "Python: Module",
+            "name": "Bad feedstock",
             "type": "python",
             "request": "launch",
             "module": "anaconda_linter.run",
             "env": {"PYTHONPATH": "~/miniconda3/envs/anaconda-linter"},
             "args": ["./tests/bad-feedstock"],
+            "justMyCode": false
+        },
+        {
+            "name": "Good feedstock",
+            "type": "python",
+            "request": "launch",
+            "module": "anaconda_linter.run",
+            "env": {"PYTHONPATH": "~/miniconda3/envs/anaconda-linter"},
+            "args": ["./tests/good-feedstock"],
             "justMyCode": false
         }
     ]
