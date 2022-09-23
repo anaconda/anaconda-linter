@@ -1,6 +1,6 @@
 __version__ = "0.0.1"
 __author__ = "Anaconda, Inc."
-__email__ = "jwillhite@anaconda.com"
+__email__ = "distribution_team@anaconda.com"
 __license__ = "BSD-3-Clause"
 __summary__ = "A linter to validate recipe meta.yaml files."
 __long_description__ = """
