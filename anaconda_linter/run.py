@@ -108,5 +108,7 @@ def main():
     else:
         sys.exit("Errors were found")
 
+
 if __name__ == "__main__":
     main()
+
