@@ -14,7 +14,7 @@ def main():
         long_description=anaconda_linter.__long_description__,
         url=anaconda_linter.__url__,
         python_requires=">=3.8",
-        packages=["anaconda_linter", "anaconda_linter.cli", "anaconda_linter.lint"],
+        packages=["anaconda_linter", "anaconda_linter.lint"],
         package_dir={"anaconda_linter": "anaconda_linter"},
         package_data={
             "anaconda_linter": ["data/*.txt", "data/*.yaml", "config*.yaml", "build-fail-blocklist"]
