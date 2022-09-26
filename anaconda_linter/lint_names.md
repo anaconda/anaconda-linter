@@ -47,5 +47,5 @@
 - `missing_wheel` (in host, for python packages)
 - `incorrect_build_number` (if the same build number already exists on defaults)
 - `gui_app` (if the package is a gui application, it requires additional testing)
-- `package_in_cbc_yaml` (mainly, we should build a package if it's mentioned in the global cbc.yaml)
+- `package_in_cbc_yaml` (mainly, we shouldn't build a package if it's mentioned in the global cbc.yaml)
 - `has_unreviewed_cves` (for info only, optional; need cvetool to retrieve data)
