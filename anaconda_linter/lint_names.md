@@ -48,4 +48,4 @@
 - incorrect_build_number
 - gui_app
 - package_in_cbc_yaml
-- has_cve
+- has_unreviewed_cves
