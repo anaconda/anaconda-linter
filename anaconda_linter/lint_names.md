@@ -36,3 +36,9 @@ incorrect_license
 version_constraints_missing_whitespace
 invalid_url
 http_url
+has_run_test_and_commands
+missing_pip_check
+missing_wheel
+missing_python
+remove_python_pinning
+gui_app
