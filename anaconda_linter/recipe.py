@@ -720,8 +720,11 @@ class Recipe:
             for n, spec in enumerate(self.get(path, [])):
                 if spec is None:  # Fixme: lint this
                     continue
-                dep = re.split(r"[\s<=>]", spec)[0]
-                deps.setdefault(dep, []).append(f"{path}/{n}")
+                splits = re.split(r"[\s<=>]", spec, 1)
+                d = deps.setdefault(splits[0], {"paths": [], "constraints": []})
+                d["paths"].append(f"{path}/{n}")
+                if len(splits) > 1:
+                    d["constraints"].append(splits[1])
         return deps
 
     def conda_render(

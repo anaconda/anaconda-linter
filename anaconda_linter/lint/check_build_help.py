@@ -7,8 +7,22 @@ These checks catch errors relating to the use of ``-
 
 import os
 
-# from . import ERROR, INFO
-from . import WARNING, LintCheck
+from . import INFO, WARNING, LintCheck
+
+
+def is_pypi_source(recipe):
+    # is it a pypi package?
+    pypi_urls = ["pypi.io", "pypi.org", "pypi.python.org"]
+    pypi_source = False
+    source = recipe.get("source", None)
+    if isinstance(source, dict):
+        pypi_source = any(x in source.get("url", "") for x in pypi_urls)
+    elif isinstance(source, list):
+        for src in source:
+            pypi_source = any(x in src.get("url", "") for x in pypi_urls)
+            if pypi_source:
+                break
+    return pypi_source
 
 
 class should_use_compilers(LintCheck):
@@ -35,7 +49,7 @@ class should_use_compilers(LintCheck):
 
     def check_deps(self, deps):
         for compiler in self.compilers:
-            for location in deps.get(compiler, []):
+            for location in deps.get(compiler, {}).get("paths", []):
                 self.message(section=location)
 
 
@@ -50,7 +64,7 @@ class compilers_must_be_in_build(LintCheck):
     def check_deps(self, deps):
         for dep in deps:
             if dep.startswith("compiler_"):
-                for location in deps[dep]:
+                for location in deps[dep]["paths"]:
                     if "run" in location or "host" in location:
                         self.message(section=location)
 
@@ -121,7 +135,7 @@ class cython_must_be_in_host(LintCheck):
 
     def check_deps(self, deps):
         if "cython" in deps:
-            if any("host" not in location for location in deps["cython"]):
+            if any("host" not in location for location in deps["cython"]["paths"]):
                 self.message()
 
 
@@ -195,7 +209,122 @@ class patch_must_be_in_build(LintCheck):
     def check_deps(self, deps):
         if self.has_patches:
             if "patch" in deps:
-                if any("build" not in location for location in deps["patch"]):
+                if any("build" not in location for location in deps["patch"]["paths"]):
                     self.message(section="build")
             else:
                 self.message(section="build")
+
+
+class has_run_test_and_commands(LintCheck):
+    """Test commands are not executed when run_test.sh (.bat...) is present.
+
+    Remove ``test/commands`` or call ``run_test`` from ``test/commands``:
+
+      tests:
+        commands:
+          - run_test.sh    # [unix]
+          - run_test.bat   # [win]
+
+    """
+
+    def check_recipe(self, recipe):
+        if recipe.get("test/commands", []) and set(os.listdir(recipe.recipe_dir)).intersection(
+            {"run_test.sh", "run_test.py", "run_test.bat"}
+        ):
+            self.message(section="test/commands")
+
+
+class missing_pip_check(LintCheck):
+    """For pypi packages, pip check should be present in the test commands
+
+    Add pip check to test/commands:
+
+      tests:
+        commands:
+          - pip check
+    """
+
+    def check_recipe(self, recipe):
+
+        if is_pypi_source(recipe) or "pip install" in self.recipe.get("build/script", ""):
+            if not any("pip check" in cmd for cmd in recipe.get("test/commands", [])):
+                self.message(section="test/commands")
+
+
+class missing_wheel(LintCheck):
+    """For pypi packages, wheel should be present in the host section
+
+    Add wheel to requirements/host:
+
+      requirements:
+        host:
+          - wheel
+    """
+
+    def check_recipe(self, recipe):
+
+        if is_pypi_source(recipe) or "pip install" in self.recipe.get("build/script", ""):
+            if "wheel" not in recipe.get_deps("host"):
+                self.message(section="requirements/host")
+
+
+class missing_python(LintCheck):
+    """For pypi packages, python should be present in the host and run sections
+
+    Add python:
+
+      requirements:
+        host:
+          - python
+        run:
+          - python
+    """
+
+    def check_recipe(self, recipe):
+
+        if is_pypi_source(recipe) or "pip install" in self.recipe.get("build/script", ""):
+            if "python" not in recipe.get_deps("host"):
+                self.message(section="requirements/host")
+            if "python" not in recipe.get_deps("run"):
+                self.message(section="requirements/run")
+
+
+class remove_python_pinning(LintCheck):
+    """On arch specific packages, python deps should not be constrained.
+
+    Replace python constraints by a skip directive:
+
+      build:
+        skip: True # [py<38]
+
+      requirements:
+        host:
+          - python
+        run:
+          - python
+    """
+
+    def check_recipe(self, recipe):
+        if recipe.get("build/noarch", "") == "":
+            if (
+                "python" in recipe.get_deps("host")
+                and recipe.get_deps_dict("host")["python"]["constraints"] != []
+            ):
+                self.message(section=recipe.get_deps_dict("host")["python"]["paths"][0])
+            if (
+                "python" in recipe.get_deps("run")
+                and recipe.get_deps_dict("run")["python"]["constraints"] != []
+            ):
+                self.message(section=recipe.get_deps_dict("run")["python"]["paths"][0])
+
+
+class gui_app(LintCheck):
+    """This may be a GUI application. It is advised to test the GUI."""
+
+    severity = INFO
+
+    guis = ("qtpy", "pyqt")
+
+    def check_recipe(self, recipe):
+        if set(self.guis).intersection(set(recipe.get_deps("run"))):
+            self.message()
