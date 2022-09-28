@@ -7,8 +7,22 @@ These checks catch errors relating to the use of ``-
 
 import os
 
-# from . import ERROR, INFO
-from . import WARNING, LintCheck
+from . import INFO, WARNING, LintCheck
+
+
+def is_pypi_source(recipe):
+    # is it a pypi package?
+    pypi_urls = ["pypi.io", "pypi.org", "pypi.python.org"]
+    pypi_source = False
+    source = recipe.get("source", None)
+    if isinstance(source, dict):
+        pypi_source = any(x in source.get("url", "") for x in pypi_urls)
+    elif isinstance(source, list):
+        for src in source:
+            pypi_source = any(x in src.get("url", "") for x in pypi_urls)
+            if pypi_source:
+                break
+    return pypi_source
 
 
 class should_use_compilers(LintCheck):
@@ -214,12 +228,10 @@ class has_run_test_and_commands(LintCheck):
     """
 
     def check_recipe(self, recipe):
-        commands = recipe.get("test/commands", [])
-        if commands != []:
-            if set(os.listdir(recipe.recipe_dir)).intersection(
-                {"run_test.sh", "run_test.py", "run_test.bat"}
-            ):
-                self.message(section="test/commands")
+        if recipe.get("test/commands", []) and set(os.listdir(recipe.recipe_dir)).intersection(
+            {"run_test.sh", "run_test.py", "run_test.bat"}
+        ):
+            self.message(section="test/commands")
 
 
 class missing_pip_check(LintCheck):
@@ -234,18 +246,7 @@ class missing_pip_check(LintCheck):
 
     def check_recipe(self, recipe):
 
-        # is it a pypi package?
-        pypi_source = False
-        source = recipe.get("source", None)
-        if isinstance(source, dict):
-            pypi_source = "pypi.io" in source.get("url", "")
-        elif isinstance(source, list):
-            for num, src in enumerate(source):
-                pypi_source = "pypi.io" in source.get("url", "")
-                if pypi_source:
-                    break
-
-        if pypi_source:
+        if is_pypi_source(recipe) or "pip install" in self.recipe.get("build/script", ""):
             if not any("pip check" in cmd for cmd in recipe.get("test/commands", [])):
                 self.message(section="test/commands")
 
@@ -262,18 +263,7 @@ class missing_wheel(LintCheck):
 
     def check_recipe(self, recipe):
 
-        # is it a pypi package?
-        pypi_source = False
-        source = recipe.get("source", None)
-        if isinstance(source, dict):
-            pypi_source = "pypi.io" in source.get("url", "")
-        elif isinstance(source, list):
-            for num, src in enumerate(source):
-                pypi_source = "pypi.io" in source.get("url", "")
-                if pypi_source:
-                    break
-
-        if pypi_source:
+        if is_pypi_source(recipe) or "pip install" in self.recipe.get("build/script", ""):
             if "wheel" not in recipe.get_deps("host"):
                 self.message(section="requirements/host")
 
@@ -292,18 +282,7 @@ class missing_python(LintCheck):
 
     def check_recipe(self, recipe):
 
-        # is it a pypi package?
-        pypi_source = False
-        source = recipe.get("source", None)
-        if isinstance(source, dict):
-            pypi_source = "pypi.io" in source.get("url", "")
-        elif isinstance(source, list):
-            for num, src in enumerate(source):
-                pypi_source = "pypi.io" in source.get("url", "")
-                if pypi_source:
-                    break
-
-        if pypi_source:
+        if is_pypi_source(recipe) or "pip install" in self.recipe.get("build/script", ""):
             if "python" not in recipe.get_deps("host"):
                 self.message(section="requirements/host")
             if "python" not in recipe.get_deps("run"):
@@ -342,7 +321,7 @@ class remove_python_pinning(LintCheck):
 class gui_app(LintCheck):
     """This may be a GUI application. It is advised to test the GUI."""
 
-    severity = WARNING
+    severity = INFO
 
     guis = ("qtpy", "pyqt")
 
