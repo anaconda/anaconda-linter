@@ -45,7 +45,22 @@ class should_use_compilers(LintCheck):
 
     """
 
-    compilers = ("gcc", "llvm", "libgfortran", "libgcc", "go", "cgo", "toolchain", "rust", "rust-gnu", "cuda", "dpcpp", "m2w64_c", "m2w64_cxx", 'm2w64_fortran')
+    compilers = (
+        "gcc",
+        "llvm",
+        "libgfortran",
+        "libgcc",
+        "go",
+        "cgo",
+        "toolchain",
+        "rust",
+        "rust-gnu",
+        "cuda",
+        "dpcpp",
+        "m2w64_c",
+        "m2w64_cxx",
+        "m2w64_fortran",
+    )
 
     def check_deps(self, deps):
         for compiler in self.compilers:
@@ -323,7 +338,20 @@ class gui_app(LintCheck):
 
     severity = INFO
 
-    guis = ("qtpy", "pyqt", "spyder", "wxpython", "qtcreator", "qt3dstudio", "orange3", "jupyterlab", "jupyterhub", "glueviz", "glue-core", "enaml")
+    guis = (
+        "qtpy",
+        "pyqt",
+        "spyder",
+        "wxpython",
+        "qtcreator",
+        "qt3dstudio",
+        "orange3",
+        "jupyterlab",
+        "jupyterhub",
+        "glueviz",
+        "glue-core",
+        "enaml",
+    )
 
     def check_recipe(self, recipe):
         if set(self.guis).intersection(set(recipe.get_deps("run"))):
