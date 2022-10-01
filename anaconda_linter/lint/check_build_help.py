@@ -45,7 +45,7 @@ class should_use_compilers(LintCheck):
 
     """
 
-    compilers = ("gcc", "llvm", "libgfortran", "libgcc", "go", "cgo", "toolchain")
+    compilers = ("gcc", "llvm", "libgfortran", "libgcc", "go", "cgo", "toolchain", "rust", "rust-gnu", "cuda", "dpcpp", "m2w64_c", "m2w64_cxx", 'm2w64_fortran')
 
     def check_deps(self, deps):
         for compiler in self.compilers:
