@@ -85,6 +85,23 @@ class uses_setuptools(LintCheck):
             self.message()
 
 
+class missing_wheel(LintCheck):
+    """For pypi packages, wheel should be present in the host section
+
+    Add wheel to requirements/host:
+
+      requirements:
+        host:
+          - wheel
+    """
+
+    def check_recipe(self, recipe):
+
+        if is_pypi_source(recipe) or "pip install" in self.recipe.get("build/script", ""):
+            if "wheel" not in recipe.get_deps("host"):
+                self.message(section="requirements/host")
+
+
 class setup_py_install_args(LintCheck):
     """The recipe uses setuptools without required arguments
 
@@ -249,23 +266,6 @@ class missing_pip_check(LintCheck):
         if is_pypi_source(recipe) or "pip install" in self.recipe.get("build/script", ""):
             if not any("pip check" in cmd for cmd in recipe.get("test/commands", [])):
                 self.message(section="test/commands")
-
-
-class missing_wheel(LintCheck):
-    """For pypi packages, wheel should be present in the host section
-
-    Add wheel to requirements/host:
-
-      requirements:
-        host:
-          - wheel
-    """
-
-    def check_recipe(self, recipe):
-
-        if is_pypi_source(recipe) or "pip install" in self.recipe.get("build/script", ""):
-            if "wheel" not in recipe.get_deps("host"):
-                self.message(section="requirements/host")
 
 
 class missing_python(LintCheck):
