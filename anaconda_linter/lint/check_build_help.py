@@ -323,7 +323,7 @@ class gui_app(LintCheck):
 
     severity = INFO
 
-    guis = ("qtpy", "pyqt")
+    guis = ("qtpy", "pyqt", "spyder", "wxpython", "qtcreator", "qt3dstudio", "orange3", "jupyterlab", "jupyterhub", "glueviz", "glue-core", "enaml")
 
     def check_recipe(self, recipe):
         if set(self.guis).intersection(set(recipe.get_deps("run"))):
