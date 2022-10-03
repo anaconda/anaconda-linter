@@ -46,20 +46,20 @@ class should_use_compilers(LintCheck):
     """
 
     compilers = (
-        "gcc",
-        "llvm",
-        "libgfortran",
-        "libgcc",
-        "go",
         "cgo",
-        "toolchain",
-        "rust",
-        "rust-gnu",
         "cuda",
         "dpcpp",
+        "gcc",
+        "go",
+        "libgcc",
+        "libgfortran",
+        "llvm",
         "m2w64_c",
         "m2w64_cxx",
         "m2w64_fortran",
+        "rust-gnu",
+        "rust",
+        "toolchain",
     )
 
     def check_deps(self, deps):
@@ -339,18 +339,18 @@ class gui_app(LintCheck):
     severity = INFO
 
     guis = (
-        "qtpy",
+        "enaml",
+        "glue-core",
+        "glueviz",
+        "jupyterhub",
+        "jupyterlab",
+        "orange3",
         "pyqt",
+        "qt3dstudio",
+        "qtcreator",
+        "qtpy",
         "spyder",
         "wxpython",
-        "qtcreator",
-        "qt3dstudio",
-        "orange3",
-        "jupyterlab",
-        "jupyterhub",
-        "glueviz",
-        "glue-core",
-        "enaml",
     )
 
     def check_recipe(self, recipe):
