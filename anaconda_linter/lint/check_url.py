@@ -22,6 +22,7 @@ class invalid_url(LintCheck):
             acceptable_redirects = [
                 ("pypi.io", "pypi.org"),
                 ("github.com", "objects.githubusercontent.com"),
+                ("github.com", "codeload.github.com"),
             ]
             if response_data["code"] < 0 and "domain_redirect" in response_data:
                 for redir in acceptable_redirects:
