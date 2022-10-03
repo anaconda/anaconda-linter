@@ -45,7 +45,22 @@ class should_use_compilers(LintCheck):
 
     """
 
-    compilers = ("gcc", "llvm", "libgfortran", "libgcc", "go", "cgo", "toolchain")
+    compilers = (
+        "cgo",
+        "cuda",
+        "dpcpp",
+        "gcc",
+        "go",
+        "libgcc",
+        "libgfortran",
+        "llvm",
+        "m2w64_c",
+        "m2w64_cxx",
+        "m2w64_fortran",
+        "rust-gnu",
+        "rust",
+        "toolchain",
+    )
 
     def check_deps(self, deps):
         for compiler in self.compilers:
@@ -83,6 +98,23 @@ class uses_setuptools(LintCheck):
     def check_recipe(self, recipe):
         if "setuptools" in recipe.get_deps("run"):
             self.message()
+
+
+class missing_wheel(LintCheck):
+    """For pypi packages, wheel should be present in the host section
+
+    Add wheel to requirements/host:
+
+      requirements:
+        host:
+          - wheel
+    """
+
+    def check_recipe(self, recipe):
+
+        if is_pypi_source(recipe) or "pip install" in self.recipe.get("build/script", ""):
+            if "wheel" not in recipe.get_deps("host"):
+                self.message(section="requirements/host")
 
 
 class setup_py_install_args(LintCheck):
@@ -251,23 +283,6 @@ class missing_pip_check(LintCheck):
                 self.message(section="test/commands")
 
 
-class missing_wheel(LintCheck):
-    """For pypi packages, wheel should be present in the host section
-
-    Add wheel to requirements/host:
-
-      requirements:
-        host:
-          - wheel
-    """
-
-    def check_recipe(self, recipe):
-
-        if is_pypi_source(recipe) or "pip install" in self.recipe.get("build/script", ""):
-            if "wheel" not in recipe.get_deps("host"):
-                self.message(section="requirements/host")
-
-
 class missing_python(LintCheck):
     """For pypi packages, python should be present in the host and run sections
 
@@ -323,7 +338,20 @@ class gui_app(LintCheck):
 
     severity = INFO
 
-    guis = ("qtpy", "pyqt")
+    guis = (
+        "enaml",
+        "glue-core",
+        "glueviz",
+        "jupyterhub",
+        "jupyterlab",
+        "orange3",
+        "pyqt",
+        "qt3dstudio",
+        "qtcreator",
+        "qtpy",
+        "spyder",
+        "wxpython",
+    )
 
     def check_recipe(self, recipe):
         if set(self.guis).intersection(set(recipe.get_deps("run"))):
