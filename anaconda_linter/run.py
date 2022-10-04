@@ -107,3 +107,7 @@ def main():
         print("Warnings were found")
     else:
         sys.exit("Errors were found")
+
+
+if __name__ == "__main__":
+    main()
