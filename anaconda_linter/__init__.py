@@ -1,4 +1,4 @@
-__version__ = "0.0.2"
+__version__ = "0.0.3"
 __author__ = "Anaconda, Inc."
 __email__ = "distribution_team@anaconda.com"
 __license__ = "BSD-3-Clause"
