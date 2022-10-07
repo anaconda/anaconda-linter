@@ -106,7 +106,7 @@ def main():
     elif overall_result == lint.WARNING:
         print("Warnings were found")
     else:
-        sys.exit("Errors were found")
+        print("Errors were found")
 
 
 if __name__ == "__main__":
