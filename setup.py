@@ -23,7 +23,6 @@ def main():
         package_data={
             "anaconda_linter": ["data/*.txt", "data/*.yaml", "config*.yaml", "build-fail-blocklist"]
         },
-        include_package_data=True,
         entry_points={
             "console_scripts": [
                 "conda-lint = anaconda_linter.run:main",
@@ -35,6 +34,7 @@ def main():
             "jsonschema",
             "license-expression",
             "networkx",
+            "pyyaml",
             "requests",
             "ruamel.yaml>=0.16.1",
             "tqdm",
