@@ -5,7 +5,7 @@ Credits
 Development Lead
 ----------------
 
-* Anaconda, Inc.
+* Anaconda, Inc. <distribution_team@anaconda.com>
 
 Contributors
 ------------
