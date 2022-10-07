@@ -1,6 +1,9 @@
 # Anaconda Linter
 
-This package is currently a very rough draft of a pure Python linter specifically to make sure
+Anaconda Linter is a utility to validate that a recipe for a conda package
+will render correctly, and has been filled out with the correct information.
+
+The package is currently a very rough draft of a pure Python linter specifically to make sure
 that packages' meta.yaml files adhere to certain Anaconda standards.
 
 ## Installation
@@ -61,3 +64,6 @@ This new package is inspired by bioconda's [linter](https://github.com/bioconda/
 Some of the code for suggesting hints comes from [Peter Norvig](http://norvig.com/spell-correct.html).
 
 This README will continue to be fleshed out as time goes on.
+
+## License
+[BSD-3-Clause](https://choosealicense.com/licenses/bsd-3-clause/)
