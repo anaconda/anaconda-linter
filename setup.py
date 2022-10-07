@@ -4,7 +4,7 @@ import anaconda_linter
 
 
 def main():
-    with open("README.md", mode="r", encoding="utf-8") as f:
+    with open("README.md", encoding="utf-8") as f:
         readme: str = f.read()
 
     run_lint = dict(
