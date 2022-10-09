@@ -1,7 +1,7 @@
 # Anaconda Linter
 
 Anaconda Linter is a utility to validate that a recipe for a conda package
-will render correctly, and has been filled out with the correct information.
+will render correctly.
 
 The package is currently a very rough draft of a pure Python linter specifically to make sure
 that packages' meta.yaml files adhere to certain Anaconda standards.
