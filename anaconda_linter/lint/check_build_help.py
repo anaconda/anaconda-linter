@@ -6,6 +6,8 @@ These checks catch errors relating to the use of ``-
 """
 
 import os
+import yaml
+from pathlib import Path
 
 from . import INFO, WARNING, LintCheck
 
@@ -355,4 +357,19 @@ class gui_app(LintCheck):
 
     def check_recipe(self, recipe):
         if set(self.guis).intersection(set(recipe.get_deps("run"))):
+            self.message()
+
+
+
+class package_in_general_cbc_yaml(LintCheck):
+    """This package is mentioned inside the conda_build_config.yaml file. It is advised to discuss if updating the package is really needed."""
+
+    severity = WARNING
+
+    def check_recipe(self, recipe):
+        general_cbc_yaml_path = f"{Path(recipe.recipe_dir).parents[1]}/conda_build_config.yaml"
+        with open(general_cbc_yaml_path, "r") as f:
+            general_cbc_yaml = yaml.safe_load(f)
+        if set(general_cbc_yaml.keys()).intersection(set(recipe.package_names)):
+        #if any(map(lambda w: w in cbc_yaml.keys(), recipe.package_names)):
             self.message()
