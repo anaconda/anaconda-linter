@@ -360,7 +360,6 @@ class gui_app(LintCheck):
             self.message()
 
 
-
 class package_in_general_cbc_yaml(LintCheck):
     """This package is mentioned inside the conda_build_config.yaml file. It is advised to discuss if updating the package is really needed."""
 
