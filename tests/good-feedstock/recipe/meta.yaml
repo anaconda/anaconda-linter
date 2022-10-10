@@ -66,7 +66,7 @@ test:
 
 about:
   home: https://pillow.readthedocs.io
-  license: LicenseRef-PIL
+  # license: LicenseRef-PIL
   license_family: Other
   license_file: LICENSE
   license_url: https://github.com/python-pillow/Pillow/blob/main/LICENSE
