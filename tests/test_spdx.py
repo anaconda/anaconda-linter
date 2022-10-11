@@ -11,11 +11,7 @@ from anaconda_linter.recipe import Recipe
 yaml = YAML(typ="rt")
 
 
-def test_stub():
-    assert True
-
-
-@pytest.fixture
+@pytest.fixture()
 def linter():
     """Sets up linter for use in other fixtures"""
     config_file = os.path.abspath(os.path.dirname(__file__) + "/../anaconda_linter/config.yaml")
@@ -24,7 +20,7 @@ def linter():
     return linter
 
 
-@pytest.fixture
+@pytest.fixture()
 def base_yaml():
     yaml_str = """\
         package:
@@ -49,6 +45,21 @@ def test_spdx_good(linter, base_yaml):
     assert len(messages) == 0
 
 
+def test_spdx_bad(linter, base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        about:
+          license: AARP-50+
+        """
+    )
+    recipe = Recipe.from_string(yaml_str)
+    recipe.render()
+    lintcheck = incorrect_license(_linter=linter)
+    messages = lintcheck.run(recipe=recipe)
+    assert len(messages) == 1 and "closest match" not in messages[0].title
+
+
 def test_spdx_close(linter, base_yaml):
     yaml_str = (
         base_yaml
@@ -62,19 +73,3 @@ def test_spdx_close(linter, base_yaml):
     lintcheck = incorrect_license(_linter=linter)
     messages = lintcheck.run(recipe=recipe)
     assert len(messages) == 1 and "closest match: BSD-3-Clause" in messages[0].title
-
-
-# Currently the close test's recipe is being carried over to this test
-def test_spdx_bad(linter, base_yaml):
-    yaml_str = (
-        base_yaml
-        + """
-        about:
-          license: AARP-50+
-        """
-    )
-    recipe = Recipe.from_string(yaml_str)
-    recipe.render()
-    lintcheck = incorrect_license(_linter=linter)
-    messages = lintcheck.run(recipe=recipe)
-    assert len(messages) == 1
