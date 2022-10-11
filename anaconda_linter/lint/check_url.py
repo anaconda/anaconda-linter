@@ -7,6 +7,12 @@ Verify that the URLs in the recipe are valid
 from .. import utils
 from . import WARNING, LintCheck
 
+reset_text = """{} : {}
+
+    Please add a valid URL.
+
+"""
+
 
 class invalid_url(LintCheck):
     """{} : {}
@@ -54,6 +60,7 @@ class invalid_url(LintCheck):
                         url, response_data["message"]
                     )
                     self.message(section=url_field)
+                    self.__class__.__doc__ = reset_text
 
 
 class http_url(LintCheck):
@@ -84,3 +91,4 @@ class http_url(LintCheck):
             if url.lower().startswith("http://"):
                 self.__class__.__doc__ = self.__class__.__doc__.format(url)
                 self.message(section=url_field.split("/")[0])
+                self.__class__.__doc__ = reset_text
