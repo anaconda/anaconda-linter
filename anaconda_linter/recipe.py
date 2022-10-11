@@ -43,11 +43,6 @@ from . import utils
 yaml = YAML(typ="rt")  # pylint: disable=invalid-name
 
 
-class Test:
-    def __init__(self):
-        self.attribute = "test"
-
-
 # Hack: mirror stringify from conda-build in removing implicit
 #       resolution of numbers
 for digit in "0123456789":
