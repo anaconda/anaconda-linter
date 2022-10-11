@@ -1,10 +1,9 @@
 import os
-from collections import OrderedDict
 
 import pytest
 from ruamel_yaml import YAML
 
-from anaconda_linter import utils
+import anaconda_linter.utils as utils
 from anaconda_linter.lint import Linter
 from anaconda_linter.lint.check_spdx import incorrect_license
 from anaconda_linter.recipe import Recipe
@@ -25,28 +24,57 @@ def linter():
     return linter
 
 
-def test_spdx_good(linter):
-    d = OrderedDict()
-    d["about/license"] = "BSD-3-Clause"
-    lintcheck = incorrect_license(_linter=linter)
-    messages = lintcheck.check_recipe(recipe=d)
-    assert messages is None
-
-
-def test_spdx_bad(linter):
-    # creating an ordered dict won't work,
+@pytest.fixture
+def base_yaml():
     yaml_str = """\
+        package:
+          name: test_package
+          version: 0.0.1
+        """
+    return yaml_str
+
+
+def test_spdx_good(linter, base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        about:
+          license: BSD-3-Clause
+        """
+    )
+    recipe = Recipe.from_string(yaml_str)
+    recipe.render()
+    lintcheck = incorrect_license(_linter=linter)
+    messages = lintcheck.run(recipe=recipe)
+    assert len(messages) == 0
+
+
+def test_spdx_close(linter, base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
         about:
           license: BSE-3-Clause
         """
-    print(yaml_str)
-    recipe = Recipe.from_file("tests/good-feedstock/recipe/meta.yaml")
+    )
+    recipe = Recipe.from_string(yaml_str)
     recipe.render()
-    # one solution is to then insert a value into the recipe
-    # recipe.meta['about'].insert(1, 'license', 'BSE-3-Clause')
-    # data = yaml.load("good-feedstock/recipe/meta.yaml")
-    # data['about'].insert(1, 'license', 'BSE-3-Clause')
-    # create a recipe from this
     lintcheck = incorrect_license(_linter=linter)
-    messages = lintcheck.check_recipe(recipe=recipe)
-    assert len(messages) > 0
+    messages = lintcheck.run(recipe=recipe)
+    assert len(messages) == 1 and "closest match: BSD-3-Clause" in messages[0].title
+
+
+# Currently the close test's recipe is being carried over to this test
+def test_spdx_bad(linter, base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        about:
+          license: AARP-50+
+        """
+    )
+    recipe = Recipe.from_string(yaml_str)
+    recipe.render()
+    lintcheck = incorrect_license(_linter=linter)
+    messages = lintcheck.run(recipe=recipe)
+    assert len(messages) == 1
