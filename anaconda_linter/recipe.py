@@ -42,6 +42,12 @@ from . import utils
 
 yaml = YAML(typ="rt")  # pylint: disable=invalid-name
 
+
+class Test:
+    def __init__(self):
+        self.attribute = "test"
+
+
 # Hack: mirror stringify from conda-build in removing implicit
 #       resolution of numbers
 for digit in "0123456789":
@@ -154,7 +160,6 @@ class Recipe:
     }
 
     def __init__(self, recipe_dir):
-
         #: recipe dir
         self.recipe_dir = recipe_dir
 
@@ -236,6 +241,38 @@ class Recipe:
             except Exception:
                 continue
             self.build_scripts[script] = content
+
+    @classmethod
+    def from_string(
+        cls,
+        recipe_text,
+        selector_dict={},
+        variant_config_files: List[str] = [],
+        exclusive_config_files: List[str] = [],
+        return_exceptions=False,
+    ) -> "Recipe":
+        """Create new `Recipe` object from string"""
+        try:
+            recipe = cls("")
+            recipe.load_from_string(recipe_text, selector_dict)
+        except Exception as exc:
+            if return_exceptions:
+                return exc
+            raise exc
+        try:
+            recipe.read_conda_build_config(variant_config_files, exclusive_config_files)
+        except Exception as exc:
+            if return_exceptions:
+                return exc
+            raise exc
+        try:
+            recipe.read_build_scripts()
+        except Exception as exc:
+            if return_exceptions:
+                return exc
+            raise exc
+        recipe.set_original()
+        return recipe
 
     @classmethod
     def from_file(
