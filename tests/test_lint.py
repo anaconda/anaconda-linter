@@ -1,6 +1,6 @@
-from anaconda_linter.recipe import Recipe
 import os
 import pytest
+from anaconda_linter.recipe import Recipe
 try:
     from ruamel.yaml import YAML
 except ModuleNotFoundError:

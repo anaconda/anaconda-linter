@@ -29,12 +29,12 @@ from conda_build.metadata import MetaData
 
 
 try:
-    from ruamel.yaml import round_trip_dump, YAML
+    from ruamel.yaml import YAML, round_trip_dump
     from ruamel.yaml.constructor import DuplicateKeyError
 
     # from ruamel.yaml.error import YAMLError
 except ModuleNotFoundError:
-    from ruamel_yaml import round_trip_dump, YAML
+    from ruamel_yaml import YAML, round_trip_dump
     from ruamel_yaml.constructor import DuplicateKeyError
 
     # from ruamel_yaml.error import YAMLError
