@@ -256,7 +256,7 @@ class Recipe:
             selector_dict,
             variant_config_files,
             exclusive_config_files,
-            return_exceptions
+            return_exceptions,
         )
 
     @classmethod
