@@ -1,0 +1,14 @@
+- name: version_constraints_missing_whitespace_good
+  check: version_constraints_missing_whitespace
+  add:
+    requirements:
+      host:
+        - setuptools >=50
+  pass: true
+- name: version_constraints_missing_whitespace_bad
+  check: version_constraints_missing_whitespace
+  add:
+    requirements:
+      host:
+        - setuptools>=50
+  pass: false
