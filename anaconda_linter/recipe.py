@@ -251,7 +251,13 @@ class Recipe:
         round_trip_dump(recipe_yaml, stringstream)
         recipe_text = stringstream.getvalue()
         stringstream.close()
-        return Recipe.from_string(recipe_text, selector_dict, variant_config_files, exclusive_config_files, return_exceptions)
+        return Recipe.from_string(
+            recipe_text,
+            selector_dict,
+            variant_config_files,
+            exclusive_config_files,
+            return_exceptions
+        )
 
     @classmethod
     def from_string(
