@@ -38,7 +38,7 @@ except ModuleNotFoundError:
 
     # from ruamel_yaml.error import YAMLError
 
-from . import utils
+import anaconda_linter.utils as utils
 
 yaml = YAML(typ="rt")  # pylint: disable=invalid-name
 
