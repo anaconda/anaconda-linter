@@ -12,3 +12,4 @@
       host:
         - setuptools>=50
   pass: false
+  message: version constraints must be space separated
