@@ -26,5 +26,5 @@ def test_lint(linter, base_yaml, test):
     if test.get("pass", True):
         assert len(messages) == 0
     else:
-        message = test.get('message', '')
+        message = test.get("message", "")
         assert len(messages) == 1 and message in messages[0].title
