@@ -2,8 +2,7 @@ import argparse
 import os
 import textwrap
 
-import anaconda_linter.lint as lint
-import anaconda_linter.utils as utils
+from . import lint, utils
 
 
 def lint_parser() -> argparse.ArgumentParser:
