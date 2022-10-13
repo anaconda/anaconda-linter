@@ -7,7 +7,6 @@ from anaconda_linter.lint import Linter
 from anaconda_linter.recipe import Recipe
 
 
-
 @pytest.fixture()
 def linter():
     """Sets up linter for use in other tests"""
