@@ -13,12 +13,12 @@ import queue
 import subprocess as sp
 import sys
 from collections import Counter
+from copy import deepcopy
 from functools import partial
 from multiprocessing import Pool
 from pathlib import Path
 from threading import Thread
 from typing import Any, Dict, List, Sequence
-from copy import deepcopy
 
 # FIXME(upstream): For conda>=4.7.0 initialize_logging is (erroneously) called
 #                  by conda.core.index.get_index which messes up our logging.
