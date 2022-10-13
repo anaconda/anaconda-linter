@@ -14,16 +14,16 @@ def main():
 
     requirements = [
         "conda-build",
-        "jinja2>=3.0.3",
+        "jinja2",
         "jsonschema",
         "license-expression",
         "networkx",
         "pyyaml",
         "requests",
-        "ruamel.yaml>=0.16.1",
+        "ruamel.yaml",
         "tqdm",
     ]
-    test_requirements = ["pytest>=3", "pytest-cov", "pytest-html"]
+    test_requirements = ["pytest", "pytest-cov", "pytest-html"]
 
     run_lint = dict(
         author_email=anaconda_linter.__email__,
