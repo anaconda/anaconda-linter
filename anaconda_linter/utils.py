@@ -18,6 +18,7 @@ from multiprocessing import Pool
 from pathlib import Path
 from threading import Thread
 from typing import Any, Dict, List, Sequence
+from copy import deepcopy
 
 # FIXME(upstream): For conda>=4.7.0 initialize_logging is (erroneously) called
 #                  by conda.core.index.get_index which messes up our logging.
@@ -504,7 +505,7 @@ def load_config(path):
             arch = arch_config_path.stem.split("cbc_")[1]
             if arch != "default":
                 with open(arch_config_path) as text:
-                    default_config[arch] = init_arch
+                    default_config[arch] = deepcopy(init_arch)
                     default_config[arch].update(yaml.safe_load(text.read()))
 
     return default_config
