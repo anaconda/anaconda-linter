@@ -101,8 +101,8 @@ from typing import Any, Dict, List, NamedTuple, Tuple
 
 import networkx as nx
 
-import anaconda_linter.recipe as _recipe
-import anaconda_linter.utils as utils
+from .. import recipe as _recipe
+from .. import utils
 
 logger = logging.getLogger(__name__)
 
