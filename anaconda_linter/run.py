@@ -69,6 +69,12 @@ def lint_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Enable verbose output. This displays all of the checks that the linter is running.",
     )
+    parser.add_argument(
+        "-c",
+        "--compact",
+        action="store_true",
+        help="Enable compact output. This displays a compact version of all the checks that the linter is running.",
+    )
     return parser
 
 
