@@ -243,6 +243,9 @@ class patch_must_be_in_build(LintCheck):
             if "patch" in deps:
                 if any("build" not in location for location in deps["patch"]["paths"]):
                     self.message(section="build")
+            elif "m2-patch" in deps:
+                if any("build" not in location for location in deps["m2-patch"]["paths"]):
+                    self.message(section="build")
             else:
                 self.message(section="build")
 
