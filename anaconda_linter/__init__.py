@@ -1,4 +1,4 @@
-__name__ = "anaconda-linter"
+__name__ = "anaconda_linter"
 __version__ = "0.0.3"
 __author__ = "Anaconda, Inc."
 __email__ = "distribution_team@anaconda.com"
