@@ -7,8 +7,14 @@ The package is currently a very rough draft of a pure Python linter specifically
 that packages' meta.yaml files adhere to certain Anaconda standards.
 
 ## Installation
+<<<<<<< HEAD
 1. `make environment`
 2. `make install`
+=======
+1. `conda env create -f environment.yaml`
+2. `conda activate anaconda-linter`
+3. `make install`
+>>>>>>> 2ac03e3 (Update installation instructions)
 
 ## Usage
 
