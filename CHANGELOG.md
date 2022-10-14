@@ -1,6 +1,11 @@
 # Changelog
 Note: version releases in the 0.x.y range may introduce breaking changes.
 
+## 0.0.3
+
+- Update installation files
+- Bug fixes
+
 ## 0.0.2
 
 - patch: Additional checks added
