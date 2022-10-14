@@ -73,7 +73,8 @@ def lint_parser() -> argparse.ArgumentParser:
         "-c",
         "--compact",
         action="store_true",
-        help="Enable compact output. This displays a compact version of all the checks that the linter is running.",
+        help="""Enable compact output. This displays a compact
+        version of all the checks that the linter is running.""",
     )
     return parser
 
