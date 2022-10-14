@@ -13,6 +13,7 @@ import queue
 import subprocess as sp
 import sys
 from collections import Counter
+from copy import deepcopy
 from functools import partial
 from multiprocessing import Pool
 from pathlib import Path
@@ -504,7 +505,7 @@ def load_config(path):
             arch = arch_config_path.stem.split("cbc_")[1]
             if arch != "default":
                 with open(arch_config_path) as text:
-                    default_config[arch] = init_arch
+                    default_config[arch] = deepcopy(init_arch)
                     default_config[arch].update(yaml.safe_load(text.read()))
 
     return default_config
