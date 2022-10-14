@@ -16,16 +16,6 @@ LICENSES_PATH = Path("..", "data", "licenses.txt")
 EXCEPTIONS_PATH = Path("..", "data", "license_exceptions.txt")
 
 
-reset_text = """{}
-
-    Please review::
-
-        about:
-           license: <name of license>
-
-"""
-
-
 class incorrect_license(LintCheck):
     """{}
 
@@ -68,6 +58,7 @@ class incorrect_license(LintCheck):
             expected_exceptions = {l.strip() for l in expected_exceptions}  # noqa
         non_spdx_licenses = set(filtered_licenses) - expected_licenses
         if non_spdx_licenses:
+            reset_text = self.__class__.__doc__
             for license in non_spdx_licenses:
                 closest = utils.find_closest_match(license)
                 if closest:
@@ -84,6 +75,7 @@ class incorrect_license(LintCheck):
                 self.__class__.__doc__ = reset_text
         non_spdx_exceptions = set(parsed_exceptions) - expected_exceptions
         if non_spdx_exceptions:
+            reset_text = self.__class__.__doc__
             self.__class__.__doc__ = self.__class__.__doc__.format(
                 "The recipe's `about/license` key is not an SPDX compliant license"
                 " or license exception, reference https://spdx.org/licenses/exceptions-index.html"
