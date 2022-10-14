@@ -105,7 +105,7 @@ def main():
     # print report
     if messages:
         print("The following problems have been found:\n")
-        print(lint.Linter.get_report(messages, args.verbose))
+        print(lint.Linter.get_report(messages, args.verbose, args.compact))
     if not overall_result:
         print("All checks OK")
     elif overall_result == lint.WARNING:

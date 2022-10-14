@@ -97,6 +97,7 @@ import pkgutil
 import re
 from collections import defaultdict
 from enum import IntEnum
+from turtle import title
 from typing import Any, Dict, List, NamedTuple, Tuple
 
 import networkx as nx
@@ -501,6 +502,7 @@ class Linter:
         verbose: bool = False,
         exclude: List[str] = None,
         nocatch: bool = False,
+        compact: bool = False,
     ) -> None:
         self.config = config
         self.skip = self.load_skips()
@@ -508,6 +510,7 @@ class Linter:
         self.nocatch = nocatch
         self.verbose = verbose
         self._messages = []
+        self.compact = compact
 
         self.reload_checks()
 
@@ -535,9 +538,7 @@ class Linter:
 
     @classmethod
     def get_report(
-        cls,
-        messages: List[LintMessage],
-        verbose: bool = False,
+        cls, messages: List[LintMessage], verbose: bool = False, compact: bool = False
     ) -> LintMessage:
         messages = sorted(messages, key=lambda d: (d.fname, d.end_line))
         if verbose:
@@ -546,6 +547,11 @@ class Linter:
                     \n\t{msg.body}"
                 for msg in messages
             )
+        elif compact:
+            name = messages[0].recipe.meta.get("package", {}).get("name", None)
+            version = messages[0].recipe.meta.get("package", {}).get("version", None)
+            return f"{name} - {version}\n" + "\n".join(f"\t{msg.title}" for msg in messages)
+
         else:
             return "\n".join(
                 f"{msg.severity.name}: {msg.fname}:{msg.end_line}: {msg.check}: {msg.title}"
