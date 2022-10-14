@@ -17,6 +17,7 @@ import types
 from collections import defaultdict
 from contextlib import redirect_stderr, redirect_stdout
 from copy import deepcopy
+from io import StringIO
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Pattern, Sequence, Tuple
 
@@ -28,12 +29,12 @@ from conda_build.metadata import MetaData
 
 
 try:
-    from ruamel.yaml import YAML
+    from ruamel.yaml import YAML, round_trip_dump
     from ruamel.yaml.constructor import DuplicateKeyError
 
     # from ruamel.yaml.error import YAMLError
 except ModuleNotFoundError:
-    from ruamel_yaml import YAML
+    from ruamel_yaml import YAML, round_trip_dump
     from ruamel_yaml.constructor import DuplicateKeyError
 
     # from ruamel_yaml.error import YAMLError
@@ -236,6 +237,27 @@ class Recipe:
             except Exception:
                 continue
             self.build_scripts[script] = content
+
+    @classmethod
+    def from_yaml(
+        cls,
+        recipe_yaml,
+        selector_dict={},
+        variant_config_files: List[str] = [],
+        exclusive_config_files: List[str] = [],
+        return_exceptions=False,
+    ) -> "Recipe":
+        stringstream = StringIO()
+        round_trip_dump(recipe_yaml, stringstream)
+        recipe_text = stringstream.getvalue()
+        stringstream.close()
+        return Recipe.from_string(
+            recipe_text,
+            selector_dict,
+            variant_config_files,
+            exclusive_config_files,
+            return_exceptions,
+        )
 
     @classmethod
     def from_string(
