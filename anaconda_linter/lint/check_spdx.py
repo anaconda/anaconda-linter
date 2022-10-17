@@ -16,6 +16,16 @@ LICENSES_PATH = Path("..", "data", "licenses.txt")
 EXCEPTIONS_PATH = Path("..", "data", "license_exceptions.txt")
 
 
+reset_text = """{}
+
+    Please review::
+
+        about:
+           license: <name of license>
+
+"""
+
+
 class incorrect_license(LintCheck):
     """{}
 
@@ -71,6 +81,7 @@ class incorrect_license(LintCheck):
                         " license or license exception, reference https://spdx.org/licenses/"
                     )
                 self.message(section="about/license")
+                self.__class__.__doc__ = reset_text
         non_spdx_exceptions = set(parsed_exceptions) - expected_exceptions
         if non_spdx_exceptions:
             self.__class__.__doc__ = self.__class__.__doc__.format(
@@ -78,3 +89,4 @@ class incorrect_license(LintCheck):
                 " or license exception, reference https://spdx.org/licenses/exceptions-index.html"
             )
             self.message(section="about/license")
+            self.__class__.__doc__ = reset_text
