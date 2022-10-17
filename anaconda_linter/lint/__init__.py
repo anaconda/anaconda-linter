@@ -550,7 +550,6 @@ class Linter:
             name = messages[0].recipe.meta.get("package", {}).get("name", None)
             version = messages[0].recipe.meta.get("package", {}).get("version", None)
             return f"{name} - {version}\n" + "\n".join(f"\t{msg.title}" for msg in messages)
-
         else:
             return "\n".join(
                 f"{msg.severity.name}: {msg.fname}:{msg.end_line}: {msg.check}: {msg.title}"
