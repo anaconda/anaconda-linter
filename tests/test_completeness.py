@@ -139,6 +139,12 @@ def test_missing_tests_command(base_yaml):
     assert len(messages) == 0
 
 
+def test_missing_tests_missing(base_yaml):
+    lint_check = "missing_tests"
+    messages = check(lint_check, base_yaml)
+    assert len(messages) == 1 and "missing tests" in messages[0].title
+
+
 def test_missing_tests_family_bad(base_yaml):
     lint_check = "missing_tests"
     messages = check(lint_check, base_yaml)
