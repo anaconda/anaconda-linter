@@ -39,6 +39,25 @@ def test_missing_home_bad(base_yaml):
     assert len(messages) == 1 and "missing a homepage" in messages[0].title
 
 
+def test_missing_summary_good(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        about:
+          summary: amazing package
+        """
+    )
+    lint_check = "missing_summary"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_missing_summary_bad(base_yaml):
+    lint_check = "missing_summary"
+    messages = check(lint_check, base_yaml)
+    assert len(messages) == 1 and "missing a summary" in messages[0].title
+
+
 def test_missing_license_good(base_yaml):
     yaml_str = (
         base_yaml
