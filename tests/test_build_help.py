@@ -466,7 +466,7 @@ def test_missing_pip_check_url_bad(base_yaml):
         base_yaml
         + """
         source:
-          url: ttps://pypi.io/packages/source/D/Django/Django-4.1.tar.gz
+          url: https://pypi.io/packages/source/D/Django/Django-4.1.tar.gz
         """
     )
     lint_check = "missing_pip_check"
