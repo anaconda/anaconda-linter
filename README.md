@@ -7,9 +7,8 @@ The package is currently a very rough draft of a pure Python linter specifically
 that packages' meta.yaml files adhere to certain Anaconda standards.
 
 ## Installation
-1. `conda env create -f environment.yaml`
-2. `conda activate anaconda-linter`
-3. `make install`
+1. `make environment`
+2. `make install`
 
 ## Usage
 
@@ -45,7 +44,7 @@ Note: if you have both `skip-lints` and `only-lint`, any lints in `skip-lint` wi
 
 ## Testing the Anaconda Linter
 
-Make sure that your `conda-lint` environment is activated, then:
+Make sure that your `anaconda-linter` environment is activated, then:
 
 `pytest tests` OR `make tests` (if you would like to see test reports)
 
