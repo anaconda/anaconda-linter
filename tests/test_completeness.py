@@ -258,7 +258,9 @@ def test_non_url_source_bad(base_yaml):
             """
         )
         messages = check(lint_check, yaml_str)
-        assert len(messages) == 1 and "not url of url type" in messages[0].title, f"{src} is not recognized as a valid URL source"
+        assert (
+            len(messages) == 1 and "not url of url type" in messages[0].title
+        ), f"{src} is not recognized as a valid URL source"
 
 
 def test_missing_doc_url_good(base_yaml):

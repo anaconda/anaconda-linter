@@ -30,16 +30,16 @@ def test_invalid_url_bad(base_yaml):
 def test_invalid_url_redirect_good(base_yaml):
     redirect_urls = [
         {
-            'source': 'https://pypi.io/packages/source/D/Django/Django-4.1.tar.gz',
-            'redirect': 'pypi.io -> pypi.org',
+            "source": "https://pypi.io/packages/source/D/Django/Django-4.1.tar.gz",
+            "redirect": "pypi.io -> pypi.org",
         },
         {
-            'source': 'https://github.com/beekeeper-studio/beekeeper-studio/releases/download/v3.6.2/Beekeeper-Studio-3.6.2-portable.exe',
-            'redirect': 'github.com -> objects.githubusercontent.com',
+            "source": "https://github.com/beekeeper-studio/beekeeper-studio/releases/download/v3.6.2/Beekeeper-Studio-3.6.2-portable.exe",
+            "redirect": "github.com -> objects.githubusercontent.com",
         },
         {
-            'source': 'https://github.com/joblib/joblib/archive/1.1.1.tar.gz',
-            'redirect': 'github.com -> codeload.github.com',
+            "source": "https://github.com/joblib/joblib/archive/1.1.1.tar.gz",
+            "redirect": "github.com -> codeload.github.com",
         },
     ]
     lint_check = "invalid_url"
