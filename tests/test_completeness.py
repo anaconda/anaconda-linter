@@ -111,7 +111,7 @@ def test_invalid_license_family(base_yaml):
     assert len(messages) == 1 and "about/license_family` value" in messages[0].title
 
 
-def test_missing_tests_import(base_yaml):
+def test_missing_tests_good_import(base_yaml):
     yaml_str = (
         base_yaml
         + """
@@ -125,7 +125,7 @@ def test_missing_tests_import(base_yaml):
     assert len(messages) == 0
 
 
-def test_missing_tests_command(base_yaml):
+def test_missing_tests_good_command(base_yaml):
     yaml_str = (
         base_yaml
         + """
@@ -139,7 +139,7 @@ def test_missing_tests_command(base_yaml):
     assert len(messages) == 0
 
 
-def test_missing_tests_missing(base_yaml):
+def test_missing_tests_bad_missing(base_yaml):
     lint_check = "missing_tests"
     messages = check(lint_check, base_yaml)
     assert len(messages) == 1 and "missing tests" in messages[0].title
