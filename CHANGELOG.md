@@ -1,6 +1,12 @@
 # Changelog
 Note: version releases in the 0.x.y range may introduce breaking changes.
 
+## 0.0.4
+
+- Add test suite
+- Update documentation
+- Bug fixes for message system
+
 ## 0.0.3
 
 - Update installation files
