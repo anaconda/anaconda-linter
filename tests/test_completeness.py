@@ -159,12 +159,20 @@ def test_missing_tests_good_command(base_yaml):
 
 
 def test_missing_tests_bad_missing(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        test:
+          requires:
+            - pip
+        """
+    )
     lint_check = "missing_tests"
-    messages = check(lint_check, base_yaml)
+    messages = check(lint_check, yaml_str)
     assert len(messages) == 1 and "missing tests" in messages[0].title
 
 
-def test_missing_tests_family_bad(base_yaml):
+def test_missing_tests_bad_missing_section(base_yaml):
     lint_check = "missing_tests"
     messages = check(lint_check, base_yaml)
     assert len(messages) == 1 and "missing tests" in messages[0].title
