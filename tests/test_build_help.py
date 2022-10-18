@@ -385,7 +385,7 @@ def test_patch_must_be_in_build_missing(base_yaml):
     for patch in ["patch", "m2-patch"]:
         yaml_str = (
             base_yaml
-            + f"""
+            + """
         source:
           url: https://sqlite.com/2022/sqlite-autoconf-3380500.tar.gz
           patches:

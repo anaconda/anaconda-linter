@@ -33,7 +33,7 @@ def test_missing_home_good(base_yaml):
     assert len(messages) == 0
 
 
-def test_missing_build_number_bad(base_yaml):
+def test_missing_home_bad(base_yaml):
     lint_check = "missing_home"
     messages = check(lint_check, base_yaml)
     assert len(messages) == 1 and "missing a homepage" in messages[0].title
@@ -376,7 +376,7 @@ def test_missing_description_good(base_yaml):
     assert len(messages) == 0
 
 
-def test_missing_license_url_bad(base_yaml):
+def test_missing_description_bad(base_yaml):
     yaml_str = (
         base_yaml
         + """
