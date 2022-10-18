@@ -8,7 +8,7 @@ that packages' meta.yaml files adhere to certain Anaconda standards.
 
 ## Installation
 1. `make environment`
-2. `make install`
+2. `conda activate anaconda-linter`
 
 ## Usage
 
