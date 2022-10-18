@@ -32,7 +32,9 @@ def test_should_use_compilers_bad(base_yaml):
             """
         )
         messages = check(lint_check, yaml_str)
-        assert len(messages) == 1 and "compiler directly" in messages[0].title, f"Check failed for {compiler}"
+        assert (
+            len(messages) == 1 and "compiler directly" in messages[0].title
+        ), f"Check failed for {compiler}"
 
 
 def test_should_use_compilers_good(base_yaml):
@@ -68,7 +70,7 @@ def test_should_use_compilers_good(base_yaml):
 
 def test_compilers_must_be_in_build(base_yaml):
     lint_check = "compilers_must_be_in_build"
-    for section in ['host', 'run']:
+    for section in ["host", "run"]:
         yaml_str = (
             base_yaml
             + f"""
@@ -78,7 +80,9 @@ def test_compilers_must_be_in_build(base_yaml):
             """
         )
         messages = check(lint_check, yaml_str)
-        assert len(messages) == 1 and "compiler in a section" in messages[0].title, f"Check failed for {section}"
+        assert (
+            len(messages) == 1 and "compiler in a section" in messages[0].title
+        ), f"Check failed for {section}"
 
 
 def test_uses_setuptools_good(base_yaml):
@@ -343,7 +347,7 @@ def test_patch_must_be_in_build_good(base_yaml):
             + f"""
         source:
           url: https://sqlite.com/2022/sqlite-autoconf-3380500.tar.gz
-          patches: 
+          patches:
             - some-patch.patch
         requirements:
           build:
@@ -371,7 +375,9 @@ def test_patch_must_be_in_build_bad(base_yaml):
             """
             )
             messages = check(lint_check, yaml_str)
-            assert len(messages) == 1 and "patch must be in build" and messages[0].title, f"Check failed for {patch} in {section}"
+            assert (
+                len(messages) == 1 and "patch must be in build" and messages[0].title
+            ), f"Check failed for {patch} in {section}"
 
 
 def test_patch_must_be_in_build_missing(base_yaml):
@@ -382,12 +388,14 @@ def test_patch_must_be_in_build_missing(base_yaml):
             + f"""
         source:
           url: https://sqlite.com/2022/sqlite-autoconf-3380500.tar.gz
-          patches: 
+          patches:
             - some-patch.patch
             """
         )
         messages = check(lint_check, yaml_str)
-        assert len(messages) == 1 and "patch must be in build" in messages[0].title, f"Check failed for {patch}"
+        assert (
+            len(messages) == 1 and "patch must be in build" in messages[0].title
+        ), f"Check failed for {patch}"
 
 
 def test_has_run_test_and_commands_good_cmd(base_yaml):
@@ -594,7 +602,9 @@ def test_remove_python_pinning_bad(base_yaml):
     )
     lint_check = "remove_python_pinning"
     messages = check(lint_check, yaml_str)
-    assert len(messages) == 2 and all(["python deps should not be constrained" in m.title for m in messages])
+    assert len(messages) == 2 and all(
+        ["python deps should not be constrained" in m.title for m in messages]
+    )
 
 
 def test_gui_app_good(base_yaml):
@@ -631,4 +641,6 @@ def test_gui_app_bad(base_yaml):
             """
         )
         messages = check(lint_check, yaml_str)
-        assert len(messages) == 1 and "GUI application" in messages[0].title, f"Check failed for {gui}"
+        assert (
+            len(messages) == 1 and "GUI application" in messages[0].title
+        ), f"Check failed for {gui}"
