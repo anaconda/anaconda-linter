@@ -29,12 +29,12 @@ from conda_build.metadata import MetaData
 
 
 try:
-    from ruamel.yaml import YAML, round_trip_dump
+    from ruamel.yaml import YAML
     from ruamel.yaml.constructor import DuplicateKeyError
 
     # from ruamel.yaml.error import YAMLError
 except ModuleNotFoundError:
-    from ruamel_yaml import YAML, round_trip_dump
+    from ruamel_yaml import YAML
     from ruamel_yaml.constructor import DuplicateKeyError
 
     # from ruamel_yaml.error import YAMLError
@@ -248,7 +248,7 @@ class Recipe:
         return_exceptions=False,
     ) -> "Recipe":
         stringstream = StringIO()
-        round_trip_dump(recipe_yaml, stringstream)
+        yaml.dump(recipe_yaml, stringstream)
         recipe_text = stringstream.getvalue()
         stringstream.close()
         return Recipe.from_string(
