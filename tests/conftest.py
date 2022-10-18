@@ -34,3 +34,17 @@ def check(check_name, recipe_str):
     recipe = Recipe.from_string(recipe_str)
     messages = linter.check_instances[check_name].run(recipe=recipe)
     return messages
+
+
+def check_dir(check_name, feedstock_dir, recipe_str):
+    config_file = os.path.abspath(os.path.dirname(__file__) + "/../anaconda_linter/config.yaml")
+    config = utils.load_config(config_file)
+    linter = Linter(config)
+    recipe_dir = os.path.join(feedstock_dir, "recipe")
+    os.makedirs(recipe_dir, exist_ok=True)
+    meta_yaml = os.path.join(recipe_dir, "meta.yaml")
+    with open(meta_yaml, "wt") as f:
+        f.write(recipe_str)
+    recipe = Recipe.from_file(meta_yaml)
+    messages = linter.check_instances[check_name].run(recipe=recipe)
+    return messages
