@@ -1,4 +1,7 @@
-from conftest import check
+import os
+import tempfile
+
+from conftest import check, check_dir
 
 
 def test_missing_build_number_good(base_yaml):
@@ -156,6 +159,21 @@ def test_missing_tests_good_command(base_yaml):
     lint_check = "missing_tests"
     messages = check(lint_check, yaml_str)
     assert len(messages) == 0
+
+
+def test_missing_tests_good_scripts(base_yaml):
+    lint_check = "missing_tests"
+
+    test_files = ["run_test.py", "run_test.sh", "run_test.pl"]
+
+    for test_file in test_files:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            recipe_dir = os.path.join(tmpdir, "recipe")
+            os.mkdir(recipe_dir)
+            with open(os.path.join(recipe_dir, test_file), "wt") as f:
+                f.write("\n")
+            messages = check_dir(lint_check, tmpdir, base_yaml)
+            assert len(messages) == 0
 
 
 def test_missing_tests_bad_missing(base_yaml):
