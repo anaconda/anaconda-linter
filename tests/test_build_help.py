@@ -474,6 +474,21 @@ def test_missing_pip_check_url_bad(base_yaml):
     assert len(messages) == 1 and "pip check should be present" in messages[0].title
 
 
+# This test covers part of the is_pypi_source function
+def test_missing_pip_check_url_list_bad(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          - url: https://github.com/joblib/joblib/archive/1.1.1.tar.gz
+          - url: https://pypi.io/packages/source/D/Django/Django-4.1.tar.gz
+        """
+    )
+    lint_check = "missing_pip_check"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 1 and "pip check should be present" in messages[0].title
+
+
 def test_missing_pip_check_pip_install_good(base_yaml):
     yaml_str = (
         base_yaml
