@@ -17,6 +17,7 @@ import types
 from collections import defaultdict
 from contextlib import redirect_stderr, redirect_stdout
 from copy import deepcopy
+from io import StringIO
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Pattern, Sequence, Tuple
 
@@ -41,6 +42,7 @@ except ModuleNotFoundError:
 from . import utils
 
 yaml = YAML(typ="rt")  # pylint: disable=invalid-name
+
 
 # Hack: mirror stringify from conda-build in removing implicit
 #       resolution of numbers
@@ -154,7 +156,6 @@ class Recipe:
     }
 
     def __init__(self, recipe_dir):
-
         #: recipe dir
         self.recipe_dir = recipe_dir
 
@@ -236,6 +237,59 @@ class Recipe:
             except Exception:
                 continue
             self.build_scripts[script] = content
+
+    @classmethod
+    def from_yaml(
+        cls,
+        recipe_yaml,
+        selector_dict={},
+        variant_config_files: List[str] = [],
+        exclusive_config_files: List[str] = [],
+        return_exceptions=False,
+    ) -> "Recipe":
+        stringstream = StringIO()
+        yaml.dump(recipe_yaml, stringstream)
+        recipe_text = stringstream.getvalue()
+        stringstream.close()
+        return Recipe.from_string(
+            recipe_text,
+            selector_dict,
+            variant_config_files,
+            exclusive_config_files,
+            return_exceptions,
+        )
+
+    @classmethod
+    def from_string(
+        cls,
+        recipe_text,
+        selector_dict={},
+        variant_config_files: List[str] = [],
+        exclusive_config_files: List[str] = [],
+        return_exceptions=False,
+    ) -> "Recipe":
+        """Create new `Recipe` object from string"""
+        try:
+            recipe = cls("")
+            recipe.load_from_string(recipe_text, selector_dict)
+        except Exception as exc:
+            if return_exceptions:
+                return exc
+            raise exc
+        try:
+            recipe.read_conda_build_config(variant_config_files, exclusive_config_files)
+        except Exception as exc:
+            if return_exceptions:
+                return exc
+            raise exc
+        try:
+            recipe.read_build_scripts()
+        except Exception as exc:
+            if return_exceptions:
+                return exc
+            raise exc
+        recipe.set_original()
+        return recipe
 
     @classmethod
     def from_file(

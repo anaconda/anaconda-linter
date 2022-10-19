@@ -290,7 +290,7 @@ class missing_pip_check(LintCheck):
 
 
 class missing_python(LintCheck):
-    """For pypi packages, python should be present in the host and run sections
+    """For pypi packages, python should be present in the host and run sections. Missing in {}
 
     Add python:
 
@@ -304,10 +304,12 @@ class missing_python(LintCheck):
     def check_recipe(self, recipe):
 
         if is_pypi_source(recipe) or "pip install" in self.recipe.get("build/script", ""):
-            if "python" not in recipe.get_deps("host"):
-                self.message(section="requirements/host")
-            if "python" not in recipe.get_deps("run"):
-                self.message(section="requirements/run")
+            for section in ["host", "run"]:
+                if "python" not in recipe.get_deps(section):
+                    reset_text = self.__class__.__doc__
+                    self.__class__.__doc__ = self.__class__.__doc__.format(section)
+                    self.message(section=f"requirements/{section}")
+                    self.__class__.__doc__ = reset_text
 
 
 class remove_python_pinning(LintCheck):
