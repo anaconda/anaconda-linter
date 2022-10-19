@@ -6,7 +6,7 @@ target-version = ['py37', 'py38', 'py39']
 profile = "black"
 line_length = 100
 src_paths = ["anaconda_linter"]
-+
+
 [tool.pytest.ini_options]
 filterwarnings = [
     # Skip PendingDeprecationWarning from conda-build
