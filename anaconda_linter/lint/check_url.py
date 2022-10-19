@@ -50,10 +50,12 @@ class invalid_url(LintCheck):
             if url:
                 response_data = utils.check_url(url)
                 if response_data["code"] < 0 or response_data["code"] >= 400:
+                    reset_text = self.__class__.__doc__
                     self.__class__.__doc__ = self.__class__.__doc__.format(
                         url, response_data["message"]
                     )
                     self.message(section=url_field)
+                    self.__class__.__doc__ = reset_text
 
 
 class http_url(LintCheck):
@@ -82,5 +84,7 @@ class http_url(LintCheck):
         for url_field in url_fields:
             url = recipe.get(url_field, "")
             if url.lower().startswith("http://"):
+                reset_text = self.__class__.__doc__
                 self.__class__.__doc__ = self.__class__.__doc__.format(url)
                 self.message(section=url_field.split("/")[0])
+                self.__class__.__doc__ = reset_text
