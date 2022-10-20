@@ -28,6 +28,18 @@ def is_pypi_source(recipe):
     return pypi_source
 
 
+def recipe_has_patches(recipe):
+    if source := recipe.get("source", None):
+        if isinstance(source, dict):
+            if source.get("patches", ""):
+                return True
+        elif isinstance(source, list):
+            for src in source:
+                if src.get("patches", ""):
+                    return True
+    return False
+
+
 class should_use_compilers(LintCheck):
     """The recipe requires a compiler directly
 
@@ -224,6 +236,19 @@ class avoid_noarch(LintCheck):
             self.message(section="build")
 
 
+class patch_unnecessary(LintCheck):
+    """patch should not be in build when source/patches is not set
+
+    Remove patch/m2-patch from ``build``
+    """
+
+    def check_recipe(self, recipe):
+        if not recipe_has_patches(recipe):
+            deps = recipe.get_deps_dict()
+            if "patch" in deps or "m2-patch" in deps:
+                self.message(section="build")
+
+
 class patch_must_be_in_build(LintCheck):
     """patch must be in build when source/patches is set.
 
@@ -235,14 +260,9 @@ class patch_must_be_in_build(LintCheck):
           - m2-patch    # [win]
     """
 
-    has_patches = False
-
-    def check_source(self, source, section):
-        if source.get("patches", ""):
-            self.has_patches = True
-
-    def check_deps(self, deps):
-        if self.has_patches:
+    def check_recipe(self, recipe):
+        if recipe_has_patches(recipe):
+            deps = recipe.get_deps_dict()
             if "patch" in deps:
                 if any("build" not in location for location in deps["patch"]["paths"]):
                     self.message(section="build")
