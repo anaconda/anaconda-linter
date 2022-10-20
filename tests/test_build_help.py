@@ -411,6 +411,29 @@ def test_patch_must_be_in_build_bad(base_yaml):
             ), f"Check failed for {patch} in {section}"
 
 
+def test_patch_must_be_in_build_list_bad(base_yaml):
+    lint_check = "patch_must_be_in_build"
+    for patch in ["patch", "m2-patch"]:
+        for section in ["host", "run"]:
+            yaml_str = (
+                base_yaml
+                + f"""
+        source:
+          - url: https://sqlite.com/2022/sqlite-autoconf-3380500.tar.gz
+          - url: https://sqlite.com/2022/sqlite-autoconf-3380500.tar.gz
+            patches:
+              - some-patch.patch
+        requirements:
+          {section}:
+            - {patch}
+            """
+            )
+            messages = check(lint_check, yaml_str)
+            assert (
+                len(messages) == 1 and "patch must be in build" and messages[0].title
+            ), f"Check failed for {patch} in {section}"
+
+
 def test_patch_must_be_in_build_missing(base_yaml):
     lint_check = "patch_must_be_in_build"
     for patch in ["patch", "m2-patch"]:
