@@ -344,7 +344,7 @@ def test_patch_unnecessary_good(base_yaml):
     for patch in ["patch", "m2-patch"]:
         yaml_str = (
             base_yaml
-            + f"""
+            + """
         source:
           url: https://sqlite.com/2022/sqlite-autoconf-3380500.tar.gz
             """
@@ -367,7 +367,9 @@ def test_patch_unnecessary_bad(base_yaml):
             """
         )
         messages = check(lint_check, yaml_str)
-        assert len(messages) == 1 and "patch should not be" in messages[0].title, f"Check failed for {patch}"
+        assert (
+            len(messages) == 1 and "patch should not be" in messages[0].title
+        ), f"Check failed for {patch}"
 
 
 def test_patch_must_be_in_build_good(base_yaml):
