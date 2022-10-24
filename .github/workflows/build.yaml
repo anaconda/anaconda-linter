@@ -11,7 +11,7 @@ jobs:
   pre-commit:
       runs-on: ubuntu-latest
       steps:
-        - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3
+        - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3
         - uses: actions/setup-python@13ae5bb136fac2878aff31522b9efb785519f984 # tag=v4
           with:
             python-version: '3.9'
@@ -19,7 +19,7 @@ jobs:
   tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
+      - uses: actions/checkout@1f9a0c22da41e6ebfa534300ef656657ea2c6707
       - name: Create Environment
         run: |
           source $CONDA/bin/activate
