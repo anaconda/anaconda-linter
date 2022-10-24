@@ -170,7 +170,7 @@ def test_missing_tests_good_scripts(base_yaml):
         with tempfile.TemporaryDirectory() as tmpdir:
             recipe_dir = os.path.join(tmpdir, "recipe")
             os.mkdir(recipe_dir)
-            with open(os.path.join(recipe_dir, test_file), "wt") as f:
+            with open(os.path.join(recipe_dir, test_file), "w") as f:
                 f.write("\n")
             messages = check_dir(lint_check, tmpdir, base_yaml)
             assert len(messages) == 0
