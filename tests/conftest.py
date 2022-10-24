@@ -43,7 +43,7 @@ def check_dir(check_name, feedstock_dir, recipe_str):
     recipe_dir = os.path.join(feedstock_dir, "recipe")
     os.makedirs(recipe_dir, exist_ok=True)
     meta_yaml = os.path.join(recipe_dir, "meta.yaml")
-    with open(meta_yaml, "wt") as f:
+    with open(meta_yaml, "w") as f:
         f.write(recipe_str)
     recipe = Recipe.from_file(meta_yaml)
     messages = linter.check_instances[check_name].run(recipe=recipe)

@@ -11,18 +11,18 @@ jobs:
   pre-commit:
       runs-on: ubuntu-latest
       steps:
-        - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3
-        - uses: actions/setup-python@b55428b1882923874294fa556849718a1d7f2ca5 # tag=v4
+        - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3
+        - uses: actions/setup-python@13ae5bb136fac2878aff31522b9efb785519f984 # tag=v4
           with:
             python-version: '3.9'
         - uses: pre-commit/action@646c83fcd040023954eafda54b4db0192ce70507 # tag=v3.0.0
   tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
+      - uses: actions/checkout@1f9a0c22da41e6ebfa534300ef656657ea2c6707
       - name: Cache conda env
         id: cache-conda
-        uses: actions/cache@fd5de65bc895cf536527842281bea11763fefd77 # tag=v3
+        uses: actions/cache@1c73980b09e7aea7201f325a7aa3ad00beddcdda # tag=v3
         env:
           cache-name: conda-env-cache
         with:
@@ -43,7 +43,7 @@ jobs:
           conda activate anaconda-linter
           make test
       - name: Archive CI Artefacts
-        uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8
+        uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb
         with:
           name: ci-artifacts
           path: artifacts/**
