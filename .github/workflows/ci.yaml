@@ -11,7 +11,7 @@ jobs:
   pre-commit:
       runs-on: ubuntu-latest
       steps:
-        - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3
+        - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3
         - uses: actions/setup-python@b55428b1882923874294fa556849718a1d7f2ca5 # tag=v4
           with:
             python-version: '3.9'
@@ -19,7 +19,7 @@ jobs:
   tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
+      - uses: actions/checkout@1f9a0c22da41e6ebfa534300ef656657ea2c6707
       - name: Cache conda env
         id: cache-conda
         uses: actions/cache@fd5de65bc895cf536527842281bea11763fefd77 # tag=v3
