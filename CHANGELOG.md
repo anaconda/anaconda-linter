@@ -6,6 +6,7 @@ Note: version releases in the 0.x.y range may introduce breaking changes.
 - Add test suite
 - Update documentation
 - Bug fixes for message system
+- Add new check: `patch_unnecessary`
 
 ## 0.0.3
 
