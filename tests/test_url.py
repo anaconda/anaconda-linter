@@ -56,6 +56,10 @@ def test_invalid_url_redirect_good(base_yaml):
             "redirect": "pypi.io -> pypi.org",
         },
         {
+            "source": "https://pypi.org/packages/source/D/Django/Django-4.1.tar.gz",
+            "redirect": "pypi.org -> files.pythonhosted.org",
+        },
+        {
             "source": "https://github.com/beekeeper-studio/beekeeper-studio/"
             "releases/download/v3.6.2/Beekeeper-Studio-3.6.2-portable.exe",
             "redirect": "github.com -> objects.githubusercontent.com",
