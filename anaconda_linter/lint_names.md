@@ -1,87 +1,87 @@
-avoid\_noarch
+avoid_noarch
 
-compilers\_must\_be\_in\_build
+compilers_must_be_in_build
 
-conda\_render\_failure
+conda_render_failure
 
-cython\_must\_be\_in\_host
+cython_must_be_in_host
 
-cython\_needs\_compiler
+cython_needs_compiler
 
-duplicate\_key\_in\_meta\_yaml
+duplicate_key_in_meta_yaml
 
-empty\_meta\_yaml
+empty_meta_yaml
 
-gui\_app
+gui_app
 
-has\_run\_test\_and\_commands
+has_run_test_and_commands
 
-http\_url
+http_url
 
-incorrect\_license
+incorrect_license
 
-invalid\_license\_family
+invalid_license_family
 
-invalid\_url
+invalid_url
 
-jinja\_render\_failure
+jinja_render_failure
 
-linter\_failure
+linter_failure
 
-missing\_build
+missing_build
 
-missing\_build\_number
+missing_build_number
 
-missing\_description
+missing_description
 
-missing\_dev\_url
+missing_dev_url
 
-missing\_doc\_source\_url
+missing_doc_source_url
 
-missing\_doc\_url
+missing_doc_url
 
-missing\_hash
+missing_hash
 
-missing\_home
+missing_home
 
-missing\_license
+missing_license
 
-missing\_license\_family
+missing_license_family
 
-missing\_license\_file
+missing_license_file
 
-missing\_license\_url
+missing_license_url
 
-missing\_meta\_yaml
+missing_meta_yaml
 
-missing\_pip\_check
+missing_pip_check
 
-missing\_python
+missing_python
 
-missing\_source
+missing_source
 
-missing\_summary
+missing_summary
 
-missing\_tests
+missing_tests
 
-missing\_version\_or\_name
+missing_version_or_name
 
-missing\_wheel
+missing_wheel
 
-non\_url\_source
+non_url_source
 
-patch\_must\_be\_in\_build
+patch_must_be_in_build
 
-remove\_python\_pinning
+remove_python_pinning
 
-setup\_py\_install\_args
+setup_py_install_args
 
-should\_use\_compilers
+should_use_compilers
 
-unknown\_check
+unknown_check
 
-unknown\_selector
+unknown_selector
 
-uses\_setuptools
+uses_setuptools
 
-version\_constraints\_missing\_whitespace
+version_constraints_missing_whitespace
