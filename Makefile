@@ -5,7 +5,7 @@ SHELL := /bin/bash -o pipefail -o errexit
 
 CONDA_ENV_NAME ?= anaconda-linter
 
-# Folder for all the build artefacts to be archived by CI.
+# Folder for all the build artifacts to be archived by CI.
 ARTIFACTS_PATH ?= artifacts
 
 define BROWSER_PYSCRIPT
