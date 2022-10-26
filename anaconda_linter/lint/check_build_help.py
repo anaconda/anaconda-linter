@@ -101,20 +101,23 @@ class uses_setuptools(LintCheck):
 
 
 class missing_wheel(LintCheck):
-    """For pypi packages, wheel should be present in the host section
+    """For pypi packages, wheel should be present in the build section
 
-    Add wheel to requirements/host:
+    Add wheel to requirements/build:
 
       requirements:
-        host:
+        build:
           - wheel
     """
+
+    # Note, newer pyproject.toml non-setuptools packages don't use `wheel` to
+    # create wheels.
 
     def check_recipe(self, recipe):
 
         if is_pypi_source(recipe) or "pip install" in self.recipe.get("build/script", ""):
-            if "wheel" not in recipe.get_deps("host"):
-                self.message(section="requirements/host")
+            if "wheel" not in recipe.get_deps("build"):
+                self.message(section="requirements/build")
 
 
 class setup_py_install_args(LintCheck):
