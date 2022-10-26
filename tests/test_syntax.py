@@ -11,6 +11,7 @@ def test_version_constraints_missing_whitespace_good(base_yaml):
             - pip =22
             - wheel <33.0
             - python !=3.7.6
+            - tbb-devel 2021.*,<2021.6
         """
     )
     lint_check = "version_constraints_missing_whitespace"
