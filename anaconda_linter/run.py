@@ -2,7 +2,7 @@ import argparse
 import os
 import textwrap
 
-from . import lint, utils
+from . import __version__, lint, utils
 
 
 def lint_parser() -> argparse.ArgumentParser:
@@ -19,6 +19,13 @@ def lint_parser() -> argparse.ArgumentParser:
                 anaconda-lint:
                 Performs linting on conda recipes."""
         ),
+    )
+    parser.add_argument(
+        "-V",
+        "--version",
+        action="version",
+        version=f"%(prog)s {__version__}",
+        help="The version of anaconda-linter",
     )
     parser.add_argument(
         "-m",
