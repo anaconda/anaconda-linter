@@ -210,7 +210,7 @@ def test_setup_py_install_args_good_script(base_yaml):
     with tempfile.TemporaryDirectory() as tmpdir:
         recipe_dir = os.path.join(tmpdir, "recipe")
         os.mkdir(recipe_dir)
-        with open(os.path.join(recipe_dir, "build.sh"), "wt") as f:
+        with open(os.path.join(recipe_dir, "build.sh"), "w") as f:
             f.write("{{ PYTHON }} -m setup.py install --single-version-externally-managed\n")
         messages = check_dir(lint_check, tmpdir, yaml_str)
         assert len(messages) == 0
@@ -245,7 +245,7 @@ def test_setup_py_install_args_bad_script(base_yaml):
     with tempfile.TemporaryDirectory() as tmpdir:
         recipe_dir = os.path.join(tmpdir, "recipe")
         os.mkdir(recipe_dir)
-        with open(os.path.join(recipe_dir, "build.sh"), "wt") as f:
+        with open(os.path.join(recipe_dir, "build.sh"), "w") as f:
             f.write("{{ PYTHON }} -m setup.py install\n")
         messages = check_dir(lint_check, tmpdir, yaml_str)
         assert len(messages) == 1 and "setuptools without required arguments" in messages[0].title
@@ -475,7 +475,7 @@ def test_has_run_test_and_commands_good_script(base_yaml):
         recipe_dir = os.path.join(tmpdir, "recipe")
         os.mkdir(recipe_dir)
         for script in ["run_test.sh", "run_test.py", "run_test.bat"]:
-            with open(os.path.join(recipe_dir, script), "wt") as f:
+            with open(os.path.join(recipe_dir, script), "w") as f:
                 f.write("pip check\n")
         messages = check_dir(lint_check, tmpdir, base_yaml)
         assert len(messages) == 0
@@ -495,7 +495,7 @@ def test_has_run_test_and_commands_bad(base_yaml):
         recipe_dir = os.path.join(tmpdir, "recipe")
         os.mkdir(recipe_dir)
         for script in ["run_test.sh", "run_test.py", "run_test.bat"]:
-            with open(os.path.join(recipe_dir, script), "wt") as f:
+            with open(os.path.join(recipe_dir, script), "w") as f:
                 f.write("pip check\n")
         messages = check_dir(lint_check, tmpdir, yaml_str)
         assert len(messages) == 1 and "Test commands are not executed" in messages[0].title
