@@ -27,11 +27,37 @@ def test_invalid_url_bad(base_yaml):
     assert len(messages) == 1
 
 
+def test_invalid_url_about_bad(base_yaml):
+    url_fields = [
+        "home",
+        "doc_url",
+        "doc_source_url",
+        "license_url",
+        "dev_url",
+    ]
+
+    lint_check = "invalid_url"
+    for field in url_fields:
+        yaml_str = (
+            base_yaml
+            + f"""
+        about:
+          {field}: https://sqlit.org/
+            """
+        )
+        messages = check(lint_check, yaml_str)
+        assert len(messages) == 1, f"Check failed for {field}"
+
+
 def test_invalid_url_redirect_good(base_yaml):
     redirect_urls = [
         {
             "source": "https://pypi.io/packages/source/D/Django/Django-4.1.tar.gz",
             "redirect": "pypi.io -> pypi.org",
+        },
+        {
+            "source": "https://pypi.org/packages/source/D/Django/Django-4.1.tar.gz",
+            "redirect": "pypi.org -> files.pythonhosted.org",
         },
         {
             "source": "https://github.com/beekeeper-studio/beekeeper-studio/"
