@@ -17,8 +17,7 @@ The usage is similar to conda-build.
 1. navigate into the folder of your main `conda_build_config.yaml` file:
 `cd <path/to/aggregate/>`
 
-2. run `conda-lint`
-`conda-lint <path_to_feedstock>`
+2. run `conda-lint` with:  `conda-lint <path_to_feedstock>`
 
 Concrete example:
 `cd ~/work/recipes/aggregate/`
