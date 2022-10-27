@@ -339,6 +339,39 @@ def test_avoid_noarch_bad(base_yaml):
     assert len(messages) == 1 and "noarch: python" in messages[0].title
 
 
+def test_patch_unnecessary_good(base_yaml):
+    lint_check = "patch_unnecessary"
+    for patch in ["patch", "m2-patch"]:
+        yaml_str = (
+            base_yaml
+            + """
+        source:
+          url: https://sqlite.com/2022/sqlite-autoconf-3380500.tar.gz
+            """
+        )
+        messages = check(lint_check, yaml_str)
+        assert len(messages) == 0, f"Check failed for {patch}"
+
+
+def test_patch_unnecessary_bad(base_yaml):
+    lint_check = "patch_unnecessary"
+    for patch in ["patch", "m2-patch"]:
+        yaml_str = (
+            base_yaml
+            + f"""
+        source:
+          url: https://sqlite.com/2022/sqlite-autoconf-3380500.tar.gz
+        requirements:
+          build:
+            - {patch}
+            """
+        )
+        messages = check(lint_check, yaml_str)
+        assert (
+            len(messages) == 1 and "patch should not be" in messages[0].title
+        ), f"Check failed for {patch}"
+
+
 def test_patch_must_be_in_build_good(base_yaml):
     lint_check = "patch_must_be_in_build"
     for patch in ["patch", "m2-patch"]:
@@ -369,6 +402,29 @@ def test_patch_must_be_in_build_bad(base_yaml):
           url: https://sqlite.com/2022/sqlite-autoconf-3380500.tar.gz
           patches:
             - some-patch.patch
+        requirements:
+          {section}:
+            - {patch}
+            """
+            )
+            messages = check(lint_check, yaml_str)
+            assert (
+                len(messages) == 1 and "patch must be in build" and messages[0].title
+            ), f"Check failed for {patch} in {section}"
+
+
+def test_patch_must_be_in_build_list_bad(base_yaml):
+    lint_check = "patch_must_be_in_build"
+    for patch in ["patch", "m2-patch"]:
+        for section in ["host", "run"]:
+            yaml_str = (
+                base_yaml
+                + f"""
+        source:
+          - url: https://sqlite.com/2022/sqlite-autoconf-3380500.tar.gz
+          - url: https://sqlite.com/2022/sqlite-autoconf-3380500.tar.gz
+            patches:
+              - some-patch.patch
         requirements:
           {section}:
             - {patch}

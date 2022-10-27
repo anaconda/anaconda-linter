@@ -72,6 +72,8 @@ non_url_source
 
 patch_must_be_in_build
 
+patch_unnecessary
+
 remove_python_pinning
 
 setup_py_install_args
