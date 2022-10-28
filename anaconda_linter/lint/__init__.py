@@ -20,7 +20,7 @@ Briefly, each class becomes a check by:
   a brief description is needed. The remainder is a long desription
   and should include brief help on how to fix the detected issue.
 
-- The class property ``severity`` defaults to ``ERROR`` but can be
+- The input property ``severity`` defaults to ``ERROR`` but can be
   set to ``INFO`` or ``WARNING`` for informative checks that
   should not cause linting to fail.
 
@@ -123,6 +123,7 @@ class Severity(IntEnum):
 INFO = Severity.INFO
 WARNING = Severity.WARNING
 ERROR = Severity.ERROR
+SEVERITY_DEFAULT = ERROR
 
 
 class LintMessage(NamedTuple):
@@ -135,7 +136,7 @@ class LintMessage(NamedTuple):
     check: "LintCheck"
 
     #: The severity of the message
-    severity: Severity = ERROR
+    severity: Severity = SEVERITY_DEFAULT
 
     #: Message title to be presented to user
     title: str = ""
@@ -227,7 +228,7 @@ class LintCheck(metaclass=LintCheckMeta):
     """Base class for lint checks"""
 
     #: Severity of this check. Only ERROR causes a lint failure.
-    severity: Severity = ERROR
+    severity: Severity = SEVERITY_DEFAULT
 
     #: Checks that must have passed for this check to be executed.
     requires: List["LintCheck"] = []
@@ -312,7 +313,12 @@ class LintCheck(metaclass=LintCheckMeta):
         """Attempt to fix the problem"""
 
     def message(
-        self, section: str = None, fname: str = None, line: int = None, data: Any = None
+        self,
+        section: str = None,
+        severity: Severity = SEVERITY_DEFAULT,
+        fname: str = None,
+        line: int = None,
+        data: Any = None,
     ) -> None:
         """Add a message to the lint results
 
@@ -328,7 +334,7 @@ class LintCheck(metaclass=LintCheckMeta):
           data: Data to be passed to `fix`. If check can fix, set this to
                 something other than None.
         """
-        message = self.make_message(self.recipe, section, fname, line, data is not None)
+        message = self.make_message(self.recipe, section, severity, fname, line, data is not None)
         if data is not None and self.try_fix and self.fix(message, data):
             return
         self.messages.append(message)
@@ -338,6 +344,7 @@ class LintCheck(metaclass=LintCheckMeta):
         cls,
         recipe: _recipe.Recipe,
         section: str = None,
+        severity: Severity = SEVERITY_DEFAULT,
         fname: str = None,
         line=None,
         canfix: bool = False,
@@ -374,7 +381,7 @@ class LintCheck(metaclass=LintCheckMeta):
         return LintMessage(
             recipe=recipe,
             check=cls,
-            severity=cls.severity,
+            severity=severity,
             title=title.strip(),
             body=body,
             fname=fname,

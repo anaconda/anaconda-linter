@@ -93,11 +93,9 @@ class uses_setuptools(LintCheck):
 
     """
 
-    severity = WARNING
-
     def check_recipe(self, recipe):
         if "setuptools" in recipe.get_deps("run"):
-            self.message()
+            self.message(severity=WARNING)
 
 
 class missing_wheel(LintCheck):
@@ -213,12 +211,10 @@ class avoid_noarch(LintCheck):
 
     """
 
-    severity = WARNING
-
     def check_recipe(self, recipe):
         noarch = recipe.get("build/noarch", "")
         if noarch == "python":
-            self.message(section="build")
+            self.message(section="build", severity=WARNING)
 
 
 class patch_must_be_in_build(LintCheck):
@@ -341,8 +337,6 @@ class remove_python_pinning(LintCheck):
 class gui_app(LintCheck):
     """This may be a GUI application. It is advised to test the GUI."""
 
-    severity = INFO
-
     guis = (
         "enaml",
         "glue-core",
@@ -360,4 +354,4 @@ class gui_app(LintCheck):
 
     def check_recipe(self, recipe):
         if set(self.guis).intersection(set(recipe.get_deps("run"))):
-            self.message()
+            self.message(severity=INFO)

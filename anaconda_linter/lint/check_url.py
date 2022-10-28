@@ -65,8 +65,6 @@ class http_url(LintCheck):
 
     """
 
-    severity = WARNING
-
     def check_source(self, source, section):
         url = source.get("url", "")
         if url.lower().startswith("http://"):
@@ -86,5 +84,5 @@ class http_url(LintCheck):
             if url.lower().startswith("http://"):
                 reset_text = self.__class__.__doc__
                 self.__class__.__doc__ = self.__class__.__doc__.format(url)
-                self.message(section=url_field.split("/")[0])
+                self.message(section=url_field.split("/")[0], severity=WARNING)
                 self.__class__.__doc__ = reset_text
