@@ -603,7 +603,7 @@ class Linter:
 
     def lint(
         self,
-        recipe_names: List[str],
+        recipes: List[str] |  List[_recipe.Recipe],
         arch_name: str = "linux-64",
         variant_config_files: List[str] = [],
         exclusive_config_files: List[str] = [],
@@ -615,29 +615,48 @@ class Linter:
         with `get_messages` and the list cleared with `clear_messages`.
 
         Args:
-          recipe_names: List of names of recipes to lint
+          recipe: List of names of recipes or Recipe objects to lint
           fix: Whether checks should attempt to fix detected issues
 
         Returns:
           True if issues with errors were found
 
         """
-        for recipe_name in utils.tqdm(sorted(recipe_names)):
-            try:
-                msgs = self.lint_one(
-                    recipe_name,
-                    arch_name=arch_name,
-                    variant_config_files=variant_config_files,
-                    exclusive_config_files=exclusive_config_files,
-                    fix=fix,
-                )
-            except Exception:
-                if self.nocatch:
-                    raise
-                logger.exception("Unexpected exception in lint")
-                recipe = _recipe.Recipe(recipe_name)
-                msgs = [linter_failure.make_message(recipe=recipe)]
-            self._messages.extend(msgs)
+        if len(recipes) == 0:
+            return 0
+        if isinstance(recipes[0], str):
+            for recipe_name in utils.tqdm(sorted(recipes)):
+                try:
+                    msgs = self.lint_file(
+                        recipe_name,
+                        arch_name=arch_name,
+                        variant_config_files=variant_config_files,
+                        exclusive_config_files=exclusive_config_files,
+                        fix=fix,
+                    )
+                except Exception:
+                    if self.nocatch:
+                        raise
+                    logger.exception("Unexpected exception in lint")
+                    recipe = _recipe.Recipe(recipe_name)
+                    msgs = [linter_failure.make_message(recipe=recipe)]
+                self._messages.extend(msgs)
+        elif isinstance(recipes[0], _recipe.Recipe):
+            for recipe in recipes:
+                try:
+                    msgs = self.lint_recipe(
+                        recipe,
+                        arch_name=arch_name,
+                        variant_config_files=variant_config_files,
+                        exclusive_config_files=exclusive_config_files,
+                        fix=fix,
+                    )
+                except Exception:
+                    if self.nocatch:
+                        raise
+                    logger.exception("Unexpected exception in lint")
+                    msgs = [linter_failure.make_message(recipe=recipe)]
+                self._messages.extend(msgs)
 
         result = 0
         for message in self._messages:
@@ -649,7 +668,7 @@ class Linter:
 
         return result
 
-    def lint_one(
+    def lint_file(
         self,
         recipe_name: str,
         arch_name: str = "linux-64",
@@ -682,7 +701,29 @@ class Linter:
 
         # collect checks to skip
         checks_to_skip = set(self.skip[recipe_name])
+
+        return self.lint_recipe(
+            recipe,
+            arch_name=arch_name,
+            variant_config_files=variant_config_files,
+            exclusive_config_files=exclusive_config_files,
+            fix=fix,
+            checks_to_skip=checks_to_skip,
+        )
+
+    def lint_recipe(
+        self,
+        recipe: _recipe.Recipe,
+        arch_name: str = "linux-64",
+        variant_config_files: List[str] = [],
+        exclusive_config_files: List[str] = [],
+        fix: bool = False,
+        checks_to_skip: set = set(),
+    ) -> List[LintMessage]:
+
+        # collect checks to skip
         checks_to_skip.update(self.exclude)
+
         # currently skip-lints will overwrite only-lint, we can check for the key
         # being in checks_to_skip, but I think letting the user do this is best?
         checks_to_skip.update(recipe.get("extra/skip-lints", []))
@@ -718,7 +759,7 @@ class Linter:
             except Exception:
                 if self.nocatch:
                     raise
-                logger.exception("Unexpected exception in lint_one")
+                logger.exception("Unexpected exception in lint_recipe")
                 res = [
                     LintMessage(
                         recipe=recipe,
