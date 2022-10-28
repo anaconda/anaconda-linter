@@ -229,9 +229,6 @@ def get_checks():
 class LintCheck(metaclass=LintCheckMeta):
     """Base class for lint checks"""
 
-    #: Severity of this check. Only ERROR causes a lint failure.
-    severity: Severity = SEVERITY_DEFAULT
-
     #: Checks that must have passed for this check to be executed.
     requires: List["LintCheck"] = []
 
