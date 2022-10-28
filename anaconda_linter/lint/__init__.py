@@ -123,7 +123,9 @@ class Severity(IntEnum):
 INFO = Severity.INFO
 WARNING = Severity.WARNING
 ERROR = Severity.ERROR
+
 SEVERITY_DEFAULT = ERROR
+SEVERITY_MIN_DEFAULT = INFO
 
 
 class LintMessage(NamedTuple):
@@ -527,7 +529,7 @@ class Linter:
             except KeyError:
                 raise ValueError(f"Unrecognized severity level {severity_min}")
         else:
-            self.severity_min = INFO
+            self.severity_min = SEVERITY_MIN_DEFAULT
 
         self.reload_checks()
 
