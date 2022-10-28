@@ -96,7 +96,7 @@ def main():
 
     # set up linter
     linter = lint.Linter(
-        config=config, verbose=args.verbose, exclude=None, nocatch=True, severity_max=args.severity
+        config=config, verbose=args.verbose, exclude=None, nocatch=True, severity_min=args.severity
     )
 
     # run linter
