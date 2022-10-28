@@ -95,7 +95,9 @@ def main():
     config = utils.load_config(config_file)
 
     # set up linter
-    linter = lint.Linter(config, args.verbose, None, True, args.severity)
+    linter = lint.Linter(
+        config=config, verbose=args.verbose, exclude=None, nocatch=True, severity_max=args.severity
+    )
 
     # run linter
     recipes = [f"{args.recipe}/recipe/"]
