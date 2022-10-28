@@ -21,6 +21,7 @@ class invalid_url(LintCheck):
             response_data = utils.check_url(url)
             acceptable_redirects = [
                 ("pypi.io", "pypi.org"),
+                ("pypi.org", "files.pythonhosted.org"),
                 ("github.com", "objects.githubusercontent.com"),
                 ("github.com", "codeload.github.com"),
             ]

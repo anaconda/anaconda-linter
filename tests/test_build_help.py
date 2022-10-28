@@ -339,6 +339,39 @@ def test_avoid_noarch_bad(base_yaml):
     assert len(messages) == 1 and "noarch: python" in messages[0].title
 
 
+def test_patch_unnecessary_good(base_yaml):
+    lint_check = "patch_unnecessary"
+    for patch in ["patch", "m2-patch"]:
+        yaml_str = (
+            base_yaml
+            + """
+        source:
+          url: https://sqlite.com/2022/sqlite-autoconf-3380500.tar.gz
+            """
+        )
+        messages = check(lint_check, yaml_str)
+        assert len(messages) == 0, f"Check failed for {patch}"
+
+
+def test_patch_unnecessary_bad(base_yaml):
+    lint_check = "patch_unnecessary"
+    for patch in ["patch", "m2-patch"]:
+        yaml_str = (
+            base_yaml
+            + f"""
+        source:
+          url: https://sqlite.com/2022/sqlite-autoconf-3380500.tar.gz
+        requirements:
+          build:
+            - {patch}
+            """
+        )
+        messages = check(lint_check, yaml_str)
+        assert (
+            len(messages) == 1 and "patch should not be" in messages[0].title
+        ), f"Check failed for {patch}"
+
+
 def test_patch_must_be_in_build_good(base_yaml):
     lint_check = "patch_must_be_in_build"
     for patch in ["patch", "m2-patch"]:
@@ -369,6 +402,29 @@ def test_patch_must_be_in_build_bad(base_yaml):
           url: https://sqlite.com/2022/sqlite-autoconf-3380500.tar.gz
           patches:
             - some-patch.patch
+        requirements:
+          {section}:
+            - {patch}
+            """
+            )
+            messages = check(lint_check, yaml_str)
+            assert (
+                len(messages) == 1 and "patch must be in build" and messages[0].title
+            ), f"Check failed for {patch} in {section}"
+
+
+def test_patch_must_be_in_build_list_bad(base_yaml):
+    lint_check = "patch_must_be_in_build"
+    for patch in ["patch", "m2-patch"]:
+        for section in ["host", "run"]:
+            yaml_str = (
+                base_yaml
+                + f"""
+        source:
+          - url: https://sqlite.com/2022/sqlite-autoconf-3380500.tar.gz
+          - url: https://sqlite.com/2022/sqlite-autoconf-3380500.tar.gz
+            patches:
+              - some-patch.patch
         requirements:
           {section}:
             - {patch}
@@ -467,6 +523,21 @@ def test_missing_pip_check_url_bad(base_yaml):
         + """
         source:
           url: https://pypi.io/packages/source/D/Django/Django-4.1.tar.gz
+        """
+    )
+    lint_check = "missing_pip_check"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 1 and "pip check should be present" in messages[0].title
+
+
+# This test covers part of the is_pypi_source function
+def test_missing_pip_check_url_list_bad(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          - url: https://github.com/joblib/joblib/archive/1.1.1.tar.gz
+          - url: https://pypi.io/packages/source/D/Django/Django-4.1.tar.gz
         """
     )
     lint_check = "missing_pip_check"
