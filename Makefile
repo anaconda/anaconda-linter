@@ -49,6 +49,7 @@ clean-test: ## remove test and coverage artifacts
 	rm -fr .tox/
 	rm -f .coverage
 	rm -fr htmlcov/
+	rm -fr artifacts/
 	rm -fr .pytest_cache
 
 coverage: ## check code coverage quickly with the default Python

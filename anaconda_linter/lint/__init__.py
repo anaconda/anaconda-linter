@@ -508,6 +508,7 @@ class Linter:
         verbose: bool = False,
         exclude: List[str] = None,
         nocatch: bool = False,
+        severity_max: Severity | str = None,
     ) -> None:
         self.config = config
         self.skip = self.load_skips()
@@ -515,6 +516,15 @@ class Linter:
         self.nocatch = nocatch
         self.verbose = verbose
         self._messages = []
+        if isinstance(severity_max, Severity):
+            self.severity_max = severity_max
+        elif isinstance(severity_max, str):
+            try:
+                self.severity_max = Severity[severity_max]
+            except KeyError:
+                raise ValueError(f"Unrecognized severity level {severity_max}")
+        else:
+            self.severity_max = INFO
 
         self.reload_checks()
 
@@ -534,7 +544,10 @@ class Linter:
 
     def get_messages(self) -> List[LintMessage]:
         """Returns the lint messages collected during linting"""
-        return sorted(self._messages, key=lambda d: (d.fname, d.end_line))
+        return sorted(
+            [msg for msg in self._messages if msg.severity >= self.severity_max],
+            key=lambda d: (d.fname, d.end_line),
+        )
 
     def clear_messages(self):
         """Clears the lint messages stored in linter"""

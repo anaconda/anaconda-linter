@@ -55,6 +55,12 @@ def lint_parser() -> argparse.ArgumentParser:
         action="append",
         help="""List subdir to lint. Example: linux-64, win-64...""",
     )
+    parser.add_argument(
+        "--severity",
+        choices=["INFO", "WARNING", "ERROR"],
+        type=str.upper,
+        help="""The minimum severity level displayed in the output.""",
+    )
     # we do this one separately because we only allow one entry to conda render
     parser.add_argument(
         "recipe",
@@ -82,7 +88,7 @@ def main():
     config = utils.load_config(config_file)
 
     # set up linter
-    linter = lint.Linter(config, args.verbose, None, True)
+    linter = lint.Linter(config, args.verbose, None, True, args.severity)
 
     # run linter
     recipes = [f"{args.recipe}/recipe/"]
