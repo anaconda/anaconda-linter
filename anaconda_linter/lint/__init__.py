@@ -328,6 +328,7 @@ class LintCheck(metaclass=LintCheckMeta):
           section: If specified, a lint location within the recipe
                    meta.yaml pointing to this section/subsection will
                    be added to the message
+          severity: The severity level of the message.
           fname: If specified, the message will apply to this file, rather than the
                  recipe meta.yaml
           line: If specified, sets the line number for the message directly
@@ -355,6 +356,7 @@ class LintCheck(metaclass=LintCheckMeta):
           section: If specified, a lint location within the recipe
                    meta.yaml pointing to this section/subsection will
                    be added to the message
+          severity: The severity level of the message.
           fname: If specified, the message will apply to this file, rather than the
                  recipe meta.yaml
           line: If specified, sets the line number for the message directly
@@ -500,6 +502,7 @@ class Linter:
                recipes. Use sparingly.
       nocatch: Don't catch exceptions in lint checks and turn them into
                linter_error lint messages. Used by tests.
+      severity_min: The minimum severity level to display in messages.
     """
 
     def __init__(
