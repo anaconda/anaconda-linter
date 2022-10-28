@@ -79,11 +79,21 @@ def lint_parser() -> argparse.ArgumentParser:
     return parser
 
 
+class InvalidArgsException(Exception):
+    pass
+
+
+def validate_args(args: argparse.Namespace) -> None:
+    if args.compact and args.verbose:
+        raise InvalidArgsException("Cannot have compact and verbose flag at the same time")
+
+
 def main():
     # parse arguments
     parser = lint_parser()
     args, _ = parser.parse_known_args()
-
+    # validate args
+    validate_args(args)
     # load global configuration
     config_file = os.path.abspath(os.path.dirname(__file__) + "/config.yaml")
     config = utils.load_config(config_file)
