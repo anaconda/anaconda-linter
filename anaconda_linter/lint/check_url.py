@@ -5,7 +5,7 @@ Verify that the URLs in the recipe are valid
 """
 
 from .. import utils
-from . import WARNING, LintCheck
+from . import ERROR, INFO, WARNING, LintCheck
 
 
 class invalid_url(LintCheck):
@@ -36,7 +36,8 @@ class invalid_url(LintCheck):
                 self.__class__.__doc__ = self.__class__.__doc__.format(
                     url, response_data["message"]
                 )
-                self.message(section=section)
+                severity = INFO if "domain_redirect" in response_data else ERROR
+                self.message(section=section, severity=severity)
 
     def check_recipe(self, recipe):
         url_fields = [
@@ -55,7 +56,8 @@ class invalid_url(LintCheck):
                     self.__class__.__doc__ = self.__class__.__doc__.format(
                         url, response_data["message"]
                     )
-                    self.message(section=url_field)
+                    severity = INFO if "domain_redirect" in response_data else ERROR
+                    self.message(section=url_field, severity=severity)
                     self.__class__.__doc__ = reset_text
 
 
