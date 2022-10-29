@@ -702,14 +702,21 @@ class Linter:
         # collect checks to skip
         checks_to_skip = set(self.skip[recipe_name])
 
-        return self.lint_recipe(
+        messages = self.lint_recipe(
             recipe,
             arch_name=arch_name,
             variant_config_files=variant_config_files,
             exclusive_config_files=exclusive_config_files,
             fix=fix,
-            checks_to_skip=checks_to_skip,
+            skip=checks_to_skip,
         )
+
+        if fix and recipe.is_modified():
+            with open(recipe.path, "w", encoding="utf-8") as fdes:
+                fdes.write(recipe.dump())
+
+        return messages
+
 
     def lint_recipe(
         self,
