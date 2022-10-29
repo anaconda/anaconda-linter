@@ -1,11 +1,11 @@
-import pytest
 import os
+
+import pytest
+from conftest import check
 
 from anaconda_linter import lint, utils
 from anaconda_linter.lint import ERROR, INFO, WARNING
 from anaconda_linter.recipe import Recipe
-
-from conftest import check
 
 
 class dummy_info(lint.LintCheck):
@@ -105,7 +105,7 @@ def test_severity_min(base_yaml):
         linter = lint.Linter(config=config, severity_min=sev)
         linter.lint(recipes)
         assert len(linter.get_messages()) == 3 - s
-    with pytest.raises(ValueError) as e:
+    with pytest.raises(ValueError):
         linter = lint.Linter(config=config, severity_min="BADSEVERITY")
 
     # Test enum representation
