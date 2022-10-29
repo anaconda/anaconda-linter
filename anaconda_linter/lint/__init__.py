@@ -92,10 +92,7 @@ import abc
 import importlib
 import inspect
 import logging
-import os
 import pkgutil
-import re
-from collections import defaultdict
 from enum import IntEnum
 from typing import Any, Dict, List, NamedTuple, Tuple
 
@@ -513,7 +510,6 @@ class Linter:
         severity_min: Severity | str = None,
     ) -> None:
         self.config = config
-        self.skip = self.load_skips()
         self.exclude = exclude or []
         self.nocatch = nocatch
         self.verbose = verbose
@@ -573,33 +569,6 @@ class Linter:
                 f"{msg.severity.name}: {msg.fname}:{msg.end_line}: {msg.check}: {msg.title}"
                 for msg in messages
             )
-
-    def load_skips(self):
-        """Parses lint skips
-
-        If :envvar:`LINT_SKIP` or the most recent commit contains ``[
-        lint skip <check_name> for <recipe_name> ]``, that particular
-        check will be skipped.
-
-        """
-        skip_dict = defaultdict(list)
-
-        commit_message = ""
-        if "LINT_SKIP" in os.environ:
-            # Allow overwriting of commit message
-            commit_message = os.environ["LINT_SKIP"]
-        elif os.path.exists(".git"):
-            # Obtain commit message from last commit.
-            commit_message = utils.run(
-                ["git", "log", "--format=%B", "-n", "1"], mask=False, loglevel=0
-            ).stdout
-
-        skip_re = re.compile(r"\[\s*lint skip (?P<func>\w+) for (?P<recipe>.*?)\s*\]")
-        to_skip = skip_re.findall(commit_message)
-
-        for func, recipe in to_skip:
-            skip_dict[recipe].append(func)
-        return skip_dict
 
     def lint(
         self,
@@ -699,16 +668,12 @@ class Linter:
             check_cls = recipe_error_to_lint_check.get(exc.__class__, linter_failure)
             return [check_cls.make_message(recipe=recipe, line=getattr(exc, "line"))]
 
-        # collect checks to skip
-        checks_to_skip = set(self.skip[recipe_name])
-
         messages = self.lint_recipe(
             recipe,
             arch_name=arch_name,
             variant_config_files=variant_config_files,
             exclusive_config_files=exclusive_config_files,
             fix=fix,
-            skip=checks_to_skip,
         )
 
         if fix and recipe.is_modified():
@@ -717,7 +682,6 @@ class Linter:
 
         return messages
 
-
     def lint_recipe(
         self,
         recipe: _recipe.Recipe,
@@ -725,11 +689,10 @@ class Linter:
         variant_config_files: List[str] = [],
         exclusive_config_files: List[str] = [],
         fix: bool = False,
-        skip: set = set(),
     ) -> List[LintMessage]:
 
         # collect checks to skip
-        checks_to_skip = set(self.exclude) ^ skip
+        checks_to_skip = set(self.exclude)
 
         # currently skip-lints will overwrite only-lint, we can check for the key
         # being in checks_to_skip, but I think letting the user do this is best?
