@@ -39,6 +39,28 @@ def test_only_lint(base_yaml, linter):
     assert len(linter.get_messages()) == 3
 
 
+def test_skip_lints(base_yaml, linter):
+    yaml_str = (
+        base_yaml
+        + """
+        extra:
+          skip-lints:
+            - dummy_info
+            - dummy_error
+            - dummy_warning
+        """
+    )
+    recipes_base = [Recipe.from_string(base_yaml)]
+    recipes_skip = [Recipe.from_string(yaml_str)]
+    linter.lint(recipes_base)
+    messages_base = linter.get_messages()
+    linter.clear_messages()
+    assert len(linter.get_messages()) == 0
+    linter.lint(recipes_skip)
+    messages_skip = linter.get_messages()
+    assert len(messages_base) == len(messages_skip) + 3
+
+
 def test_severity_level(base_yaml):
     levels = [
         {
