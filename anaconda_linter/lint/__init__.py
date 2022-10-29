@@ -603,7 +603,7 @@ class Linter:
 
     def lint(
         self,
-        recipes: List[str] |  List[_recipe.Recipe],
+        recipes: List[str] | List[_recipe.Recipe],
         arch_name: str = "linux-64",
         variant_config_files: List[str] = [],
         exclusive_config_files: List[str] = [],
