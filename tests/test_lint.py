@@ -5,6 +5,8 @@ from anaconda_linter import lint, utils
 from anaconda_linter.lint import ERROR, INFO, WARNING
 from anaconda_linter.recipe import Recipe
 
+from conftest import check
+
 
 class dummy_info(lint.LintCheck):
     def check_recipe(self, recipe):
@@ -19,6 +21,31 @@ class dummy_warning(lint.LintCheck):
 class dummy_error(lint.LintCheck):
     def check_recipe(self, recipe):
         self.message("Error message", severity=ERROR)
+
+
+def test_severity_level(base_yaml):
+    levels = [
+        {
+            "enum": INFO,
+            "string": "notice",
+            "check": "dummy_info",
+        },
+        {
+            "enum": WARNING,
+            "string": "warning",
+            "check": "dummy_warning",
+        },
+        {
+            "enum": ERROR,
+            "string": "failure",
+            "check": "dummy_error",
+        },
+    ]
+    for lvl in levels:
+        messages = check(lvl["check"], base_yaml)
+        assert len(messages) == 1
+        assert messages[0].severity == lvl["enum"]
+        assert messages[0].get_level() == lvl["string"]
 
 
 def test_severity_min(base_yaml):
