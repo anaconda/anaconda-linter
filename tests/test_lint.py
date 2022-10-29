@@ -89,7 +89,7 @@ def test_severity_min(base_yaml):
     # Test enum representation
     for s, sev in enumerate([INFO, WARNING, ERROR]):
         linter = lint.Linter(config=config, severity_min=sev)
-        linter.lint(recipe)
+        linter.lint(recipes)
         assert len(linter.get_messages()) == 3 - s
 
 
