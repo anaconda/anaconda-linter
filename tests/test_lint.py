@@ -23,6 +23,22 @@ class dummy_error(lint.LintCheck):
         self.message("Error message", severity=ERROR)
 
 
+def test_only_lint(base_yaml, linter):
+    yaml_str = (
+        base_yaml
+        + """
+        extra:
+          only-lint:
+            - dummy_info
+            - dummy_error
+            - dummy_warning
+        """
+    )
+    recipes = [Recipe.from_string(yaml_str)]
+    linter.lint(recipes)
+    assert len(linter.get_messages()) == 3
+
+
 def test_severity_level(base_yaml):
     levels = [
         {
@@ -59,13 +75,13 @@ def test_severity_min(base_yaml):
             - dummy_warning
         """
     )
-    recipe = [Recipe.from_string(yaml_str)]
+    recipes = [Recipe.from_string(yaml_str)]
     config_file = os.path.abspath(os.path.dirname(__file__) + "/../anaconda_linter/config.yaml")
     config = utils.load_config(config_file)
     # Test string representation
     for s, sev in enumerate(["INFO", "WARNING", "ERROR"]):
         linter = lint.Linter(config=config, severity_min=sev)
-        linter.lint(recipe)
+        linter.lint(recipes)
         assert len(linter.get_messages()) == 3 - s
     with pytest.raises(ValueError) as e:
         linter = lint.Linter(config=config, severity_min="BADSEVERITY")
@@ -75,22 +91,6 @@ def test_severity_min(base_yaml):
         linter = lint.Linter(config=config, severity_min=sev)
         linter.lint(recipe)
         assert len(linter.get_messages()) == 3 - s
-
-
-def test_only_lint(base_yaml, linter):
-    yaml_str = (
-        base_yaml
-        + """
-        extra:
-          only-lint:
-            - dummy_info
-            - dummy_error
-            - dummy_warning
-        """
-    )
-    recipe = [Recipe.from_string(yaml_str)]
-    linter.lint(recipe)
-    assert len(linter.get_messages()) == 3
 
 
 def test_lint_list():
