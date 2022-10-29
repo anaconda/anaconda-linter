@@ -725,11 +725,11 @@ class Linter:
         variant_config_files: List[str] = [],
         exclusive_config_files: List[str] = [],
         fix: bool = False,
-        checks_to_skip: set = set(),
+        skip: set = set(),
     ) -> List[LintMessage]:
 
         # collect checks to skip
-        checks_to_skip.update(self.exclude)
+        checks_to_skip = set(self.exclude) ^ skip
 
         # currently skip-lints will overwrite only-lint, we can check for the key
         # being in checks_to_skip, but I think letting the user do this is best?
@@ -779,10 +779,6 @@ class Linter:
             if res:  # skip checks depending on failed checks
                 checks_to_skip.update(nx.ancestors(self.checks_dag, str(check)))
             messages.extend(res)
-
-        if fix and recipe.is_modified():
-            with open(recipe.path, "w", encoding="utf-8") as fdes:
-                fdes.write(recipe.dump())
 
         for message in messages:
             logger.debug("Found: %s", message)
