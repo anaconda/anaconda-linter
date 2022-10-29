@@ -77,6 +77,22 @@ def test_severity_min(base_yaml):
         assert len(linter.get_messages()) == 3 - s
 
 
+def test_only_lint(base_yaml, linter):
+    yaml_str = (
+        base_yaml
+        + """
+        extra:
+          only-lint:
+            - dummy_info
+            - dummy_error
+            - dummy_warning
+        """
+    )
+    recipe = [Recipe.from_string(yaml_str)]
+    linter.lint(recipe)
+    assert len(linter.get_messages()) == 3
+
+
 def test_lint_list():
     checks_file = os.path.abspath(os.path.dirname(__file__) + "/../anaconda_linter/lint_names.md")
     with open(checks_file) as f:
