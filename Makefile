@@ -1,4 +1,4 @@
-.PHONY: clean clean-build clean-pyc clean-test coverage dist docs help install lint lint/flake8 lint/black
+.PHONY: clean clean-build clean-pyc clean-test coverage dist docs help install
 .DEFAULT_GOAL := help
 
 SHELL := /bin/bash -o pipefail -o errexit
