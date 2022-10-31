@@ -92,7 +92,6 @@ from typing import Any, Dict, List, NamedTuple, Tuple
 import networkx as nx
 
 from .. import recipe as _recipe
-from .. import utils
 
 logger = logging.getLogger(__name__)
 
