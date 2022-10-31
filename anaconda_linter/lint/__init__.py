@@ -70,19 +70,12 @@ Module Autodocs
 
 .. rubric:: Environment Variables
 
-.. envvar:: LINT_SKIP
-
-   If set, will be parsed instead of the most recent commit. To skip
-   checks for specific recipes, add strings of the following form::
-
-       [lint skip <check_name> for <recipe_name>]
-
-
 .. autosummary::
    :toctree:
 
    check_build_help
    check_completeness
+   check_spdx
    check_syntax
    check_url
 
