@@ -61,6 +61,12 @@ def test_skip_lints(base_yaml, linter):
     assert len(messages_base) == len(messages_skip) + 3
 
 
+def test_lint_none(base_yaml, linter):
+    recipes = []
+    return_code = linter.lint(recipes)
+    assert return_code == 0 and len(linter.get_messages()) == 0
+
+
 def test_severity_level(base_yaml):
     levels = [
         {
