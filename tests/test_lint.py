@@ -51,11 +51,11 @@ def test_skip_lints(base_yaml, linter):
         """
     )
     recipes_base = [Recipe.from_string(base_yaml)]
-    recipes_skip = [Recipe.from_string(yaml_str)]
     linter.lint(recipes_base)
     messages_base = linter.get_messages()
     linter.clear_messages()
     assert len(linter.get_messages()) == 0
+    recipes_skip = [Recipe.from_string(yaml_str)]
     linter.lint(recipes_skip)
     messages_skip = linter.get_messages()
     assert len(messages_base) == len(messages_skip) + 3
