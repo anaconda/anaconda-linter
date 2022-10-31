@@ -587,7 +587,7 @@ class Linter:
         if len(recipes) == 0:
             return 0
         if isinstance(recipes[0], str):
-            for recipe_name in utils.tqdm(sorted(recipes)):
+            for recipe_name in sorted(recipes):
                 try:
                     msgs = self.lint_file(
                         recipe_name,
