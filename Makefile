@@ -1,4 +1,4 @@
-.PHONY: clean clean-build clean-pyc clean-test coverage dist docs help install lint lint/flake8 lint/black
+.PHONY: clean clean-build clean-pyc clean-test coverage dist docs help install
 .DEFAULT_GOAL := help
 
 SHELL := /bin/bash -o pipefail -o errexit
@@ -49,6 +49,7 @@ clean-test: ## remove test and coverage artifacts
 	rm -fr .tox/
 	rm -f .coverage
 	rm -fr htmlcov/
+	rm -fr artifacts/
 	rm -fr .pytest_cache
 
 coverage: ## check code coverage quickly with the default Python

@@ -13,3 +13,8 @@ filterwarnings = [
     "ignore:.*`conda\\.exports\\.memoized`.*:PendingDeprecationWarning",
     "ignore:.*`conda\\._vendor\\.toolz`.*:PendingDeprecationWarning",
 ]
+
+[tool.coverage.run]
+omit = [
+    "anaconda_linter/run.py",
+]

@@ -209,13 +209,11 @@ class non_url_source(LintCheck):
 
     """
 
-    severity = WARNING
-
     source_types = ["git_url", "hg_url", "svn_url"]
 
     def check_source(self, source, section):
         if any(source.get(chk) for chk in self.source_types):
-            self.message(section=section)
+            self.message(section=section, severity=WARNING)
 
 
 class missing_doc_url(LintCheck):
@@ -243,11 +241,9 @@ class missing_doc_source_url(LintCheck):
 
     """
 
-    severity = WARNING
-
     def check_recipe(self, recipe):
         if not recipe.get("about/doc_source_url", ""):
-            self.message(section="about")
+            self.message(section="about", severity=WARNING)
 
 
 class missing_dev_url(LintCheck):
@@ -275,11 +271,9 @@ class missing_license_url(LintCheck):
 
     """
 
-    severity = WARNING
-
     def check_recipe(self, recipe):
         if not recipe.get("about/license_url", ""):
-            self.message(section="about")
+            self.message(section="about", severity=WARNING)
 
 
 class missing_description(LintCheck):
@@ -292,8 +286,6 @@ class missing_description(LintCheck):
 
     """
 
-    severity = WARNING
-
     def check_recipe(self, recipe):
         if not recipe.get("about/description", ""):
-            self.message(section="about")
+            self.message(section="about", severity=WARNING)

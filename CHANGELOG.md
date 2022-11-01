@@ -7,6 +7,8 @@ Note: version releases in the 0.x.y range may introduce breaking changes.
 - Update documentation
 - Bug fixes for message system
 - Add new check: `patch_unnecessary`
+- Add `--severity` option to control the severity level of linter messages
+- Remove `load_skips` function
 
 ## 0.0.3
 

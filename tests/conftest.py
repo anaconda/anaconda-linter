@@ -12,7 +12,7 @@ def linter():
     """Sets up linter for use in other tests"""
     config_file = os.path.abspath(os.path.dirname(__file__) + "/../anaconda_linter/config.yaml")
     config = utils.load_config(config_file)
-    linter = Linter(config)
+    linter = Linter(config=config)
     return linter
 
 
@@ -30,7 +30,7 @@ def base_yaml():
 def check(check_name, recipe_str):
     config_file = os.path.abspath(os.path.dirname(__file__) + "/../anaconda_linter/config.yaml")
     config = utils.load_config(config_file)
-    linter = Linter(config)
+    linter = Linter(config=config)
     recipe = Recipe.from_string(recipe_str)
     messages = linter.check_instances[check_name].run(recipe=recipe)
     return messages
@@ -39,7 +39,7 @@ def check(check_name, recipe_str):
 def check_dir(check_name, feedstock_dir, recipe_str):
     config_file = os.path.abspath(os.path.dirname(__file__) + "/../anaconda_linter/config.yaml")
     config = utils.load_config(config_file)
-    linter = Linter(config)
+    linter = Linter(config=config)
     recipe_dir = os.path.join(feedstock_dir, "recipe")
     os.makedirs(recipe_dir, exist_ok=True)
     meta_yaml = os.path.join(recipe_dir, "meta.yaml")
