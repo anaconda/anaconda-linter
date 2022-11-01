@@ -25,7 +25,6 @@ import conda_build.api
 import jinja2
 from conda_build.metadata import MetaData
 
-
 try:
     from ruamel.yaml import YAML
     from ruamel.yaml.constructor import DuplicateKeyError
