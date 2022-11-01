@@ -392,9 +392,14 @@ class package_in_general_cbc_yaml(LintCheck):
     severity = WARNING
 
     def check_recipe(self, recipe):
-        general_cbc_yaml_path = f"{Path(recipe.recipe_dir).parents[1]}/conda_build_config.yaml"
-        with open(general_cbc_yaml_path) as f:
-            general_cbc_yaml = yaml.safe_load(f)
-        if set(general_cbc_yaml.keys()).intersection(set(recipe.package_names)):
-            # if any(map(lambda w: w in cbc_yaml.keys(), recipe.package_names)):
-            self.message()
+        def _check_general_cbc_yaml_keys(self, cbc_yaml_path, recipe):
+            with open(cbc_yaml_path) as f:
+                cbc_yaml = yaml.safe_load(f)
+            if set(cbc_yaml.keys()).intersection(set(recipe.package_names)):
+                return self.message()
+        try:
+            general_cbc_yaml_path = f"{Path(recipe.recipe_dir).parents[1]}/conda_build_config.yaml"
+            _check_general_cbc_yaml_keys(self, general_cbc_yaml_path, recipe)
+        except IndexError:
+            general_cbc_yaml_path = "anaconda_linter/data/conda_build_config.yaml"
+            _check_general_cbc_yaml_keys(self, general_cbc_yaml_path, recipe)

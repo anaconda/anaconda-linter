@@ -70,6 +70,8 @@ missing_wheel
 
 non_url_source
 
+package_in_general_cbc_yaml
+
 patch_must_be_in_build
 
 patch_unnecessary

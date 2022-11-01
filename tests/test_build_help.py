@@ -715,3 +715,9 @@ def test_gui_app_bad(base_yaml):
         assert (
             len(messages) == 1 and "GUI application" in messages[0].title
         ), f"Check failed for {gui}"
+
+
+def test_package_in_general_cbc_yaml_good(base_yaml):
+    lint_check = "package_in_general_cbc_yaml"
+    messages = check(lint_check, base_yaml)
+    assert len(messages) == 0
