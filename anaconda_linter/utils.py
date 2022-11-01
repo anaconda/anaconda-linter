@@ -27,15 +27,25 @@ import conda.gateways.logging
 import jinja2
 import requests
 import tqdm as _tqdm
-import yaml
 from conda_build import api
 from jinja2 import Environment
 from jsonschema import validate
+
+try:
+    from ruamel.yaml import YAML
+    from ruamel.yaml.constructor import DuplicateKeyError
+except ModuleNotFoundError:
+    from ruamel_yaml import YAML
+    from ruamel_yaml.constructor import DuplicateKeyError
+
 
 conda.gateways.logging.initialize_logging = lambda: None
 
 
 logger = logging.getLogger(__name__)
+
+
+yaml = YAML(typ="safe")  # pylint: disable=invalid-name
 
 
 class TqdmHandler(logging.StreamHandler):
@@ -452,9 +462,9 @@ def validate_config(config):
         directly.
     """
     if not isinstance(config, dict):
-        config = yaml.safe_load(open(config))
+        config = yaml.load(open(config))
     fn = os.path.abspath(os.path.dirname(__file__)) + "/config.schema.yaml"
-    schema = yaml.safe_load(open(fn))
+    schema = yaml.load(open(fn))
     validate(config, schema)
 
 
@@ -480,7 +490,7 @@ def load_config(path):
         def relpath(p):
             return os.path.join(os.path.dirname(path), p)
 
-        config = yaml.safe_load(open(path))
+        config = yaml.load(open(path))
 
     def get_list(key):
         # always return empty list, also if NoneType is defined in yaml
@@ -499,14 +509,14 @@ def load_config(path):
 
     # store architecture information
     with open(Path(__file__).parent / "data" / "cbc_default.yaml") as text:
-        init_arch = yaml.safe_load(text.read())
+        init_arch = yaml.load(text.read())
         data_path = Path(__file__).parent / "data"
         for arch_config_path in data_path.glob("cbc_*.yaml"):
             arch = arch_config_path.stem.split("cbc_")[1]
             if arch != "default":
                 with open(arch_config_path) as text:
                     default_config[arch] = deepcopy(init_arch)
-                    default_config[arch].update(yaml.safe_load(text.read()))
+                    default_config[arch].update(yaml.load(text.read()))
 
     return default_config
 

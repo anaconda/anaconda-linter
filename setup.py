@@ -18,7 +18,6 @@ def main():
         "jsonschema",
         "license-expression",
         "networkx",
-        "pyyaml",
         "requests",
         "ruamel.yaml",
         "tqdm",
