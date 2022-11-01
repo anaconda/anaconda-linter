@@ -8,7 +8,6 @@ dependencies:
   - ruamel.yaml
   - license-expression
   - jinja2
-  - tqdm
   - conda-build
   - jsonschema
   - networkx

@@ -20,7 +20,6 @@ def main():
         "networkx",
         "requests",
         "ruamel.yaml",
-        "tqdm",
     ]
     test_requirements = ["pytest", "pytest-cov", "pytest-html"]
 
