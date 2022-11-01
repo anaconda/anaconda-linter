@@ -8,7 +8,8 @@ Note: version releases in the 0.x.y range may introduce breaking changes.
 - Bug fixes for message system
 - Add new check: `patch_unnecessary`
 - Add `--severity` option to control the severity level of linter messages
-- Remove `load_skips` function
+- Remove threading functionality and unused functions
+- Use ruamel.yaml through the module and remove pyyaml
 
 ## 0.0.3
 
