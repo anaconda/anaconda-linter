@@ -25,19 +25,13 @@ import conda_build.api
 import jinja2
 from conda_build.metadata import MetaData
 
-# from boa.cli.mambabuild import prepare as insert_mambabuild
-
 
 try:
     from ruamel.yaml import YAML
     from ruamel.yaml.constructor import DuplicateKeyError
-
-    # from ruamel.yaml.error import YAMLError
 except ModuleNotFoundError:
     from ruamel_yaml import YAML
     from ruamel_yaml.constructor import DuplicateKeyError
-
-    # from ruamel_yaml.error import YAMLError
 
 from . import utils
 
@@ -857,8 +851,6 @@ class Recipe:
                 raise SystemExit(args)
 
             sys.exit = new_exit
-
-        # insert_mambabuild()
 
         try:
             with open("/dev/null", "w") as devnull:

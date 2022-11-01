@@ -167,8 +167,6 @@ def load_all_meta(recipe, config=None, finalize=True):
         via conda and also download of those packages (to inspect possible
         run_exports). For fast-running tasks like linting, set to False.
     """
-    # insert_mambabuild()
-
     if config is None:
         config = load_conda_build_config()
     # `bypass_env_check=True` prevents evaluating (=environment solving) the
