@@ -25,6 +25,18 @@ def is_pypi_source(recipe):
     return pypi_source
 
 
+def recipe_has_patches(recipe):
+    if source := recipe.get("source", None):
+        if isinstance(source, dict):
+            if source.get("patches", ""):
+                return True
+        elif isinstance(source, list):
+            for src in source:
+                if src.get("patches", ""):
+                    return True
+    return False
+
+
 class should_use_compilers(LintCheck):
     """The recipe requires a compiler directly
 
@@ -93,11 +105,9 @@ class uses_setuptools(LintCheck):
 
     """
 
-    severity = WARNING
-
     def check_recipe(self, recipe):
         if "setuptools" in recipe.get_deps("run"):
-            self.message()
+            self.message(severity=WARNING)
 
 
 class missing_wheel(LintCheck):
@@ -213,12 +223,23 @@ class avoid_noarch(LintCheck):
 
     """
 
-    severity = WARNING
-
     def check_recipe(self, recipe):
         noarch = recipe.get("build/noarch", "")
         if noarch == "python":
-            self.message(section="build")
+            self.message(section="build", severity=WARNING)
+
+
+class patch_unnecessary(LintCheck):
+    """patch should not be in build when source/patches is not set
+
+    Remove patch/m2-patch from ``build``
+    """
+
+    def check_recipe(self, recipe):
+        if not recipe_has_patches(recipe):
+            deps = recipe.get_deps_dict()
+            if "patch" in deps or "m2-patch" in deps:
+                self.message(section="build")
 
 
 class patch_must_be_in_build(LintCheck):
@@ -232,14 +253,9 @@ class patch_must_be_in_build(LintCheck):
           - m2-patch    # [win]
     """
 
-    has_patches = False
-
-    def check_source(self, source, section):
-        if source.get("patches", ""):
-            self.has_patches = True
-
-    def check_deps(self, deps):
-        if self.has_patches:
+    def check_recipe(self, recipe):
+        if recipe_has_patches(recipe):
+            deps = recipe.get_deps_dict()
             if "patch" in deps:
                 if any("build" not in location for location in deps["patch"]["paths"]):
                     self.message(section="build")
@@ -287,7 +303,7 @@ class missing_pip_check(LintCheck):
 
 
 class missing_python(LintCheck):
-    """For pypi packages, python should be present in the host and run sections
+    """For pypi packages, python should be present in the host and run sections. Missing in {}
 
     Add python:
 
@@ -301,10 +317,12 @@ class missing_python(LintCheck):
     def check_recipe(self, recipe):
 
         if is_pypi_source(recipe) or "pip install" in self.recipe.get("build/script", ""):
-            if "python" not in recipe.get_deps("host"):
-                self.message(section="requirements/host")
-            if "python" not in recipe.get_deps("run"):
-                self.message(section="requirements/run")
+            for section in ["host", "run"]:
+                if "python" not in recipe.get_deps(section):
+                    reset_text = self.__class__.__doc__
+                    self.__class__.__doc__ = self.__class__.__doc__.format(section)
+                    self.message(section=f"requirements/{section}")
+                    self.__class__.__doc__ = reset_text
 
 
 class remove_python_pinning(LintCheck):
@@ -339,8 +357,6 @@ class remove_python_pinning(LintCheck):
 class gui_app(LintCheck):
     """This may be a GUI application. It is advised to test the GUI."""
 
-    severity = INFO
-
     guis = (
         "enaml",
         "glue-core",
@@ -358,4 +374,4 @@ class gui_app(LintCheck):
 
     def check_recipe(self, recipe):
         if set(self.guis).intersection(set(recipe.get_deps("run"))):
-            self.message()
+            self.message(severity=INFO)

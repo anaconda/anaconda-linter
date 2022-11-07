@@ -20,7 +20,7 @@ Briefly, each class becomes a check by:
   a brief description is needed. The remainder is a long desription
   and should include brief help on how to fix the detected issue.
 
-- The class property ``severity`` defaults to ``ERROR`` but can be
+- The input property ``severity`` defaults to ``ERROR`` but can be
   set to ``INFO`` or ``WARNING`` for informative checks that
   should not cause linting to fail.
 
@@ -70,19 +70,12 @@ Module Autodocs
 
 .. rubric:: Environment Variables
 
-.. envvar:: LINT_SKIP
-
-   If set, will be parsed instead of the most recent commit. To skip
-   checks for specific recipes, add strings of the following form::
-
-       [lint skip <check_name> for <recipe_name>]
-
-
 .. autosummary::
    :toctree:
 
    check_build_help
    check_completeness
+   check_spdx
    check_syntax
    check_url
 
@@ -92,17 +85,13 @@ import abc
 import importlib
 import inspect
 import logging
-import os
 import pkgutil
-import re
-from collections import defaultdict
 from enum import IntEnum
 from typing import Any, Dict, List, NamedTuple, Tuple
 
 import networkx as nx
 
 from .. import recipe as _recipe
-from .. import utils
 
 logger = logging.getLogger(__name__)
 
@@ -124,6 +113,9 @@ INFO = Severity.INFO
 WARNING = Severity.WARNING
 ERROR = Severity.ERROR
 
+SEVERITY_DEFAULT = ERROR
+SEVERITY_MIN_DEFAULT = INFO
+
 
 class LintMessage(NamedTuple):
     """Message issued by LintChecks"""
@@ -135,7 +127,7 @@ class LintMessage(NamedTuple):
     check: "LintCheck"
 
     #: The severity of the message
-    severity: Severity = ERROR
+    severity: Severity = SEVERITY_DEFAULT
 
     #: Message title to be presented to user
     title: str = ""
@@ -226,9 +218,6 @@ def get_checks():
 class LintCheck(metaclass=LintCheckMeta):
     """Base class for lint checks"""
 
-    #: Severity of this check. Only ERROR causes a lint failure.
-    severity: Severity = ERROR
-
     #: Checks that must have passed for this check to be executed.
     requires: List["LintCheck"] = []
 
@@ -312,7 +301,12 @@ class LintCheck(metaclass=LintCheckMeta):
         """Attempt to fix the problem"""
 
     def message(
-        self, section: str = None, fname: str = None, line: int = None, data: Any = None
+        self,
+        section: str = None,
+        severity: Severity = SEVERITY_DEFAULT,
+        fname: str = None,
+        line: int = None,
+        data: Any = None,
     ) -> None:
         """Add a message to the lint results
 
@@ -322,13 +316,14 @@ class LintCheck(metaclass=LintCheckMeta):
           section: If specified, a lint location within the recipe
                    meta.yaml pointing to this section/subsection will
                    be added to the message
+          severity: The severity level of the message.
           fname: If specified, the message will apply to this file, rather than the
                  recipe meta.yaml
           line: If specified, sets the line number for the message directly
           data: Data to be passed to `fix`. If check can fix, set this to
                 something other than None.
         """
-        message = self.make_message(self.recipe, section, fname, line, data is not None)
+        message = self.make_message(self.recipe, section, severity, fname, line, data is not None)
         if data is not None and self.try_fix and self.fix(message, data):
             return
         self.messages.append(message)
@@ -338,6 +333,7 @@ class LintCheck(metaclass=LintCheckMeta):
         cls,
         recipe: _recipe.Recipe,
         section: str = None,
+        severity: Severity = SEVERITY_DEFAULT,
         fname: str = None,
         line=None,
         canfix: bool = False,
@@ -348,6 +344,7 @@ class LintCheck(metaclass=LintCheckMeta):
           section: If specified, a lint location within the recipe
                    meta.yaml pointing to this section/subsection will
                    be added to the message
+          severity: The severity level of the message.
           fname: If specified, the message will apply to this file, rather than the
                  recipe meta.yaml
           line: If specified, sets the line number for the message directly
@@ -374,7 +371,7 @@ class LintCheck(metaclass=LintCheckMeta):
         return LintMessage(
             recipe=recipe,
             check=cls,
-            severity=cls.severity,
+            severity=severity,
             title=title.strip(),
             body=body,
             fname=fname,
@@ -493,6 +490,7 @@ class Linter:
                recipes. Use sparingly.
       nocatch: Don't catch exceptions in lint checks and turn them into
                linter_error lint messages. Used by tests.
+      severity_min: The minimum severity level to display in messages.
     """
 
     def __init__(
@@ -502,14 +500,26 @@ class Linter:
         exclude: List[str] = None,
         nocatch: bool = False,
         compact: bool = False,
+
+        severity_min: Severity | str = None,
+
     ) -> None:
         self.config = config
-        self.skip = self.load_skips()
         self.exclude = exclude or []
         self.nocatch = nocatch
         self.verbose = verbose
         self._messages = []
         self.compact = compact
+
+        if isinstance(severity_min, Severity):
+            self.severity_min = severity_min
+        elif isinstance(severity_min, str):
+            try:
+                self.severity_min = Severity[severity_min]
+            except KeyError:
+                raise ValueError(f"Unrecognized severity level {severity_min}")
+        else:
+            self.severity_min = SEVERITY_MIN_DEFAULT
 
         self.reload_checks()
 
@@ -529,7 +539,10 @@ class Linter:
 
     def get_messages(self) -> List[LintMessage]:
         """Returns the lint messages collected during linting"""
-        return sorted(self._messages, key=lambda d: (d.fname, d.end_line))
+        return sorted(
+            [msg for msg in self._messages if msg.severity >= self.severity_min],
+            key=lambda d: (d.fname, d.end_line),
+        )
 
     def clear_messages(self):
         """Clears the lint messages stored in linter"""
@@ -556,36 +569,9 @@ class Linter:
                 for msg in messages
             )
 
-    def load_skips(self):
-        """Parses lint skips
-
-        If :envvar:`LINT_SKIP` or the most recent commit contains ``[
-        lint skip <check_name> for <recipe_name> ]``, that particular
-        check will be skipped.
-
-        """
-        skip_dict = defaultdict(list)
-
-        commit_message = ""
-        if "LINT_SKIP" in os.environ:
-            # Allow overwriting of commit message
-            commit_message = os.environ["LINT_SKIP"]
-        elif os.path.exists(".git"):
-            # Obtain commit message from last commit.
-            commit_message = utils.run(
-                ["git", "log", "--format=%B", "-n", "1"], mask=False, loglevel=0
-            ).stdout
-
-        skip_re = re.compile(r"\[\s*lint skip (?P<func>\w+) for (?P<recipe>.*?)\s*\]")
-        to_skip = skip_re.findall(commit_message)
-
-        for func, recipe in to_skip:
-            skip_dict[recipe].append(func)
-        return skip_dict
-
     def lint(
         self,
-        recipe_names: List[str],
+        recipes: List[str] | List[_recipe.Recipe],
         arch_name: str = "linux-64",
         variant_config_files: List[str] = [],
         exclusive_config_files: List[str] = [],
@@ -597,29 +583,48 @@ class Linter:
         with `get_messages` and the list cleared with `clear_messages`.
 
         Args:
-          recipe_names: List of names of recipes to lint
+          recipe: List of names of recipes or Recipe objects to lint
           fix: Whether checks should attempt to fix detected issues
 
         Returns:
           True if issues with errors were found
 
         """
-        for recipe_name in utils.tqdm(sorted(recipe_names)):
-            try:
-                msgs = self.lint_one(
-                    recipe_name,
-                    arch_name=arch_name,
-                    variant_config_files=variant_config_files,
-                    exclusive_config_files=exclusive_config_files,
-                    fix=fix,
-                )
-            except Exception:
-                if self.nocatch:
-                    raise
-                logger.exception("Unexpected exception in lint")
-                recipe = _recipe.Recipe(recipe_name)
-                msgs = [linter_failure.make_message(recipe=recipe)]
-            self._messages.extend(msgs)
+        if len(recipes) == 0:
+            return 0
+        if isinstance(recipes[0], str):
+            for recipe_name in sorted(recipes):
+                try:
+                    msgs = self.lint_file(
+                        recipe_name,
+                        arch_name=arch_name,
+                        variant_config_files=variant_config_files,
+                        exclusive_config_files=exclusive_config_files,
+                        fix=fix,
+                    )
+                except Exception:
+                    if self.nocatch:
+                        raise
+                    logger.exception("Unexpected exception in lint")
+                    recipe = _recipe.Recipe(recipe_name)
+                    msgs = [linter_failure.make_message(recipe=recipe)]
+                self._messages.extend(msgs)
+        elif isinstance(recipes[0], _recipe.Recipe):
+            for recipe in recipes:
+                try:
+                    msgs = self.lint_recipe(
+                        recipe,
+                        arch_name=arch_name,
+                        variant_config_files=variant_config_files,
+                        exclusive_config_files=exclusive_config_files,
+                        fix=fix,
+                    )
+                except Exception:
+                    if self.nocatch:
+                        raise
+                    logger.exception("Unexpected exception in lint")
+                    msgs = [linter_failure.make_message(recipe=recipe)]
+                self._messages.extend(msgs)
 
         result = 0
         for message in self._messages:
@@ -631,7 +636,7 @@ class Linter:
 
         return result
 
-    def lint_one(
+    def lint_file(
         self,
         recipe_name: str,
         arch_name: str = "linux-64",
@@ -642,7 +647,7 @@ class Linter:
         """Run the linter on a single recipe
 
         Args:
-          recipe_name: Nname of recipe to lint
+          recipe_name: Name of recipe to lint
           arch_name: Architecture to consider
           fix: Whether checks should attempt to fix detected issues
 
@@ -662,9 +667,32 @@ class Linter:
             check_cls = recipe_error_to_lint_check.get(exc.__class__, linter_failure)
             return [check_cls.make_message(recipe=recipe, line=getattr(exc, "line"))]
 
+        messages = self.lint_recipe(
+            recipe,
+            arch_name=arch_name,
+            variant_config_files=variant_config_files,
+            exclusive_config_files=exclusive_config_files,
+            fix=fix,
+        )
+
+        if fix and recipe.is_modified():
+            with open(recipe.path, "w", encoding="utf-8") as fdes:
+                fdes.write(recipe.dump())
+
+        return messages
+
+    def lint_recipe(
+        self,
+        recipe: _recipe.Recipe,
+        arch_name: str = "linux-64",
+        variant_config_files: List[str] = [],
+        exclusive_config_files: List[str] = [],
+        fix: bool = False,
+    ) -> List[LintMessage]:
+
         # collect checks to skip
-        checks_to_skip = set(self.skip[recipe_name])
-        checks_to_skip.update(self.exclude)
+        checks_to_skip = set(self.exclude)
+
         # currently skip-lints will overwrite only-lint, we can check for the key
         # being in checks_to_skip, but I think letting the user do this is best?
         checks_to_skip.update(recipe.get("extra/skip-lints", []))
@@ -700,7 +728,7 @@ class Linter:
             except Exception:
                 if self.nocatch:
                     raise
-                logger.exception("Unexpected exception in lint_one")
+                logger.exception("Unexpected exception in lint_recipe")
                 res = [
                     LintMessage(
                         recipe=recipe,
@@ -713,10 +741,6 @@ class Linter:
             if res:  # skip checks depending on failed checks
                 checks_to_skip.update(nx.ancestors(self.checks_dag, str(check)))
             messages.extend(res)
-
-        if fix and recipe.is_modified():
-            with open(recipe.path, "w", encoding="utf-8") as fdes:
-                fdes.write(recipe.dump())
 
         for message in messages:
             logger.debug("Found: %s", message)

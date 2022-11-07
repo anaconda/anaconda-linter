@@ -2,7 +2,7 @@ import argparse
 import os
 import textwrap
 
-from . import lint, utils
+from . import __version__, lint, utils
 
 
 def lint_parser() -> argparse.ArgumentParser:
@@ -19,6 +19,13 @@ def lint_parser() -> argparse.ArgumentParser:
                 anaconda-lint:
                 Performs linting on conda recipes."""
         ),
+    )
+    parser.add_argument(
+        "-V",
+        "--version",
+        action="version",
+        version=f"%(prog)s {__version__}",
+        help="The version of anaconda-linter",
     )
     parser.add_argument(
         "-m",
@@ -54,6 +61,12 @@ def lint_parser() -> argparse.ArgumentParser:
         ],
         action="append",
         help="""List subdir to lint. Example: linux-64, win-64...""",
+    )
+    parser.add_argument(
+        "--severity",
+        choices=["INFO", "WARNING", "ERROR"],
+        type=str.upper,
+        help="""The minimum severity level displayed in the output.""",
     )
     # we do this one separately because we only allow one entry to conda render
     parser.add_argument(
@@ -99,7 +112,9 @@ def main():
     config = utils.load_config(config_file)
 
     # set up linter
-    linter = lint.Linter(config, args.verbose, None, True)
+    linter = lint.Linter(
+        config=config, verbose=args.verbose, exclude=None, nocatch=True, severity_min=args.severity
+    )
 
     # run linter
     recipes = [f"{args.recipe}/recipe/"]

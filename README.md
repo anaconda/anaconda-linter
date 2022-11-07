@@ -7,9 +7,8 @@ The package is currently a very rough draft of a pure Python linter specifically
 that packages' meta.yaml files adhere to certain Anaconda standards.
 
 ## Installation
-1. `conda env create -f environment.yaml`
+1. `make environment`
 2. `conda activate anaconda-linter`
-3. `make install`
 
 ## Usage
 
@@ -18,8 +17,7 @@ The usage is similar to conda-build.
 1. navigate into the folder of your main `conda_build_config.yaml` file:
 `cd <path/to/aggregate/>`
 
-2. run `conda-lint`
-`conda-lint <path_to_feedstock>`
+2. run `conda-lint` with:  `conda-lint <path_to_feedstock>`
 
 Concrete example:
 `cd ~/work/recipes/aggregate/`
@@ -45,16 +43,16 @@ Note: if you have both `skip-lints` and `only-lint`, any lints in `skip-lint` wi
 
 ## Testing the Anaconda Linter
 
-`conda-lint ../tests/bad-feedstock` - some tests fail
+Make sure that your `anaconda-linter` environment is activated, then:
 
-`conda-lint ../tests/good-feedstock` - all tests pass
+`pytest tests` OR `make tests` (if you would like to see test reports)
+
+It's that easy!
 
 ## TODO:
-- Create a Makefile to auto-create a conda env and download dependencies
-- Set up CI.
-- Increase number of errors in bad-feedstock so that all lints are covered
+- Finish creating a Makefile to auto-create a conda env and download dependencies
+- Finish setting up CI.
 - Add further lints
-- Remove unneeded codes
 - Test with Prefect Flow
 - Set up Sphinx Docs
 
