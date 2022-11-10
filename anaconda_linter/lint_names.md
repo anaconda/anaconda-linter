@@ -2,8 +2,6 @@ avoid_noarch
 
 compilers_must_be_in_build
 
-conda_render_failure
-
 cython_must_be_in_host
 
 cython_needs_compiler

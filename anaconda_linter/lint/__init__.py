@@ -439,13 +439,6 @@ class missing_meta_yaml(LintCheck):
     """
 
 
-class conda_render_failure(LintCheck):
-    """The recipe was not understood by conda-build
-
-    Please request help from cconda-lint.
-    """
-
-
 class jinja_render_failure(LintCheck):
     """The recipe could not be rendered by Jinja2
 
@@ -470,7 +463,6 @@ recipe_error_to_lint_check = {
     _recipe.MissingBuild: missing_build,
     _recipe.HasSelector: unknown_selector,
     _recipe.MissingMetaYaml: missing_meta_yaml,
-    _recipe.CondaRenderFailure: conda_render_failure,
     _recipe.RenderFailure: jinja_render_failure,
 }
 

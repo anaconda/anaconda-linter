@@ -12,6 +12,7 @@ import os
 import queue
 import subprocess as sp
 import sys
+import tempfile
 from collections import Counter
 from copy import deepcopy
 from functools import partial
@@ -31,6 +32,19 @@ import yaml
 from conda_build import api
 from jinja2 import Environment
 from jsonschema import validate
+
+try:
+    from ruamel.yaml import YAML
+    from ruamel.yaml.constructor import DuplicateKeyError
+
+    # from ruamel.yaml.error import YAMLError
+except ModuleNotFoundError:
+    from ruamel_yaml import YAML
+    from ruamel_yaml.constructor import DuplicateKeyError
+
+    # from ruamel_yaml.error import YAMLError
+
+yaml_r = YAML(typ="rt")  # pylint: disable=invalid-name
 
 conda.gateways.logging.initialize_logging = lambda: None
 
@@ -662,3 +676,31 @@ def find_config_files(metadata_or_path, variant_config_files, exclusive_config_f
     files.extend([resolve(f) for f in ensure_list(variant_config_files)])
 
     return files
+
+def crender(feedstock_path, arch="linux-64", python="nopy", variant_config_files = [], exclusive_config_files = []):
+
+    # configure crender call
+    recipe_path = Path(feedstock_path) / 'recipe' / 'meta.yaml'
+    crender_args = ['crender', '-a', arch]
+    if python != 'nopy':
+        crender_args.extend(['-p', python])
+    crender_args.extend(['-o', '-', str(recipe_path)])
+    for cbc in find_config_files(feedstock_path, variant_config_files, exclusive_config_files):
+        crender_args.extend(['-m', str(cbc)])
+
+    # run crender
+    ret = sp.run(crender_args, capture_output=True)
+    if ret.returncode != 0:
+        crender_str = ' '.join(crender_args)
+        raise Exception(f'crender issue. returncode:{ret.returncode}. { crender_str }')
+    meta = yaml_r.load(ret.stdout)
+    print(f" META {meta}")
+    return meta
+
+def crender_from_string(recipe_str, arch="linux-64", python="nopy", variant_config_files = [], exclusive_config_files = []):
+    with tempfile.TemporaryDirectory() as tmp:
+        recipe_dir = Path(tmp) / 'recipe'
+        os.makedirs(recipe_dir)
+        with open(recipe_dir / 'meta.yaml', "w") as tmp_recipe:
+            tmp_recipe.write(recipe_str)
+        return crender(tmp, arch, python, variant_config_files, exclusive_config_files)

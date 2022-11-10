@@ -11,19 +11,10 @@ edit the meta.yaml.
 import logging
 import os
 import re
-import sys
-import tempfile
-import types
-from collections import defaultdict
-from contextlib import redirect_stderr, redirect_stdout
 from copy import deepcopy
 from io import StringIO
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Pattern, Sequence, Tuple
-
-import conda_build.api
+from typing import Any, Dict, List, Optional, Pattern, Sequence
 import jinja2
-from conda_build.metadata import MetaData
 
 # from boa.cli.mambabuild import prepare as insert_mambabuild
 
@@ -165,9 +156,6 @@ class Recipe:
 
         self.conda_build_config_files = []
 
-        self.conda_build_config: str = ""
-        self.build_scripts: Dict[str, str] = {}
-
         # These will be filled in by load_from_string()
         #: Lines of the raw recipe file
         self.meta_yaml: List[str] = []
@@ -202,10 +190,10 @@ class Recipe:
 
     def load_from_string(self, data, selector_dict) -> "Recipe":
         """Load and `render` recipe contents from disk"""
-        self.meta_yaml = self.apply_selector(data, selector_dict)
+        self.meta_yaml = data.splitlines()
         if not self.meta_yaml:
             raise EmptyRecipe(self)
-        self.render()
+        self.crender_from_string(data)
         return self
 
     def read_conda_build_config(
@@ -215,28 +203,6 @@ class Recipe:
         self.conda_build_config_files = utils.find_config_files(
             self.recipe_dir, variant_config_files, exclusive_config_files
         )
-        # Cache contents of conda_build_config.yaml for conda_render.
-        path = Path(self.recipe_dir, "conda_build_config.yaml")
-        if path.is_file():
-            self.conda_build_config = path.read_text()
-        else:
-            self.conda_build_config = ""
-
-    def read_build_scripts(self):
-        # Cache contents of build scripts for conda_render since conda-build
-        # inspects build scripts for used variant variables.
-        scripts = ["build.sh"] + [output.get("script") for output in self.meta.get("outputs") or ()]
-        self.build_scripts.clear()
-        for script in scripts:
-            if not script or os.path.sep in script:
-                # Only support flat folder structure.
-                continue
-            try:
-                path = Path(self.dir, script)
-                content = path.read_text()
-            except Exception:
-                continue
-            self.build_scripts[script] = content
 
     @classmethod
     def from_yaml(
@@ -282,12 +248,6 @@ class Recipe:
             if return_exceptions:
                 return exc
             raise exc
-        try:
-            recipe.read_build_scripts()
-        except Exception as exc:
-            if return_exceptions:
-                return exc
-            raise exc
         recipe.set_original()
         return recipe
 
@@ -326,12 +286,6 @@ class Recipe:
             if return_exceptions:
                 return exc
             raise exc
-        try:
-            recipe.read_build_scripts()
-        except Exception as exc:
-            if return_exceptions:
-                return exc
-            raise exc
         recipe.set_original()
         return recipe
 
@@ -349,57 +303,6 @@ class Recipe:
     def dump(self):
         """Dump recipe content"""
         return "\n".join(self.meta_yaml) + "\n"
-
-    @staticmethod
-    def _rewrite_selector_block(text, block_top, block_left):
-        if not block_left:
-            return None  # never the whole yaml
-        lines = text.splitlines()
-        block_height = 0
-        variants: Dict[str, List[str]] = defaultdict(list)
-
-        for block_height, line in enumerate(lines[block_top:]):
-            if line.strip() and not line.startswith(" " * block_left):
-                break
-            _, _, selector = line.partition("#")
-            if selector:
-                variants[selector.strip("[] ")].append(line)
-            else:
-                for variant in variants:
-                    variants[variant].append(line)
-        else:
-            # end of file, need to add one to block height
-            block_height += 1
-
-        if not block_height:  # empty lines?
-            return None
-        if not variants:
-            return None
-        if any(" " in v for v in variants):
-            # can't handle "[py2k or osx]" style things
-            return None
-
-        new_lines = []
-        for variant in variants.values():
-            first = True
-            for line in variant:
-                if first:
-                    new_lines.append("".join((" " * block_left, "- ", line)))
-                    first = False
-                else:
-                    new_lines.append("".join((" " * (block_left + 2), line)))
-
-        logger.debug(
-            "Replacing: lines %i - %i with %i lines:\n%s\n---\n%s",
-            block_top,
-            block_top + block_height,
-            len(new_lines),
-            "\n".join(lines[block_top : block_top + block_height]),
-            "\n".join(new_lines),
-        )
-
-        lines[block_top : block_top + block_height] = new_lines
-        return "\n".join(lines)
 
     def apply_selector(self, data, selector_dict):
         """Apply selectors # [...]"""
@@ -458,18 +361,7 @@ class Recipe:
         except DuplicateKeyError as err:
             line = err.problem_mark.line + 1
             column = err.problem_mark.column + 1
-            logger.debug("fixing duplicate key at %i:%i", line, column)
-            # We may have encountered a recipe with linux/osx variants using line selectors
-            yaml_text = self._rewrite_selector_block(
-                yaml_text, err.context_mark.line, err.context_mark.column
-            )
-            if yaml_text:
-                try:
-                    self.meta = yaml.load(yaml_text)
-                except DuplicateKeyError:
-                    raise DuplicateKey(self, line=line, column=column)
-            else:
-                raise DuplicateKey(self, line=line, column=column)
+            raise DuplicateKey(self, line=line, column=column)
 
         if (
             "package" not in self.meta
@@ -477,6 +369,22 @@ class Recipe:
             or "name" not in self.meta["package"]
         ):
             raise MissingKey(self)
+
+    def crender(self, subdir="linux-64", python="nopy", variant_config_files: List[str] = [], exclusive_config_files: List[str] = []) -> None:
+        """Convert recipe text into data structure using crender
+        """
+        try:
+            self.meta = utils.crender(self.dir, subdir, python, variant_config_files, exclusive_config_files)
+        except:
+            raise RenderFailure(self, "crender failure")
+
+    def crender_from_string(self, meta_str, subdir="linux-64", python="nopy", variant_config_files: List[str] = [], exclusive_config_files: List[str] = []) -> None:
+        """Convert recipe text into data structure using crender
+        """
+        try:
+            self.meta = utils.crender_from_string(meta_str, subdir, python, variant_config_files, exclusive_config_files)
+        except:
+            raise RenderFailure(self, "crender failure")
 
     @property
     def maintainers(self):
@@ -650,7 +558,7 @@ class Recipe:
                 row += 1
                 col += 2
             self.meta_yaml[row - 1] += " marker"
-            self.render()
+            self.crender()
 
         # get old content
         content = self.get(path)
@@ -658,7 +566,7 @@ class Recipe:
         self.meta_yaml[row] = self.meta_yaml[row].replace(str(content), str(value))
         if not str(value) in self.meta_yaml[row]:
             self.meta_yaml[row] = self.meta_yaml[row][:col] + value
-        self.render()
+        self.crender()
 
     @property
     def package_names(self) -> List[str]:
@@ -752,7 +660,7 @@ class Recipe:
         line = self.meta_yaml[lineno]
         line = re.sub("number: [0-9]+", "number: " + str(n), line)
         self.meta_yaml[lineno] = line
-        self.render()
+        self.crender()
 
     def get_deps(self, sections=None, output=True):
         return list(self.get_deps_dict(sections, output).keys())
@@ -780,118 +688,3 @@ class Recipe:
                 if len(splits) > 1:
                     d["constraints"].append(splits[1])
         return deps
-
-    def conda_render(
-        self,
-        bypass_env_check=True,
-        finalize=True,
-        permit_unsatisfiable_variants=False,
-        **kwargs,
-    ) -> List[Tuple[MetaData, bool, bool]]:
-        """Handles calling conda_build.api.render
-
-        ``conda_build.api.render`` is fragile, loud and slow. Avoid using this
-        whenever you can.
-
-        This function will create a temporary directory, write out the
-        current ``meta.yaml`` contents, redirect stdout and stderr to silence
-        needless prints, ultimately call the `render` function, catching
-        various exceptions and rewriting them into `CondaRenderFailure`, then
-        cache the result.
-
-        Since the ``MetaData`` objects returned expect the on-disk ``meta.yaml``
-        to persist (it can get reloaded later on), clients of this function
-        must **make sure to call `conda_release` once you are done** with those
-        objects.
-
-        Args:
-          bypass_env_check:
-             Avoids calling solver to fill in values for ``pin_compatible``
-             and ``resolved_packages`` in Jinja2 expansion.
-             **Changed default:** ``conda-build.api.render`` defaults to False,
-             we set this to True as it is very slow.
-          finalize:
-             Has ``render()`` run ``finalize_metadata``, which fills in
-             versions for host/run dependencies.
-          permit_unsatisfiable_variants:
-             Avoids raising ``UnsatisfiableError`` or
-             ``DependencyNeedsBuildingError`` when determining package
-             dependencies.
-             **Changed default:** Set to True upstream, we set this to False
-             to be informed about dependency problems.
-          kwargs:
-             passed on to ``conda_build.api.render``
-
-        Raises:
-          `CondaRenderfailure`: Some of the exceptions raised are rewritten
-                                to simplify handling. The list will grow, but
-                                is likely incomplete.
-        Returns:
-          List of 3-tuples each comprising the rendered MetaData and the flags
-          ``needs_download`` and ``needs_render_in_env``.
-
-        FIXME:
-          Need to use **kwargs** to invalidate cache.
-        """
-        if self._conda_meta:
-            return self._conda_meta
-        self.conda_release()
-
-        self._conda_tempdir = tempfile.TemporaryDirectory()
-
-        with open(os.path.join(self._conda_tempdir.name, "meta.yaml"), "w") as tmpfile:
-            tmpfile.write(self.dump())
-
-        if self.conda_build_config:
-            cbc_path = Path(self._conda_tempdir.name, "conda_build_config.yaml")
-            cbc_path.write_text(self.conda_build_config)
-
-        for script, content in self.build_scripts.items():
-            script_path = Path(self._conda_tempdir.name, script)
-            script_path.write_text(content)
-
-        old_exit = sys.exit
-        if isinstance(sys.exit, types.FunctionType):
-
-            def new_exit(args=None):
-                raise SystemExit(args)
-
-            sys.exit = new_exit
-
-        # insert_mambabuild()
-
-        try:
-            with open("/dev/null", "w") as devnull:
-                with redirect_stdout(devnull), redirect_stderr(devnull):
-                    self._conda_meta = conda_build.api.render(
-                        self._conda_tempdir.name,
-                        finalize=finalize,
-                        bypass_env_check=bypass_env_check,
-                        permit_unsatisfiable_variants=permit_unsatisfiable_variants,
-                        **kwargs,
-                    )
-        except RuntimeError as exc:
-            if exc.args[0].startswith("Couldn't extract raw recipe text"):
-                line = self.meta_yaml[0]
-                if not line.startswith("package") or line.startswith("build"):
-                    raise CondaRenderFailure(self, "Must start with package or build section")
-            raise
-        except SystemExit as exc:
-            msg = exc.args[0]
-            if msg.startswith("Error: Failed to render jinja"):
-                msg = "; ".join(msg.splitlines()[1:]) if "\n" in msg else msg
-                raise CondaRenderFailure(self, f"Jinja2 Template Error: '{msg}'")
-            raise CondaRenderFailure(
-                self, f"Unknown SystemExit raised in Conda-Build Render API: '{msg}'"
-            )
-        finally:
-            sys.exit = old_exit
-        return self._conda_meta
-
-    def conda_release(self):
-        """Releases resources acquired in `conda_render`"""
-        if self._conda_meta:
-            self._conda_meta = None
-        if self._conda_tempdir:
-            self._conda_tempdir.cleanup()
-            self._conda_tempdir = None
