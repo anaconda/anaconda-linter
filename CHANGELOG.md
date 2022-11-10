@@ -1,6 +1,15 @@
 # Changelog
 Note: version releases in the 0.x.y range may introduce breaking changes.
 
+## 0.0.5
+
+Bug fixes:
+- Correct mocks of conda-build jinja functions. PR: #131, Issues: #118, #126
+- Correct error line reporting. PR: #131, Issues: #123
+
+Enhancements:
+- Render recipe using cbc files defined variables. PR: #131
+
 ## 0.0.4
 
 - Add test suite

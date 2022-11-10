@@ -6,7 +6,7 @@ from conftest import check
 
 from anaconda_linter import lint, utils
 from anaconda_linter.lint import ERROR, INFO, WARNING
-from anaconda_linter.recipe import Recipe
+from anaconda_linter.recipe import Recipe, RecipeError
 
 
 class dummy_info(lint.LintCheck):
@@ -150,3 +150,70 @@ def test_lint_list():
         lint_checks_file = [line.strip() for line in f.readlines() if line.strip()]
     lint_checks_lint = [str(chk) for chk in lint.get_checks() if not str(chk).startswith("dummy_")]
     assert sorted(lint_checks_file) == sorted(lint_checks_lint)
+
+@pytest.mark.parametrize(
+    "jinja_func,expected",
+    [
+        ("cran_mirror", False),
+        ("compiler('c')", False),
+        ("cdt('cdt-cos6-plop')", False),
+        ("pin_compatible('dotnet-runtime', min_pin='x.x.x.x.x.x', max_pin='x', lower_bound=None, upper_bound=None)", False),
+        ("pin_subpackage('dotnet-runtime', min_pin='x.x.x.x.x.x', max_pin='x', exact=True)", False),
+        ("pin_subpackage('dotnet-runtime', min_pin='x.x.x.x.x.x', max_pin='x')", False),
+        ("pin_subpackage('dotnet-runtime', exact=True)", False),
+        ("pin_subpackage('dotnet-runtime', min_pin='x.x.x.x.x.x')", False),
+        ("pin_subpackage('dotnet-runtime', exact=True, badParam=False)", True),
+    ],
+)
+def test_jinja_functions(base_yaml, jinja_func, expected):
+    
+    def run_lint(yaml_str):
+        config_file = os.path.abspath(os.path.dirname(__file__) + "/../anaconda_linter/config.yaml")
+        config = utils.load_config(config_file)
+        linter = lint.Linter(config=config)
+
+        try:
+            _recipe = Recipe.from_string(yaml_str)
+            linter.lint([_recipe])
+            messages = linter.get_messages()
+        except RecipeError as exc:
+            _recipe = Recipe("")
+            check_cls = lint.recipe_error_to_lint_check.get(exc.__class__, lint.linter_failure)
+            messages = [check_cls.make_message(recipe=_recipe, line=getattr(exc, "line"))]
+        
+        return messages
+
+    yaml_str = (
+        base_yaml
+        + f"""
+        build:
+          number: 0
+          
+        outputs:
+          - name: dotnet
+            version: 1
+            requirements:
+              run:
+                - {{{{ {jinja_func} }}}}
+
+        """
+    )
+
+    lint_check = "jinja_render_failure"
+    messages = run_lint(yaml_str)
+    assert any([str(msg.check) == lint_check for msg in messages]) == expected
+
+def test_error_report_line(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        plop # [aaa]
+        plip # [aaa]
+        plep # [aaa]
+        about:
+          license: BSE-3-Clause
+        """
+    )
+    lint_check = "incorrect_license"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 1 and messages[0].start_line == 5

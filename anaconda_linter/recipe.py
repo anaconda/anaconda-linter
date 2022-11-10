@@ -397,7 +397,14 @@ class Recipe:
         - parse yaml
         - normalize
         """
-        yaml_text = self.get_template().render(self.JINJA_VARS)
+        try:
+            yaml_text = self.get_template().render(self.JINJA_VARS)
+        except jinja2.exceptions.TemplateSyntaxError as exc:
+            raise RenderFailure(self, message=exc.message, line=exc.lineno)
+        except jinja2.exceptions.TemplateError as exc:
+            raise RenderFailure(self, message=exc.message)
+        except TypeError as exc:
+            raise RenderFailure(self, message=str(exc))
         try:
             self.meta = yaml.load(yaml_text)
         except DuplicateKeyError as err:
