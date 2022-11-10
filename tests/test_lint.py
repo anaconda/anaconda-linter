@@ -151,13 +151,17 @@ def test_lint_list():
     lint_checks_lint = [str(chk) for chk in lint.get_checks() if not str(chk).startswith("dummy_")]
     assert sorted(lint_checks_file) == sorted(lint_checks_lint)
 
+
 @pytest.mark.parametrize(
     "jinja_func,expected",
     [
         ("cran_mirror", False),
         ("compiler('c')", False),
         ("cdt('cdt-cos6-plop')", False),
-        ("pin_compatible('dotnet-runtime', min_pin='x.x.x.x.x.x', max_pin='x', lower_bound=None, upper_bound=None)", False),
+        (
+            "pin_compatible('dotnet-runtime', min_pin='x.x.x.x.x.x', max_pin='x', lower_bound=None, upper_bound=None)",
+            False,
+        ),
         ("pin_subpackage('dotnet-runtime', min_pin='x.x.x.x.x.x', max_pin='x', exact=True)", False),
         ("pin_subpackage('dotnet-runtime', min_pin='x.x.x.x.x.x', max_pin='x')", False),
         ("pin_subpackage('dotnet-runtime', exact=True)", False),
@@ -166,7 +170,6 @@ def test_lint_list():
     ],
 )
 def test_jinja_functions(base_yaml, jinja_func, expected):
-    
     def run_lint(yaml_str):
         config_file = os.path.abspath(os.path.dirname(__file__) + "/../anaconda_linter/config.yaml")
         config = utils.load_config(config_file)
@@ -180,7 +183,7 @@ def test_jinja_functions(base_yaml, jinja_func, expected):
             _recipe = Recipe("")
             check_cls = lint.recipe_error_to_lint_check.get(exc.__class__, lint.linter_failure)
             messages = [check_cls.make_message(recipe=_recipe, line=getattr(exc, "line"))]
-        
+
         return messages
 
     yaml_str = (
@@ -188,7 +191,7 @@ def test_jinja_functions(base_yaml, jinja_func, expected):
         + f"""
         build:
           number: 0
-          
+
         outputs:
           - name: dotnet
             version: 1
@@ -202,6 +205,7 @@ def test_jinja_functions(base_yaml, jinja_func, expected):
     lint_check = "jinja_render_failure"
     messages = run_lint(yaml_str)
     assert any([str(msg.check) == lint_check for msg in messages]) == expected
+
 
 def test_error_report_line(base_yaml):
     yaml_str = (
