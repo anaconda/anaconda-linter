@@ -9,16 +9,10 @@ import fnmatch
 import glob
 import logging
 import os
-import queue
-import subprocess as sp
-import sys
 from collections import Counter
 from copy import deepcopy
-from functools import partial
-from multiprocessing import Pool
 from pathlib import Path
-from threading import Thread
-from typing import Any, Dict, List, Sequence
+from typing import Sequence
 
 # FIXME(upstream): For conda>=4.7.0 initialize_logging is (erroneously) called
 #                  by conda.core.index.get_index which messes up our logging.
@@ -26,11 +20,15 @@ from typing import Any, Dict, List, Sequence
 import conda.gateways.logging
 import jinja2
 import requests
-import tqdm as _tqdm
-import yaml
 from conda_build import api
 from jinja2 import Environment
 from jsonschema import validate
+
+try:
+    from ruamel.yaml import YAML
+except ModuleNotFoundError:
+    from ruamel_yaml import YAML
+
 
 conda.gateways.logging.initialize_logging = lambda: None
 
@@ -38,45 +36,7 @@ conda.gateways.logging.initialize_logging = lambda: None
 logger = logging.getLogger(__name__)
 
 
-class TqdmHandler(logging.StreamHandler):
-    """Tqdm aware logging StreamHandler
-
-    Passes all log writes through tqdm to allow progress bars and log
-    messages to coexist without clobbering terminal
-    """
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # initialise internal tqdm lock so that we can use tqdm.write
-        _tqdm.tqdm(disable=True, total=0)
-
-    def emit(self, record):
-        _tqdm.tqdm.write(self.format(record))
-
-
-def tqdm(*args, **kwargs):
-    """Wrapper around TQDM handling disable
-
-    Logging is disabled if:
-
-    - ``TERM`` is set to ``dumb``
-    - ``CIRCLECI`` is set to ``true``
-    - the effective log level of the is lower than set via ``loglevel``
-
-    Args:
-      loglevel: logging loglevel (the number, so logging.INFO)
-      logger: local logger (in case it has different effective log level)
-    """
-    term_ok = (
-        sys.stderr.isatty()
-        and os.environ.get("TERM", "") != "dumb"
-        and os.environ.get("CIRCLECI", "") != "true"
-    )
-    loglevel_ok = kwargs.get("logger", logger).getEffectiveLevel() <= kwargs.get(
-        "loglevel", logging.INFO
-    )
-    kwargs["disable"] = not (term_ok and loglevel_ok)
-    return _tqdm.tqdm(*args, **kwargs)
+yaml = YAML(typ="safe")  # pylint: disable=invalid-name
 
 
 def ensure_list(obj):
@@ -157,8 +117,6 @@ def load_all_meta(recipe, config=None, finalize=True):
         via conda and also download of those packages (to inspect possible
         run_exports). For fast-running tasks like linting, set to False.
     """
-    # insert_mambabuild()
-
     if config is None:
         config = load_conda_build_config()
     # `bypass_env_check=True` prevents evaluating (=environment solving) the
@@ -215,130 +173,6 @@ def load_conda_build_config(platform=None, trim_skip=True):
     return config
 
 
-def run(
-    cmds: List[str],
-    env: Dict[str, str] = None,
-    mask: List[str] = None,
-    live: bool = True,
-    mylogger: logging.Logger = logger,
-    loglevel: int = logging.INFO,
-    **kwargs: Dict[Any, Any],
-) -> sp.CompletedProcess:
-    """
-    Run a command (with logging, masking, etc)
-
-    - Explicitly decodes stdout to avoid UnicodeDecodeErrors that can occur when
-      using the ``universal_newlines=True`` argument in the standard
-      subprocess.run.
-    - Masks secrets
-    - Passed live output to `logging`
-
-    Arguments:
-      cmd: List of command and arguments
-      env: Optional environment for command
-      mask: List of terms to mask (secrets)
-      live: Whether output should be sent to log
-      kwargs: Additional arguments to `subprocess.Popen`
-
-    Returns:
-      CompletedProcess object
-
-    Raises:
-      subprocess.CalledProcessError if the process failed
-      FileNotFoundError if the command could not be found
-    """
-    logq = queue.Queue()
-
-    def pushqueue(out, pipe):
-        """Reads from a pipe and pushes into a queue, pushing "None" to
-        indicate closed pipe"""
-        for line in iter(pipe.readline, b""):
-            out.put((pipe, line))
-        out.put(None)  # End-of-data-token
-
-    def do_mask(arg: str) -> str:
-        """Masks secrets in **arg**"""
-        if mask is None:
-            # caller has not considered masking, hide the entire command
-            # for security reasons
-            return "<hidden>"
-        if mask is False:
-            # masking has been deactivated
-            return arg
-        for mitem in mask:
-            arg = arg.replace(mitem, "<hidden>")
-        return arg
-
-    mylogger.log(loglevel, "(COMMAND) %s", " ".join(do_mask(arg) for arg in cmds))
-
-    # bufsize=4 result of manual experimentation. Changing it can
-    # drop performance drastically.
-    with sp.Popen(
-        cmds, stdout=sp.PIPE, stderr=sp.PIPE, close_fds=True, env=env, bufsize=4, **kwargs
-    ) as proc:
-        # Start threads reading stdout/stderr and pushing it into queue q
-        out_thread = Thread(target=pushqueue, args=(logq, proc.stdout))
-        err_thread = Thread(target=pushqueue, args=(logq, proc.stderr))
-        out_thread.daemon = True  # Do not wait for these threads to terminate
-        err_thread.daemon = True
-        out_thread.start()
-        err_thread.start()
-
-        output_lines = []
-        try:
-            for _ in range(2):  # Run until we've got both `None` tokens
-                for pipe, line in iter(logq.get, None):
-                    line = do_mask(line.decode(errors="replace").rstrip())
-                    output_lines.append(line)
-                    if live:
-                        if pipe == proc.stdout:
-                            prefix = "OUT"
-                        else:
-                            prefix = "ERR"
-                        mylogger.log(loglevel, "(%s) %s", prefix, line)
-        except Exception:
-            proc.kill()
-            proc.wait()
-            raise
-
-        output = "\n".join(output_lines)
-        if isinstance(cmds, str):
-            masked_cmds = do_mask(cmds)
-        else:
-            masked_cmds = [do_mask(c) for c in cmds]
-
-        if proc.poll() is None:
-            mylogger.log(loglevel, "Command closed STDOUT/STDERR but is still running")
-            waitfor = 30
-            waittimes = 5
-            for attempt in range(waittimes):
-                mylogger.log(
-                    loglevel,
-                    "Waiting %s seconds (%i/%i)",
-                    waitfor,
-                    attempt + 1,
-                    waittimes,
-                )
-                try:
-                    proc.wait(timeout=waitfor)
-                    break
-                except sp.TimeoutExpired:
-                    pass
-            else:
-                mylogger.log(loglevel, "Terminating process")
-                proc.kill()
-                proc.wait()
-        returncode = proc.poll()
-
-        if returncode:
-            logger.error("COMMAND FAILED (exited with %s): %s", returncode, " ".join(masked_cmds))
-            if not live:
-                logger.error("STDOUT+STDERR:\n%s", output)
-            raise sp.CalledProcessError(returncode, masked_cmds, output=output)
-
-        return sp.CompletedProcess(returncode, masked_cmds, output)
-
-
 def get_deps(recipe=None, build=True):
     """
     Generator of dependencies for a single recipe
@@ -375,29 +209,6 @@ def get_deps(recipe=None, build=True):
             deps = meta.get_value("requirements/run", [])
         all_deps.update(dep.split()[0] for dep in deps)
     return all_deps
-
-
-_max_threads = 1
-
-
-def set_max_threads(n):
-    global _max_threads
-    _max_threads = n
-
-
-def threads_to_use():
-    """Returns the number of cores we are allowed to run on"""
-    if hasattr(os, "sched_getaffinity"):
-        cores = len(os.sched_getaffinity(0))
-    else:
-        cores = os.cpu_count()
-    return min(_max_threads, cores)
-
-
-def parallel_iter(func, items, desc, *args, **kwargs):
-    pfunc = partial(func, *args, **kwargs)
-    with Pool(threads_to_use()) as pool:
-        yield from tqdm(pool.imap_unordered(pfunc, items), desc=desc, total=len(items))
 
 
 def get_recipes(aggregate_folder, package="*", exclude=None):
@@ -452,9 +263,9 @@ def validate_config(config):
         directly.
     """
     if not isinstance(config, dict):
-        config = yaml.safe_load(open(config))
+        config = yaml.load(open(config))
     fn = os.path.abspath(os.path.dirname(__file__)) + "/config.schema.yaml"
-    schema = yaml.safe_load(open(fn))
+    schema = yaml.load(open(fn))
     validate(config, schema)
 
 
@@ -480,7 +291,7 @@ def load_config(path):
         def relpath(p):
             return os.path.join(os.path.dirname(path), p)
 
-        config = yaml.safe_load(open(path))
+        config = yaml.load(open(path))
 
     def get_list(key):
         # always return empty list, also if NoneType is defined in yaml
@@ -499,14 +310,14 @@ def load_config(path):
 
     # store architecture information
     with open(Path(__file__).parent / "data" / "cbc_default.yaml") as text:
-        init_arch = yaml.safe_load(text.read())
+        init_arch = yaml.load(text.read())
         data_path = Path(__file__).parent / "data"
         for arch_config_path in data_path.glob("cbc_*.yaml"):
             arch = arch_config_path.stem.split("cbc_")[1]
             if arch != "default":
                 with open(arch_config_path) as text:
                     default_config[arch] = deepcopy(init_arch)
-                    default_config[arch].update(yaml.safe_load(text.read()))
+                    default_config[arch].update(yaml.load(text.read()))
 
     return default_config
 

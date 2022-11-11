@@ -6,10 +6,8 @@ dependencies:
   - setuptools
   # run
   - ruamel.yaml
-  - pyyaml
   - license-expression
   - jinja2
-  - tqdm
   - conda-build
   - jsonschema
   - networkx
