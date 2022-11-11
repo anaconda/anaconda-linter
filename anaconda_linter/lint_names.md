@@ -87,3 +87,5 @@ unknown_selector
 uses_setuptools
 
 version_constraints_missing_whitespace
+
+yaml_load_failure
