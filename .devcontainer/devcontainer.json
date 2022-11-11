@@ -1,0 +1,8 @@
+{
+	"name": "Anaconda Linter",
+	"settings": {
+		"python.linting.enabled": true,
+		"python.linting.pylintEnabled": true
+	},
+	"postCreateCommand": "conda install make -y -q && make environment",
+}
