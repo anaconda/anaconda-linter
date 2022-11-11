@@ -14,7 +14,6 @@ import re
 import sys
 import tempfile
 import types
-from collections import defaultdict
 from contextlib import redirect_stderr, redirect_stdout
 from copy import deepcopy
 from io import StringIO
@@ -28,9 +27,11 @@ from conda_build.metadata import MetaData
 try:
     from ruamel.yaml import YAML
     from ruamel.yaml.constructor import DuplicateKeyError
+    from ruamel.yaml.parser import ParserError
 except ModuleNotFoundError:
     from ruamel_yaml import YAML
     from ruamel_yaml.constructor import DuplicateKeyError
+    from ruamel_yaml.parser import ParserError
 
 from . import utils
 
@@ -114,13 +115,22 @@ class CondaRenderFailure(RecipeError):
     template = "could not be rendered by conda-build: %s"
 
 
-class RenderFailure(RecipeError):
+class JinjaRenderFailure(RecipeError):
     """Raised on Jinja rendering problems
 
     May have self.line
     """
 
     template = "failed to render in Jinja2. Error was: %s"
+
+
+class YAMLRenderFailure(RecipeError):
+    """Raised on YAML parsing problems
+
+    May have self.line
+    """
+
+    template = "failed to load YAML. Error was: %s"
 
 
 class Recipe:
@@ -144,7 +154,8 @@ class Recipe:
     JINJA_VARS = {
         "cran_mirror": "https://cloud.r-project.org",
         "compiler": lambda x: f"compiler_{x}",
-        "pin_compatible": lambda x, max_pin=None, min_pin=None: f"{x}",
+        "pin_compatible": lambda x, max_pin=None, min_pin=None, lower_bound=None, upper_bound=None: f"{x}",
+        "pin_subpackage": lambda x, max_pin=None, min_pin=None, exact=False: f"{x}",
         "cdt": lambda x: x,
     }
 
@@ -164,6 +175,8 @@ class Recipe:
         # These will be filled in by load_from_string()
         #: Lines of the raw recipe file
         self.meta_yaml: List[str] = []
+        #: Selectors configuration
+        self.selector_dict: Dict[str, Any] = {}
         # Filled in by update filter
         self.version_data: Dict[str, Any] = {}
         #: Original recipe before modifications (updated by load_from_string)
@@ -193,27 +206,40 @@ class Recipe:
     def __repr__(self) -> str:
         return f'{self.__class__.__name__} "{self.recipe_dir}"'
 
-    def load_from_string(self, data, selector_dict) -> "Recipe":
+    def load_from_string(self, data) -> "Recipe":
         """Load and `render` recipe contents from disk"""
-        self.meta_yaml = self.apply_selector(data, selector_dict)
+        self.meta_yaml = data
         if not self.meta_yaml:
             raise EmptyRecipe(self)
         self.render()
         return self
 
     def read_conda_build_config(
-        self, variant_config_files: List[str] = [], exclusive_config_files: List[str] = []
+        self,
+        selector_dict,
+        variant_config_files: List[str] = [],
+        exclusive_config_files: List[str] = [],
     ):
+        self.selector_dict = selector_dict
+
         # List conda_build_config files for linter render.
         self.conda_build_config_files = utils.find_config_files(
             self.recipe_dir, variant_config_files, exclusive_config_files
         )
-        # Cache contents of conda_build_config.yaml for conda_render.
-        path = Path(self.recipe_dir, "conda_build_config.yaml")
-        if path.is_file():
-            self.conda_build_config = path.read_text()
-        else:
-            self.conda_build_config = ""
+        # Update selector dict
+        for cbc in self.conda_build_config_files:
+            with open(cbc) as f_cbc:
+                try:
+                    cbc_selectors_str = self.apply_selector(f_cbc.read(), self.selector_dict)
+                    cbc_selectors_yml = yaml.load("\n".join(cbc_selectors_str))
+                    if cbc_selectors_yml:
+                        for k, v in cbc_selectors_yml.items():
+                            if type(v) is list:
+                                self.selector_dict[k] = v[-1]
+                except DuplicateKeyError as err:
+                    line = err.problem_mark.line + 1
+                    column = err.problem_mark.column + 1
+                    raise DuplicateKey(self, line=line, column=column)
 
     def read_build_scripts(self):
         # Cache contents of build scripts for conda_render since conda-build
@@ -264,19 +290,10 @@ class Recipe:
         """Create new `Recipe` object from string"""
         try:
             recipe = cls("")
-            recipe.load_from_string(recipe_text, selector_dict)
-        except Exception as exc:
-            if return_exceptions:
-                return exc
-            raise exc
-        try:
-            recipe.read_conda_build_config(variant_config_files, exclusive_config_files)
-        except Exception as exc:
-            if return_exceptions:
-                return exc
-            raise exc
-        try:
-            recipe.read_build_scripts()
+            recipe.read_conda_build_config(
+                selector_dict, variant_config_files, exclusive_config_files
+            )
+            recipe.load_from_string(recipe_text)
         except Exception as exc:
             if return_exceptions:
                 return exc
@@ -301,26 +318,15 @@ class Recipe:
         if recipe_fname.endswith("meta.yaml"):
             recipe_fname = os.path.dirname(recipe_fname)
         recipe = cls(recipe_fname)
+        recipe.read_conda_build_config(selector_dict, variant_config_files, exclusive_config_files)
         try:
             with open(os.path.join(recipe_fname, "meta.yaml")) as text:
-                recipe.load_from_string(text.read(), selector_dict)
+                recipe.load_from_string(text.read())
         except FileNotFoundError:
             exc = MissingMetaYaml(recipe_fname)
             if return_exceptions:
                 return exc
             raise exc
-        except Exception as exc:
-            if return_exceptions:
-                return exc
-            raise exc
-        try:
-            recipe.read_conda_build_config(variant_config_files, exclusive_config_files)
-        except Exception as exc:
-            if return_exceptions:
-                return exc
-            raise exc
-        try:
-            recipe.read_build_scripts()
         except Exception as exc:
             if return_exceptions:
                 return exc
@@ -343,57 +349,6 @@ class Recipe:
         """Dump recipe content"""
         return "\n".join(self.meta_yaml) + "\n"
 
-    @staticmethod
-    def _rewrite_selector_block(text, block_top, block_left):
-        if not block_left:
-            return None  # never the whole yaml
-        lines = text.splitlines()
-        block_height = 0
-        variants: Dict[str, List[str]] = defaultdict(list)
-
-        for block_height, line in enumerate(lines[block_top:]):
-            if line.strip() and not line.startswith(" " * block_left):
-                break
-            _, _, selector = line.partition("#")
-            if selector:
-                variants[selector.strip("[] ")].append(line)
-            else:
-                for variant in variants:
-                    variants[variant].append(line)
-        else:
-            # end of file, need to add one to block height
-            block_height += 1
-
-        if not block_height:  # empty lines?
-            return None
-        if not variants:
-            return None
-        if any(" " in v for v in variants):
-            # can't handle "[py2k or osx]" style things
-            return None
-
-        new_lines = []
-        for variant in variants.values():
-            first = True
-            for line in variant:
-                if first:
-                    new_lines.append("".join((" " * block_left, "- ", line)))
-                    first = False
-                else:
-                    new_lines.append("".join((" " * (block_left + 2), line)))
-
-        logger.debug(
-            "Replacing: lines %i - %i with %i lines:\n%s\n---\n%s",
-            block_top,
-            block_top + block_height,
-            len(new_lines),
-            "\n".join(lines[block_top : block_top + block_height]),
-            "\n".join(new_lines),
-        )
-
-        lines[block_top : block_top + block_height] = new_lines
-        return "\n".join(lines)
-
     def apply_selector(self, data, selector_dict):
         """Apply selectors # [...]"""
         updated_data = []
@@ -415,11 +370,12 @@ class Recipe:
         # Storing it means the recipe cannot be pickled, which in turn
         # means we cannot pass it to ProcessExecutors.
         try:
-            return utils.jinja_silent_undef.from_string("\n".join(self.meta_yaml))
+            meta_yaml_selectors_applied = self.apply_selector(self.meta_yaml, self.selector_dict)
+            return utils.jinja_silent_undef.from_string("\n".join(meta_yaml_selectors_applied))
         except jinja2.exceptions.TemplateSyntaxError as exc:
-            raise RenderFailure(self, message=exc.message, line=exc.lineno)
+            raise JinjaRenderFailure(self, message=exc.message, line=exc.lineno)
         except jinja2.exceptions.TemplateError as exc:
-            raise RenderFailure(self, message=exc.message)
+            raise JinjaRenderFailure(self, message=exc.message)
 
     def get_simple_modules(self):
         """Yield simple replacement values from template
@@ -445,24 +401,22 @@ class Recipe:
         - parse yaml
         - normalize
         """
-        yaml_text = self.get_template().render(self.JINJA_VARS)
+        try:
+            yaml_text = self.get_template().render(self.JINJA_VARS)
+        except jinja2.exceptions.TemplateSyntaxError as exc:
+            raise JinjaRenderFailure(self, message=exc.message, line=exc.lineno)
+        except jinja2.exceptions.TemplateError as exc:
+            raise JinjaRenderFailure(self, message=exc.message)
+        except TypeError as exc:
+            raise JinjaRenderFailure(self, message=str(exc))
         try:
             self.meta = yaml.load(yaml_text)
+        except ParserError as exc:
+            raise YAMLRenderFailure(self, line=exc.problem_mark.line)
         except DuplicateKeyError as err:
             line = err.problem_mark.line + 1
             column = err.problem_mark.column + 1
-            logger.debug("fixing duplicate key at %i:%i", line, column)
-            # We may have encountered a recipe with linux/osx variants using line selectors
-            yaml_text = self._rewrite_selector_block(
-                yaml_text, err.context_mark.line, err.context_mark.column
-            )
-            if yaml_text:
-                try:
-                    self.meta = yaml.load(yaml_text)
-                except DuplicateKeyError:
-                    raise DuplicateKey(self, line=line, column=column)
-            else:
-                raise DuplicateKey(self, line=line, column=column)
+            raise DuplicateKey(self, line=line, column=column)
 
         if (
             "package" not in self.meta
