@@ -507,7 +507,7 @@ class Linter:
         verbose: bool = False,
         exclude: List[str] = None,
         nocatch: bool = False,
-        severity_min: Severity | str = None,
+        severity_min=None,
     ) -> None:
         self.config = config
         self.exclude = exclude or []
@@ -572,7 +572,7 @@ class Linter:
 
     def lint(
         self,
-        recipes: List[str] | List[_recipe.Recipe],
+        recipes,
         arch_name: str = "linux-64",
         variant_config_files: List[str] = [],
         exclusive_config_files: List[str] = [],
