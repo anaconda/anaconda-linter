@@ -455,6 +455,13 @@ class jinja_render_failure(LintCheck):
     """
 
 
+class yaml_load_failure(LintCheck):
+    """The recipe could not be loaded by yaml
+
+    Check your selectors and overall yaml validity.
+    """
+
+
 class unknown_check(LintCheck):
     """Something went wrong inside the linter
 
@@ -471,7 +478,8 @@ recipe_error_to_lint_check = {
     _recipe.HasSelector: unknown_selector,
     _recipe.MissingMetaYaml: missing_meta_yaml,
     _recipe.CondaRenderFailure: conda_render_failure,
-    _recipe.RenderFailure: jinja_render_failure,
+    _recipe.JinjaRenderFailure: jinja_render_failure,
+    _recipe.YAMLRenderFailure: yaml_load_failure,
 }
 
 

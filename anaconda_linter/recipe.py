@@ -30,11 +30,12 @@ from conda_build.metadata import MetaData
 try:
     from ruamel.yaml import YAML
     from ruamel.yaml.constructor import DuplicateKeyError
+    from ruamel.yaml.parser import ParserError
 
     # from ruamel.yaml.error import YAMLError
 except ModuleNotFoundError:
     from ruamel_yaml import YAML
-    from ruamel_yaml.constructor import DuplicateKeyError
+    from ruamel_yaml.parser import ParserError
 
     # from ruamel_yaml.error import YAMLError
 
@@ -120,13 +121,22 @@ class CondaRenderFailure(RecipeError):
     template = "could not be rendered by conda-build: %s"
 
 
-class RenderFailure(RecipeError):
+class JinjaRenderFailure(RecipeError):
     """Raised on Jinja rendering problems
 
     May have self.line
     """
 
     template = "failed to render in Jinja2. Error was: %s"
+
+
+class YAMLRenderFailure(RecipeError):
+    """Raised on YAML parsing problems
+
+    May have self.line
+    """
+
+    template = "failed to load YAML. Error was: %s"
 
 
 class Recipe:
@@ -369,9 +379,9 @@ class Recipe:
             meta_yaml_selectors_applied = self.apply_selector(self.meta_yaml, self.selector_dict)
             return utils.jinja_silent_undef.from_string("\n".join(meta_yaml_selectors_applied))
         except jinja2.exceptions.TemplateSyntaxError as exc:
-            raise RenderFailure(self, message=exc.message, line=exc.lineno)
+            raise JinjaRenderFailure(self, message=exc.message, line=exc.lineno)
         except jinja2.exceptions.TemplateError as exc:
-            raise RenderFailure(self, message=exc.message)
+            raise JinjaRenderFailure(self, message=exc.message)
 
     def get_simple_modules(self):
         """Yield simple replacement values from template
@@ -400,13 +410,15 @@ class Recipe:
         try:
             yaml_text = self.get_template().render(self.JINJA_VARS)
         except jinja2.exceptions.TemplateSyntaxError as exc:
-            raise RenderFailure(self, message=exc.message, line=exc.lineno)
+            raise JinjaRenderFailure(self, message=exc.message, line=exc.lineno)
         except jinja2.exceptions.TemplateError as exc:
-            raise RenderFailure(self, message=exc.message)
+            raise JinjaRenderFailure(self, message=exc.message)
         except TypeError as exc:
-            raise RenderFailure(self, message=str(exc))
+            raise JinjaRenderFailure(self, message=str(exc))
         try:
             self.meta = yaml.load(yaml_text)
+        except ParserError as exc:
+            raise YAMLRenderFailure(self, line=exc.problem_mark.line)
         except DuplicateKeyError as err:
             line = err.problem_mark.line + 1
             column = err.problem_mark.column + 1
