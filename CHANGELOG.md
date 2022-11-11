@@ -8,6 +8,8 @@ Note: version releases in the 0.x.y range may introduce breaking changes.
 - Bug fixes for message system
 - Add new check: `patch_unnecessary`
 - Add `--severity` option to control the severity level of linter messages
+- Remove threading functionality and unused functions
+- Use ruamel.yaml through the module and remove pyyaml
 - Remove `load_skips` function
 - Bug fix: Correct mocks of conda-build jinja functions. PR: #131, Issues: #118
 - Bug fix: Correct error line reporting. PR: #131, Issues: #123
