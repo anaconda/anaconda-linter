@@ -22,7 +22,7 @@ jobs:
       - uses: actions/checkout@1f9a0c22da41e6ebfa534300ef656657ea2c6707
       - name: Cache conda env
         id: cache-conda
-        uses: actions/cache@1c73980b09e7aea7201f325a7aa3ad00beddcdda # tag=v3
+        uses: actions/cache@9b0c1fce7a93df8e3bb8926b0d6e9d89e92f20a7 # tag=v3
         env:
           cache-name: conda-env-cache
         with:
