@@ -54,7 +54,6 @@ It's that easy!
 - Finish setting up CI.
 - Add further lints
 - Test with Prefect Flow
-- Set up Sphinx Docs
 
 ## Contributions
 This new package is inspired by bioconda's [linter](https://github.com/bioconda/bioconda-utils/blob/master/bioconda_utils/lint/__init__.py).

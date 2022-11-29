@@ -51,6 +51,9 @@ def main():
                 "conda-lint=anaconda_linter.run:main",
             ]
         },
+        extras_require={
+            "docs": ["sphinx", "myst-parser"],
+        },
         install_requires=requirements,
         keywords="anaconda_linter",
         license=anaconda_linter.__license__,
