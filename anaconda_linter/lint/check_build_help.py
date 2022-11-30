@@ -375,3 +375,14 @@ class gui_app(LintCheck):
     def check_recipe(self, recipe):
         if set(self.guis).intersection(set(recipe.get_deps("run"))):
             self.message(severity=INFO)
+
+
+class uses_matplotlib(LintCheck):
+    """The recipe uses matplotlib, but matplotlib-base is recommended
+    The ``matplotlib`` dependency should be replaced with ``matplotlib-base``
+    unless the package explicitly needs the PyQt interactive plotting backend.
+    """
+
+    def check_recipe(self, recipe):
+        if "matplotlib" in recipe.get_deps("run"):
+            self.message(severity=WARNING)

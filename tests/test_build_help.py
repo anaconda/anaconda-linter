@@ -715,3 +715,31 @@ def test_gui_app_bad(base_yaml):
         assert (
             len(messages) == 1 and "GUI application" in messages[0].title
         ), f"Check failed for {gui}"
+
+
+def test_matplotlib_good(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        requirements:
+          run:
+            - matplotlib-base
+        """
+    )
+    lint_check = "uses_matplotlib"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_matplotlib_bad(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        requirements:
+          run:
+            - matplotlib
+        """
+    )
+    lint_check = "uses_matplotlib"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 1 and "The recipe uses matplotlib" in messages[0].title

@@ -84,6 +84,8 @@ unknown_check
 
 unknown_selector
 
+uses_matplotlib
+
 uses_setuptools
 
 version_constraints_missing_whitespace
