@@ -378,9 +378,10 @@ class gui_app(LintCheck):
 
 
 class uses_matplotlib(LintCheck):
-    """The recipe uses matplotlib, but matplotlib-base is recommended
+    """The recipe uses matplotlib, but matplotlib-base is always recommended.
     The ``matplotlib`` dependency should be replaced with ``matplotlib-base``
     unless the package explicitly needs the PyQt interactive plotting backend.
+    It will reduce the size of the package.
     """
 
     def check_recipe(self, recipe):
