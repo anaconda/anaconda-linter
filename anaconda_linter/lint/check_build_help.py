@@ -386,4 +386,4 @@ class uses_matplotlib(LintCheck):
 
     def check_recipe(self, recipe):
         if "matplotlib" in recipe.get_deps("run"):
-            self.message(severity=WARNING)
+            self.message(severity=INFO)
