@@ -148,19 +148,19 @@ class missing_tests(LintCheck):
 
     test_files = ["run_test.py", "run_test.sh", "run_test.pl"]
 
-    def check_section(self, recipe, section=""):
-        test_section = f"{section}test"
+    def check_output(self, recipe, output=""):
+        test_section = f"{output}test"
         if recipe.get(f"{test_section}/commands", "") or recipe.get(f"{test_section}/imports", ""):
             return
         reset_text = self.__class__.__doc__
-        if section == "":
+        if output == "":
             self.__class__.__doc__ = self.__class__.__doc__.format("The recipe")
         else:
-            self.__class__.__doc__ = self.__class__.__doc__.format(recipe.get(f"{section}name"))
+            self.__class__.__doc__ = self.__class__.__doc__.format(recipe.get(f"{output}name"))
         if recipe.get(f"{test_section}", False) is not False:
             self.message(section=test_section)
         else:
-            self.message(section=section)
+            self.message(section=output)
         self.__class__.__doc__ = reset_text
 
     def check_recipe(self, recipe):
@@ -168,9 +168,9 @@ class missing_tests(LintCheck):
             return
         if outputs := recipe.get("outputs", None):
             for o in range(len(outputs)):
-                self.check_section(recipe, f"outputs/{o}/")
+                self.check_output(recipe, f"outputs/{o}/")
         else:
-            self.check_section(recipe)
+            self.check_output(recipe)
 
 
 class missing_hash(LintCheck):
