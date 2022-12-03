@@ -161,6 +161,28 @@ def test_missing_tests_good_command(base_yaml):
     assert len(messages) == 0
 
 
+def test_missing_tests_good_multi(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+            test:
+              requires:
+                - pip
+              commands:
+                - pip check
+          - name: output2
+            test:
+              imports:
+                - module
+        """
+    )
+    lint_check = "missing_tests"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
 def test_missing_tests_good_scripts(base_yaml):
     lint_check = "missing_tests"
 
@@ -187,13 +209,54 @@ def test_missing_tests_bad_missing(base_yaml):
     )
     lint_check = "missing_tests"
     messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "missing tests" in messages[0].title
+    assert len(messages) == 1 and "The recipe is missing tests" in messages[0].title
 
 
 def test_missing_tests_bad_missing_section(base_yaml):
     lint_check = "missing_tests"
     messages = check(lint_check, base_yaml)
-    assert len(messages) == 1 and "missing tests" in messages[0].title
+    assert len(messages) == 1 and "The recipe missing tests" in messages[0].title
+
+
+def test_missing_tests_bad_missing_multi(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+            test:
+              requires:
+                - pip
+              commands:
+                - pip check
+          - name: output2
+            test:
+              requires:
+                - pip
+        """
+    )
+    lint_check = "missing_tests"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 1 and "output2 is missing tests" in messages[0].title
+
+
+def test_missing_tests_bad_missing_section(base_yaml):
+    lint_check = "missing_tests"
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+            test:
+              requires:
+                - pip
+              commands:
+                - pip check
+          - name: output2
+        """
+    )
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 1 and "output2 is missing tests" in messages[0].title
 
 
 def test_missing_hash_good(base_yaml):

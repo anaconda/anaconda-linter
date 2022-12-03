@@ -126,7 +126,7 @@ class invalid_license_family(LintCheck):
 
 
 class missing_tests(LintCheck):
-    """The recipe is missing tests.
+    """{} is missing tests.
 
     Please add::
 
@@ -148,15 +148,29 @@ class missing_tests(LintCheck):
 
     test_files = ["run_test.py", "run_test.sh", "run_test.pl"]
 
+    def check_section(self, recipe, section=""):
+        test_section = f"{section}test"
+        if recipe.get(f"{test_section}/commands", "") or recipe.get(f"{test_section}/imports", ""):
+            return
+        reset_text = self.__class__.__doc__
+        if section == "":
+            self.__class__.__doc__ = self.__class__.__doc__.format("The recipe")
+        else:
+            self.__class__.__doc__ = self.__class__.__doc__.format(recipe.get(f"{section}name"))
+        if recipe.get(f"{test_section}", False) is not False:
+            self.message(section=test_section)
+        else:
+            self.message(section=section)
+        self.__class__.__doc__ = reset_text
+
     def check_recipe(self, recipe):
         if any(os.path.exists(os.path.join(recipe.dir, f)) for f in self.test_files):
             return
-        if recipe.get("test/commands", "") or recipe.get("test/imports", ""):
-            return
-        if recipe.get("test", False) is not False:
-            self.message(section="test")
+        if outputs := recipe.get("outputs", None):
+            for o in range(len(outputs)):
+                self.check_section(recipe, f"outputs/{o}/")
         else:
-            self.message()
+            self.check_section(recipe)
 
 
 class missing_hash(LintCheck):
