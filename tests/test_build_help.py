@@ -68,7 +68,41 @@ def test_should_use_compilers_good(base_yaml):
         assert len(messages) == 0, f"Check failed for {compiler}"
 
 
-def test_compilers_must_be_in_build(base_yaml):
+def test_should_use_compilers_bad_multi(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+            requirements:
+              build:
+                - {{ compiler('c') }}
+          - name: output2
+            requirements:
+              build:
+                - gcc
+        """
+    )
+    lint_check = "should_use_compilers"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 1 and "compiler directly" in messages[0].title
+
+
+def test_compilers_must_be_in_build_good(base_yaml):
+    lint_check = "compilers_must_be_in_build"
+    yaml_str = (
+        base_yaml
+        + f"""
+        requirements:
+          build:
+            - {{{{ compiler('c') }}}}
+        """
+    )
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_compilers_must_be_in_build_bad(base_yaml):
     lint_check = "compilers_must_be_in_build"
     for section in ["host", "run"]:
         yaml_str = (
@@ -79,6 +113,30 @@ def test_compilers_must_be_in_build(base_yaml):
             - {{{{ compiler('c') }}}}
             """
         )
+        messages = check(lint_check, yaml_str)
+        assert (
+            len(messages) == 1 and "compiler in a section" in messages[0].title
+        ), f"Check failed for {section}"
+
+
+def test_compilers_must_be_in_build_bad_multi(base_yaml):
+    lint_check = "compilers_must_be_in_build"
+    for section in ["host", "run"]:
+        yaml_str = (
+            base_yaml
+            + f"""
+        outputs:
+          - name: output1
+            requirements:
+              build:
+                - {{{{ compiler('c') }}}}
+          - name: output2
+            requirements:
+              {section}:
+                - {{{{ compiler('c') }}}}
+            """
+        )
+        print(yaml_str)
         messages = check(lint_check, yaml_str)
         assert (
             len(messages) == 1 and "compiler in a section" in messages[0].title
