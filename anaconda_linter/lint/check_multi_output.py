@@ -16,7 +16,7 @@ class outputs_not_unique(LintCheck):
             for n, name in enumerate(output_names):
                 if name in unique_names:
                     self.__class__.__doc__ = reset_text.format(name)
-                    self.message(section=f"outputs/{n}")
+                    self.message(section=f"outputs/{n}/name")
                     self.__class__.__doc__ = reset_text
                 else:
                     unique_names.append(name)
