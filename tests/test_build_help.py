@@ -232,6 +232,28 @@ def test_setup_py_install_args_bad_cmd(base_yaml):
     assert len(messages) == 1 and "setuptools without required arguments" in messages[0].title
 
 
+def test_setup_py_install_args_bad_cmd_multi(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+            script: {{ PYTHON }} -m setup.py install --single-version-externally-managed
+            requirements:
+              host:
+                - setuptools
+          - name: output2
+            script: {{ PYTHON }} -m setup.py install
+            requirements:
+              host:
+                - setuptools
+        """
+    )
+    lint_check = "setup_py_install_args"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 1 and "setuptools without required arguments" in messages[0].title
+
+
 def test_setup_py_install_args_bad_script(base_yaml):
     yaml_str = (
         base_yaml

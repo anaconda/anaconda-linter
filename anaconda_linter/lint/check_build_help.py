@@ -155,6 +155,10 @@ class setup_py_install_args(LintCheck):
 
         if not self._check_line(self.recipe.get("build/script", "")):
             self.message(section="build/script")
+        if outputs := self.recipe.get("outputs", None):
+            for o, output in enumerate(outputs):
+                if any([path.startswith(f"outputs/{o}/requirements/host") for path in deps["setuptools"]["paths"]]) and not self._check_line(output.get("script", "")):
+                    self.message(section=f"outputs/{o}/script")
 
         try:
             with open(os.path.join(self.recipe.dir, "build.sh")) as buildsh:
