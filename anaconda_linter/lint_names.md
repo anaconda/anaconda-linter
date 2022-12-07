@@ -70,6 +70,8 @@ missing_wheel
 
 non_url_source
 
+outputs_not_unique
+
 patch_must_be_in_build
 
 patch_unnecessary
