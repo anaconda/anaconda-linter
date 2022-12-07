@@ -331,6 +331,33 @@ def test_setup_py_install_args_bad_script(base_yaml):
         assert len(messages) == 1 and "setuptools without required arguments" in messages[0].title
 
 
+def test_setup_py_install_args_bad_script_multi(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+            script: {{ PYTHON }} -m setup.py install --single-version-externally-managed
+            requirements:
+              host:
+                - setuptools
+          - name: output2
+            script: build_output.sh
+            requirements:
+              host:
+                - setuptools
+        """
+    )
+    lint_check = "setup_py_install_args"
+    with tempfile.TemporaryDirectory() as tmpdir:
+        recipe_dir = os.path.join(tmpdir, "recipe")
+        os.mkdir(recipe_dir)
+        with open(os.path.join(recipe_dir, "build_output.sh"), "w") as f:
+            f.write("{{ PYTHON }} -m setup.py install\n")
+        messages = check_dir(lint_check, tmpdir, yaml_str)
+        assert len(messages) == 1 and "setuptools without required arguments" in messages[0].title
+
+
 def test_cython_must_be_in_host_good(base_yaml):
     yaml_str = (
         base_yaml
