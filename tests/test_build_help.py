@@ -171,6 +171,46 @@ def test_uses_setuptools_bad(base_yaml):
     assert len(messages) == 1 and "uses setuptools in run depends" in messages[0].title
 
 
+def test_uses_setuptools_good_multi(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+            requirements:
+              host:
+                - setuptools
+          - name: output2
+            requirements:
+              host:
+                - setuptools
+        """
+    )
+    lint_check = "uses_setuptools"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_uses_setuptools_bad_multi(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+            requirements:
+              host:
+                - setuptools
+          - name: output2
+            requirements:
+              run:
+                - setuptools
+        """
+    )
+    lint_check = "uses_setuptools"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 1 and "uses setuptools in run depends" in messages[0].title
+
+
 def test_missing_wheel_url_good(base_yaml):
     yaml_str = (
         base_yaml

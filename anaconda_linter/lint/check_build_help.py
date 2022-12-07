@@ -106,8 +106,10 @@ class uses_setuptools(LintCheck):
     """
 
     def check_recipe(self, recipe):
-        if "setuptools" in recipe.get_deps("run"):
-            self.message(severity=WARNING)
+        deps = recipe.get_deps_dict("run")
+        if "setuptools" in deps:
+            for path in deps["setuptools"]["paths"]:
+                self.message(severity=WARNING, section=path)
 
 
 class missing_wheel(LintCheck):
