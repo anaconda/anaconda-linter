@@ -452,7 +452,6 @@ def test_cython_must_be_in_host_good(base_yaml):
     )
     lint_check = "cython_must_be_in_host"
     messages = check(lint_check, yaml_str)
-    print(yaml_str)
     assert len(messages) == 0
 
 
@@ -466,6 +465,41 @@ def test_cython_must_be_in_host_bad(base_yaml):
           {section}:
             - cython
             """
+        )
+        messages = check(lint_check, yaml_str)
+        assert len(messages) == 1 and "Cython should be" in messages[0].title
+
+
+def test_cython_must_be_in_host_good_multi(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+          - name: output2
+            requirements:
+              host:
+                - cython
+        """
+    )
+    lint_check = "cython_must_be_in_host"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_cython_must_be_in_host_bad_multi(base_yaml):
+    lint_check = "cython_must_be_in_host"
+    for section in ["build", "run"]:
+        yaml_str = (
+            base_yaml
+            + f"""
+        outputs:
+          - name: output1
+          - name: output2
+            requirements:
+              {section}:
+                - cython
+        """
         )
         messages = check(lint_check, yaml_str)
         assert len(messages) == 1 and "Cython should be" in messages[0].title

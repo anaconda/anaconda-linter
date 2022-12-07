@@ -193,8 +193,9 @@ class cython_must_be_in_host(LintCheck):
 
     def check_deps(self, deps):
         if "cython" in deps:
-            if any("host" not in location for location in deps["cython"]["paths"]):
-                self.message()
+            for location in deps["cython"]["paths"]:
+                if "/host" not in location:
+                    self.message(section=location)
 
 
 class cython_needs_compiler(LintCheck):
