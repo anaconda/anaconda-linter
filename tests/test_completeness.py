@@ -215,7 +215,7 @@ def test_missing_tests_bad_missing(base_yaml):
 def test_missing_tests_bad_missing_section(base_yaml):
     lint_check = "missing_tests"
     messages = check(lint_check, base_yaml)
-    assert len(messages) == 1 and "The recipe missing tests" in messages[0].title
+    assert len(messages) == 1 and "The recipe is missing tests" in messages[0].title
 
 
 def test_missing_tests_bad_missing_multi(base_yaml):
@@ -240,7 +240,7 @@ def test_missing_tests_bad_missing_multi(base_yaml):
     assert len(messages) == 1 and "output2 is missing tests" in messages[0].title
 
 
-def test_missing_tests_bad_missing_section(base_yaml):
+def test_missing_tests_bad_missing_section_multi(base_yaml):
     lint_check = "missing_tests"
     yaml_str = (
         base_yaml

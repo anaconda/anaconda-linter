@@ -15,13 +15,13 @@ def test_outputs_not_unique_good(base_yaml):
     assert len(messages) == 0
 
 
-def test_outputs_not_unique_bad(base_yaml):
+def test_outputs_not_unique_bad_package_name(base_yaml):
     yaml_str = (
         base_yaml
         + """
         outputs:
           - name: output1
-          - name: output2
+          - name: test_package
         """
     )
     lint_check = "outputs_not_unique"

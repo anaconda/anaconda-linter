@@ -92,10 +92,10 @@ def test_compilers_must_be_in_build_good(base_yaml):
     lint_check = "compilers_must_be_in_build"
     yaml_str = (
         base_yaml
-        + f"""
+        + """
         requirements:
           build:
-            - {{{{ compiler('c') }}}}
+            - {{ compiler('c') }}
         """
     )
     messages = check(lint_check, yaml_str)
