@@ -74,9 +74,6 @@ def test_should_use_compilers_bad_multi(base_yaml):
         + """
         outputs:
           - name: output1
-            requirements:
-              build:
-                - {{ compiler('c') }}
           - name: output2
             requirements:
               build:
@@ -127,9 +124,6 @@ def test_compilers_must_be_in_build_bad_multi(base_yaml):
             + f"""
         outputs:
           - name: output1
-            requirements:
-              build:
-                - {{{{ compiler('c') }}}}
           - name: output2
             requirements:
               {section}:
@@ -197,9 +191,6 @@ def test_uses_setuptools_bad_multi(base_yaml):
         + """
         outputs:
           - name: output1
-            requirements:
-              host:
-                - setuptools
           - name: output2
             requirements:
               run:
@@ -279,10 +270,6 @@ def test_missing_wheel_pip_install_good_multi(base_yaml):
         + """
         outputs:
           - name: output1
-            script: {{ PYTHON }} -m pip install .
-            requirements:
-              host:
-                - wheel
           - name: output2
             script: {{ PYTHON }} -m pip install .
             requirements:
@@ -301,10 +288,6 @@ def test_missing_wheel_pip_install_bad_multi(base_yaml):
         + """
         outputs:
           - name: output1
-            script: {{ PYTHON }} -m pip install .
-            requirements:
-              host:
-                - wheel
           - name: output2
             script: {{ PYTHON }} -m pip install .
             requirements:
@@ -379,10 +362,6 @@ def test_setup_py_install_args_bad_cmd_multi(base_yaml):
         + """
         outputs:
           - name: output1
-            script: {{ PYTHON }} -m setup.py install --single-version-externally-managed
-            requirements:
-              host:
-                - setuptools
           - name: output2
             script: {{ PYTHON }} -m setup.py install
             requirements:
@@ -420,10 +399,6 @@ def test_setup_py_install_args_bad_script_multi(base_yaml):
         + """
         outputs:
           - name: output1
-            script: {{ PYTHON }} -m setup.py install --single-version-externally-managed
-            requirements:
-              host:
-                - setuptools
           - name: output2
             script: build_output.sh
             requirements:
