@@ -273,6 +273,49 @@ def test_missing_wheel_pip_install_bad(base_yaml):
     assert len(messages) == 1 and "wheel should be present" in messages[0].title
 
 
+def test_missing_wheel_pip_install_good_multi(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+            script: {{ PYTHON }} -m pip install .
+            requirements:
+              host:
+                - wheel
+          - name: output2
+            script: {{ PYTHON }} -m pip install .
+            requirements:
+              host:
+                - wheel
+        """
+    )
+    lint_check = "missing_wheel"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_missing_wheel_pip_install_bad_multi(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+            script: {{ PYTHON }} -m pip install .
+            requirements:
+              host:
+                - wheel
+          - name: output2
+            script: {{ PYTHON }} -m pip install .
+            requirements:
+              host:
+        """
+    )
+    lint_check = "missing_wheel"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 1 and "wheel should be present" in messages[0].title
+
+
 def test_setup_py_install_args_good_missing(base_yaml):
     lint_check = "setup_py_install_args"
     messages = check(lint_check, base_yaml)
