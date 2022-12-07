@@ -210,8 +210,15 @@ class cython_needs_compiler(LintCheck):
     """
 
     def check_deps(self, deps):
-        if "cython" in deps and "compiler_c" not in deps:
-            self.message()
+        if "cython" in deps:
+            for location in deps["cython"]["paths"]:
+                if location.startswith("outputs"):
+                    n = location.split("/")[1]
+                    section = f"outputs/{n}/requirements/build"
+                else:
+                    section = "requirements/build"
+                if "compiler_c" not in self.recipe.get(section):
+                    self.message(section=section)
 
 
 class avoid_noarch(LintCheck):
