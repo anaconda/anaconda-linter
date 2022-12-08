@@ -282,12 +282,12 @@ class patch_must_be_in_build(LintCheck):
             deps = recipe.get_deps_dict()
             if "patch" in deps:
                 if any("build" not in location for location in deps["patch"]["paths"]):
-                    self.message(section="build")
+                    self.message(section="requirements/build")
             elif "m2-patch" in deps:
                 if any("build" not in location for location in deps["m2-patch"]["paths"]):
-                    self.message(section="build")
+                    self.message(section="requirements/build")
             else:
-                self.message(section="build")
+                self.message(section="requirements/build")
 
 
 class has_run_test_and_commands(LintCheck):
