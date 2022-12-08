@@ -168,6 +168,7 @@ class setup_py_install_args(LintCheck):
                 script = "build/script"
             if not self._check_line(self.recipe.get(script, "")):
                 self.message(section=script)
+                continue
             try:
                 if script == "build/script":
                     build_file = "build.sh"
