@@ -1,4 +1,4 @@
-from . import LintCheck
+from . import WARNING, LintCheck
 
 
 class outputs_not_unique(LintCheck):
@@ -17,3 +17,14 @@ class outputs_not_unique(LintCheck):
                     self.message(section=f"outputs/{n}/name")
                 else:
                     unique_names.append(name)
+
+
+class no_global_test(LintCheck):
+    """Global tests are ignored in multi-output recipes.
+
+    Tests must be added to each individual output.
+    """
+
+    def check_recipe(self, recipe):
+        if recipe.get("outputs", None) and recipe.get("test", None):
+            self.message(severity=WARNING)

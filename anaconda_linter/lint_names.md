@@ -68,6 +68,8 @@ missing_version_or_name
 
 missing_wheel
 
+no_global_test
+
 non_url_source
 
 outputs_not_unique

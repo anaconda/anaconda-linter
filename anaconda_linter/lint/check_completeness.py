@@ -164,12 +164,11 @@ class missing_tests(LintCheck):
         self.__class__.__doc__ = reset_text
 
     def check_recipe(self, recipe):
-        if any(os.path.exists(os.path.join(recipe.dir, f)) for f in self.test_files):
-            return
         if outputs := recipe.get("outputs", None):
             for o in range(len(outputs)):
                 self.check_output(recipe, f"outputs/{o}/")
-        else:
+        # multi-output recipes do not execute test files
+        elif not any(os.path.exists(os.path.join(recipe.dir, f)) for f in self.test_files):
             self.check_output(recipe)
 
 
