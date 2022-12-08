@@ -2,7 +2,7 @@ from . import WARNING, LintCheck
 
 
 class outputs_not_unique(LintCheck):
-    """The output name {} is not unique
+    """Output name is not unique
 
     Please make sure all output names are unique
     and are not the same as the package name.
