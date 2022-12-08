@@ -669,6 +669,20 @@ def test_has_run_test_and_commands_good_cmd(base_yaml):
 
 
 def test_has_run_test_and_commands_good_script(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        test:
+          script: test_module.sh
+        """
+    )
+    lint_check = "has_run_test_and_commands"
+    with tempfile.TemporaryDirectory() as tmpdir:
+        messages = check_dir(lint_check, tmpdir, yaml_str)
+        assert len(messages) == 0
+
+
+def test_has_run_test_and_commands_good_script_default(base_yaml):
     lint_check = "has_run_test_and_commands"
     with tempfile.TemporaryDirectory() as tmpdir:
         recipe_dir = os.path.join(tmpdir, "recipe")
@@ -677,6 +691,46 @@ def test_has_run_test_and_commands_good_script(base_yaml):
             with open(os.path.join(recipe_dir, script), "w") as f:
                 f.write("pip check\n")
         messages = check_dir(lint_check, tmpdir, base_yaml)
+        assert len(messages) == 0
+
+
+def test_has_run_test_and_commands_good_cmd_multi(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+            test:
+              commands:
+                - pip check
+          - name: output2
+            test:
+              commands:
+                - pip check
+        """
+    )
+    lint_check = "has_run_test_and_commands"
+    with tempfile.TemporaryDirectory() as tmpdir:
+        messages = check_dir(lint_check, tmpdir, yaml_str)
+        assert len(messages) == 0
+
+
+def test_has_run_test_and_commands_good_script_multi(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+            test:
+              script: test_module.sh
+          - name: output2
+            test:
+              script: test_module2.sh
+        """
+    )
+    lint_check = "has_run_test_and_commands"
+    with tempfile.TemporaryDirectory() as tmpdir:
+        messages = check_dir(lint_check, tmpdir, yaml_str)
         assert len(messages) == 0
 
 
@@ -696,6 +750,27 @@ def test_has_run_test_and_commands_bad(base_yaml):
         for script in ["run_test.sh", "run_test.py", "run_test.bat"]:
             with open(os.path.join(recipe_dir, script), "w") as f:
                 f.write("pip check\n")
+        messages = check_dir(lint_check, tmpdir, yaml_str)
+        assert len(messages) == 1 and "Test commands are not executed" in messages[0].title
+
+
+def test_has_run_test_and_commands_bad_multi(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+            test:
+              script: test_module.sh
+          - name: output2
+            test:
+              commands:
+                - pip check
+              script: test_module2.sh
+        """
+    )
+    lint_check = "has_run_test_and_commands"
+    with tempfile.TemporaryDirectory() as tmpdir:
         messages = check_dir(lint_check, tmpdir, yaml_str)
         assert len(messages) == 1 and "Test commands are not executed" in messages[0].title
 

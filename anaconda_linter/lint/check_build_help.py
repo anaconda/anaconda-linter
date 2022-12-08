@@ -304,10 +304,21 @@ class has_run_test_and_commands(LintCheck):
     """
 
     def check_recipe(self, recipe):
-        if recipe.get("test/commands", []) and set(os.listdir(recipe.recipe_dir)).intersection(
-            {"run_test.sh", "run_test.py", "run_test.bat"}
-        ):
-            self.message(section="test/commands")
+        if outputs := recipe.get("outputs", None):
+            for o in range(len(outputs)):
+                test_section = f"outputs/{o}/test"
+                if recipe.get(f"{test_section}/script", None) and recipe.get(
+                    f"{test_section}/commands", None
+                ):
+                    self.message(section=f"{test_section}/commands")
+        else:
+            if recipe.get("test/commands", []) and (
+                recipe.get("test/script", None)
+                or set(os.listdir(recipe.recipe_dir)).intersection(
+                    {"run_test.sh", "run_test.py", "run_test.bat"}
+                )
+            ):
+                self.message(section="test/commands")
 
 
 class missing_pip_check(LintCheck):
@@ -321,8 +332,8 @@ class missing_pip_check(LintCheck):
     """
 
     def check_recipe(self, recipe):
-
-        if is_pypi_source(recipe) or "pip install" in self.recipe.get("build/script", ""):
+        is_pypi = is_pypi_source(recipe)
+        if is_pypi or "pip install" in self.recipe.get("build/script", ""):
             if not any("pip check" in cmd for cmd in recipe.get("test/commands", [])):
                 self.message(section="test/commands")
 
