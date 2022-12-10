@@ -331,11 +331,49 @@ class missing_pip_check(LintCheck):
           - pip check
     """
 
+    def _check_file(self, file):
+        with open(file) as test_file:
+            for line in test_file:
+                if "pip check" in line:
+                    return
+            self.message(fname=file)
+
+    def check_output(self, recipe, output="") -> bool:
+        # The return value indicates if a test was found
+        test_section = f"{output}test"
+        if commands := recipe.get(f"{test_section}/commands", None):
+            if not any("pip check" in cmd for cmd in commands):
+                self.message(section=f"{test_section}/commands")
+            return True
+        elif script := recipe.get(f"{test_section}/script", None):
+            test_file = os.path.join(recipe.dir, script)
+            if os.path.exists(test_file):
+                self._check_file(test_file)
+            else:
+                self.message(fname=test_file)
+            return True
+        return False
+
     def check_recipe(self, recipe):
         is_pypi = is_pypi_source(recipe)
-        if is_pypi or "pip install" in self.recipe.get("build/script", ""):
-            if not any("pip check" in cmd for cmd in recipe.get("test/commands", [])):
-                self.message(section="test/commands")
+        if outputs := recipe.get("outputs", None):
+            for o in range(len(outputs)):
+                if not is_pypi and "pip install" not in recipe.get(f"outputs/{o}/script", ""):
+                    continue
+                if not self.check_output(recipe, f"outputs/{o}/"):
+                    self.message(section=f"outputs/{o}/test")
+        elif is_pypi or "pip install" in self.recipe.get("build/script", ""):
+            if not self.check_output(recipe):
+                test_files = (
+                    set(os.listdir(recipe.recipe_dir)).intersection({"run_test.sh", "run_test.bat"})
+                    if os.path.exists(recipe.dir)
+                    else set()
+                )
+                if len(test_files) > 0:
+                    for file in test_files:
+                        self._check_file(os.path.join(recipe.dir, file))
+                else:
+                    self.message(section="test")
 
 
 class missing_python(LintCheck):
