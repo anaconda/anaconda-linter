@@ -1222,6 +1222,34 @@ def test_missing_python_pip_install_good(base_yaml):
     assert len(messages) == 0
 
 
+def test_missing_python_pip_install_good_multi(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://github.com/joblib/joblib/archive/1.1.1.tar.gz
+        outputs:
+          - name: output1
+            script: {{ PYTHON }} -m pip install .
+            requirements:
+              host:
+                - python
+              run:
+                - python
+          - name: output2
+            script: {{ PYTHON }} -m pip install .
+            requirements:
+              host:
+                - python
+              run:
+                - python
+        """
+    )
+    lint_check = "missing_python"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
 def test_missing_python_pip_install_bad(base_yaml):
     yaml_str = (
         base_yaml
@@ -1235,6 +1263,24 @@ def test_missing_python_pip_install_bad(base_yaml):
     lint_check = "missing_python"
     messages = check(lint_check, yaml_str)
     assert len(messages) == 2 and all(["python should be present" in m.title for m in messages])
+
+
+def test_missing_python_pip_install_bad_multi(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://github.com/joblib/joblib/archive/1.1.1.tar.gz
+        outputs:
+          - name: output1
+            script: {{ PYTHON }} -m pip install .
+          - name: output2
+            script: {{ PYTHON }} -m pip install .
+        """
+    )
+    lint_check = "missing_python"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 4 and all(["python should be present" in m.title for m in messages])
 
 
 def test_remove_python_pinning_good(base_yaml):
