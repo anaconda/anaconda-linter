@@ -532,6 +532,30 @@ def test_cython_needs_compiler_good(base_yaml):
     assert len(messages) == 0
 
 
+def test_cython_needs_compiler_good_multi(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+            requirements:
+              build:
+                - {{ compiler('c') }}
+              host:
+                - cython
+          - name: output2
+            requirements:
+              build:
+                - {{ compiler('c') }}
+              host:
+                - cython
+        """
+    )
+    lint_check = "cython_needs_compiler"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
 def test_cython_needs_compiler_bad(base_yaml):
     yaml_str = (
         base_yaml
@@ -546,6 +570,30 @@ def test_cython_needs_compiler_bad(base_yaml):
     lint_check = "cython_needs_compiler"
     messages = check(lint_check, yaml_str)
     assert len(messages) == 1 and "Cython generates C code" in messages[0].title
+
+
+def test_cython_needs_compiler_good_multi(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+            requirements:
+              build:
+                - {{ compiler('cxx') }}
+              host:
+                - cython
+          - name: output2
+            requirements:
+              build:
+                - {{ compiler('cxx') }}
+              host:
+                - cython
+        """
+    )
+    lint_check = "cython_needs_compiler"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 2 and all("Cython generates C code" in msg.title for msg in messages)
 
 
 def test_avoid_noarch_good(base_yaml):
