@@ -74,6 +74,9 @@ def test_should_use_compilers_bad_multi(base_yaml):
         + """
         outputs:
           - name: output1
+            requirements:
+              build:
+                - gcc
           - name: output2
             requirements:
               build:
@@ -82,7 +85,7 @@ def test_should_use_compilers_bad_multi(base_yaml):
     )
     lint_check = "should_use_compilers"
     messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "compiler directly" in messages[0].title
+    assert len(messages) == 2 and all("compiler directly" in msg.title for msg in messages)
 
 
 def test_compilers_must_be_in_build_good(base_yaml):
@@ -124,6 +127,9 @@ def test_compilers_must_be_in_build_bad_multi(base_yaml):
             + f"""
         outputs:
           - name: output1
+            requirements:
+              {section}:
+                - {{{{ compiler('c') }}}}
           - name: output2
             requirements:
               {section}:
@@ -132,8 +138,8 @@ def test_compilers_must_be_in_build_bad_multi(base_yaml):
         )
         print(yaml_str)
         messages = check(lint_check, yaml_str)
-        assert (
-            len(messages) == 1 and "compiler in a section" in messages[0].title
+        assert len(messages) == 2 and all(
+            "compiler in a section" in msg.title for msg in messages
         ), f"Check failed for {section}"
 
 
@@ -191,6 +197,9 @@ def test_uses_setuptools_bad_multi(base_yaml):
         + """
         outputs:
           - name: output1
+            requirements:
+              run:
+                - setuptools
           - name: output2
             requirements:
               run:
@@ -199,7 +208,9 @@ def test_uses_setuptools_bad_multi(base_yaml):
     )
     lint_check = "uses_setuptools"
     messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "uses setuptools in run depends" in messages[0].title
+    assert len(messages) == 2 and all(
+        "uses setuptools in run depends" in msg.title for msg in messages
+    )
 
 
 def test_missing_wheel_url_good(base_yaml):
@@ -270,6 +281,10 @@ def test_missing_wheel_pip_install_good_multi(base_yaml):
         + """
         outputs:
           - name: output1
+            script: {{ PYTHON }} -m pip install .
+            requirements:
+              host:
+                - wheel
           - name: output2
             script: {{ PYTHON }} -m pip install .
             requirements:
@@ -288,6 +303,9 @@ def test_missing_wheel_pip_install_bad_multi(base_yaml):
         + """
         outputs:
           - name: output1
+            script: {{ PYTHON }} -m pip install .
+            requirements:
+              host:
           - name: output2
             script: {{ PYTHON }} -m pip install .
             requirements:
@@ -296,7 +314,7 @@ def test_missing_wheel_pip_install_bad_multi(base_yaml):
     )
     lint_check = "missing_wheel"
     messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "wheel should be present" in messages[0].title
+    assert len(messages) == 2 and all("wheel should be present" in msg.title for msg in messages)
 
 
 def test_setup_py_install_args_good_missing(base_yaml):
@@ -362,6 +380,10 @@ def test_setup_py_install_args_bad_cmd_multi(base_yaml):
         + """
         outputs:
           - name: output1
+            script: {{ PYTHON }} -m setup.py install
+            requirements:
+              host:
+                - setuptools
           - name: output2
             script: {{ PYTHON }} -m setup.py install
             requirements:
@@ -371,7 +393,9 @@ def test_setup_py_install_args_bad_cmd_multi(base_yaml):
     )
     lint_check = "setup_py_install_args"
     messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "setuptools without required arguments" in messages[0].title
+    assert len(messages) == 2 and all(
+        "setuptools without required arguments" in msg.title for msg in messages
+    )
 
 
 def test_setup_py_install_args_bad_script(base_yaml):
@@ -399,6 +423,10 @@ def test_setup_py_install_args_bad_script_multi(base_yaml):
         + """
         outputs:
           - name: output1
+            script: build_output.sh
+            requirements:
+              host:
+                - setuptools
           - name: output2
             script: build_output.sh
             requirements:
@@ -413,7 +441,9 @@ def test_setup_py_install_args_bad_script_multi(base_yaml):
         with open(os.path.join(recipe_dir, "build_output.sh"), "w") as f:
             f.write("{{ PYTHON }} -m setup.py install\n")
         messages = check_dir(lint_check, tmpdir, yaml_str)
-        assert len(messages) == 1 and "setuptools without required arguments" in messages[0].title
+        assert len(messages) == 2 and all(
+            "setuptools without required arguments" in msg.title for msg in messages
+        )
 
 
 def test_cython_must_be_in_host_good(base_yaml):
@@ -451,6 +481,9 @@ def test_cython_must_be_in_host_good_multi(base_yaml):
         + """
         outputs:
           - name: output1
+            requirements:
+              host:
+                - cython
           - name: output2
             requirements:
               host:
@@ -470,6 +503,9 @@ def test_cython_must_be_in_host_bad_multi(base_yaml):
             + f"""
         outputs:
           - name: output1
+            requirements:
+              {section}:
+                - cython
           - name: output2
             requirements:
               {section}:
@@ -477,7 +513,7 @@ def test_cython_must_be_in_host_bad_multi(base_yaml):
         """
         )
         messages = check(lint_check, yaml_str)
-        assert len(messages) == 1 and "Cython should be" in messages[0].title
+        assert len(messages) == 2 and all("Cython should be" in msg.title for msg in messages)
 
 
 def test_cython_needs_compiler_good(base_yaml):
@@ -761,6 +797,8 @@ def test_has_run_test_and_commands_bad_multi(base_yaml):
         outputs:
           - name: output1
             test:
+              commands:
+                - pip check
               script: test_module.sh
           - name: output2
             test:
@@ -772,7 +810,9 @@ def test_has_run_test_and_commands_bad_multi(base_yaml):
     lint_check = "has_run_test_and_commands"
     with tempfile.TemporaryDirectory() as tmpdir:
         messages = check_dir(lint_check, tmpdir, yaml_str)
-        assert len(messages) == 1 and "Test commands are not executed" in messages[0].title
+        assert len(messages) == 2 and all(
+            "Test commands are not executed" in msg.title for msg in messages
+        )
 
 
 def test_missing_pip_check_url_good(base_yaml):
@@ -910,14 +950,14 @@ def test_missing_pip_check_pip_install_script_good_multi(base_yaml):
           - name: output2
             script: {{ PYTHON }} -m pip install .
             test:
-              script: test_output2.sh
+              script: test_output.sh
         """
     )
     lint_check = "missing_pip_check"
     with tempfile.TemporaryDirectory() as tmpdir:
         recipe_dir = os.path.join(tmpdir, "recipe")
         os.mkdir(recipe_dir)
-        with open(os.path.join(recipe_dir, "test_output2.sh"), "w") as f:
+        with open(os.path.join(recipe_dir, "test_output.sh"), "w") as f:
             f.write("pip check\n")
         messages = check_dir(lint_check, tmpdir, yaml_str)
         assert len(messages) == 0
@@ -946,13 +986,16 @@ def test_missing_pip_check_pip_install_missing_bad_multi(base_yaml):
           url: https://github.com/joblib/joblib/archive/1.1.1.tar.gz
         outputs:
           - name: output1
+            script: {{ PYTHON }} -m pip install .
           - name: output2
             script: {{ PYTHON }} -m pip install .
         """
     )
     lint_check = "missing_pip_check"
     messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "pip check should be present" in messages[0].title
+    assert len(messages) == 2 and all(
+        "pip check should be present" in msg.title for msg in messages
+    )
 
 
 def test_missing_pip_check_pip_install_cmd_bad(base_yaml):
@@ -981,6 +1024,10 @@ def test_missing_pip_check_pip_install_cmd_bad_multi(base_yaml):
           url: https://github.com/joblib/joblib/archive/1.1.1.tar.gz
         outputs:
           - name: output1
+            script: {{ PYTHON }} -m pip install .
+            test:
+              commands:
+                - other_test_command
           - name: output2
             script: {{ PYTHON }} -m pip install .
             test:
@@ -990,7 +1037,9 @@ def test_missing_pip_check_pip_install_cmd_bad_multi(base_yaml):
     )
     lint_check = "missing_pip_check"
     messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "pip check should be present" in messages[0].title
+    assert len(messages) == 2 and all(
+        "pip check should be present" in msg.title for msg in messages
+    )
 
 
 def test_missing_pip_check_pip_install_script_bad(base_yaml):
@@ -1043,20 +1092,25 @@ def test_missing_pip_check_pip_install_script_nad_multi(base_yaml):
           url: https://github.com/joblib/joblib/archive/1.1.1.tar.gz
         outputs:
           - name: output1
+            script: {{ PYTHON }} -m pip install .
+            test:
+              script: test_output.sh
           - name: output2
             script: {{ PYTHON }} -m pip install .
             test:
-              script: test_output2.sh
+              script: test_output.sh
         """
     )
     lint_check = "missing_pip_check"
     with tempfile.TemporaryDirectory() as tmpdir:
         recipe_dir = os.path.join(tmpdir, "recipe")
         os.mkdir(recipe_dir)
-        with open(os.path.join(recipe_dir, "test_output2.sh"), "w") as f:
+        with open(os.path.join(recipe_dir, "test_output.sh"), "w") as f:
             f.write("other_test_command\n")
         messages = check_dir(lint_check, tmpdir, yaml_str)
-        assert len(messages) == 1 and "pip check should be present" in messages[0].title
+        assert len(messages) == 2 and all(
+            "pip check should be present" in msg.title for msg in messages
+        )
 
 
 def test_missing_python_url_good(base_yaml):
