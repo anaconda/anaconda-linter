@@ -1299,6 +1299,30 @@ def test_remove_python_pinning_good(base_yaml):
     assert len(messages) == 0
 
 
+def test_remove_python_pinning_good_multi(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+            requirements:
+              host:
+                - python
+              run:
+                - python
+          - name: output2
+            requirements:
+              host:
+                - python
+              run:
+                - python
+        """
+    )
+    lint_check = "remove_python_pinning"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
 def test_remove_python_pinning_bad(base_yaml):
     yaml_str = (
         base_yaml
@@ -1313,7 +1337,33 @@ def test_remove_python_pinning_bad(base_yaml):
     lint_check = "remove_python_pinning"
     messages = check(lint_check, yaml_str)
     assert len(messages) == 2 and all(
-        ["python deps should not be constrained" in m.title for m in messages]
+        "python deps should not be constrained" in m.title for m in messages
+    )
+
+
+def test_remove_python_pinning_bad_multi(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+            requirements:
+              host:
+                - python >=3.8
+              run:
+                - python >=3.8
+          - name: output2
+            requirements:
+              host:
+                - python >=3.8
+              run:
+                - python >=3.8
+        """
+    )
+    lint_check = "remove_python_pinning"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 4 and all(
+        "python deps should not be constrained" in m.title for m in messages
     )
 
 

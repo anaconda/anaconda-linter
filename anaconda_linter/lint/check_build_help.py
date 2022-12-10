@@ -425,16 +425,12 @@ class remove_python_pinning(LintCheck):
 
     def check_recipe(self, recipe):
         if recipe.get("build/noarch", "") == "":
-            if (
-                "python" in recipe.get_deps("host")
-                and recipe.get_deps_dict("host")["python"]["constraints"] != []
-            ):
-                self.message(section=recipe.get_deps_dict("host")["python"]["paths"][0])
-            if (
-                "python" in recipe.get_deps("run")
-                and recipe.get_deps_dict("run")["python"]["constraints"] != []
-            ):
-                self.message(section=recipe.get_deps_dict("run")["python"]["paths"][0])
+            sections = ["host", "run"]
+            deps = recipe.get_deps_dict(sections=sections)
+            if "python" in deps:
+                for c, constraint in enumerate(deps["python"]["constraints"]):
+                    if constraint != "":
+                        self.message(section=deps["python"]["paths"][c])
 
 
 class gui_app(LintCheck):

@@ -726,6 +726,8 @@ class Recipe:
                 d["paths"].append(f"{path}/{n}")
                 if len(splits) > 1:
                     d["constraints"].append(splits[1])
+                else:
+                    d["constraints"].append("")
         return deps
 
     def conda_render(
