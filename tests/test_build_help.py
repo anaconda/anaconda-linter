@@ -1,11 +1,13 @@
 import os
 import tempfile
 
+import pytest
 from conftest import check, check_dir
 
 
-def test_should_use_compilers_bad(base_yaml):
-    compilers = (
+@pytest.mark.parametrize(
+    "compiler",
+    (
         "cgo",
         "cuda",
         "dpcpp",
@@ -20,25 +22,25 @@ def test_should_use_compilers_bad(base_yaml):
         "rust-gnu",
         "rust",
         "toolchain",
-    )
+    ),
+)
+def test_should_use_compilers_bad(base_yaml, compiler):
     lint_check = "should_use_compilers"
-    for compiler in compilers:
-        yaml_str = (
-            base_yaml
-            + f"""
+    yaml_str = (
+        base_yaml
+        + f"""
         requirements:
           build:
             - {compiler}
-            """
-        )
-        messages = check(lint_check, yaml_str)
-        assert (
-            len(messages) == 1 and "compiler directly" in messages[0].title
-        ), f"Check failed for {compiler}"
+        """
+    )
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 1 and "compiler directly" in messages[0].title
 
 
-def test_should_use_compilers_good(base_yaml):
-    compilers = (
+@pytest.mark.parametrize(
+    "compiler",
+    (
         "cgo",
         "cuda",
         "dpcpp",
@@ -53,19 +55,20 @@ def test_should_use_compilers_good(base_yaml):
         "rust-gnu",
         "rust",
         "toolchain",
-    )
+    ),
+)
+def test_should_use_compilers_good(base_yaml, compiler):
     lint_check = "should_use_compilers"
-    for compiler in compilers:
-        yaml_str = (
-            base_yaml
-            + f"""
+    yaml_str = (
+        base_yaml
+        + f"""
         requirements:
           build:
             - {{{{ compiler('{compiler}') }}}}
-            """
-        )
-        messages = check(lint_check, yaml_str)
-        assert len(messages) == 0, f"Check failed for {compiler}"
+        """
+    )
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
 
 
 def test_should_use_compilers_bad_multi(base_yaml):
@@ -102,29 +105,27 @@ def test_compilers_must_be_in_build_good(base_yaml):
     assert len(messages) == 0
 
 
-def test_compilers_must_be_in_build_bad(base_yaml):
+@pytest.mark.parametrize("section", ["host", "run"])
+def test_compilers_must_be_in_build_bad(base_yaml, section):
     lint_check = "compilers_must_be_in_build"
-    for section in ["host", "run"]:
-        yaml_str = (
-            base_yaml
-            + f"""
+    yaml_str = (
+        base_yaml
+        + f"""
         requirements:
           {section}:
             - {{{{ compiler('c') }}}}
             """
-        )
-        messages = check(lint_check, yaml_str)
-        assert (
-            len(messages) == 1 and "compiler in a section" in messages[0].title
-        ), f"Check failed for {section}"
+    )
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 1 and "compiler in a section" in messages[0].title
 
 
-def test_compilers_must_be_in_build_bad_multi(base_yaml):
+@pytest.mark.parametrize("section", ["host", "run"])
+def test_compilers_must_be_in_build_bad_multi(base_yaml, section):
     lint_check = "compilers_must_be_in_build"
-    for section in ["host", "run"]:
-        yaml_str = (
-            base_yaml
-            + f"""
+    yaml_str = (
+        base_yaml
+        + f"""
         outputs:
           - name: output1
             requirements:
@@ -134,13 +135,10 @@ def test_compilers_must_be_in_build_bad_multi(base_yaml):
             requirements:
               {section}:
                 - {{{{ compiler('c') }}}}
-            """
-        )
-        print(yaml_str)
-        messages = check(lint_check, yaml_str)
-        assert len(messages) == 2 and all(
-            "compiler in a section" in msg.title for msg in messages
-        ), f"Check failed for {section}"
+        """
+    )
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 2 and all("compiler in a section" in msg.title for msg in messages)
 
 
 def test_uses_setuptools_good(base_yaml):
@@ -460,21 +458,6 @@ def test_cython_must_be_in_host_good(base_yaml):
     assert len(messages) == 0
 
 
-def test_cython_must_be_in_host_bad(base_yaml):
-    lint_check = "cython_must_be_in_host"
-    for section in ["build", "run"]:
-        yaml_str = (
-            base_yaml
-            + f"""
-        requirements:
-          {section}:
-            - cython
-            """
-        )
-        messages = check(lint_check, yaml_str)
-        assert len(messages) == 1 and "Cython should be" in messages[0].title
-
-
 def test_cython_must_be_in_host_good_multi(base_yaml):
     yaml_str = (
         base_yaml
@@ -495,12 +478,27 @@ def test_cython_must_be_in_host_good_multi(base_yaml):
     assert len(messages) == 0
 
 
-def test_cython_must_be_in_host_bad_multi(base_yaml):
+@pytest.mark.parametrize("section", ["build", "run"])
+def test_cython_must_be_in_host_bad(base_yaml, section):
     lint_check = "cython_must_be_in_host"
-    for section in ["build", "run"]:
-        yaml_str = (
-            base_yaml
-            + f"""
+    yaml_str = (
+        base_yaml
+        + f"""
+        requirements:
+          {section}:
+            - cython
+        """
+    )
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 1 and "Cython should be" in messages[0].title
+
+
+@pytest.mark.parametrize("section", ["build", "run"])
+def test_cython_must_be_in_host_bad_multi(base_yaml, section):
+    lint_check = "cython_must_be_in_host"
+    yaml_str = (
+        base_yaml
+        + f"""
         outputs:
           - name: output1
             requirements:
@@ -510,10 +508,10 @@ def test_cython_must_be_in_host_bad_multi(base_yaml):
             requirements:
               {section}:
                 - cython
-        """
-        )
-        messages = check(lint_check, yaml_str)
-        assert len(messages) == 2 and all("Cython should be" in msg.title for msg in messages)
+    """
+    )
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 2 and all("Cython should be" in msg.title for msg in messages)
 
 
 def test_cython_needs_compiler_good(base_yaml):
@@ -624,43 +622,40 @@ def test_avoid_noarch_bad(base_yaml):
 
 def test_patch_unnecessary_good(base_yaml):
     lint_check = "patch_unnecessary"
-    for patch in ["patch", "m2-patch"]:
-        yaml_str = (
-            base_yaml
-            + """
+    yaml_str = (
+        base_yaml
+        + """
         source:
           url: https://sqlite.com/2022/sqlite-autoconf-3380500.tar.gz
-            """
-        )
-        messages = check(lint_check, yaml_str)
-        assert len(messages) == 0, f"Check failed for {patch}"
+        """
+    )
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
 
 
-def test_patch_unnecessary_bad(base_yaml):
+@pytest.mark.parametrize("patch", ["patch", "m2-patch"])
+def test_patch_unnecessary_bad(base_yaml, patch):
     lint_check = "patch_unnecessary"
-    for patch in ["patch", "m2-patch"]:
-        yaml_str = (
-            base_yaml
-            + f"""
+    yaml_str = (
+        base_yaml
+        + f"""
         source:
           url: https://sqlite.com/2022/sqlite-autoconf-3380500.tar.gz
         requirements:
           build:
             - {patch}
-            """
-        )
-        messages = check(lint_check, yaml_str)
-        assert (
-            len(messages) == 1 and "patch should not be" in messages[0].title
-        ), f"Check failed for {patch}"
+        """
+    )
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 1 and "patch should not be" in messages[0].title
 
 
-def test_patch_must_be_in_build_good(base_yaml):
+@pytest.mark.parametrize("patch", ["patch", "m2-patch"])
+def test_patch_must_be_in_build_good(base_yaml, patch):
     lint_check = "patch_must_be_in_build"
-    for patch in ["patch", "m2-patch"]:
-        yaml_str = (
-            base_yaml
-            + f"""
+    yaml_str = (
+        base_yaml
+        + f"""
         source:
           url: https://sqlite.com/2022/sqlite-autoconf-3380500.tar.gz
           patches:
@@ -668,10 +663,10 @@ def test_patch_must_be_in_build_good(base_yaml):
         requirements:
           build:
             - {patch}
-            """
-        )
-        messages = check(lint_check, yaml_str)
-        assert len(messages) == 0, f"Check failed for {patch}"
+        """
+    )
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
 
 
 def test_patch_must_be_in_build_bad(base_yaml):
@@ -696,13 +691,13 @@ def test_patch_must_be_in_build_bad(base_yaml):
             ), f"Check failed for {patch} in {section}"
 
 
-def test_patch_must_be_in_build_list_bad(base_yaml):
+@pytest.mark.parametrize("patch", ["patch", "m2-patch"])
+@pytest.mark.parametrize("section", ["host", "run"])
+def test_patch_must_be_in_build_list_bad(base_yaml, patch, section):
     lint_check = "patch_must_be_in_build"
-    for patch in ["patch", "m2-patch"]:
-        for section in ["host", "run"]:
-            yaml_str = (
-                base_yaml
-                + f"""
+    yaml_str = (
+        base_yaml
+        + f"""
         source:
           - url: https://sqlite.com/2022/sqlite-autoconf-3380500.tar.gz
           - url: https://sqlite.com/2022/sqlite-autoconf-3380500.tar.gz
@@ -711,30 +706,25 @@ def test_patch_must_be_in_build_list_bad(base_yaml):
         requirements:
           {section}:
             - {patch}
-            """
-            )
-            messages = check(lint_check, yaml_str)
-            assert (
-                len(messages) == 1 and "patch must be in build" and messages[0].title
-            ), f"Check failed for {patch} in {section}"
+        """
+    )
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 1 and "patch must be in build" and messages[0].title
 
 
 def test_patch_must_be_in_build_missing(base_yaml):
     lint_check = "patch_must_be_in_build"
-    for patch in ["patch", "m2-patch"]:
-        yaml_str = (
-            base_yaml
-            + """
+    yaml_str = (
+        base_yaml
+        + """
         source:
           url: https://sqlite.com/2022/sqlite-autoconf-3380500.tar.gz
           patches:
             - some-patch.patch
-            """
-        )
-        messages = check(lint_check, yaml_str)
-        assert (
-            len(messages) == 1 and "patch must be in build" in messages[0].title
-        ), f"Check failed for {patch}"
+        """
+    )
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 1 and "patch must be in build" in messages[0].title
 
 
 def test_has_run_test_and_commands_good_cmd(base_yaml):
@@ -1287,10 +1277,9 @@ def test_gui_app_good(base_yaml):
     assert len(messages) == 0
 
 
-def test_gui_app_bad(base_yaml):
-    lint_check = "gui_app"
-
-    guis = (
+@pytest.mark.parametrize(
+    "gui",
+    (
         "enaml",
         "glue-core",
         "glueviz",
@@ -1303,18 +1292,17 @@ def test_gui_app_bad(base_yaml):
         "qtpy",
         "spyder",
         "wxpython",
-    )
-
-    for gui in guis:
-        yaml_str = (
-            base_yaml
-            + f"""
+    ),
+)
+def test_gui_app_bad(base_yaml, gui):
+    lint_check = "gui_app"
+    yaml_str = (
+        base_yaml
+        + f"""
         requirements:
           run:
             - {gui}
-            """
-        )
-        messages = check(lint_check, yaml_str)
-        assert (
-            len(messages) == 1 and "GUI application" in messages[0].title
-        ), f"Check failed for {gui}"
+        """
+    )
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 1 and "GUI application" in messages[0].title
