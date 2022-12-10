@@ -572,7 +572,7 @@ def test_cython_needs_compiler_bad(base_yaml):
     assert len(messages) == 1 and "Cython generates C code" in messages[0].title
 
 
-def test_cython_needs_compiler_good_multi(base_yaml):
+def test_cython_needs_compiler_bad_multi(base_yaml):
     yaml_str = (
         base_yaml
         + """
