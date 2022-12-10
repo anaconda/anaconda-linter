@@ -1064,6 +1064,26 @@ def test_missing_pip_check_pip_install_script_bad(base_yaml):
         assert len(messages) == 1 and "pip check should be present" in messages[0].title
 
 
+def test_missing_pip_check_pip_install_script_missing(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://github.com/joblib/joblib/archive/1.1.1.tar.gz
+        build:
+          script: {{ PYTHON }} -m pip install .
+        test:
+          script: test_package.sh
+        """
+    )
+    lint_check = "missing_pip_check"
+    with tempfile.TemporaryDirectory() as tmpdir:
+        recipe_dir = os.path.join(tmpdir, "recipe")
+        os.mkdir(recipe_dir)
+        messages = check_dir(lint_check, tmpdir, yaml_str)
+        assert len(messages) == 1 and "pip check should be present" in messages[0].title
+
+
 def test_missing_pip_check_pip_install_script_default_bad(base_yaml):
     yaml_str = (
         base_yaml
