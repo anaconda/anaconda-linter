@@ -126,7 +126,7 @@ class invalid_license_family(LintCheck):
 
 
 class missing_tests(LintCheck):
-    """{} is missing tests.
+    """No tests were found.
 
     Please add::
 
@@ -150,19 +150,13 @@ class missing_tests(LintCheck):
 
     def check_output(self, recipe, output=""):
         test_section = f"{output}test"
-        o = -1 if not test_section.startswith("outputs") else int(test_section.split("/")[1])
         if recipe.get(f"{test_section}/commands", "") or recipe.get(f"{test_section}/imports", ""):
             return
-        reset_text = self.__class__.__doc__
-        if output == "":
-            self.__class__.__doc__ = self.__class__.__doc__.format("The recipe")
-        else:
-            self.__class__.__doc__ = self.__class__.__doc__.format(recipe.get(f"{output}name"))
+        o = -1 if not test_section.startswith("outputs") else int(test_section.split("/")[1])
         if recipe.get(f"{test_section}", False) is not False:
             self.message(section=test_section, output=o)
         else:
             self.message(section=output, output=o)
-        self.__class__.__doc__ = reset_text
 
     def check_recipe(self, recipe):
         if outputs := recipe.get("outputs", None):

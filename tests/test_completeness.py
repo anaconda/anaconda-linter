@@ -207,13 +207,13 @@ def test_missing_tests_bad_missing(base_yaml):
     )
     lint_check = "missing_tests"
     messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "The recipe is missing tests" in messages[0].title
+    assert len(messages) == 1 and "No tests were found" in messages[0].title
 
 
 def test_missing_tests_bad_missing_section(base_yaml):
     lint_check = "missing_tests"
     messages = check(lint_check, base_yaml)
-    assert len(messages) == 1 and "The recipe is missing tests" in messages[0].title
+    assert len(messages) == 1 and "No tests were found" in messages[0].title
 
 
 def test_missing_tests_bad_missing_multi(base_yaml):
@@ -225,8 +225,6 @@ def test_missing_tests_bad_missing_multi(base_yaml):
             test:
               requires:
                 - pip
-              commands:
-                - pip check
           - name: output2
             test:
               requires:
@@ -235,7 +233,7 @@ def test_missing_tests_bad_missing_multi(base_yaml):
     )
     lint_check = "missing_tests"
     messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "output2 is missing tests" in messages[0].title
+    assert len(messages) == 2 and all("No tests were found" in msg.title for msg in messages)
 
 
 def test_missing_tests_bad_missing_section_multi(base_yaml):
@@ -245,16 +243,11 @@ def test_missing_tests_bad_missing_section_multi(base_yaml):
         + """
         outputs:
           - name: output1
-            test:
-              requires:
-                - pip
-              commands:
-                - pip check
           - name: output2
         """
     )
     messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "output2 is missing tests" in messages[0].title
+    assert len(messages) == 2 and all("No tests were found" in msg.title for msg in messages)
 
 
 def test_missing_hash_good(base_yaml):
