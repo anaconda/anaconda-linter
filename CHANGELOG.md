@@ -15,6 +15,7 @@ Note: version releases in the 0.x.y range may introduce breaking changes.
 - Bug fix: Correct error line reporting. PR: #131, Issues: #123
 - Bug fix: Handle YAML parsing errors. PR: #131, Issues: #126
 - Enhancement: Render recipe using cbc files defined variables. PR: #131
+- Add multi-output recipe support. PR: #149, Issues: #88
 
 ## 0.0.3
 
