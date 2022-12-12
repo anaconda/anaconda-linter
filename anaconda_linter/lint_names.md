@@ -72,6 +72,8 @@ no_global_test
 
 non_url_source
 
+output_missing_name
+
 outputs_not_unique
 
 patch_must_be_in_build

@@ -1,6 +1,34 @@
 from conftest import check
 
 
+def test_output_missing_name_good(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+          - name: output2
+        """
+    )
+    lint_check = "output_missing_name"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_output_missing_name_bad(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - requirements
+          - requirements
+        """
+    )
+    lint_check = "output_missing_name"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 2 and all("has no name" in msg.title for msg in messages)
+
+
 def test_outputs_not_unique_good(base_yaml):
     yaml_str = (
         base_yaml
@@ -69,8 +97,8 @@ def test_no_global_test_bad(base_yaml):
         base_yaml
         + """
         outputs:
-          - output1:
-          - output2:
+          - name: output1
+          - name: output2
         test:
           imports:
             - module

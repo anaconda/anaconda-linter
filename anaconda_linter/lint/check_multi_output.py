@@ -1,6 +1,22 @@
 from . import WARNING, LintCheck
 
 
+class output_missing_name(LintCheck):
+    """Output has no name.
+
+    Each output must have a unique name. Please add:
+    outputs:
+      - name: <output name>
+    """
+
+    def check_recipe(self, recipe):
+        if outputs := recipe.get("outputs", None):
+            output_names = [recipe.get(f"outputs/{n}/name", None) for n in range(len(outputs))]
+            for n, name in enumerate(output_names):
+                if name is None:
+                    self.message(f"outputs/{n}")
+
+
 class outputs_not_unique(LintCheck):
     """Output name is not unique
 
@@ -11,7 +27,7 @@ class outputs_not_unique(LintCheck):
     def check_recipe(self, recipe):
         if outputs := recipe.get("outputs", None):
             unique_names = [recipe.get("package/name")]
-            output_names = [output.get("name") for output in outputs]
+            output_names = [recipe.get(f"outputs/{n}/name", "") for n in range(len(outputs))]
             for n, name in enumerate(output_names):
                 if name in unique_names:
                     self.message(section=f"outputs/{n}/name")
