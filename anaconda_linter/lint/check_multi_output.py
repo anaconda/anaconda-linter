@@ -14,7 +14,7 @@ class output_missing_name(LintCheck):
             output_names = [recipe.get(f"outputs/{n}/name", None) for n in range(len(outputs))]
             for n, name in enumerate(output_names):
                 if name is None:
-                    self.message(f"outputs/{n}")
+                    self.message(section=f"outputs/{n}")
 
 
 class outputs_not_unique(LintCheck):
@@ -30,7 +30,7 @@ class outputs_not_unique(LintCheck):
             output_names = [recipe.get(f"outputs/{n}/name", "") for n in range(len(outputs))]
             for n, name in enumerate(output_names):
                 if name in unique_names:
-                    self.message(section=f"outputs/{n}/name")
+                    self.message(section=f"outputs/{n}/name", output=n)
                 else:
                     unique_names.append(name)
 

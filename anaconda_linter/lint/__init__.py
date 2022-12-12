@@ -307,6 +307,7 @@ class LintCheck(metaclass=LintCheckMeta):
         fname: str = None,
         line: int = None,
         data: Any = None,
+        output: int = -1,
     ) -> None:
         """Add a message to the lint results
 
@@ -322,8 +323,11 @@ class LintCheck(metaclass=LintCheckMeta):
           line: If specified, sets the line number for the message directly
           data: Data to be passed to `fix`. If check can fix, set this to
                 something other than None.
+          output: the output the error occurred in (multi-output recipes only)
         """
-        message = self.make_message(self.recipe, section, severity, fname, line, data is not None)
+        message = self.make_message(
+            self.recipe, section, severity, fname, line, data is not None, output
+        )
         if data is not None and self.try_fix and self.fix(message, data):
             return
         self.messages.append(message)
@@ -337,6 +341,7 @@ class LintCheck(metaclass=LintCheckMeta):
         fname: str = None,
         line=None,
         canfix: bool = False,
+        output: int = -1,
     ) -> LintMessage:
         """Create a LintMessage
 
@@ -348,10 +353,15 @@ class LintCheck(metaclass=LintCheckMeta):
           fname: If specified, the message will apply to this file, rather than the
                  recipe meta.yaml
           line: If specified, sets the line number for the message directly
+          output: the output the error occurred in (multi-output recipes only)
         """
         doc = inspect.getdoc(cls)
         doc = doc.replace("::", ":").replace("``", "`")
         title, _, body = doc.partition("\n")
+        if output >= 0:
+            name = recipe.get(f"outputs/{output}/name", "")
+            if name != "":
+                title = f'output "{name}": {title}'
         if section:
             try:
                 sl, sc, el, ec = recipe.get_raw_range(section)
