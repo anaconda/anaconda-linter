@@ -24,18 +24,18 @@ from conftest import check, check_dir
         "toolchain",
     ),
 )
-def test_should_use_compilers_bad(base_yaml, compiler):
+def test_should_use_compilers_good(base_yaml, compiler):
     lint_check = "should_use_compilers"
     yaml_str = (
         base_yaml
         + f"""
         requirements:
           build:
-            - {compiler}
+            - {{{{ compiler('{compiler}') }}}}
         """
     )
     messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "compiler directly" in messages[0].title
+    assert len(messages) == 0
 
 
 @pytest.mark.parametrize(
@@ -57,18 +57,18 @@ def test_should_use_compilers_bad(base_yaml, compiler):
         "toolchain",
     ),
 )
-def test_should_use_compilers_good(base_yaml, compiler):
+def test_should_use_compilers_bad(base_yaml, compiler):
     lint_check = "should_use_compilers"
     yaml_str = (
         base_yaml
         + f"""
         requirements:
           build:
-            - {{{{ compiler('{compiler}') }}}}
+            - {compiler}
         """
     )
     messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
+    assert len(messages) == 1 and "compiler directly" in messages[0].title
 
 
 def test_should_use_compilers_bad_multi(base_yaml):
@@ -99,6 +99,26 @@ def test_compilers_must_be_in_build_good(base_yaml):
         requirements:
           build:
             - {{ compiler('c') }}
+        """
+    )
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_compilers_must_be_in_build_good_multi(base_yaml):
+    lint_check = "compilers_must_be_in_build"
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+            requirements:
+              build:
+                - {{ compiler('c') }}
+          - name: output2
+            requirements:
+              build:
+                - {{ compiler('c') }}
         """
     )
     messages = check(lint_check, yaml_str)
@@ -155,20 +175,6 @@ def test_uses_setuptools_good(base_yaml):
     assert len(messages) == 0
 
 
-def test_uses_setuptools_bad(base_yaml):
-    yaml_str = (
-        base_yaml
-        + """
-        requirements:
-          run:
-            - setuptools
-        """
-    )
-    lint_check = "uses_setuptools"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "uses setuptools in run depends" in messages[0].title
-
-
 def test_uses_setuptools_good_multi(base_yaml):
     yaml_str = (
         base_yaml
@@ -187,6 +193,20 @@ def test_uses_setuptools_good_multi(base_yaml):
     lint_check = "uses_setuptools"
     messages = check(lint_check, yaml_str)
     assert len(messages) == 0
+
+
+def test_uses_setuptools_bad(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        requirements:
+          run:
+            - setuptools
+        """
+    )
+    lint_check = "uses_setuptools"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 1 and "uses setuptools in run depends" in messages[0].title
 
 
 def test_uses_setuptools_bad_multi(base_yaml):
@@ -258,21 +278,6 @@ def test_missing_wheel_pip_install_good(base_yaml):
     assert len(messages) == 0
 
 
-def test_missing_wheel_pip_install_bad(base_yaml):
-    yaml_str = (
-        base_yaml
-        + """
-        source:
-          url: https://github.com/joblib/joblib/archive/1.1.1.tar.gz
-        build:
-          script: {{ PYTHON }} -m pip install .
-        """
-    )
-    lint_check = "missing_wheel"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "wheel should be present" in messages[0].title
-
-
 def test_missing_wheel_pip_install_good_multi(base_yaml):
     yaml_str = (
         base_yaml
@@ -293,6 +298,21 @@ def test_missing_wheel_pip_install_good_multi(base_yaml):
     lint_check = "missing_wheel"
     messages = check(lint_check, yaml_str)
     assert len(messages) == 0
+
+
+def test_missing_wheel_pip_install_bad(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://github.com/joblib/joblib/archive/1.1.1.tar.gz
+        build:
+          script: {{ PYTHON }} -m pip install .
+        """
+    )
+    lint_check = "missing_wheel"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 1 and "wheel should be present" in messages[0].title
 
 
 def test_missing_wheel_pip_install_bad_multi(base_yaml):
