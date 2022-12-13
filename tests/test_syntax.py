@@ -32,3 +32,23 @@ def test_version_constraints_missing_whitespace_bad(base_yaml):
     lint_check = "version_constraints_missing_whitespace"
     messages = check(lint_check, yaml_str)
     assert len(messages) == 1 and "version constraints" in messages[0].title
+
+
+def test_version_constraints_missing_whitespace_multi(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+            requirements:
+              host:
+                - setuptools>=50
+          - name: output2
+            requirements:
+              host:
+                - setuptools>=50
+        """
+    )
+    lint_check = "version_constraints_missing_whitespace"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 2 and all("version constraints" in msg.title for msg in messages)

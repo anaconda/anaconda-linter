@@ -24,9 +24,14 @@ class version_constraints_missing_whitespace(LintCheck):
         check_paths = []
         for section in ("build", "run", "host"):
             check_paths.append(f"requirements/{section}")
+        if outputs := recipe.get("outputs", None):
+            for n in range(len(outputs)):
+                for section in ("build", "run", "host"):
+                    check_paths.append(f"outputs/{n}/requirements/{section}")
 
         constraints = re.compile("(.*?)([!<=>].*)")
         for path in check_paths:
+            output = -1 if not path.startswith("outputs") else int(path.split("/")[1])
             for n, spec in enumerate(recipe.get(path, [])):
                 has_constraints = constraints.search(spec)
                 if has_constraints:
@@ -34,12 +39,16 @@ class version_constraints_missing_whitespace(LintCheck):
                     # See: https://github.com/anaconda-distribution/anaconda-linter/issues/113
                     space_separated = has_constraints[1].endswith(" ") or " " in has_constraints[0]
                     if not space_separated:
-                        self.message(section=f"{path}/{n}", data=True)
+                        self.message(section=f"{path}/{n}", data=True, output=output)
 
     def fix(self, _message, _data):
         check_paths = []
         for section in ("build", "run", "host"):
             check_paths.append(f"requirements/{section}")
+        if outputs := self.recipe.get("outputs", None):
+            for n in range(len(outputs)):
+                for section in ("build", "run", "host"):
+                    check_paths.append(f"outputs/{n}/requirements/{section}")
 
         constraints = re.compile("(.*?)([!<=>].*)")
         for path in check_paths:

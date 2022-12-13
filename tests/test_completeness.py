@@ -1,6 +1,7 @@
 import os
 import tempfile
 
+import pytest
 from conftest import check, check_dir
 
 
@@ -161,19 +162,38 @@ def test_missing_tests_good_command(base_yaml):
     assert len(messages) == 0
 
 
-def test_missing_tests_good_scripts(base_yaml):
+def test_missing_tests_good_multi(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+            test:
+              requires:
+                - pip
+              commands:
+                - pip check
+          - name: output2
+            test:
+              imports:
+                - module
+        """
+    )
     lint_check = "missing_tests"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
 
-    test_files = ["run_test.py", "run_test.sh", "run_test.pl"]
 
-    for test_file in test_files:
-        with tempfile.TemporaryDirectory() as tmpdir:
-            recipe_dir = os.path.join(tmpdir, "recipe")
-            os.mkdir(recipe_dir)
-            with open(os.path.join(recipe_dir, test_file), "w") as f:
-                f.write("\n")
-            messages = check_dir(lint_check, tmpdir, base_yaml)
-            assert len(messages) == 0
+@pytest.mark.parametrize("test_file", ["run_test.py", "run_test.sh", "run_test.pl"])
+def test_missing_tests_good_scripts(base_yaml, test_file):
+    lint_check = "missing_tests"
+    with tempfile.TemporaryDirectory() as tmpdir:
+        recipe_dir = os.path.join(tmpdir, "recipe")
+        os.mkdir(recipe_dir)
+        with open(os.path.join(recipe_dir, test_file), "w") as f:
+            f.write("\n")
+        messages = check_dir(lint_check, tmpdir, base_yaml)
+        assert len(messages) == 0
 
 
 def test_missing_tests_bad_missing(base_yaml):
@@ -187,13 +207,47 @@ def test_missing_tests_bad_missing(base_yaml):
     )
     lint_check = "missing_tests"
     messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "missing tests" in messages[0].title
+    assert len(messages) == 1 and "No tests were found" in messages[0].title
 
 
 def test_missing_tests_bad_missing_section(base_yaml):
     lint_check = "missing_tests"
     messages = check(lint_check, base_yaml)
-    assert len(messages) == 1 and "missing tests" in messages[0].title
+    assert len(messages) == 1 and "No tests were found" in messages[0].title
+
+
+def test_missing_tests_bad_missing_multi(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+            test:
+              requires:
+                - pip
+          - name: output2
+            test:
+              requires:
+                - pip
+        """
+    )
+    lint_check = "missing_tests"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 2 and all("No tests were found" in msg.title for msg in messages)
+
+
+def test_missing_tests_bad_missing_section_multi(base_yaml):
+    lint_check = "missing_tests"
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+          - name: output2
+        """
+    )
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 2 and all("No tests were found" in msg.title for msg in messages)
 
 
 def test_missing_hash_good(base_yaml):
@@ -237,21 +291,19 @@ def test_missing_hash_bad_algorithm(base_yaml):
     assert len(messages) == 1 and "missing a sha256" in messages[0].title
 
 
-def test_missing_source_good(base_yaml):
-    source_types = ["url", "git_url", "hg_url", "svn_url"]
-
+@pytest.mark.parametrize("src_type", ["url", "git_url", "hg_url", "svn_url"])
+def test_missing_source_good(base_yaml, src_type):
     lint_check = "missing_source"
-    for src in source_types:
-        yaml_str = (
-            base_yaml
-            + f"""
+    yaml_str = (
+        base_yaml
+        + f"""
         source:
-          {src}: https://sqlite.com/2022/sqlite-autoconf-3380500.tar.gz
+          {src_type}: https://sqlite.com/2022/sqlite-autoconf-3380500.tar.gz
           sha256: 5af07de982ba658fd91a03170c945f99c971f6955bc79df3266544373e39869c
-            """
-        )
-        messages = check(lint_check, yaml_str)
-        assert len(messages) == 0, f"{src} is not recognized as a valid URL source"
+     """
+    )
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
 
 
 def test_missing_source_bad(base_yaml):
@@ -295,23 +347,19 @@ def test_non_url_source_good(base_yaml):
     assert len(messages) == 0
 
 
-def test_non_url_source_bad(base_yaml):
-    source_types = ["git_url", "hg_url", "svn_url"]
-
+@pytest.mark.parametrize("src_type", ["git_url", "hg_url", "svn_url"])
+def test_non_url_source_bad(base_yaml, src_type):
     lint_check = "non_url_source"
-    for src in source_types:
-        yaml_str = (
-            base_yaml
-            + f"""
+    yaml_str = (
+        base_yaml
+        + f"""
         source:
-          {src}: https://sqlite.com/2022/sqlite-autoconf-3380500.tar.gz
+          {src_type}: https://sqlite.com/2022/sqlite-autoconf-3380500.tar.gz
           sha256: 5af07de982ba658fd91a03170c945f99c971f6955bc79df3266544373e39869c
-            """
-        )
-        messages = check(lint_check, yaml_str)
-        assert (
-            len(messages) == 1 and "not url of url type" in messages[0].title
-        ), f"{src} is not recognized as a valid URL source"
+        """
+    )
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 1 and "not url of url type" in messages[0].title
 
 
 def test_missing_doc_url_good(base_yaml):
