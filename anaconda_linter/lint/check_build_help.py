@@ -401,16 +401,24 @@ class missing_python(LintCheck):
 
     def check_recipe(self, recipe):
         is_pypi = is_pypi_source(recipe)
+        deps = recipe.get_deps_dict(["host", "run"])
+        paths = (
+            []
+            if "python" not in deps
+            else ["/".join(path.split("/")[:-1]) for path in deps["python"]["paths"]]
+        )
         if outputs := recipe.get("outputs", None):
             for o in range(len(outputs)):
                 if is_pypi or "pip install" in self.recipe.get(f"outputs/{o}/script", ""):
                     for section in ["host", "run"]:
-                        if "python" not in recipe.get(f"outputs/{o}/requirements/{section}", ""):
-                            self._create_message(f"outputs/{o}/requirements/{section}", output=o)
+                        path_to_section = f"outputs/{o}/requirements/{section}"
+                        if path_to_section not in paths:
+                            self._create_message(section=path_to_section, output=o)
         elif is_pypi or "pip install" in self.recipe.get("build/script", ""):
             for section in ["host", "run"]:
-                if "python" not in recipe.get(f"requirements/{section}", ""):
-                    self._create_message(f"requirements/{section}")
+                path_to_section = f"requirements/{section}"
+                if path_to_section not in paths:
+                    self._create_message(section=path_to_section)
 
 
 class remove_python_pinning(LintCheck):
