@@ -193,11 +193,27 @@ class Recipe:
     @property
     def path(self):
         """Full path to ``meta.yaml``"""
+        # process the short recipe directory path
+        split_recipe_dir = (self.recipe_dir).split('/')
+        length = len(split_recipe_dir)
+        # if the directory path line has 3 elements or more then shorten the path
+        short_recipe_dir = ""
+        if(length > 2):
+            short_recipe_dir = "{0}/{1}/{2}".format(split_recipe_dir[length - 3], split_recipe_dir[length - 2], split_recipe_dir[length - 1])
+            self.recipe_dir = short_recipe_dir
         return os.path.join(self.recipe_dir, "meta.yaml")
 
     @property
     def dir(self):
         """Path to recipe folder"""
+        # process the short recipe directory path
+        split_recipe_dir = (self.recipe_dir).split('/')
+        length = len(split_recipe_dir)
+        # if the directory path line has 3 elements or more then shorten the path
+        short_recipe_dir = ""
+        if(length > 2):
+            short_recipe_dir = "{0}/{1}/{2}".format(split_recipe_dir[length - 3], split_recipe_dir[length - 2], split_recipe_dir[length - 1])
+            self.recipe_dir = short_recipe_dir
         return self.recipe_dir
 
     def __str__(self) -> str:
