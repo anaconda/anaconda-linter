@@ -59,8 +59,6 @@ class output_missing_script(LintCheck):
         output_names = {recipe.get(f"outputs/{n}/name", None) for n in range(len(outputs))}
         deps = recipe.get_deps_dict("run")
         subpackages = output_names.intersection(set(deps.keys()))
-        print(subpackages)
-        print(deps)
         for o in range(len(recipe.get("outputs", []))):
             # True if subpackage is a run dependency
             if any(
