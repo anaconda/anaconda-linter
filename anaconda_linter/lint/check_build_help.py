@@ -179,6 +179,50 @@ class uses_setup_py(LintCheck):
                 pass
 
 
+class pip_install_args(LintCheck):
+    """`pip install` should be run with --no-deps.
+
+    Please use::
+
+        $PYTHON -m pip install . --no-deps
+
+    """
+
+    @staticmethod
+    def _check_line(line: str) -> bool:
+        """Check a line for a broken call to setup.py"""
+        if "pip install" in line and "--no-deps" not in line:
+            return False
+        return True
+
+    def check_deps(self, deps):
+        if "pip" not in deps:
+            return  # no pip, no problem
+
+        for path in deps["pip"]["paths"]:
+            if path.startswith("output"):
+                n = path.split("/")[1]
+                script = f"outputs/{n}/script"
+                output = int(n)
+            else:
+                script = "build/script"
+                output = -1
+            if not self._check_line(self.recipe.get(script, "")):
+                self.message(section=script)
+                continue
+            try:
+                if script == "build/script":
+                    build_file = "build.sh"
+                else:
+                    build_file = self.recipe.get(script)
+                with open(os.path.join(self.recipe.dir, build_file)) as buildsh:
+                    for num, line in enumerate(buildsh):
+                        if not self._check_line(line):
+                            self.message(fname=build_file, line=num, output=output)
+            except FileNotFoundError:
+                pass
+
+
 class cython_must_be_in_host(LintCheck):
     """Cython should be in the host section
 

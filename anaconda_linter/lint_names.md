@@ -80,8 +80,9 @@ patch_must_be_in_build
 
 patch_unnecessary
 
-remove_python_pinning
+pip_install_args
 
+remove_python_pinning
 
 should_use_compilers
 

@@ -456,6 +456,132 @@ def test_uses_setup_py_bad_script_multi(base_yaml, tmpdir):
     assert len(messages) == 2 and all("python setup.py install" in msg.title for msg in messages)
 
 
+def test_pip_install_args_good_missing(base_yaml):
+    lint_check = "pip_install_args"
+    messages = check(lint_check, base_yaml)
+    assert len(messages) == 0
+
+
+def test_pip_install_args_good_cmd(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        build:
+          script: {{ PYTHON }} -m pip install . --no-deps
+        requirements:
+          host:
+            - pip
+        """
+    )
+    lint_check = "pip_install_args"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_pip_install_args_good_script(base_yaml, tmpdir):
+    yaml_str = (
+        base_yaml
+        + """
+        requirements:
+          host:
+            - pip
+        """
+    )
+    lint_check = "pip_install_args"
+    recipe_dir = os.path.join(tmpdir, "recipe")
+    os.mkdir(recipe_dir)
+    with open(os.path.join(recipe_dir, "build.sh"), "w") as f:
+        f.write("{{ PYTHON }} -m pip install . --no-deps\n")
+    messages = check_dir(lint_check, tmpdir, yaml_str)
+    assert len(messages) == 0
+
+
+def test_pip_install_args_bad_cmd(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        build:
+          script: {{ PYTHON }} -m pip install .
+        requirements:
+          host:
+            - pip
+        """
+    )
+    lint_check = "pip_install_args"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 1 and "should be run with --no-deps" in messages[0].title
+
+
+def test_pip_install_args_bad_cmd_multi(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+            script: {{ PYTHON }} -m pip install
+            requirements:
+              host:
+                - pip
+          - name: output2
+            script: {{ PYTHON }} -m pip install
+            requirements:
+              host:
+                - pip
+        """
+    )
+    lint_check = "pip_install_args"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 2 and all(
+        "should be run with --no-deps" in msg.title for msg in messages
+    )
+
+
+def test_pip_install_args_bad_script(base_yaml, tmpdir):
+    yaml_str = (
+        base_yaml
+        + """
+        requirements:
+          host:
+            - pip
+        """
+    )
+    lint_check = "pip_install_args"
+    recipe_dir = os.path.join(tmpdir, "recipe")
+    os.mkdir(recipe_dir)
+    with open(os.path.join(recipe_dir, "build.sh"), "w") as f:
+        f.write("{{ PYTHON }} -m pip install\n")
+    messages = check_dir(lint_check, tmpdir, yaml_str)
+    assert len(messages) == 1 and "should be run with --no-deps" in messages[0].title
+
+
+def test_pip_install_args_bad_script_multi(base_yaml, tmpdir):
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+            script: build_output.sh
+            requirements:
+              host:
+                - pip
+          - name: output2
+            script: build_output.sh
+            requirements:
+              host:
+                - pip
+        """
+    )
+    lint_check = "pip_install_args"
+    recipe_dir = os.path.join(tmpdir, "recipe")
+    os.mkdir(recipe_dir)
+    with open(os.path.join(recipe_dir, "build_output.sh"), "w") as f:
+        f.write("{{ PYTHON }} -m pip install\n")
+    messages = check_dir(lint_check, tmpdir, yaml_str)
+    assert len(messages) == 2 and all(
+        "should be run with --no-deps" in msg.title for msg in messages
+    )
+
+
 def test_cython_must_be_in_host_good(base_yaml):
     yaml_str = (
         base_yaml
