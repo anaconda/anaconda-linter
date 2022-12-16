@@ -49,6 +49,17 @@ Make sure that your `anaconda-linter` environment is activated, then:
 
 It's that easy!
 
+## Contributing
+
+We welcome contributions for bug fixes, enhancements, or new tests.
+For a list of projects, please see the [Issues page](https://github.com/anaconda-distribution/anaconda-linter/issues)
+
+Before submitting a PR, please make sure to:
+
+  * run `make pre-commit` to format your code using `flake8` and `black`.
+  * run `make test` to make sure our unit tests pass.
+  * add unit tests for new functionality. To print a coverage report, run `make coverage`.
+
 ## Contributions
 This new package is inspired by bioconda's [linter](https://github.com/bioconda/bioconda-utils/blob/master/bioconda_utils/lint/__init__.py).
 
