@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 import pytest
 
@@ -27,9 +28,16 @@ def base_yaml():
     return yaml_str
 
 
+@pytest.fixture()
+def recipe_dir(tmpdir):
+    recipe_directory = Path(tmpdir) / "recipe"
+    recipe_directory.mkdir(parents=True, exist_ok=True)
+    return recipe_directory
+
+
 def check(check_name, recipe_str):
-    config_file = os.path.abspath(os.path.dirname(__file__) + "/../anaconda_linter/config.yaml")
-    config = utils.load_config(config_file)
+    config_file = Path(__file__).parent / "../anaconda_linter/config.yaml"
+    config = utils.load_config(str(config_file.resolve()))
     linter = Linter(config=config)
     recipe = Recipe.from_string(recipe_str)
     messages = linter.check_instances[check_name].run(recipe=recipe)
@@ -37,14 +45,15 @@ def check(check_name, recipe_str):
 
 
 def check_dir(check_name, feedstock_dir, recipe_str):
-    config_file = os.path.abspath(os.path.dirname(__file__) + "/../anaconda_linter/config.yaml")
-    config = utils.load_config(config_file)
+    if not isinstance(feedstock_dir, Path):
+        feedstock_dir = Path(feedstock_dir)
+    config_file = Path(__file__).parent / "../anaconda_linter/config.yaml"
+    config = utils.load_config(str(config_file.resolve()))
     linter = Linter(config=config)
-    recipe_dir = os.path.join(feedstock_dir, "recipe")
-    os.makedirs(recipe_dir, exist_ok=True)
-    meta_yaml = os.path.join(recipe_dir, "meta.yaml")
-    with open(meta_yaml, "w") as f:
-        f.write(recipe_str)
-    recipe = Recipe.from_file(meta_yaml)
+    recipe_dir = feedstock_dir / "recipe"
+    recipe_dir.mkdir(parents=True, exist_ok=True)
+    meta_yaml = recipe_dir / "meta.yaml"
+    meta_yaml.write_text(recipe_str)
+    recipe = Recipe.from_file(str(meta_yaml))
     messages = linter.check_instances[check_name].run(recipe=recipe)
     return messages

@@ -1,5 +1,3 @@
-import os
-
 import pytest
 from conftest import check, check_dir
 
@@ -182,14 +180,12 @@ def test_missing_tests_good_multi(base_yaml):
     assert len(messages) == 0
 
 
-@pytest.mark.parametrize("test_file", ["run_test.py", "run_test.sh", "run_test.pl"])
-def test_missing_tests_good_scripts(base_yaml, test_file, tmpdir):
+@pytest.mark.parametrize("test_file_name", ["run_test.py", "run_test.sh", "run_test.pl"])
+def test_missing_tests_good_scripts(base_yaml, test_file_name, recipe_dir):
     lint_check = "missing_tests"
-    recipe_dir = os.path.join(tmpdir, "recipe")
-    os.mkdir(recipe_dir)
-    with open(os.path.join(recipe_dir, test_file), "w") as f:
-        f.write("\n")
-    messages = check_dir(lint_check, tmpdir, base_yaml)
+    test_file = recipe_dir / test_file_name
+    test_file.write_text("\n")
+    messages = check_dir(lint_check, recipe_dir.parent, base_yaml)
     assert len(messages) == 0
 
 
