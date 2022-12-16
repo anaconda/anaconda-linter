@@ -336,6 +336,12 @@ class missing_pip_check(LintCheck):
     """
 
     def _check_file(self, file, output=-1):
+        """Reads the file for a `pip check` command and outputs a message if not found.
+
+        Args:
+          file: The path of the file.
+          output: The output number for multi-output recipes.
+        """
         if os.path.isfile(file):
             with open(file) as test_file:
                 for line in test_file:
