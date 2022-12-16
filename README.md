@@ -45,7 +45,7 @@ Note: if you have both `skip-lints` and `only-lint`, any lints in `skip-lint` wi
 
 Make sure that your `anaconda-linter` environment is activated, then:
 
-`pytest tests` OR `make tests` (if you would like to see test reports)
+`pytest tests` OR `make test` (if you would like to see test reports)
 
 It's that easy!
 
