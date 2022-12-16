@@ -161,7 +161,8 @@ class missing_tests(LintCheck):
     def check_recipe(self, recipe):
         if outputs := recipe.get("outputs", None):
             for o in range(len(outputs)):
-                self.check_output(recipe, f"outputs/{o}/")
+                if not recipe.get(f"outputs/{o}/test/script", ""):
+                    self.check_output(recipe, f"outputs/{o}/")
         # multi-output recipes do not execute test files automatically
         elif not any(os.path.exists(os.path.join(recipe.dir, f)) for f in self.test_files):
             self.check_output(recipe)

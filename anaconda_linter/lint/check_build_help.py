@@ -336,28 +336,12 @@ class missing_pip_check(LintCheck):
     """
 
     def _check_file(self, file, output=-1):
-        with open(file) as test_file:
-            for line in test_file:
-                if "pip check" in line:
-                    return
-            self.message(fname=file, output=output)
-
-    def check_output(self, recipe, output="") -> bool:
-        # The return value indicates if a test was found
-        test_section = f"{output}test"
-        o = -1 if not output.startswith("outputs") else int(output.split("/")[1])
-        if commands := recipe.get(f"{test_section}/commands", None):
-            if not any("pip check" in cmd for cmd in commands):
-                self.message(section=f"{test_section}/commands", output=o)
-            return True
-        elif script := recipe.get(f"{test_section}/script", None):
-            test_file = os.path.join(recipe.dir, script)
-            if os.path.exists(test_file):
-                self._check_file(test_file)
-            else:
-                self.message(fname=test_file, output=o)
-            return True
-        return False
+        if os.path.isfile(file):
+            with open(file) as test_file:
+                for line in test_file:
+                    if "pip check" in line:
+                        return
+        self.message(fname=file, output=output)
 
     def check_recipe(self, recipe):
         is_pypi = is_pypi_source(recipe)
@@ -365,10 +349,19 @@ class missing_pip_check(LintCheck):
             for o in range(len(outputs)):
                 if not is_pypi and "pip install" not in recipe.get(f"outputs/{o}/script", ""):
                     continue
-                if not self.check_output(recipe, f"outputs/{o}/"):
-                    self.message(section=f"outputs/{o}/test", output=o)
+                test_section = f"outputs/{o}/test"
+                if commands := recipe.get(f"{test_section}/commands", None):
+                    if not any("pip check" in cmd for cmd in commands):
+                        self.message(section=f"{test_section}/commands", output=o)
+                elif script := recipe.get(f"{test_section}/script", None):
+                    self._check_file(os.path.join(recipe.dir, script))
+                else:
+                    self.message(section=test_section, output=o)
         elif is_pypi or "pip install" in self.recipe.get("build/script", ""):
-            if not self.check_output(recipe):
+            if commands := recipe.get("test/commands", None):
+                if not any("pip check" in cmd for cmd in commands):
+                    self.message(section="test/commands")
+            else:
                 test_files = (
                     set(os.listdir(recipe.recipe_dir)).intersection({"run_test.sh", "run_test.bat"})
                     if os.path.exists(recipe.dir)
