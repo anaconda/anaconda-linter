@@ -33,11 +33,8 @@ class invalid_url(LintCheck):
                     ):
                         return
             if response_data["code"] < 0 or response_data["code"] >= 400:
-                self.__class__.__doc__ = self.__class__.__doc__.format(
-                    url, response_data["message"]
-                )
                 severity = INFO if "domain_redirect" in response_data else ERROR
-                self.message(section=section, severity=severity)
+                self.message(url, response_data["message"], section=section, severity=severity)
 
     def check_recipe(self, recipe):
         url_fields = [
@@ -52,13 +49,10 @@ class invalid_url(LintCheck):
             if url:
                 response_data = utils.check_url(url)
                 if response_data["code"] < 0 or response_data["code"] >= 400:
-                    reset_text = self.__class__.__doc__
-                    self.__class__.__doc__ = self.__class__.__doc__.format(
-                        url, response_data["message"]
-                    )
                     severity = INFO if "domain_redirect" in response_data else ERROR
-                    self.message(section=url_field, severity=severity)
-                    self.__class__.__doc__ = reset_text
+                    self.message(
+                        url, response_data["message"], section=url_field, severity=severity
+                    )
 
 
 class http_url(LintCheck):
@@ -71,8 +65,7 @@ class http_url(LintCheck):
     def check_source(self, source, section):
         url = source.get("url", "")
         if url.lower().startswith("http://"):
-            self.__class__.__doc__ = self.__class__.__doc__.format(url)
-            self.message(section=section)
+            self.message(url, section=section)
 
     def check_recipe(self, recipe):
         url_fields = [
@@ -85,7 +78,4 @@ class http_url(LintCheck):
         for url_field in url_fields:
             url = recipe.get(url_field, "")
             if url.lower().startswith("http://"):
-                reset_text = self.__class__.__doc__
-                self.__class__.__doc__ = self.__class__.__doc__.format(url)
-                self.message(section=url_field.split("/")[0], severity=WARNING)
-                self.__class__.__doc__ = reset_text
+                self.message(url, section=url_field.split("/")[0], severity=WARNING)

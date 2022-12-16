@@ -393,12 +393,6 @@ class missing_python(LintCheck):
           - python
     """
 
-    def _create_message(self, section, output=-1):
-        reset_text = self.__class__.__doc__
-        self.__class__.__doc__ = self.__class__.__doc__.format(section)
-        self.message(section=section, output=output)
-        self.__class__.__doc__ = reset_text
-
     def check_recipe(self, recipe):
         # To check for a missing python, find the paths that require python
         # and compare with the existing dependency dictionary.
@@ -419,12 +413,12 @@ class missing_python(LintCheck):
                     for section in ["host", "run"]:
                         path_to_section = f"outputs/{o}/requirements/{section}"
                         if path_to_section not in paths:
-                            self._create_message(section=path_to_section, output=o)
+                            self.message(section, section=path_to_section, output=o)
         elif is_pypi or "pip install" in self.recipe.get("build/script", ""):
             for section in ["host", "run"]:
                 path_to_section = f"requirements/{section}"
                 if path_to_section not in paths:
-                    self._create_message(section=path_to_section)
+                    self.message(section, section=path_to_section)
 
 
 class remove_python_pinning(LintCheck):
