@@ -141,6 +141,28 @@ def test_output_missing_script_good(base_yaml):
     assert len(messages) == 0
 
 
+def test_output_missing_script_subpackage(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+            script: build_output1.sh
+            requirements:
+              run:
+                - python
+          - name: output2
+            requirements:
+              run:
+                - python
+                - {{ pin_subpackage('output1') }}
+        """
+    )
+    lint_check = "output_missing_script"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
 def test_output_missing_script_bad(base_yaml):
     yaml_str = (
         base_yaml

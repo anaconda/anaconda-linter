@@ -53,7 +53,22 @@ class output_missing_script(LintCheck):
     """
 
     def check_recipe(self, recipe):
+        # May not need scripts if pin_subpackage is used.
+        # Pinned subpackages are expanded to their names.
+        outputs = recipe.get("outputs", [])
+        output_names = {recipe.get(f"outputs/{n}/name", None) for n in range(len(outputs))}
+        deps = recipe.get_deps_dict("run")
+        subpackages = output_names.intersection(set(deps.keys()))
+        print(subpackages)
+        print(deps)
         for o in range(len(recipe.get("outputs", []))):
+            # True if subpackage is a run dependency
+            if any(
+                path.startswith(f"outputs/{o}/")
+                for name in subpackages
+                for path in deps[name]["paths"]
+            ):
+                continue
             if recipe.get(f"outputs/{o}/script", "") == "":
                 self.message(output=o)
 
