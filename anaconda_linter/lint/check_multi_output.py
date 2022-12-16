@@ -56,3 +56,13 @@ class output_missing_script(LintCheck):
         for o in range(len(recipe.get("outputs", []))):
             if recipe.get(f"outputs/{o}/script", "") == "":
                 self.message(output=o)
+
+
+class output_script_name_default(LintCheck):
+    """Output should not use default script names build.sh/bld.sh."""
+
+    def check_recipe(self, recipe):
+        default_scripts = ("build.sh", "bld.bat")
+        for o in range(len(recipe.get("outputs", []))):
+            if recipe.get(f"outputs/{o}/script", "") in default_scripts:
+                self.message(output=o)

@@ -152,3 +152,36 @@ def test_output_missing_script_bad(base_yaml):
     lint_check = "output_missing_script"
     messages = check(lint_check, yaml_str)
     assert len(messages) == 2 and all("Output is missing script" in msg.title for msg in messages)
+
+
+def test_output_script_name_default_good(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+            script: build_output1.sh
+          - name: output2
+            script: build_output2.sh
+        """
+    )
+    lint_check = "output_script_name_default"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+@pytest.mark.parametrize("script", ("build.sh", "bld.bat"))
+def test_output_script_name_default_bad(base_yaml, script):
+    yaml_str = (
+        base_yaml
+        + f"""
+        outputs:
+          - name: output1
+            script: {script}
+          - name: output2
+            script: {script}
+        """
+    )
+    lint_check = "output_script_name_default"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 2 and all("default script names" in msg.title for msg in messages)
