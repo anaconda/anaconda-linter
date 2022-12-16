@@ -334,29 +334,29 @@ def test_missing_wheel_pip_install_bad_multi(base_yaml):
     assert len(messages) == 2 and all("wheel should be present" in msg.title for msg in messages)
 
 
-def test_setup_py_install_args_good_missing(base_yaml):
-    lint_check = "setup_py_install_args"
+def test_uses_setup_py_good_missing(base_yaml):
+    lint_check = "uses_setup_py"
     messages = check(lint_check, base_yaml)
     assert len(messages) == 0
 
 
-def test_setup_py_install_args_good_cmd(base_yaml):
+def test_uses_setup_py_good_cmd(base_yaml):
     yaml_str = (
         base_yaml
         + """
         build:
-          script: {{ PYTHON }} -m setup.py install --single-version-externally-managed
+          script: {{ PYTHON }} -m pip install . --no-deps
         requirements:
           host:
             - setuptools
         """
     )
-    lint_check = "setup_py_install_args"
+    lint_check = "uses_setup_py"
     messages = check(lint_check, yaml_str)
     assert len(messages) == 0
 
 
-def test_setup_py_install_args_good_script(base_yaml, tmpdir):
+def test_uses_setup_py_good_script(base_yaml, tmpdir):
     yaml_str = (
         base_yaml
         + """
@@ -365,16 +365,16 @@ def test_setup_py_install_args_good_script(base_yaml, tmpdir):
             - setuptools
         """
     )
-    lint_check = "setup_py_install_args"
+    lint_check = "uses_setup_py"
     recipe_dir = os.path.join(tmpdir, "recipe")
     os.mkdir(recipe_dir)
     with open(os.path.join(recipe_dir, "build.sh"), "w") as f:
-        f.write("{{ PYTHON }} -m setup.py install --single-version-externally-managed\n")
+        f.write("{{ PYTHON }} -m pip install . --no-deps\n")
     messages = check_dir(lint_check, tmpdir, yaml_str)
     assert len(messages) == 0
 
 
-def test_setup_py_install_args_bad_cmd(base_yaml):
+def test_uses_setup_py_bad_cmd(base_yaml):
     yaml_str = (
         base_yaml
         + """
@@ -385,12 +385,12 @@ def test_setup_py_install_args_bad_cmd(base_yaml):
             - setuptools
         """
     )
-    lint_check = "setup_py_install_args"
+    lint_check = "uses_setup_py"
     messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "setuptools without required arguments" in messages[0].title
+    assert len(messages) == 1 and "python setup.py install" in messages[0].title
 
 
-def test_setup_py_install_args_bad_cmd_multi(base_yaml):
+def test_uses_setup_py_bad_cmd_multi(base_yaml):
     yaml_str = (
         base_yaml
         + """
@@ -407,14 +407,12 @@ def test_setup_py_install_args_bad_cmd_multi(base_yaml):
                 - setuptools
         """
     )
-    lint_check = "setup_py_install_args"
+    lint_check = "uses_setup_py"
     messages = check(lint_check, yaml_str)
-    assert len(messages) == 2 and all(
-        "setuptools without required arguments" in msg.title for msg in messages
-    )
+    assert len(messages) == 2 and all("python setup.py install" in msg.title for msg in messages)
 
 
-def test_setup_py_install_args_bad_script(base_yaml, tmpdir):
+def test_uses_setup_py_bad_script(base_yaml, tmpdir):
     yaml_str = (
         base_yaml
         + """
@@ -423,16 +421,16 @@ def test_setup_py_install_args_bad_script(base_yaml, tmpdir):
             - setuptools
         """
     )
-    lint_check = "setup_py_install_args"
+    lint_check = "uses_setup_py"
     recipe_dir = os.path.join(tmpdir, "recipe")
     os.mkdir(recipe_dir)
     with open(os.path.join(recipe_dir, "build.sh"), "w") as f:
         f.write("{{ PYTHON }} -m setup.py install\n")
     messages = check_dir(lint_check, tmpdir, yaml_str)
-    assert len(messages) == 1 and "setuptools without required arguments" in messages[0].title
+    assert len(messages) == 1 and "python setup.py install" in messages[0].title
 
 
-def test_setup_py_install_args_bad_script_multi(base_yaml, tmpdir):
+def test_uses_setup_py_bad_script_multi(base_yaml, tmpdir):
     yaml_str = (
         base_yaml
         + """
@@ -449,14 +447,138 @@ def test_setup_py_install_args_bad_script_multi(base_yaml, tmpdir):
                 - setuptools
         """
     )
-    lint_check = "setup_py_install_args"
+    lint_check = "uses_setup_py"
     recipe_dir = os.path.join(tmpdir, "recipe")
     os.mkdir(recipe_dir)
     with open(os.path.join(recipe_dir, "build_output.sh"), "w") as f:
         f.write("{{ PYTHON }} -m setup.py install\n")
     messages = check_dir(lint_check, tmpdir, yaml_str)
+    assert len(messages) == 2 and all("python setup.py install" in msg.title for msg in messages)
+
+
+def test_pip_install_args_good_missing(base_yaml):
+    lint_check = "pip_install_args"
+    messages = check(lint_check, base_yaml)
+    assert len(messages) == 0
+
+
+def test_pip_install_args_good_cmd(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        build:
+          script: {{ PYTHON }} -m pip install . --no-deps
+        requirements:
+          host:
+            - pip
+        """
+    )
+    lint_check = "pip_install_args"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_pip_install_args_good_script(base_yaml, tmpdir):
+    yaml_str = (
+        base_yaml
+        + """
+        requirements:
+          host:
+            - pip
+        """
+    )
+    lint_check = "pip_install_args"
+    recipe_dir = os.path.join(tmpdir, "recipe")
+    os.mkdir(recipe_dir)
+    with open(os.path.join(recipe_dir, "build.sh"), "w") as f:
+        f.write("{{ PYTHON }} -m pip install . --no-deps\n")
+    messages = check_dir(lint_check, tmpdir, yaml_str)
+    assert len(messages) == 0
+
+
+def test_pip_install_args_bad_cmd(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        build:
+          script: {{ PYTHON }} -m pip install .
+        requirements:
+          host:
+            - pip
+        """
+    )
+    lint_check = "pip_install_args"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 1 and "should be run with --no-deps" in messages[0].title
+
+
+def test_pip_install_args_bad_cmd_multi(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+            script: {{ PYTHON }} -m pip install
+            requirements:
+              host:
+                - pip
+          - name: output2
+            script: {{ PYTHON }} -m pip install
+            requirements:
+              host:
+                - pip
+        """
+    )
+    lint_check = "pip_install_args"
+    messages = check(lint_check, yaml_str)
     assert len(messages) == 2 and all(
-        "setuptools without required arguments" in msg.title for msg in messages
+        "should be run with --no-deps" in msg.title for msg in messages
+    )
+
+
+def test_pip_install_args_bad_script(base_yaml, tmpdir):
+    yaml_str = (
+        base_yaml
+        + """
+        requirements:
+          host:
+            - pip
+        """
+    )
+    lint_check = "pip_install_args"
+    recipe_dir = os.path.join(tmpdir, "recipe")
+    os.mkdir(recipe_dir)
+    with open(os.path.join(recipe_dir, "build.sh"), "w") as f:
+        f.write("{{ PYTHON }} -m pip install\n")
+    messages = check_dir(lint_check, tmpdir, yaml_str)
+    assert len(messages) == 1 and "should be run with --no-deps" in messages[0].title
+
+
+def test_pip_install_args_bad_script_multi(base_yaml, tmpdir):
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+            script: build_output.sh
+            requirements:
+              host:
+                - pip
+          - name: output2
+            script: build_output.sh
+            requirements:
+              host:
+                - pip
+        """
+    )
+    lint_check = "pip_install_args"
+    recipe_dir = os.path.join(tmpdir, "recipe")
+    os.mkdir(recipe_dir)
+    with open(os.path.join(recipe_dir, "build_output.sh"), "w") as f:
+        f.write("{{ PYTHON }} -m pip install\n")
+    messages = check_dir(lint_check, tmpdir, yaml_str)
+    assert len(messages) == 2 and all(
+        "should be run with --no-deps" in msg.title for msg in messages
     )
 
 
@@ -616,6 +738,49 @@ def test_avoid_noarch_good(base_yaml):
         + """
         build:
           noarch: generic
+        """
+    )
+    lint_check = "avoid_noarch"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_avoid_noarch_good_build_number(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        build:
+          noarch: python
+          number: 2
+        """
+    )
+    lint_check = "avoid_noarch"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_avoid_noarch_good_osx_app(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        build:
+          noarch: python
+          osx_is_app: true
+        """
+    )
+    lint_check = "avoid_noarch"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_avoid_noarch_good_app(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        build:
+          noarch: python
+        app:
+          icon: logo.png
         """
     )
     lint_check = "avoid_noarch"
@@ -1097,6 +1262,241 @@ def test_missing_pip_check_pip_install_script_bad_multi(base_yaml, tmpdir):
     assert len(messages) == 2 and all(
         "pip check should be present" in msg.title for msg in messages
     )
+
+
+def test_missing_test_requirement_pip_missing(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://pypi.io/packages/source/D/Django/Django-4.1.tar.gz
+        """
+    )
+    lint_check = "missing_test_requirement_pip"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_missing_test_requirement_pip_missing_multi(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://pypi.io/packages/source/D/Django/Django-4.1.tar.gz
+        outputs:
+          - name: output1
+          - name: output2
+        """
+    )
+    lint_check = "missing_test_requirement_pip"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_missing_test_requirementk_pip_script_missing(base_yaml, tmpdir):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://pypi.io/packages/source/D/Django/Django-4.1.tar.gz
+        """
+    )
+    lint_check = "missing_test_requirement_pip"
+    recipe_dir = os.path.join(tmpdir, "recipe")
+    os.mkdir(recipe_dir)
+    with open(os.path.join(recipe_dir, "run_test.sh"), "w") as f:
+        f.write("some_other_command\n")
+    messages = check_dir(lint_check, tmpdir, yaml_str)
+    assert len(messages) == 0
+
+
+def test_missing_test_requirement_pip_script_missing_multi(base_yaml, tmpdir):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://pypi.io/packages/source/D/Django/Django-4.1.tar.gz
+        outputs:
+          - name: output1
+          - name: output2
+            test:
+              script: test_output.sh
+        """
+    )
+    lint_check = "missing_test_requirement_pip"
+    recipe_dir = os.path.join(tmpdir, "recipe")
+    os.mkdir(recipe_dir)
+    with open(os.path.join(recipe_dir, "test_output.sh"), "w") as f:
+        f.write("some_other_command\n")
+    messages = check_dir(lint_check, tmpdir, yaml_str)
+    assert len(messages) == 0
+
+
+def test_missing_test_requirement_pip_cmd_good(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://pypi.io/packages/source/D/Django/Django-4.1.tar.gz
+        test:
+          commands:
+            - pip check
+          requires:
+            - pip
+        """
+    )
+    lint_check = "missing_test_requirement_pip"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_missing_test_requirement_pip_cmd_good_multi(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://pypi.io/packages/source/D/Django/Django-4.1.tar.gz
+        outputs:
+          - name: output1
+            test:
+              commands:
+                - pip check
+              requires:
+                - pip
+          - name: output2
+            test:
+              commands:
+                - pip check
+              requires:
+                - pip
+        """
+    )
+    lint_check = "missing_test_requirement_pip"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_missing_test_requirement_pip_script_good(base_yaml, tmpdir):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://pypi.io/packages/source/D/Django/Django-4.1.tar.gz
+        test:
+          requires:
+            - pip
+        """
+    )
+    lint_check = "missing_test_requirement_pip"
+    recipe_dir = os.path.join(tmpdir, "recipe")
+    os.mkdir(recipe_dir)
+    with open(os.path.join(recipe_dir, "run_test.sh"), "w") as f:
+        f.write("pip check\n")
+    messages = check_dir(lint_check, tmpdir, yaml_str)
+    assert len(messages) == 0
+
+
+def test_missing_test_requirement_pip_script_good_multi(base_yaml, tmpdir):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://pypi.io/packages/source/D/Django/Django-4.1.tar.gz
+        outputs:
+          - name: output1
+          - name: output2
+            test:
+              script: test_output.sh
+              requires:
+                - pip
+        """
+    )
+    lint_check = "missing_test_requirement_pip"
+    recipe_dir = os.path.join(tmpdir, "recipe")
+    os.mkdir(recipe_dir)
+    with open(os.path.join(recipe_dir, "test_output.sh"), "w") as f:
+        f.write("pip check\n")
+    messages = check_dir(lint_check, tmpdir, yaml_str)
+    assert len(messages) == 0
+
+
+def test_missing_test_requirement_pip_cmd_bad(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://pypi.io/packages/source/D/Django/Django-4.1.tar.gz
+        test:
+          commands:
+            - pip check
+        """
+    )
+    lint_check = "missing_test_requirement_pip"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 1 and "pip is required" in messages[0].title
+
+
+def test_missing_test_requirement_pip_cmd_bad_multi(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://pypi.io/packages/source/D/Django/Django-4.1.tar.gz
+        outputs:
+          - name: output1
+            test:
+              commands:
+                - pip check
+          - name: output2
+            test:
+              commands:
+                - pip check
+        """
+    )
+    lint_check = "missing_test_requirement_pip"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 2 and all("pip is required" in msg.title for msg in messages)
+
+
+def test_missing_test_requirement_pip_script_bad(base_yaml, tmpdir):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://pypi.io/packages/source/D/Django/Django-4.1.tar.gz
+        """
+    )
+    lint_check = "missing_test_requirement_pip"
+    recipe_dir = os.path.join(tmpdir, "recipe")
+    os.mkdir(recipe_dir)
+    with open(os.path.join(recipe_dir, "run_test.sh"), "w") as f:
+        f.write("pip check\n")
+    messages = check_dir(lint_check, tmpdir, yaml_str)
+    assert len(messages) == 1 and "pip is required" in messages[0].title
+
+
+def test_missing_test_requirement_pip_script_bad_multi(base_yaml, tmpdir):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://pypi.io/packages/source/D/Django/Django-4.1.tar.gz
+        outputs:
+          - name: output1
+            test:
+              script: test_output.sh
+          - name: output2
+            test:
+              script: test_output.sh
+        """
+    )
+    lint_check = "missing_test_requirement_pip"
+    recipe_dir = os.path.join(tmpdir, "recipe")
+    os.mkdir(recipe_dir)
+    with open(os.path.join(recipe_dir, "test_output.sh"), "w") as f:
+        f.write("pip check\n")
+    messages = check_dir(lint_check, tmpdir, yaml_str)
+    assert len(messages) == 2 and all("pip is required" in msg.title for msg in messages)
 
 
 def test_missing_python_url_good(base_yaml):

@@ -134,27 +134,22 @@ class missing_wheel(LintCheck):
                         self.message(section=f"outputs/{o}/requirements/host", output=o)
 
 
-class setup_py_install_args(LintCheck):
-    """The recipe uses setuptools without required arguments
+class uses_setup_py(LintCheck):
+    """`python setup.py install` is deprecated.
 
     Please use::
 
-        $PYTHON setup.py install --single-version-externally-managed --record=record.txt
+        $PYTHON -m pip install . --no-deps
 
-    The parameters are required to avoid ``setuptools`` trying (and
-    failing) to install ``certifi`` when a package this recipe
-    requires defines entrypoints in its ``setup.py``.
-
+    Or use another python build tool.
     """
 
     @staticmethod
     def _check_line(line: str) -> bool:
         """Check a line for a broken call to setup.py"""
-        if "setup.py install" not in line:
-            return True
-        if "--single-version-externally-managed" in line:
-            return True
-        return False
+        if "setup.py install" in line:
+            return False
+        return True
 
     def check_deps(self, deps):
         if "setuptools" not in deps:
@@ -179,7 +174,51 @@ class setup_py_install_args(LintCheck):
                 with open(os.path.join(self.recipe.dir, build_file)) as buildsh:
                     for num, line in enumerate(buildsh):
                         if not self._check_line(line):
-                            self.message(fname="build.sh", line=num, output=output)
+                            self.message(fname=build_file, line=num, output=output)
+            except FileNotFoundError:
+                pass
+
+
+class pip_install_args(LintCheck):
+    """`pip install` should be run with --no-deps.
+
+    Please use::
+
+        $PYTHON -m pip install . --no-deps
+
+    """
+
+    @staticmethod
+    def _check_line(line: str) -> bool:
+        """Check a line for a broken call to setup.py"""
+        if "pip install" in line and "--no-deps" not in line:
+            return False
+        return True
+
+    def check_deps(self, deps):
+        if "pip" not in deps:
+            return  # no pip, no problem
+
+        for path in deps["pip"]["paths"]:
+            if path.startswith("output"):
+                n = path.split("/")[1]
+                script = f"outputs/{n}/script"
+                output = int(n)
+            else:
+                script = "build/script"
+                output = -1
+            if not self._check_line(self.recipe.get(script, "")):
+                self.message(section=script)
+                continue
+            try:
+                if script == "build/script":
+                    build_file = "build.sh"
+                else:
+                    build_file = self.recipe.get(script)
+                with open(os.path.join(self.recipe.dir, build_file)) as buildsh:
+                    for num, line in enumerate(buildsh):
+                        if not self._check_line(line):
+                            self.message(fname=build_file, line=num, output=output)
             except FileNotFoundError:
                 pass
 
@@ -254,7 +293,12 @@ class avoid_noarch(LintCheck):
 
     def check_recipe(self, recipe):
         noarch = recipe.get("build/noarch", "")
-        if noarch == "python":
+        if (
+            noarch == "python"
+            and recipe.get("build/number", 0) == 0
+            and not recipe.get("build/osx_is_app", False)
+            and not recipe.get("app", None)
+        ):
             self.message(section="build", severity=WARNING)
 
 
@@ -378,6 +422,54 @@ class missing_pip_check(LintCheck):
                         self._check_file(os.path.join(recipe.dir, file))
                 else:
                     self.message(section="test")
+
+
+class missing_test_requirement_pip(LintCheck):
+    """pip is required in the test requirements.
+
+    Please add::
+        test:
+          requires:
+            - pip
+    """
+
+    def _check_file(self, file):
+        if not os.path.isfile(file):
+            return False
+        with open(file) as test_file:
+            for line in test_file:
+                if "pip check" in line:
+                    return True
+        return False
+
+    def _has_pip_check(self, recipe, output=""):
+        test_section = f"{output}test"
+        if commands := recipe.get(f"{test_section}/commands", None):
+            if any("pip check" in cmd for cmd in commands):
+                return True
+        elif output.startswith("outputs"):
+            script = recipe.get(f"{test_section}/script", "")
+            return self._check_file(os.path.join(recipe.dir, script))
+        else:
+            test_files = (
+                set(os.listdir(recipe.recipe_dir)).intersection({"run_test.sh", "run_test.bat"})
+                if os.path.exists(recipe.dir)
+                else set()
+            )
+            for file in test_files:
+                if self._check_file(os.path.join(recipe.dir, file)):
+                    return True
+        return False
+
+    def check_recipe(self, recipe):
+        if outputs := recipe.get("outputs", None):
+            for o in range(len(outputs)):
+                if self._has_pip_check(recipe, output=f"outputs/{o}/") and "pip" not in recipe.get(
+                    f"outputs/{o}/test/requires", []
+                ):
+                    self.message(section=f"outputs/{o}/test/requires/", output=o)
+        elif self._has_pip_check(recipe) and "pip" not in recipe.get("test/requires", []):
+            self.message(section="test/requires")
 
 
 class missing_python(LintCheck):
