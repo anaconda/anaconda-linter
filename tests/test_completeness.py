@@ -1,5 +1,4 @@
 import os
-import tempfile
 
 import pytest
 from conftest import check, check_dir
@@ -185,15 +184,14 @@ def test_missing_tests_good_multi(base_yaml):
 
 
 @pytest.mark.parametrize("test_file", ["run_test.py", "run_test.sh", "run_test.pl"])
-def test_missing_tests_good_scripts(base_yaml, test_file):
+def test_missing_tests_good_scripts(base_yaml, test_file, tmpdir):
     lint_check = "missing_tests"
-    with tempfile.TemporaryDirectory() as tmpdir:
-        recipe_dir = os.path.join(tmpdir, "recipe")
-        os.mkdir(recipe_dir)
-        with open(os.path.join(recipe_dir, test_file), "w") as f:
-            f.write("\n")
-        messages = check_dir(lint_check, tmpdir, base_yaml)
-        assert len(messages) == 0
+    recipe_dir = os.path.join(tmpdir, "recipe")
+    os.mkdir(recipe_dir)
+    with open(os.path.join(recipe_dir, test_file), "w") as f:
+        f.write("\n")
+    messages = check_dir(lint_check, tmpdir, base_yaml)
+    assert len(messages) == 0
 
 
 def test_missing_tests_bad_missing(base_yaml):

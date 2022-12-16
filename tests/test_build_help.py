@@ -1,5 +1,4 @@
 import os
-import tempfile
 
 import pytest
 from conftest import check, check_dir
@@ -357,7 +356,7 @@ def test_setup_py_install_args_good_cmd(base_yaml):
     assert len(messages) == 0
 
 
-def test_setup_py_install_args_good_script(base_yaml):
+def test_setup_py_install_args_good_script(base_yaml, tmpdir):
     yaml_str = (
         base_yaml
         + """
@@ -367,13 +366,12 @@ def test_setup_py_install_args_good_script(base_yaml):
         """
     )
     lint_check = "setup_py_install_args"
-    with tempfile.TemporaryDirectory() as tmpdir:
-        recipe_dir = os.path.join(tmpdir, "recipe")
-        os.mkdir(recipe_dir)
-        with open(os.path.join(recipe_dir, "build.sh"), "w") as f:
-            f.write("{{ PYTHON }} -m setup.py install --single-version-externally-managed\n")
-        messages = check_dir(lint_check, tmpdir, yaml_str)
-        assert len(messages) == 0
+    recipe_dir = os.path.join(tmpdir, "recipe")
+    os.mkdir(recipe_dir)
+    with open(os.path.join(recipe_dir, "build.sh"), "w") as f:
+        f.write("{{ PYTHON }} -m setup.py install --single-version-externally-managed\n")
+    messages = check_dir(lint_check, tmpdir, yaml_str)
+    assert len(messages) == 0
 
 
 def test_setup_py_install_args_bad_cmd(base_yaml):
@@ -416,7 +414,7 @@ def test_setup_py_install_args_bad_cmd_multi(base_yaml):
     )
 
 
-def test_setup_py_install_args_bad_script(base_yaml):
+def test_setup_py_install_args_bad_script(base_yaml, tmpdir):
     yaml_str = (
         base_yaml
         + """
@@ -426,16 +424,15 @@ def test_setup_py_install_args_bad_script(base_yaml):
         """
     )
     lint_check = "setup_py_install_args"
-    with tempfile.TemporaryDirectory() as tmpdir:
-        recipe_dir = os.path.join(tmpdir, "recipe")
-        os.mkdir(recipe_dir)
-        with open(os.path.join(recipe_dir, "build.sh"), "w") as f:
-            f.write("{{ PYTHON }} -m setup.py install\n")
-        messages = check_dir(lint_check, tmpdir, yaml_str)
-        assert len(messages) == 1 and "setuptools without required arguments" in messages[0].title
+    recipe_dir = os.path.join(tmpdir, "recipe")
+    os.mkdir(recipe_dir)
+    with open(os.path.join(recipe_dir, "build.sh"), "w") as f:
+        f.write("{{ PYTHON }} -m setup.py install\n")
+    messages = check_dir(lint_check, tmpdir, yaml_str)
+    assert len(messages) == 1 and "setuptools without required arguments" in messages[0].title
 
 
-def test_setup_py_install_args_bad_script_multi(base_yaml):
+def test_setup_py_install_args_bad_script_multi(base_yaml, tmpdir):
     yaml_str = (
         base_yaml
         + """
@@ -453,15 +450,14 @@ def test_setup_py_install_args_bad_script_multi(base_yaml):
         """
     )
     lint_check = "setup_py_install_args"
-    with tempfile.TemporaryDirectory() as tmpdir:
-        recipe_dir = os.path.join(tmpdir, "recipe")
-        os.mkdir(recipe_dir)
-        with open(os.path.join(recipe_dir, "build_output.sh"), "w") as f:
-            f.write("{{ PYTHON }} -m setup.py install\n")
-        messages = check_dir(lint_check, tmpdir, yaml_str)
-        assert len(messages) == 2 and all(
-            "setuptools without required arguments" in msg.title for msg in messages
-        )
+    recipe_dir = os.path.join(tmpdir, "recipe")
+    os.mkdir(recipe_dir)
+    with open(os.path.join(recipe_dir, "build_output.sh"), "w") as f:
+        f.write("{{ PYTHON }} -m setup.py install\n")
+    messages = check_dir(lint_check, tmpdir, yaml_str)
+    assert len(messages) == 2 and all(
+        "setuptools without required arguments" in msg.title for msg in messages
+    )
 
 
 def test_cython_must_be_in_host_good(base_yaml):
@@ -747,7 +743,7 @@ def test_patch_must_be_in_build_missing(base_yaml):
     assert len(messages) == 1 and "patch must be in build" in messages[0].title
 
 
-def test_has_run_test_and_commands_good_cmd(base_yaml):
+def test_has_run_test_and_commands_good_cmd(base_yaml, tmpdir):
     yaml_str = (
         base_yaml
         + """
@@ -757,12 +753,11 @@ def test_has_run_test_and_commands_good_cmd(base_yaml):
         """
     )
     lint_check = "has_run_test_and_commands"
-    with tempfile.TemporaryDirectory() as tmpdir:
-        messages = check_dir(lint_check, tmpdir, yaml_str)
-        assert len(messages) == 0
+    messages = check_dir(lint_check, tmpdir, yaml_str)
+    assert len(messages) == 0
 
 
-def test_has_run_test_and_commands_good_script(base_yaml):
+def test_has_run_test_and_commands_good_script(base_yaml, tmpdir):
     yaml_str = (
         base_yaml
         + """
@@ -771,24 +766,22 @@ def test_has_run_test_and_commands_good_script(base_yaml):
         """
     )
     lint_check = "has_run_test_and_commands"
-    with tempfile.TemporaryDirectory() as tmpdir:
-        messages = check_dir(lint_check, tmpdir, yaml_str)
-        assert len(messages) == 0
+    messages = check_dir(lint_check, tmpdir, yaml_str)
+    assert len(messages) == 0
 
 
-def test_has_run_test_and_commands_good_script_default(base_yaml):
+def test_has_run_test_and_commands_good_script_default(base_yaml, tmpdir):
     lint_check = "has_run_test_and_commands"
-    with tempfile.TemporaryDirectory() as tmpdir:
-        recipe_dir = os.path.join(tmpdir, "recipe")
-        os.mkdir(recipe_dir)
-        for script in ["run_test.sh", "run_test.py", "run_test.bat"]:
-            with open(os.path.join(recipe_dir, script), "w") as f:
-                f.write("pip check\n")
-        messages = check_dir(lint_check, tmpdir, base_yaml)
-        assert len(messages) == 0
+    recipe_dir = os.path.join(tmpdir, "recipe")
+    os.mkdir(recipe_dir)
+    for script in ["run_test.sh", "run_test.bat"]:
+        with open(os.path.join(recipe_dir, script), "w") as f:
+            f.write("pip check\n")
+    messages = check_dir(lint_check, tmpdir, base_yaml)
+    assert len(messages) == 0
 
 
-def test_has_run_test_and_commands_good_cmd_multi(base_yaml):
+def test_has_run_test_and_commands_good_cmd_multi(base_yaml, tmpdir):
     yaml_str = (
         base_yaml
         + """
@@ -804,12 +797,11 @@ def test_has_run_test_and_commands_good_cmd_multi(base_yaml):
         """
     )
     lint_check = "has_run_test_and_commands"
-    with tempfile.TemporaryDirectory() as tmpdir:
-        messages = check_dir(lint_check, tmpdir, yaml_str)
-        assert len(messages) == 0
+    messages = check_dir(lint_check, tmpdir, yaml_str)
+    assert len(messages) == 0
 
 
-def test_has_run_test_and_commands_good_script_multi(base_yaml):
+def test_has_run_test_and_commands_good_script_multi(base_yaml, tmpdir):
     yaml_str = (
         base_yaml
         + """
@@ -823,12 +815,11 @@ def test_has_run_test_and_commands_good_script_multi(base_yaml):
         """
     )
     lint_check = "has_run_test_and_commands"
-    with tempfile.TemporaryDirectory() as tmpdir:
-        messages = check_dir(lint_check, tmpdir, yaml_str)
-        assert len(messages) == 0
+    messages = check_dir(lint_check, tmpdir, yaml_str)
+    assert len(messages) == 0
 
 
-def test_has_run_test_and_commands_bad(base_yaml):
+def test_has_run_test_and_commands_bad(base_yaml, tmpdir):
     yaml_str = (
         base_yaml
         + """
@@ -838,17 +829,16 @@ def test_has_run_test_and_commands_bad(base_yaml):
         """
     )
     lint_check = "has_run_test_and_commands"
-    with tempfile.TemporaryDirectory() as tmpdir:
-        recipe_dir = os.path.join(tmpdir, "recipe")
-        os.mkdir(recipe_dir)
-        for script in ["run_test.sh", "run_test.py", "run_test.bat"]:
-            with open(os.path.join(recipe_dir, script), "w") as f:
-                f.write("pip check\n")
-        messages = check_dir(lint_check, tmpdir, yaml_str)
-        assert len(messages) == 1 and "Test commands are not executed" in messages[0].title
+    recipe_dir = os.path.join(tmpdir, "recipe")
+    os.mkdir(recipe_dir)
+    for script in ["run_test.sh", "run_test.bat"]:
+        with open(os.path.join(recipe_dir, script), "w") as f:
+            f.write("pip check\n")
+    messages = check_dir(lint_check, tmpdir, yaml_str)
+    assert len(messages) == 1 and "Test commands are not executed" in messages[0].title
 
 
-def test_has_run_test_and_commands_bad_multi(base_yaml):
+def test_has_run_test_and_commands_bad_multi(base_yaml, tmpdir):
     yaml_str = (
         base_yaml
         + """
@@ -866,11 +856,10 @@ def test_has_run_test_and_commands_bad_multi(base_yaml):
         """
     )
     lint_check = "has_run_test_and_commands"
-    with tempfile.TemporaryDirectory() as tmpdir:
-        messages = check_dir(lint_check, tmpdir, yaml_str)
-        assert len(messages) == 2 and all(
-            "Test commands are not executed" in msg.title for msg in messages
-        )
+    messages = check_dir(lint_check, tmpdir, yaml_str)
+    assert len(messages) == 2 and all(
+        "Test commands are not executed" in msg.title for msg in messages
+    )
 
 
 def test_missing_pip_check_url_good(base_yaml):
@@ -955,7 +944,7 @@ def test_missing_pip_check_pip_install_cmd_good_multi(base_yaml):
     assert len(messages) == 0
 
 
-def test_missing_pip_check_pip_install_script_good(base_yaml):
+def test_missing_pip_check_pip_install_script_good(base_yaml, tmpdir):
     yaml_str = (
         base_yaml
         + """
@@ -968,16 +957,15 @@ def test_missing_pip_check_pip_install_script_good(base_yaml):
         """
     )
     lint_check = "missing_pip_check"
-    with tempfile.TemporaryDirectory() as tmpdir:
-        recipe_dir = os.path.join(tmpdir, "recipe")
-        os.mkdir(recipe_dir)
-        with open(os.path.join(recipe_dir, "test_package.sh"), "w") as f:
-            f.write("pip check\n")
-        messages = check_dir(lint_check, tmpdir, yaml_str)
-        assert len(messages) == 0
+    recipe_dir = os.path.join(tmpdir, "recipe")
+    os.mkdir(recipe_dir)
+    with open(os.path.join(recipe_dir, "test_package.sh"), "w") as f:
+        f.write("pip check\n")
+    messages = check_dir(lint_check, tmpdir, yaml_str)
+    assert len(messages) == 0
 
 
-def test_missing_pip_check_pip_install_script_default_good(base_yaml):
+def test_missing_pip_check_pip_install_script_default_good(base_yaml, tmpdir):
     yaml_str = (
         base_yaml
         + """
@@ -988,16 +976,15 @@ def test_missing_pip_check_pip_install_script_default_good(base_yaml):
         """
     )
     lint_check = "missing_pip_check"
-    with tempfile.TemporaryDirectory() as tmpdir:
-        recipe_dir = os.path.join(tmpdir, "recipe")
-        os.mkdir(recipe_dir)
-        with open(os.path.join(recipe_dir, "run_test.sh"), "w") as f:
-            f.write("pip check\n")
-        messages = check_dir(lint_check, tmpdir, yaml_str)
-        assert len(messages) == 0
+    recipe_dir = os.path.join(tmpdir, "recipe")
+    os.mkdir(recipe_dir)
+    with open(os.path.join(recipe_dir, "run_test.sh"), "w") as f:
+        f.write("pip check\n")
+    messages = check_dir(lint_check, tmpdir, yaml_str)
+    assert len(messages) == 0
 
 
-def test_missing_pip_check_pip_install_script_good_multi(base_yaml):
+def test_missing_pip_check_pip_install_script_good_multi(base_yaml, tmpdir):
     yaml_str = (
         base_yaml
         + """
@@ -1012,13 +999,12 @@ def test_missing_pip_check_pip_install_script_good_multi(base_yaml):
         """
     )
     lint_check = "missing_pip_check"
-    with tempfile.TemporaryDirectory() as tmpdir:
-        recipe_dir = os.path.join(tmpdir, "recipe")
-        os.mkdir(recipe_dir)
-        with open(os.path.join(recipe_dir, "test_output.sh"), "w") as f:
-            f.write("pip check\n")
-        messages = check_dir(lint_check, tmpdir, yaml_str)
-        assert len(messages) == 0
+    recipe_dir = os.path.join(tmpdir, "recipe")
+    os.mkdir(recipe_dir)
+    with open(os.path.join(recipe_dir, "test_output.sh"), "w") as f:
+        f.write("pip check\n")
+    messages = check_dir(lint_check, tmpdir, yaml_str)
+    assert len(messages) == 0
 
 
 def test_missing_pip_check_pip_install_missing_bad(base_yaml):
@@ -1100,7 +1086,7 @@ def test_missing_pip_check_pip_install_cmd_bad_multi(base_yaml):
     )
 
 
-def test_missing_pip_check_pip_install_script_bad(base_yaml):
+def test_missing_pip_check_pip_install_script_bad(base_yaml, tmpdir):
     yaml_str = (
         base_yaml
         + """
@@ -1113,16 +1099,15 @@ def test_missing_pip_check_pip_install_script_bad(base_yaml):
         """
     )
     lint_check = "missing_pip_check"
-    with tempfile.TemporaryDirectory() as tmpdir:
-        recipe_dir = os.path.join(tmpdir, "recipe")
-        os.mkdir(recipe_dir)
-        with open(os.path.join(recipe_dir, "test_package.sh"), "w") as f:
-            f.write("other_test_command\n")
-        messages = check_dir(lint_check, tmpdir, yaml_str)
-        assert len(messages) == 1 and "pip check should be present" in messages[0].title
+    recipe_dir = os.path.join(tmpdir, "recipe")
+    os.mkdir(recipe_dir)
+    with open(os.path.join(recipe_dir, "test_package.sh"), "w") as f:
+        f.write("other_test_command\n")
+    messages = check_dir(lint_check, tmpdir, yaml_str)
+    assert len(messages) == 1 and "pip check should be present" in messages[0].title
 
 
-def test_missing_pip_check_pip_install_script_missing(base_yaml):
+def test_missing_pip_check_pip_install_script_missing(base_yaml, tmpdir):
     yaml_str = (
         base_yaml
         + """
@@ -1135,14 +1120,13 @@ def test_missing_pip_check_pip_install_script_missing(base_yaml):
         """
     )
     lint_check = "missing_pip_check"
-    with tempfile.TemporaryDirectory() as tmpdir:
-        recipe_dir = os.path.join(tmpdir, "recipe")
-        os.mkdir(recipe_dir)
-        messages = check_dir(lint_check, tmpdir, yaml_str)
-        assert len(messages) == 1 and "pip check should be present" in messages[0].title
+    recipe_dir = os.path.join(tmpdir, "recipe")
+    os.mkdir(recipe_dir)
+    messages = check_dir(lint_check, tmpdir, yaml_str)
+    assert len(messages) == 1 and "pip check should be present" in messages[0].title
 
 
-def test_missing_pip_check_pip_install_script_default_bad(base_yaml):
+def test_missing_pip_check_pip_install_script_default_bad(base_yaml, tmpdir):
     yaml_str = (
         base_yaml
         + """
@@ -1153,16 +1137,15 @@ def test_missing_pip_check_pip_install_script_default_bad(base_yaml):
         """
     )
     lint_check = "missing_pip_check"
-    with tempfile.TemporaryDirectory() as tmpdir:
-        recipe_dir = os.path.join(tmpdir, "recipe")
-        os.mkdir(recipe_dir)
-        with open(os.path.join(recipe_dir, "run_test.sh"), "w") as f:
-            f.write("other_test_command\n")
-        messages = check_dir(lint_check, tmpdir, yaml_str)
-        assert len(messages) == 1 and "pip check should be present" in messages[0].title
+    recipe_dir = os.path.join(tmpdir, "recipe")
+    os.mkdir(recipe_dir)
+    with open(os.path.join(recipe_dir, "run_test.sh"), "w") as f:
+        f.write("other_test_command\n")
+    messages = check_dir(lint_check, tmpdir, yaml_str)
+    assert len(messages) == 1 and "pip check should be present" in messages[0].title
 
 
-def test_missing_pip_check_pip_install_script_nad_multi(base_yaml):
+def test_missing_pip_check_pip_install_script_bad_multi(base_yaml, tmpdir):
     yaml_str = (
         base_yaml
         + """
@@ -1180,15 +1163,14 @@ def test_missing_pip_check_pip_install_script_nad_multi(base_yaml):
         """
     )
     lint_check = "missing_pip_check"
-    with tempfile.TemporaryDirectory() as tmpdir:
-        recipe_dir = os.path.join(tmpdir, "recipe")
-        os.mkdir(recipe_dir)
-        with open(os.path.join(recipe_dir, "test_output.sh"), "w") as f:
-            f.write("other_test_command\n")
-        messages = check_dir(lint_check, tmpdir, yaml_str)
-        assert len(messages) == 2 and all(
-            "pip check should be present" in msg.title for msg in messages
-        )
+    recipe_dir = os.path.join(tmpdir, "recipe")
+    os.mkdir(recipe_dir)
+    with open(os.path.join(recipe_dir, "test_output.sh"), "w") as f:
+        f.write("other_test_command\n")
+    messages = check_dir(lint_check, tmpdir, yaml_str)
+    assert len(messages) == 2 and all(
+        "pip check should be present" in msg.title for msg in messages
+    )
 
 
 def test_missing_python_url_good(base_yaml):
