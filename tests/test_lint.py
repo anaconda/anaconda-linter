@@ -1,5 +1,4 @@
 import os
-import tempfile
 
 import pytest
 from conftest import check
@@ -81,7 +80,7 @@ def test_lint_none(base_yaml, linter):
     assert return_code == 0 and len(linter.get_messages()) == 0
 
 
-def test_lint_file(base_yaml, linter):
+def test_lint_file(base_yaml, linter, tmpdir):
     yaml_str = (
         base_yaml
         + """
@@ -92,14 +91,13 @@ def test_lint_file(base_yaml, linter):
             - dummy_warning
         """
     )
-    with tempfile.TemporaryDirectory() as tmpdir:
-        recipe_dir = os.path.join(tmpdir, "recipe")
-        os.mkdir(recipe_dir)
-        meta_yaml = os.path.join(recipe_dir, "meta.yaml")
-        with open(meta_yaml, "w") as f:
-            f.write(yaml_str)
-        linter.lint([recipe_dir])
-        assert len(linter.get_messages()) == 3
+    recipe_dir = os.path.join(tmpdir, "recipe")
+    os.mkdir(recipe_dir)
+    meta_yaml = os.path.join(recipe_dir, "meta.yaml")
+    with open(meta_yaml, "w") as f:
+        f.write(yaml_str)
+    linter.lint([recipe_dir])
+    assert len(linter.get_messages()) == 3
 
 
 @pytest.mark.parametrize(
