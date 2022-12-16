@@ -28,6 +28,8 @@ invalid_url
 
 jinja_render_failure
 
+license_file_overspecified
+
 linter_failure
 
 missing_build
@@ -49,8 +51,6 @@ missing_license
 missing_license_family
 
 missing_license_file
-
-missing_license_url
 
 missing_meta_yaml
 

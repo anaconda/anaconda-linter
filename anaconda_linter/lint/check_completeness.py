@@ -98,7 +98,7 @@ class missing_license(LintCheck):
 
 
 class missing_license_file(LintCheck):
-    """The recipe is missing the ``about/license_file`` key.
+    """The recipe is missing the ``about/license_file`` or ``about/license_url`` key.
 
     Please add::
 
@@ -112,11 +112,26 @@ class missing_license_file(LintCheck):
                 - <license file name>
                 - <license file name>
 
+    or::
+        about:
+           license_url: <license url>
+
     """
 
     def check_recipe(self, recipe):
-        if not recipe.get("about/license_file", ""):
-            self.message(section="about")
+        if not recipe.get("about/license_file", "") and not recipe.get("about/license_url", ""):
+            self.message(section="about", severity=WARNING)
+
+
+class license_file_overspecified(LintCheck):
+    """Using license_file and license_url is overspecified.
+
+    Please remove license_url.
+    """
+
+    def check_recipe(self, recipe):
+        if recipe.get("about/license_file", "") and recipe.get("about/license_url", ""):
+            self.message(section="about", severity=WARNING)
 
 
 class missing_license_family(LintCheck):
@@ -227,7 +242,7 @@ class missing_source(LintCheck):
 
     """
 
-    source_types = ["url", "git_url", "hg_url", "svn_url"]
+    source_types = ["url", "git_url", "hg_url", "svn_url", "path"]
 
     def check_source(self, source, section):
         if not any(source.get(chk) for chk in self.source_types):
@@ -235,7 +250,7 @@ class missing_source(LintCheck):
 
 
 class non_url_source(LintCheck):
-    """A source of the recipe is not url of url type.
+    """A source of the recipe is not a valid type. Allowed types are url, git_url, and path.
 
     Please change to::
 
@@ -244,7 +259,7 @@ class non_url_source(LintCheck):
 
     """
 
-    source_types = ["git_url", "hg_url", "svn_url"]
+    source_types = ["hg_url", "svn_url"]
 
     def check_source(self, source, section):
         if any(source.get(chk) for chk in self.source_types):

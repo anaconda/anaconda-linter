@@ -142,13 +142,13 @@ def test_missing_license_bad(base_yaml):
     assert len(messages) == 1 and "about/license" in messages[0].title
 
 
-def test_missing_license_file_good(base_yaml):
+@pytest.mark.parametrize("license_type", ("license_file", "license_url"))
+def test_missing_license_file_good(base_yaml, license_type):
     yaml_str = (
         base_yaml
-        + """
+        + f"""
         about:
-          license_file:
-            - LICENSE.md
+          {license_type}: LICENSE
         """
     )
     lint_check = "missing_license_file"
@@ -160,6 +160,36 @@ def test_missing_license_file_bad(base_yaml):
     lint_check = "missing_license_file"
     messages = check(lint_check, base_yaml)
     assert len(messages) == 1 and "about/license_file" in messages[0].title
+
+
+@pytest.mark.parametrize("license_type", ("license_file", "license_url"))
+def test_license_file_overspecified_good(base_yaml, license_type):
+    yaml_str = (
+        base_yaml
+        + f"""
+        about:
+          {license_type}: LICENSE
+        """
+    )
+    lint_check = "license_file_overspecified"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_license_file_overspecified_bad(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        about:
+          license_file: LICENSE
+          license_url: https://url.com/LICENSE
+        """
+    )
+    lint_check = "license_file_overspecified"
+    messages = check(lint_check, yaml_str)
+    assert (
+        len(messages) == 1 and "license_file and license_url is overspecified" in messages[0].title
+    )
 
 
 def test_missing_license_family_good(base_yaml):
@@ -392,12 +422,13 @@ def test_missing_source_bad_type(base_yaml):
     assert len(messages) == 1 and "missing a URL for the source" in messages[0].title
 
 
-def test_non_url_source_good(base_yaml):
+@pytest.mark.parametrize("src_type", ("url", "git_url", "path"))
+def test_non_url_source_good(base_yaml, src_type):
     yaml_str = (
         base_yaml
         + """
         source:
-          url: https://sqlite.com/2022/sqlite-autoconf-3380500.tar.gz
+          {src_type}: https://sqlite.com/2022/sqlite-autoconf-3380500.tar.gz
           md5: 5af07de982ba658fd91a03170c945f99c971f6955bc79df3266544373e39869c
         """
     )
@@ -406,7 +437,7 @@ def test_non_url_source_good(base_yaml):
     assert len(messages) == 0
 
 
-@pytest.mark.parametrize("src_type", ["git_url", "hg_url", "svn_url"])
+@pytest.mark.parametrize("src_type", ("hg_url", "svn_url"))
 def test_non_url_source_bad(base_yaml, src_type):
     lint_check = "non_url_source"
     yaml_str = (
@@ -418,7 +449,7 @@ def test_non_url_source_bad(base_yaml, src_type):
         """
     )
     messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "not url of url type" in messages[0].title
+    assert len(messages) == 1 and "not a valid type" in messages[0].title
 
 
 @pytest.mark.parametrize("doc_type", ("doc_url", "doc_source_url"))
@@ -498,31 +529,6 @@ def test_missing_dev_url_bad(base_yaml):
     lint_check = "missing_dev_url"
     messages = check(lint_check, yaml_str)
     assert len(messages) == 1 and "dev_url" in messages[0].title
-
-
-def test_missing_license_url_good(base_yaml):
-    yaml_str = (
-        base_yaml
-        + """
-        about:
-          license_url: https://sqlite.com/copyright.html
-        """
-    )
-    lint_check = "missing_license_url"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
-
-
-def test_missing_license_url_bad(base_yaml):
-    yaml_str = (
-        base_yaml
-        + """
-        about:
-        """
-    )
-    lint_check = "missing_license_url"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "license_url" in messages[0].title
 
 
 def test_missing_description_good(base_yaml):
