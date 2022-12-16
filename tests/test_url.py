@@ -28,6 +28,19 @@ def test_invalid_url_bad(base_yaml):
     assert len(messages) == 1
 
 
+def test_invalid_url_good_redirect(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://pypi.io/packages/source/p/pydot/pydot-1.4.1.tar.gz
+        """
+    )
+    lint_check = "invalid_url"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
 @pytest.mark.parametrize(
     "url_field",
     (

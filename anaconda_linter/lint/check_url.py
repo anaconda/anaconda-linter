@@ -19,22 +19,9 @@ class invalid_url(LintCheck):
         url = source.get("url", "")
         if url:
             response_data = utils.check_url(url)
-            acceptable_redirects = [
-                ("pypi.io", "pypi.org"),
-                ("pypi.org", "files.pythonhosted.org"),
-                ("github.com", "objects.githubusercontent.com"),
-                ("github.com", "codeload.github.com"),
-            ]
-            if response_data["code"] < 0 and "domain_redirect" in response_data:
-                for redir in acceptable_redirects:
-                    if (
-                        response_data["domain_origin"] == redir[0]
-                        and response_data["domain_redirect"] == redir[1]
-                    ):
-                        return
             if response_data["code"] < 0 or response_data["code"] >= 400:
-                severity = INFO if "domain_redirect" in response_data else ERROR
-                self.message(url, response_data["message"], section=section, severity=severity)
+                if "domain_redirect" not in response_data:
+                    self.message(url, response_data["message"], section=section)
 
     def check_recipe(self, recipe):
         url_fields = [
