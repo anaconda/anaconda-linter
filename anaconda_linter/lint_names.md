@@ -74,6 +74,10 @@ non_url_source
 
 output_missing_name
 
+output_missing_script
+
+output_script_name_default
+
 outputs_not_unique
 
 patch_must_be_in_build

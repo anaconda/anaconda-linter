@@ -758,19 +758,6 @@ def test_has_run_test_and_commands_good_cmd(base_yaml, tmpdir):
 
 
 def test_has_run_test_and_commands_good_script(base_yaml, tmpdir):
-    yaml_str = (
-        base_yaml
-        + """
-        test:
-          script: test_module.sh
-        """
-    )
-    lint_check = "has_run_test_and_commands"
-    messages = check_dir(lint_check, tmpdir, yaml_str)
-    assert len(messages) == 0
-
-
-def test_has_run_test_and_commands_good_script_default(base_yaml, tmpdir):
     lint_check = "has_run_test_and_commands"
     recipe_dir = os.path.join(tmpdir, "recipe")
     os.mkdir(recipe_dir)
@@ -952,27 +939,6 @@ def test_missing_pip_check_pip_install_script_good(base_yaml, tmpdir):
           url: https://github.com/joblib/joblib/archive/1.1.1.tar.gz
         build:
           script: {{ PYTHON }} -m pip install .
-        test:
-          script: test_package.sh
-        """
-    )
-    lint_check = "missing_pip_check"
-    recipe_dir = os.path.join(tmpdir, "recipe")
-    os.mkdir(recipe_dir)
-    with open(os.path.join(recipe_dir, "test_package.sh"), "w") as f:
-        f.write("pip check\n")
-    messages = check_dir(lint_check, tmpdir, yaml_str)
-    assert len(messages) == 0
-
-
-def test_missing_pip_check_pip_install_script_default_good(base_yaml, tmpdir):
-    yaml_str = (
-        base_yaml
-        + """
-        source:
-          url: https://github.com/joblib/joblib/archive/1.1.1.tar.gz
-        build:
-          script: {{ PYTHON }} -m pip install .
         """
     )
     lint_check = "missing_pip_check"
@@ -1087,46 +1053,6 @@ def test_missing_pip_check_pip_install_cmd_bad_multi(base_yaml):
 
 
 def test_missing_pip_check_pip_install_script_bad(base_yaml, tmpdir):
-    yaml_str = (
-        base_yaml
-        + """
-        source:
-          url: https://github.com/joblib/joblib/archive/1.1.1.tar.gz
-        build:
-          script: {{ PYTHON }} -m pip install .
-        test:
-          script: test_package.sh
-        """
-    )
-    lint_check = "missing_pip_check"
-    recipe_dir = os.path.join(tmpdir, "recipe")
-    os.mkdir(recipe_dir)
-    with open(os.path.join(recipe_dir, "test_package.sh"), "w") as f:
-        f.write("other_test_command\n")
-    messages = check_dir(lint_check, tmpdir, yaml_str)
-    assert len(messages) == 1 and "pip check should be present" in messages[0].title
-
-
-def test_missing_pip_check_pip_install_script_missing(base_yaml, tmpdir):
-    yaml_str = (
-        base_yaml
-        + """
-        source:
-          url: https://github.com/joblib/joblib/archive/1.1.1.tar.gz
-        build:
-          script: {{ PYTHON }} -m pip install .
-        test:
-          script: test_package.sh
-        """
-    )
-    lint_check = "missing_pip_check"
-    recipe_dir = os.path.join(tmpdir, "recipe")
-    os.mkdir(recipe_dir)
-    messages = check_dir(lint_check, tmpdir, yaml_str)
-    assert len(messages) == 1 and "pip check should be present" in messages[0].title
-
-
-def test_missing_pip_check_pip_install_script_default_bad(base_yaml, tmpdir):
     yaml_str = (
         base_yaml
         + """
