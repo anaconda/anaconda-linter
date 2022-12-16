@@ -357,7 +357,7 @@ class has_run_test_and_commands(LintCheck):
             if recipe.get("test/commands", []) and (
                 recipe.get("test/script", None)
                 or set(os.listdir(recipe.recipe_dir)).intersection(
-                    {"run_test.sh", "run_test.py", "run_test.bat"}
+                    {"run_test.sh", "run_test.pl", "run_test.bat"}
                 )
             ):
                 self.message(section="test/commands")
