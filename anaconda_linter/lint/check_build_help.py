@@ -400,8 +400,14 @@ class missing_python(LintCheck):
         self.__class__.__doc__ = reset_text
 
     def check_recipe(self, recipe):
+        # To check for a missing python, find the paths that require python
+        # and compare with the existing dependency dictionary.
+        # Since this dictionary has everything parsed already, there is no need for regex.
         is_pypi = is_pypi_source(recipe)
         deps = recipe.get_deps_dict(["host", "run"])
+        # The `paths` dictionary stores dependencies as, e.g., `requirements/host/{n}/`
+        # with the list index n. For multi-output recipes, it the paths are of the form
+        # `outputs/{o}/requirements/host/{n}`. To compare, the list index needs to be stripped.
         paths = (
             []
             if "python" not in deps
