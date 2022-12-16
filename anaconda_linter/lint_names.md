@@ -58,6 +58,8 @@ missing_pip_check
 
 missing_python
 
+missing_section
+
 missing_source
 
 missing_summary

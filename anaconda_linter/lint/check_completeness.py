@@ -11,6 +11,33 @@ import conda_build.license_family
 from . import WARNING, LintCheck
 
 
+class missing_section(LintCheck):
+    """The {} section is missing.
+
+    Please add this section to the recipe or output
+    """
+
+    def check_recipe(self, recipe):
+        global_sections = (
+            "package",
+            "build",
+            "about",
+        )
+        output_sections = ("requirements",)
+        for section in global_sections:
+            if not recipe.get(section, None):
+                self.message(section)
+        if outputs := recipe.get("outputs", None):
+            for o in range(len(outputs)):
+                for section in output_sections:
+                    if not recipe.get(f"outputs/{o}/{section}", None):
+                        self.message(section, output=o)
+        else:
+            for section in output_sections:
+                if not recipe.get(section, None):
+                    self.message(section)
+
+
 class missing_build_number(LintCheck):
     """The recipe is missing a build number
 

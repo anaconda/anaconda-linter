@@ -4,6 +4,68 @@ import pytest
 from conftest import check, check_dir
 
 
+def test_missing_section_good(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        build:
+          number: 0
+        requirements:
+          host:
+            - python
+        about:
+          summary: test package
+        """
+    )
+    lint_check = "missing_section"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_missing_section_good_multi(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        build:
+          number: 0
+        outputs:
+          - name: output1
+            requirements:
+              host:
+                - python
+          - name: output2
+            requirements:
+              host:
+                - python
+        about:
+          summary: test package
+        """
+    )
+    lint_check = "missing_section"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_missing_section_bad(base_yaml):
+    lint_check = "missing_section"
+    messages = check(lint_check, base_yaml)
+    assert len(messages) == 3 and all("section is missing" in msg.title for msg in messages)
+
+
+def test_missing_section_bad_multi(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+          - name: output2
+        """
+    )
+    lint_check = "missing_section"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 4 and all("section is missing" in msg.title for msg in messages)
+
+
 def test_missing_build_number_good(base_yaml):
     yaml_str = (
         base_yaml
