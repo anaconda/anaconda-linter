@@ -65,7 +65,5 @@ This new package is inspired by bioconda's [linter](https://github.com/bioconda/
 
 Some of the code for suggesting hints comes from [Peter Norvig](http://norvig.com/spell-correct.html).
 
-This README will continue to be fleshed out as time goes on.
-
 ## License
 [BSD-3-Clause](https://choosealicense.com/licenses/bsd-3-clause/)
