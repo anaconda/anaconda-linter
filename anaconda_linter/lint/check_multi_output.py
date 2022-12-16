@@ -72,7 +72,7 @@ class output_missing_script(LintCheck):
 
 
 class output_script_name_default(LintCheck):
-    """Output should not use default script names build.sh/bld.sh."""
+    """Output should not use default script names build.sh/bld.bat."""
 
     def check_recipe(self, recipe):
         default_scripts = ("build.sh", "bld.bat")
