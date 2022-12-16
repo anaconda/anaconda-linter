@@ -293,7 +293,12 @@ class avoid_noarch(LintCheck):
 
     def check_recipe(self, recipe):
         noarch = recipe.get("build/noarch", "")
-        if noarch == "python":
+        if (
+            noarch == "python"
+            and recipe.get("build/number", 0) == 0
+            and not recipe.get("build/osx_is_app", False)
+            and not recipe.get("app", None)
+        ):
             self.message(section="build", severity=WARNING)
 
 

@@ -745,6 +745,49 @@ def test_avoid_noarch_good(base_yaml):
     assert len(messages) == 0
 
 
+def test_avoid_noarch_good_build_number(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        build:
+          noarch: python
+          number: 2
+        """
+    )
+    lint_check = "avoid_noarch"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_avoid_noarch_good_osx_app(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        build:
+          noarch: python
+          osx_is_app: true
+        """
+    )
+    lint_check = "avoid_noarch"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_avoid_noarch_good_app(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        build:
+          noarch: python
+        app:
+          icon: logo.png
+        """
+    )
+    lint_check = "avoid_noarch"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
 def test_avoid_noarch_bad(base_yaml):
     yaml_str = (
         base_yaml
