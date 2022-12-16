@@ -5,7 +5,7 @@ Verify that the URLs in the recipe are valid
 """
 
 from .. import utils
-from . import ERROR, INFO, WARNING, LintCheck
+from . import ERROR, INFO, LintCheck
 
 
 class invalid_url(LintCheck):
@@ -45,14 +45,21 @@ class invalid_url(LintCheck):
 class http_url(LintCheck):
     """{} is not https
 
-    Please replace with https if possible.
+    Please replace with https.
 
     """
 
+    def _check_url(self, url, section):
+        if url.lower().startswith("http://"):
+            # Check if the https source even exists
+            https_response = utils.check_url(url.lower().replace("http://", "http://"))
+            if https_response["code"] < 400:
+                self.message(url, section=section)
+
     def check_source(self, source, section):
         url = source.get("url", "")
-        if url.lower().startswith("http://"):
-            self.message(url, section=section)
+        if url != "":
+            self._check_url(url, section)
 
     def check_recipe(self, recipe):
         url_fields = [
@@ -64,5 +71,4 @@ class http_url(LintCheck):
         ]
         for url_field in url_fields:
             url = recipe.get(url_field, "")
-            if url.lower().startswith("http://"):
-                self.message(url, section=url_field.split("/")[0], severity=WARNING)
+            self._check_url(url, url_field.split("/")[0])
