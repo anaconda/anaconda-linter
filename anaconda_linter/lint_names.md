@@ -62,6 +62,8 @@ missing_source
 
 missing_summary
 
+missing_test_requirement_pip
+
 missing_tests
 
 missing_version_or_name

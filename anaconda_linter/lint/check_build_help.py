@@ -425,6 +425,54 @@ class missing_pip_check(LintCheck):
                     self.message(section="test")
 
 
+class missing_test_requirement_pip(LintCheck):
+    """pip is required in the test requirements.
+
+    Please add::
+        test:
+          requires:
+            - pip
+    """
+
+    def _check_file(self, file):
+        if not os.path.isfile(file):
+            return False
+        with open(file) as test_file:
+            for line in test_file:
+                if "pip check" in line:
+                    return True
+        return False
+
+    def _has_pip_check(self, recipe, output=""):
+        test_section = f"{output}test"
+        if commands := recipe.get(f"{test_section}/commands", None):
+            if any("pip check" in cmd for cmd in commands):
+                return True
+        elif output.startswith("outputs"):
+            script = recipe.get(f"{test_section}/script", "")
+            return self._check_file(os.path.join(recipe.dir, script))
+        else:
+            test_files = (
+                set(os.listdir(recipe.recipe_dir)).intersection({"run_test.sh", "run_test.bat"})
+                if os.path.exists(recipe.dir)
+                else set()
+            )
+            for file in test_files:
+                if self._check_file(os.path.join(recipe.dir, file)):
+                    return True
+        return False
+
+    def check_recipe(self, recipe):
+        if outputs := recipe.get("outputs", None):
+            for o in range(len(outputs)):
+                if self._has_pip_check(recipe, output=f"outputs/{o}/") and "pip" not in recipe.get(
+                    f"outputs/{o}/test/requires", []
+                ):
+                    self.message(section=f"outputs/{o}/test/requires/", output=o)
+        elif self._has_pip_check(recipe) and "pip" not in recipe.get("test/requires", []):
+            self.message(section="test/requires")
+
+
 class missing_python(LintCheck):
     """For pypi packages, python should be present in the host and run sections. Missing in {}
 

@@ -1338,6 +1338,241 @@ def test_missing_pip_check_pip_install_script_bad_multi(base_yaml, tmpdir):
     )
 
 
+def test_missing_test_requirement_pip_missing(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://pypi.io/packages/source/D/Django/Django-4.1.tar.gz
+        """
+    )
+    lint_check = "missing_test_requirement_pip"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_missing_test_requirement_pip_missing_multi(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://pypi.io/packages/source/D/Django/Django-4.1.tar.gz
+        outputs:
+          - name: output1
+          - name: output2
+        """
+    )
+    lint_check = "missing_test_requirement_pip"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_missing_test_requirementk_pip_script_missing(base_yaml, tmpdir):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://pypi.io/packages/source/D/Django/Django-4.1.tar.gz
+        """
+    )
+    lint_check = "missing_test_requirement_pip"
+    recipe_dir = os.path.join(tmpdir, "recipe")
+    os.mkdir(recipe_dir)
+    with open(os.path.join(recipe_dir, "run_test.sh"), "w") as f:
+        f.write("some_other_command\n")
+    messages = check_dir(lint_check, tmpdir, yaml_str)
+    assert len(messages) == 0
+
+
+def test_missing_test_requirement_pip_script_missing_multi(base_yaml, tmpdir):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://pypi.io/packages/source/D/Django/Django-4.1.tar.gz
+        outputs:
+          - name: output1
+          - name: output2
+            test:
+              script: test_output.sh
+        """
+    )
+    lint_check = "missing_test_requirement_pip"
+    recipe_dir = os.path.join(tmpdir, "recipe")
+    os.mkdir(recipe_dir)
+    with open(os.path.join(recipe_dir, "test_output.sh"), "w") as f:
+        f.write("some_other_command\n")
+    messages = check_dir(lint_check, tmpdir, yaml_str)
+    assert len(messages) == 0
+
+
+def test_missing_test_requirement_pip_cmd_good(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://pypi.io/packages/source/D/Django/Django-4.1.tar.gz
+        test:
+          commands:
+            - pip check
+          requires:
+            - pip
+        """
+    )
+    lint_check = "missing_test_requirement_pip"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_missing_test_requirement_pip_cmd_good_multi(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://pypi.io/packages/source/D/Django/Django-4.1.tar.gz
+        outputs:
+          - name: output1
+            test:
+              commands:
+                - pip check
+              requires:
+                - pip
+          - name: output2
+            test:
+              commands:
+                - pip check
+              requires:
+                - pip
+        """
+    )
+    lint_check = "missing_test_requirement_pip"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_missing_test_requirement_pip_script_good(base_yaml, tmpdir):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://pypi.io/packages/source/D/Django/Django-4.1.tar.gz
+        test:
+          requires:
+            - pip
+        """
+    )
+    lint_check = "missing_test_requirement_pip"
+    recipe_dir = os.path.join(tmpdir, "recipe")
+    os.mkdir(recipe_dir)
+    with open(os.path.join(recipe_dir, "run_test.sh"), "w") as f:
+        f.write("pip check\n")
+    messages = check_dir(lint_check, tmpdir, yaml_str)
+    assert len(messages) == 0
+
+
+def test_missing_test_requirement_pip_script_good_multi(base_yaml, tmpdir):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://pypi.io/packages/source/D/Django/Django-4.1.tar.gz
+        outputs:
+          - name: output1
+          - name: output2
+            test:
+              script: test_output.sh
+              requires:
+                - pip
+        """
+    )
+    lint_check = "missing_test_requirement_pip"
+    recipe_dir = os.path.join(tmpdir, "recipe")
+    os.mkdir(recipe_dir)
+    with open(os.path.join(recipe_dir, "test_output.sh"), "w") as f:
+        f.write("pip check\n")
+    messages = check_dir(lint_check, tmpdir, yaml_str)
+    assert len(messages) == 0
+
+
+def test_missing_test_requirement_pip_cmd_bad(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://pypi.io/packages/source/D/Django/Django-4.1.tar.gz
+        test:
+          commands:
+            - pip check
+        """
+    )
+    lint_check = "missing_test_requirement_pip"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 1 and "pip is required" in messages[0].title
+
+
+def test_missing_test_requirement_pip_cmd_bad_multi(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://pypi.io/packages/source/D/Django/Django-4.1.tar.gz
+        outputs:
+          - name: output1
+            test:
+              commands:
+                - pip check
+          - name: output2
+            test:
+              commands:
+                - pip check
+        """
+    )
+    lint_check = "missing_test_requirement_pip"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 2 and all("pip is required" in msg.title for msg in messages)
+
+
+def test_missing_test_requirement_pip_script_bad(base_yaml, tmpdir):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://pypi.io/packages/source/D/Django/Django-4.1.tar.gz
+        """
+    )
+    lint_check = "missing_test_requirement_pip"
+    recipe_dir = os.path.join(tmpdir, "recipe")
+    os.mkdir(recipe_dir)
+    with open(os.path.join(recipe_dir, "run_test.sh"), "w") as f:
+        f.write("pip check\n")
+    messages = check_dir(lint_check, tmpdir, yaml_str)
+    assert len(messages) == 1 and "pip is required" in messages[0].title
+
+
+def test_missing_test_requirement_pip_script_bad_multi(base_yaml, tmpdir):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://pypi.io/packages/source/D/Django/Django-4.1.tar.gz
+        outputs:
+          - name: output1
+            test:
+              script: test_output.sh
+          - name: output2
+            test:
+              script: test_output.sh
+        """
+    )
+    lint_check = "missing_test_requirement_pip"
+    recipe_dir = os.path.join(tmpdir, "recipe")
+    os.mkdir(recipe_dir)
+    with open(os.path.join(recipe_dir, "test_output.sh"), "w") as f:
+        f.write("pip check\n")
+    messages = check_dir(lint_check, tmpdir, yaml_str)
+    assert len(messages) == 2 and all("pip is required" in msg.title for msg in messages)
+
+
 def test_missing_python_url_good(base_yaml):
     yaml_str = (
         base_yaml
