@@ -144,6 +144,13 @@ class missing_tests(LintCheck):
     and/or any file named ``run_test.py`, ``run_test.sh`` or
     ``run_test.pl`` executing tests.
 
+    For multi-output recipes, add:
+
+      test:
+        script: <test file>
+
+    to each output
+
     """
 
     test_files = ["run_test.py", "run_test.sh", "run_test.pl"]
