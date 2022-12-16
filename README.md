@@ -49,12 +49,6 @@ Make sure that your `anaconda-linter` environment is activated, then:
 
 It's that easy!
 
-## TODO:
-- Finish creating a Makefile to auto-create a conda env and download dependencies
-- Finish setting up CI.
-- Add further lints
-- Test with Prefect Flow
-
 ## Contributions
 This new package is inspired by bioconda's [linter](https://github.com/bioconda/bioconda-utils/blob/master/bioconda_utils/lint/__init__.py).
 
