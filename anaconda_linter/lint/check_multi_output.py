@@ -44,3 +44,15 @@ class no_global_test(LintCheck):
     def check_recipe(self, recipe):
         if recipe.get("outputs", None) and recipe.get("test", None):
             self.message(severity=WARNING)
+
+
+class output_missing_script(LintCheck):
+    """Output is missing script.
+
+    Every output must have either a filename or a command in the script field.
+    """
+
+    def check_recipe(self, recipe):
+        for o in range(len(recipe.get("outputs", []))):
+            if recipe.get(f"outputs/{o}/script", "") == "":
+                self.message(output=o)
