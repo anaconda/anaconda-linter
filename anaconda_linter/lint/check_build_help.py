@@ -134,27 +134,22 @@ class missing_wheel(LintCheck):
                         self.message(section=f"outputs/{o}/requirements/host", output=o)
 
 
-class setup_py_install_args(LintCheck):
-    """The recipe uses setuptools without required arguments
+class uses_setup_py(LintCheck):
+    """`python setup.py install` is deprecated.
 
     Please use::
 
-        $PYTHON setup.py install --single-version-externally-managed --record=record.txt
+        $PYTHON -m pip install . --no-deps
 
-    The parameters are required to avoid ``setuptools`` trying (and
-    failing) to install ``certifi`` when a package this recipe
-    requires defines entrypoints in its ``setup.py``.
-
+    Or use another python build tool.
     """
 
     @staticmethod
     def _check_line(line: str) -> bool:
         """Check a line for a broken call to setup.py"""
-        if "setup.py install" not in line:
-            return True
-        if "--single-version-externally-managed" in line:
-            return True
-        return False
+        if "setup.py install" in line:
+            return False
+        return True
 
     def check_deps(self, deps):
         if "setuptools" not in deps:
@@ -179,7 +174,7 @@ class setup_py_install_args(LintCheck):
                 with open(os.path.join(self.recipe.dir, build_file)) as buildsh:
                     for num, line in enumerate(buildsh):
                         if not self._check_line(line):
-                            self.message(fname="build.sh", line=num, output=output)
+                            self.message(fname=build_file, line=num, output=output)
             except FileNotFoundError:
                 pass
 

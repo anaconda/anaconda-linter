@@ -82,13 +82,14 @@ patch_unnecessary
 
 remove_python_pinning
 
-setup_py_install_args
 
 should_use_compilers
 
 unknown_check
 
 unknown_selector
+
+uses_setup_py
 
 uses_setuptools
 

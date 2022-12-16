@@ -334,29 +334,29 @@ def test_missing_wheel_pip_install_bad_multi(base_yaml):
     assert len(messages) == 2 and all("wheel should be present" in msg.title for msg in messages)
 
 
-def test_setup_py_install_args_good_missing(base_yaml):
-    lint_check = "setup_py_install_args"
+def test_uses_setup_py_good_missing(base_yaml):
+    lint_check = "uses_setup_py"
     messages = check(lint_check, base_yaml)
     assert len(messages) == 0
 
 
-def test_setup_py_install_args_good_cmd(base_yaml):
+def test_uses_setup_py_good_cmd(base_yaml):
     yaml_str = (
         base_yaml
         + """
         build:
-          script: {{ PYTHON }} -m setup.py install --single-version-externally-managed
+          script: {{ PYTHON }} -m pip install . --no-deps
         requirements:
           host:
             - setuptools
         """
     )
-    lint_check = "setup_py_install_args"
+    lint_check = "uses_setup_py"
     messages = check(lint_check, yaml_str)
     assert len(messages) == 0
 
 
-def test_setup_py_install_args_good_script(base_yaml, tmpdir):
+def test_uses_setup_py_good_script(base_yaml, tmpdir):
     yaml_str = (
         base_yaml
         + """
@@ -365,16 +365,16 @@ def test_setup_py_install_args_good_script(base_yaml, tmpdir):
             - setuptools
         """
     )
-    lint_check = "setup_py_install_args"
+    lint_check = "uses_setup_py"
     recipe_dir = os.path.join(tmpdir, "recipe")
     os.mkdir(recipe_dir)
     with open(os.path.join(recipe_dir, "build.sh"), "w") as f:
-        f.write("{{ PYTHON }} -m setup.py install --single-version-externally-managed\n")
+        f.write("{{ PYTHON }} -m pip install . --no-deps\n")
     messages = check_dir(lint_check, tmpdir, yaml_str)
     assert len(messages) == 0
 
 
-def test_setup_py_install_args_bad_cmd(base_yaml):
+def test_uses_setup_py_bad_cmd(base_yaml):
     yaml_str = (
         base_yaml
         + """
@@ -385,12 +385,12 @@ def test_setup_py_install_args_bad_cmd(base_yaml):
             - setuptools
         """
     )
-    lint_check = "setup_py_install_args"
+    lint_check = "uses_setup_py"
     messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "setuptools without required arguments" in messages[0].title
+    assert len(messages) == 1 and "python setup.py install" in messages[0].title
 
 
-def test_setup_py_install_args_bad_cmd_multi(base_yaml):
+def test_uses_setup_py_bad_cmd_multi(base_yaml):
     yaml_str = (
         base_yaml
         + """
@@ -407,14 +407,12 @@ def test_setup_py_install_args_bad_cmd_multi(base_yaml):
                 - setuptools
         """
     )
-    lint_check = "setup_py_install_args"
+    lint_check = "uses_setup_py"
     messages = check(lint_check, yaml_str)
-    assert len(messages) == 2 and all(
-        "setuptools without required arguments" in msg.title for msg in messages
-    )
+    assert len(messages) == 2 and all("python setup.py install" in msg.title for msg in messages)
 
 
-def test_setup_py_install_args_bad_script(base_yaml, tmpdir):
+def test_uses_setup_py_bad_script(base_yaml, tmpdir):
     yaml_str = (
         base_yaml
         + """
@@ -423,16 +421,16 @@ def test_setup_py_install_args_bad_script(base_yaml, tmpdir):
             - setuptools
         """
     )
-    lint_check = "setup_py_install_args"
+    lint_check = "uses_setup_py"
     recipe_dir = os.path.join(tmpdir, "recipe")
     os.mkdir(recipe_dir)
     with open(os.path.join(recipe_dir, "build.sh"), "w") as f:
         f.write("{{ PYTHON }} -m setup.py install\n")
     messages = check_dir(lint_check, tmpdir, yaml_str)
-    assert len(messages) == 1 and "setuptools without required arguments" in messages[0].title
+    assert len(messages) == 1 and "python setup.py install" in messages[0].title
 
 
-def test_setup_py_install_args_bad_script_multi(base_yaml, tmpdir):
+def test_uses_setup_py_bad_script_multi(base_yaml, tmpdir):
     yaml_str = (
         base_yaml
         + """
@@ -449,15 +447,13 @@ def test_setup_py_install_args_bad_script_multi(base_yaml, tmpdir):
                 - setuptools
         """
     )
-    lint_check = "setup_py_install_args"
+    lint_check = "uses_setup_py"
     recipe_dir = os.path.join(tmpdir, "recipe")
     os.mkdir(recipe_dir)
     with open(os.path.join(recipe_dir, "build_output.sh"), "w") as f:
         f.write("{{ PYTHON }} -m setup.py install\n")
     messages = check_dir(lint_check, tmpdir, yaml_str)
-    assert len(messages) == 2 and all(
-        "setuptools without required arguments" in msg.title for msg in messages
-    )
+    assert len(messages) == 2 and all("python setup.py install" in msg.title for msg in messages)
 
 
 def test_cython_must_be_in_host_good(base_yaml):
