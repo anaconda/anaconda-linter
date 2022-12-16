@@ -89,32 +89,30 @@ def test_lint_file(base_yaml, linter):
         assert len(linter.get_messages()) == 3
 
 
-def test_severity_level(base_yaml):
-    levels = [
-        {
-            "enum": INFO,
-            "string": "notice",
-            "check": "dummy_info",
-        },
-        {
-            "enum": WARNING,
-            "string": "warning",
-            "check": "dummy_warning",
-        },
-        {
-            "enum": ERROR,
-            "string": "failure",
-            "check": "dummy_error",
-        },
-    ]
-    for lvl in levels:
-        messages = check(lvl["check"], base_yaml)
-        assert len(messages) == 1
-        assert messages[0].severity == lvl["enum"]
-        assert messages[0].get_level() == lvl["string"]
+@pytest.mark.parametrize(
+    "level,string,lint_check",
+    (
+        (INFO, "notice", "dummy_info"),
+        (WARNING, "warning", "dummy_warning"),
+        (ERROR, "failure", "dummy_error"),
+    ),
+)
+def test_severity_level(base_yaml, level, string, lint_check):
+    messages = check(lint_check, base_yaml)
+    assert len(messages) == 1
+    assert messages[0].severity == level
+    assert messages[0].get_level() == string
 
 
-def test_severity_min(base_yaml):
+def test_severity_bad(base_yaml):
+    with pytest.raises(ValueError):
+        config_file = os.path.abspath(os.path.dirname(__file__) + "/../anaconda_linter/config.yaml")
+        config = utils.load_config(config_file)
+        lint.Linter(config=config, severity_min="BADSEVERITY")
+
+
+@pytest.mark.parametrize("level,expected", (("INFO", 3), ("WARNING", 2), ("ERROR", 1)))
+def test_severity_min_string(base_yaml, level, expected):
     yaml_str = (
         base_yaml
         + """
@@ -128,19 +126,29 @@ def test_severity_min(base_yaml):
     recipes = [Recipe.from_string(yaml_str)]
     config_file = os.path.abspath(os.path.dirname(__file__) + "/../anaconda_linter/config.yaml")
     config = utils.load_config(config_file)
-    # Test string representation
-    for s, sev in enumerate(["INFO", "WARNING", "ERROR"]):
-        linter = lint.Linter(config=config, severity_min=sev)
-        linter.lint(recipes)
-        assert len(linter.get_messages()) == 3 - s
-    with pytest.raises(ValueError):
-        linter = lint.Linter(config=config, severity_min="BADSEVERITY")
+    linter = lint.Linter(config=config, severity_min=level)
+    linter.lint(recipes)
+    assert len(linter.get_messages()) == expected
 
-    # Test enum representation
-    for s, sev in enumerate([INFO, WARNING, ERROR]):
-        linter = lint.Linter(config=config, severity_min=sev)
-        linter.lint(recipes)
-        assert len(linter.get_messages()) == 3 - s
+
+@pytest.mark.parametrize("level,expected", ((INFO, 3), ("WARNING", 2), ("ERROR", 1)))
+def test_severity_min_enum(base_yaml, level, expected):
+    yaml_str = (
+        base_yaml
+        + """
+        extra:
+          only-lint:
+            - dummy_info
+            - dummy_error
+            - dummy_warning
+        """
+    )
+    recipes = [Recipe.from_string(yaml_str)]
+    config_file = os.path.abspath(os.path.dirname(__file__) + "/../anaconda_linter/config.yaml")
+    config = utils.load_config(config_file)
+    linter = lint.Linter(config=config, severity_min=level)
+    linter.lint(recipes)
+    assert len(linter.get_messages()) == expected
 
 
 def test_lint_list():
