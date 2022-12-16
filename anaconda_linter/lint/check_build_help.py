@@ -394,19 +394,31 @@ class missing_python(LintCheck):
     """
 
     def check_recipe(self, recipe):
+        # To check for a missing python, find the paths that require python
+        # and compare with the existing dependency dictionary.
+        # Since this dictionary has everything parsed already, there is no need for regex.
         is_pypi = is_pypi_source(recipe)
+        deps = recipe.get_deps_dict(["host", "run"])
+        # The `paths` dictionary stores dependencies as, e.g., `requirements/host/{n}/`
+        # with the list index n. For multi-output recipes, it the paths are of the form
+        # `outputs/{o}/requirements/host/{n}`. To compare, the list index needs to be stripped.
+        paths = (
+            []
+            if "python" not in deps
+            else ["/".join(path.split("/")[:-1]) for path in deps["python"]["paths"]]
+        )
         if outputs := recipe.get("outputs", None):
             for o in range(len(outputs)):
                 if is_pypi or "pip install" in self.recipe.get(f"outputs/{o}/script", ""):
                     for section in ["host", "run"]:
-                        if "python" not in recipe.get(f"outputs/{o}/requirements/{section}", ""):
-                            self.message(
-                                section, section=f"outputs/{o}/requirements/{section}", output=o
-                            )
+                        path_to_section = f"outputs/{o}/requirements/{section}"
+                        if path_to_section not in paths:
+                            self.message(section, section=path_to_section, output=o)
         elif is_pypi or "pip install" in self.recipe.get("build/script", ""):
             for section in ["host", "run"]:
-                if "python" not in recipe.get(f"requirements/{section}", ""):
-                    self.message(section, section=f"requirements/{section}")
+                path_to_section = f"requirements/{section}"
+                if path_to_section not in paths:
+                    self.message(section, section=path_to_section)
 
 
 class remove_python_pinning(LintCheck):
