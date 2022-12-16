@@ -342,13 +342,7 @@ class patch_must_be_in_build(LintCheck):
 class has_run_test_and_commands(LintCheck):
     """Test commands are not executed when run_test.sh (.bat...) is present.
 
-    Remove ``test/commands`` or call ``run_test`` from ``test/commands``:
-
-      tests:
-        commands:
-          - run_test.sh    # [unix]
-          - run_test.bat   # [win]
-
+    Add the test commands to run_test.sh/.bat
     """
 
     def check_recipe(self, recipe):
