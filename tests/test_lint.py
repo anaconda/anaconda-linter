@@ -86,7 +86,6 @@ def test_lint_file(base_yaml, linter):
         with open(meta_yaml, "w") as f:
             f.write(yaml_str)
         linter.lint([recipe_dir])
-        print(linter.get_messages())
         assert len(linter.get_messages()) == 3
 
 

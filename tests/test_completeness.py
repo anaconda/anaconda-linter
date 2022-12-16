@@ -129,7 +129,6 @@ def test_invalid_license_family(base_yaml):
     )
     lint_check = "invalid_license_family"
     messages = check(lint_check, yaml_str)
-    print(messages[0].title)
     assert len(messages) == 1 and "about/license_family` value" in messages[0].title
 
 
