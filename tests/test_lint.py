@@ -9,29 +9,29 @@ from anaconda_linter.recipe import Recipe, RecipeError
 
 
 class dummy_info(lint.LintCheck):
-    """Info message
-    """
+    """Info message"""
+
     def check_recipe(self, recipe):
         self.message(severity=INFO)
 
 
 class dummy_warning(lint.LintCheck):
-    """Warning message
-    """
+    """Warning message"""
+
     def check_recipe(self, recipe):
         self.message(severity=WARNING)
 
 
 class dummy_error(lint.LintCheck):
-    """Error message
-    """
+    """Error message"""
+
     def check_recipe(self, recipe):
         self.message(severity=ERROR)
 
 
 class dummy_error_format(lint.LintCheck):
-    """{} message of severity {}
-    """
+    """{} message of severity {}"""
+
     def check_recipe(self, recipe):
         self.message("Dummy", "ERROR")
 

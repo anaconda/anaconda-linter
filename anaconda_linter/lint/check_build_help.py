@@ -400,7 +400,9 @@ class missing_python(LintCheck):
                 if is_pypi or "pip install" in self.recipe.get(f"outputs/{o}/script", ""):
                     for section in ["host", "run"]:
                         if "python" not in recipe.get(f"outputs/{o}/requirements/{section}", ""):
-                            self.message(section, section=f"outputs/{o}/requirements/{section}", output=o)
+                            self.message(
+                                section, section=f"outputs/{o}/requirements/{section}", output=o
+                            )
         elif is_pypi or "pip install" in self.recipe.get("build/script", ""):
             for section in ["host", "run"]:
                 if "python" not in recipe.get(f"requirements/{section}", ""):
