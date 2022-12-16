@@ -10,18 +10,31 @@ from anaconda_linter.recipe import Recipe, RecipeError
 
 
 class dummy_info(lint.LintCheck):
+    """Info message
+    """
     def check_recipe(self, recipe):
-        self.message("Info message", severity=INFO)
+        self.message(severity=INFO)
 
 
 class dummy_warning(lint.LintCheck):
+    """Warning message
+    """
     def check_recipe(self, recipe):
-        self.message("Warning message", severity=WARNING)
+        self.message(severity=WARNING)
 
 
 class dummy_error(lint.LintCheck):
+    """Error message
+    """
     def check_recipe(self, recipe):
-        self.message("Error message", severity=ERROR)
+        self.message(severity=ERROR)
+
+
+class dummy_error_format(lint.LintCheck):
+    """{} message of severity {}
+    """
+    def check_recipe(self, recipe):
+        self.message("Dummy", "ERROR")
 
 
 def test_only_lint(base_yaml, linter):
@@ -228,3 +241,15 @@ def test_error_report_line(base_yaml):
     lint_check = "incorrect_license"
     messages = check(lint_check, yaml_str)
     assert len(messages) == 1 and messages[0].start_line == 5
+
+
+def test_message_title(base_yaml):
+    lint_check = "dummy_error"
+    messages = check(lint_check, base_yaml)
+    assert len(messages) == 1 and messages[0].title == "Error message"
+
+
+def test_message_title_format(base_yaml):
+    lint_check = "dummy_error_format"
+    messages = check(lint_check, base_yaml)
+    assert len(messages) == 1 and messages[0].title == "Dummy message of severity ERROR"

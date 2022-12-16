@@ -58,27 +58,23 @@ class incorrect_license(LintCheck):
             expected_exceptions = {l.strip() for l in expected_exceptions}  # noqa
         non_spdx_licenses = set(filtered_licenses) - expected_licenses
         if non_spdx_licenses:
-            reset_text = self.__class__.__doc__
             for license in non_spdx_licenses:
                 closest = utils.find_closest_match(license)
                 if closest:
-                    self.__class__.__doc__ = self.__class__.__doc__.format(
+                    message_text = (
                         "The recipe's `about/license` key is not an SPDX compliant"
                         f" license or license exception, closest match: {closest}"
                     )
                 else:
-                    self.__class__.__doc__ = self.__class__.__doc__.format(
+                    message_text = (
                         "The recipe's `about/license` key is not an SPDX compliant"
                         " license or license exception, reference https://spdx.org/licenses/"
                     )
-                self.message(section="about/license")
-                self.__class__.__doc__ = reset_text
+                self.message(message_text, section="about/license")
         non_spdx_exceptions = set(parsed_exceptions) - expected_exceptions
         if non_spdx_exceptions:
-            reset_text = self.__class__.__doc__
-            self.__class__.__doc__ = self.__class__.__doc__.format(
+            message_text = (
                 "The recipe's `about/license` key is not an SPDX compliant license"
                 " or license exception, reference https://spdx.org/licenses/exceptions-index.html"
             )
-            self.message(section="about/license")
-            self.__class__.__doc__ = reset_text
+            self.message(message_text, section="about/license")

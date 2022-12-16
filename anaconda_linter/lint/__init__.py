@@ -302,6 +302,7 @@ class LintCheck(metaclass=LintCheckMeta):
 
     def message(
         self,
+        *args,
         section: str = None,
         severity: Severity = SEVERITY_DEFAULT,
         fname: str = None,
@@ -326,7 +327,14 @@ class LintCheck(metaclass=LintCheckMeta):
           output: the output the error occurred in (multi-output recipes only)
         """
         message = self.make_message(
-            self.recipe, section, severity, fname, line, data is not None, output
+            *args,
+            recipe=self.recipe,
+            section=section,
+            severity=severity,
+            fname=fname,
+            line=line,
+            canfix=data is not None,
+            output=output,
         )
         if data is not None and self.try_fix and self.fix(message, data):
             return
@@ -335,6 +343,7 @@ class LintCheck(metaclass=LintCheckMeta):
     @classmethod
     def make_message(
         cls,
+        *args,
         recipe: _recipe.Recipe,
         section: str = None,
         severity: Severity = SEVERITY_DEFAULT,
@@ -358,6 +367,8 @@ class LintCheck(metaclass=LintCheckMeta):
         doc = inspect.getdoc(cls)
         doc = doc.replace("::", ":").replace("``", "`")
         title, _, body = doc.partition("\n")
+        if len(args) > 0:
+            title = title.format(*args)
         if output >= 0:
             name = recipe.get(f"outputs/{output}/name", "")
             if name != "":
