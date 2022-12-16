@@ -421,54 +421,58 @@ def test_non_url_source_bad(base_yaml, src_type):
     assert len(messages) == 1 and "not url of url type" in messages[0].title
 
 
-def test_missing_doc_url_good(base_yaml):
+@pytest.mark.parametrize("doc_type", ("doc_url", "doc_source_url"))
+def test_missing_documentation_good(base_yaml, doc_type):
     yaml_str = (
         base_yaml
-        + """
+        + f"""
         about:
-          doc_url: https://sqlite.com/
+          {doc_type}: https://sqlite.com/
         """
     )
-    lint_check = "missing_doc_url"
+    lint_check = "missing_documentation"
     messages = check(lint_check, yaml_str)
     assert len(messages) == 0
 
 
-def test_missing_doc_url_bad(base_yaml):
+def test_missing_documentation_bad(base_yaml):
     yaml_str = (
         base_yaml
         + """
         about:
         """
     )
-    lint_check = "missing_doc_url"
+    lint_check = "missing_documentation"
     messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "doc_url" in messages[0].title
+    assert len(messages) == 1 and "doc_url or doc_source_url" in messages[0].title
 
 
-def test_missing_doc_source_url_good(base_yaml):
+@pytest.mark.parametrize("doc_type", ("doc_url", "doc_source_url"))
+def test_documentation_overspecified_good(base_yaml, doc_type):
     yaml_str = (
         base_yaml
-        + """
+        + f"""
         about:
-          doc_source_url: https://sqlite.com/
+          {doc_type}: https://sqlite.com/
         """
     )
-    lint_check = "missing_doc_source_url"
+    lint_check = "documentation_overspecified"
     messages = check(lint_check, yaml_str)
     assert len(messages) == 0
 
 
-def test_missing_doc_source_url_bad(base_yaml):
+def test_documentation_overspecified_bad(base_yaml):
     yaml_str = (
         base_yaml
         + """
         about:
+          doc_url: https://sqlite.com
+          doc_source_url: https://sqlite.com
         """
     )
-    lint_check = "missing_doc_source_url"
+    lint_check = "documentation_overspecified"
     messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "doc_source_url" in messages[0].title
+    assert len(messages) == 1 and "doc_url and doc_source_url is overspecified" in messages[0].title
 
 
 def test_missing_dev_url_good(base_yaml):

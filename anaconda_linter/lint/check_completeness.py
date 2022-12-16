@@ -251,25 +251,15 @@ class non_url_source(LintCheck):
             self.message(section=section, severity=WARNING)
 
 
-class missing_doc_url(LintCheck):
-    """The recipe is missing a doc_url
+class missing_documentation(LintCheck):
+    """The recipe is missing a doc_url or doc_source_url
 
     Please add::
 
         about:
             doc_url: some_documentation_url
 
-    """
-
-    def check_recipe(self, recipe):
-        if not recipe.get("about/doc_url", ""):
-            self.message(section="about")
-
-
-class missing_doc_source_url(LintCheck):
-    """The recipe is missing a doc_source_url
-
-    Please add::
+    Or::
 
         about:
             doc_source_url: some-documentation-source-url
@@ -277,7 +267,19 @@ class missing_doc_source_url(LintCheck):
     """
 
     def check_recipe(self, recipe):
-        if not recipe.get("about/doc_source_url", ""):
+        if not recipe.get("about/doc_url", "") and not recipe.get("about/doc_source_url", ""):
+            self.message(section="about")
+
+
+class documentation_overspecified(LintCheck):
+    """Using doc_url and doc_source_url is overspecified
+
+    Please remove doc_source_url.
+
+    """
+
+    def check_recipe(self, recipe):
+        if recipe.get("about/doc_url", "") and recipe.get("about/doc_source_url", ""):
             self.message(section="about", severity=WARNING)
 
 
@@ -294,21 +296,6 @@ class missing_dev_url(LintCheck):
     def check_recipe(self, recipe):
         if not recipe.get("about/dev_url", ""):
             self.message(section="about")
-
-
-class missing_license_url(LintCheck):
-    """The recipe is missing a license_url
-
-    Please add::
-
-        about:
-            dev_url: some-dev-url
-
-    """
-
-    def check_recipe(self, recipe):
-        if not recipe.get("about/license_url", ""):
-            self.message(section="about", severity=WARNING)
 
 
 class missing_description(LintCheck):
