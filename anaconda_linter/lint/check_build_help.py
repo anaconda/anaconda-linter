@@ -363,6 +363,27 @@ class has_run_test_and_commands(LintCheck):
                 self.message(section="test/commands")
 
 
+class has_imports_and_run_test_py(LintCheck):
+    """Imports and python test file cannot coexist.
+
+    Add the imports to the python test file.
+    """
+
+    def check_recipe(self, recipe):
+        if outputs := recipe.get("outputs", None):
+            for o in range(len(outputs)):
+                test_section = f"outputs/{o}/test"
+                if recipe.get(f"{test_section}/imports", []) and recipe.get(
+                    f"{test_section}/script", ""
+                ).endswith(".py"):
+                    self.message(section=f"{test_section}/imports", output=o)
+        else:
+            if recipe.get("test/imports", []) and os.path.isfile(
+                os.path.join(recipe.recipe_dir, "run_test.py")
+            ):
+                self.message(section="test/imports")
+
+
 class missing_pip_check(LintCheck):
     """For pypi packages, pip check should be present in the test commands
 

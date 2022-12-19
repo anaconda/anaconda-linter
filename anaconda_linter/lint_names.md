@@ -16,6 +16,8 @@ empty_meta_yaml
 
 gui_app
 
+has_imports_and_run_test_py
+
 has_run_test_and_commands
 
 http_url
