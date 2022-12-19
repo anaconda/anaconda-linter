@@ -1267,7 +1267,7 @@ def test_missing_test_requirement_pip_missing_multi(base_yaml):
     assert len(messages) == 0
 
 
-def test_missing_test_requirementk_pip_script_missing(base_yaml, recipe_dir):
+def test_missing_test_requirement_pip_script_missing(base_yaml, recipe_dir):
     yaml_str = (
         base_yaml
         + """
