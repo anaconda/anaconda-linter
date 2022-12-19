@@ -146,8 +146,8 @@ class build_tools_must_be_in_build(LintCheck):
 class python_build_tool_in_run(LintCheck):
     """The python build tool {} is in run depends
 
-    Most Python packages only need setuptools during installation.
-    Check if the package really needs setuptools (e.g. because it uses
+    Most Python packages only need python build tools during installation.
+    Check if the package really needs this build tool (e.g. because it uses
     pkg_resources or setuptools console scripts).
 
     """
