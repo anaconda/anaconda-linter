@@ -9,6 +9,24 @@ import os
 
 from . import INFO, WARNING, LintCheck
 
+# Does not include m2-tools, which should be checked using wild cards.
+BUILD_TOOLS = (
+    "autoconf",
+    "automake",
+    "bison",
+    "cmake",
+    "distutils",
+    "flex",
+    "git",
+    "libtool",
+    "m4",
+    "make",
+    "ninja",
+    "patch",
+    "pkg-config",
+    "posix",
+)
+
 PYTHON_BUILD_TOOLS = (
     "flit",
     "flit-core",
@@ -105,6 +123,24 @@ class compilers_must_be_in_build(LintCheck):
                 for location in deps[dep]["paths"]:
                     if "run" in location or "host" in location:
                         self.message(section=location)
+
+
+class build_tools_must_be_in_build(LintCheck):
+    """The build tool {} is not in the build section.
+
+    Please add::
+        requirements:
+          build:
+            - {}
+    """
+
+    def check_recipe(self, recipe):
+        deps = recipe.get_deps_dict(["host", "run"])
+        for tool, dep in deps.items():
+            if tool.startswith("m2-") or tool in BUILD_TOOLS:
+                for path in dep["paths"]:
+                    o = -1 if not path.startswith("outputs") else int(path.split("/")[1])
+                    self.message(tool, severity=WARNING, section=path, output=o)
 
 
 class python_build_tool_in_run(LintCheck):

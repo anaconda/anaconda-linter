@@ -161,6 +161,160 @@ def test_compilers_must_be_in_build_bad_multi(base_yaml, section):
 @pytest.mark.parametrize(
     "tool",
     (
+        "autoconf",
+        "automake",
+        "bison",
+        "cmake",
+        "distutils",
+        "flex",
+        "git",
+        "libtool",
+        "m2-make",
+        "m4",
+        "make",
+        "ninja",
+        "patch",
+        "pkg-config",
+        "posix",
+    ),
+)
+def test_build_tools_must_be_in_build_good(base_yaml, tool):
+    yaml_str = (
+        base_yaml
+        + f"""
+        requirements:
+          build:
+            - {tool}
+        """
+    )
+    lint_check = "build_tools_must_be_in_build"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+@pytest.mark.parametrize(
+    "tool",
+    (
+        "autoconf",
+        "automake",
+        "bison",
+        "cmake",
+        "distutils",
+        "flex",
+        "git",
+        "libtool",
+        "m2-make",
+        "m4",
+        "make",
+        "ninja",
+        "patch",
+        "pkg-config",
+        "posix",
+    ),
+)
+def test_build_tools_must_be_in_build_good_multi(base_yaml, tool):
+    yaml_str = (
+        base_yaml
+        + f"""
+        outputs:
+          - name: output1
+            requirements:
+              build:
+                - {tool}
+          - name: output2
+            requirements:
+              build:
+                - {tool}
+        """
+    )
+    lint_check = "build_tools_must_be_in_build"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+@pytest.mark.parametrize("section", ("host", "run"))
+@pytest.mark.parametrize(
+    "tool",
+    (
+        "autoconf",
+        "automake",
+        "bison",
+        "cmake",
+        "distutils",
+        "flex",
+        "git",
+        "libtool",
+        "m2-make",
+        "m4",
+        "make",
+        "ninja",
+        "patch",
+        "pkg-config",
+        "posix",
+    ),
+)
+def test_build_tools_must_be_in_build_bad(base_yaml, section, tool):
+    yaml_str = (
+        base_yaml
+        + f"""
+        requirements:
+          {section}:
+            - {tool}
+        """
+    )
+    lint_check = "build_tools_must_be_in_build"
+    messages = check(lint_check, yaml_str)
+    assert (
+        len(messages) == 1 and f"build tool {tool} is not in the build section" in messages[0].title
+    )
+
+
+@pytest.mark.parametrize("section", ("host", "run"))
+@pytest.mark.parametrize(
+    "tool",
+    (
+        "autoconf",
+        "automake",
+        "bison",
+        "cmake",
+        "distutils",
+        "flex",
+        "git",
+        "libtool",
+        "m2-make",
+        "m4",
+        "make",
+        "ninja",
+        "patch",
+        "pkg-config",
+        "posix",
+    ),
+)
+def test_build_tools_must_be_in_build_bad_multi(base_yaml, section, tool):
+    yaml_str = (
+        base_yaml
+        + f"""
+        outputs:
+          - name: output1
+            requirements:
+              {section}:
+                - {tool}
+          - name: output2
+            requirements:
+              {section}:
+                - {tool}
+        """
+    )
+    lint_check = "build_tools_must_be_in_build"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 2 and all(
+        f"build tool {tool} is not in the build section" in msg.title for msg in messages
+    )
+
+
+@pytest.mark.parametrize(
+    "tool",
+    (
         "flit",
         "flit-core",
         "hatchling",
