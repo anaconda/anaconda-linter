@@ -8,6 +8,8 @@ cython_must_be_in_host
 
 cython_needs_compiler
 
+documentation_overspecified
+
 duplicate_key_in_meta_yaml
 
 empty_meta_yaml
@@ -26,6 +28,8 @@ invalid_url
 
 jinja_render_failure
 
+license_file_overspecified
+
 linter_failure
 
 missing_build
@@ -36,9 +40,7 @@ missing_description
 
 missing_dev_url
 
-missing_doc_source_url
-
-missing_doc_url
+missing_documentation
 
 missing_hash
 
@@ -50,13 +52,13 @@ missing_license_family
 
 missing_license_file
 
-missing_license_url
-
 missing_meta_yaml
 
 missing_pip_check
 
 missing_python
+
+missing_section
 
 missing_source
 
