@@ -1,5 +1,3 @@
-import os
-
 import pytest
 from conftest import check, check_dir
 
@@ -356,7 +354,7 @@ def test_uses_setup_py_good_cmd(base_yaml):
     assert len(messages) == 0
 
 
-def test_uses_setup_py_good_script(base_yaml, tmpdir):
+def test_uses_setup_py_good_script(base_yaml, recipe_dir):
     yaml_str = (
         base_yaml
         + """
@@ -366,11 +364,9 @@ def test_uses_setup_py_good_script(base_yaml, tmpdir):
         """
     )
     lint_check = "uses_setup_py"
-    recipe_dir = os.path.join(tmpdir, "recipe")
-    os.mkdir(recipe_dir)
-    with open(os.path.join(recipe_dir, "build.sh"), "w") as f:
-        f.write("{{ PYTHON }} -m pip install . --no-deps\n")
-    messages = check_dir(lint_check, tmpdir, yaml_str)
+    test_file = recipe_dir / "build.sh"
+    test_file.write_text("{{ PYTHON }} -m pip install . --no-deps\n")
+    messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
     assert len(messages) == 0
 
 
@@ -412,7 +408,7 @@ def test_uses_setup_py_bad_cmd_multi(base_yaml):
     assert len(messages) == 2 and all("python setup.py install" in msg.title for msg in messages)
 
 
-def test_uses_setup_py_bad_script(base_yaml, tmpdir):
+def test_uses_setup_py_bad_script(base_yaml, recipe_dir):
     yaml_str = (
         base_yaml
         + """
@@ -422,15 +418,13 @@ def test_uses_setup_py_bad_script(base_yaml, tmpdir):
         """
     )
     lint_check = "uses_setup_py"
-    recipe_dir = os.path.join(tmpdir, "recipe")
-    os.mkdir(recipe_dir)
-    with open(os.path.join(recipe_dir, "build.sh"), "w") as f:
-        f.write("{{ PYTHON }} -m setup.py install\n")
-    messages = check_dir(lint_check, tmpdir, yaml_str)
+    test_file = recipe_dir / "build.sh"
+    test_file.write_text("{{ PYTHON }} -m setup.py install\n")
+    messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
     assert len(messages) == 1 and "python setup.py install" in messages[0].title
 
 
-def test_uses_setup_py_bad_script_multi(base_yaml, tmpdir):
+def test_uses_setup_py_bad_script_multi(base_yaml, recipe_dir):
     yaml_str = (
         base_yaml
         + """
@@ -448,11 +442,9 @@ def test_uses_setup_py_bad_script_multi(base_yaml, tmpdir):
         """
     )
     lint_check = "uses_setup_py"
-    recipe_dir = os.path.join(tmpdir, "recipe")
-    os.mkdir(recipe_dir)
-    with open(os.path.join(recipe_dir, "build_output.sh"), "w") as f:
-        f.write("{{ PYTHON }} -m setup.py install\n")
-    messages = check_dir(lint_check, tmpdir, yaml_str)
+    test_file = recipe_dir / "build_output.sh"
+    test_file.write_text("{{ PYTHON }} -m setup.py install\n")
+    messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
     assert len(messages) == 2 and all("python setup.py install" in msg.title for msg in messages)
 
 
@@ -478,7 +470,7 @@ def test_pip_install_args_good_cmd(base_yaml):
     assert len(messages) == 0
 
 
-def test_pip_install_args_good_script(base_yaml, tmpdir):
+def test_pip_install_args_good_script(base_yaml, recipe_dir):
     yaml_str = (
         base_yaml
         + """
@@ -488,11 +480,9 @@ def test_pip_install_args_good_script(base_yaml, tmpdir):
         """
     )
     lint_check = "pip_install_args"
-    recipe_dir = os.path.join(tmpdir, "recipe")
-    os.mkdir(recipe_dir)
-    with open(os.path.join(recipe_dir, "build.sh"), "w") as f:
-        f.write("{{ PYTHON }} -m pip install . --no-deps\n")
-    messages = check_dir(lint_check, tmpdir, yaml_str)
+    test_file = recipe_dir / "build.sh"
+    test_file.write_text("{{ PYTHON }} -m pip install . --no-deps\n")
+    messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
     assert len(messages) == 0
 
 
@@ -536,7 +526,7 @@ def test_pip_install_args_bad_cmd_multi(base_yaml):
     )
 
 
-def test_pip_install_args_bad_script(base_yaml, tmpdir):
+def test_pip_install_args_bad_script(base_yaml, recipe_dir):
     yaml_str = (
         base_yaml
         + """
@@ -546,15 +536,13 @@ def test_pip_install_args_bad_script(base_yaml, tmpdir):
         """
     )
     lint_check = "pip_install_args"
-    recipe_dir = os.path.join(tmpdir, "recipe")
-    os.mkdir(recipe_dir)
-    with open(os.path.join(recipe_dir, "build.sh"), "w") as f:
-        f.write("{{ PYTHON }} -m pip install\n")
-    messages = check_dir(lint_check, tmpdir, yaml_str)
+    test_file = recipe_dir / "build.sh"
+    test_file.write_text("{{ PYTHON }} -m pip install .\n")
+    messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
     assert len(messages) == 1 and "should be run with --no-deps" in messages[0].title
 
 
-def test_pip_install_args_bad_script_multi(base_yaml, tmpdir):
+def test_pip_install_args_bad_script_multi(base_yaml, recipe_dir):
     yaml_str = (
         base_yaml
         + """
@@ -572,11 +560,9 @@ def test_pip_install_args_bad_script_multi(base_yaml, tmpdir):
         """
     )
     lint_check = "pip_install_args"
-    recipe_dir = os.path.join(tmpdir, "recipe")
-    os.mkdir(recipe_dir)
-    with open(os.path.join(recipe_dir, "build_output.sh"), "w") as f:
-        f.write("{{ PYTHON }} -m pip install\n")
-    messages = check_dir(lint_check, tmpdir, yaml_str)
+    test_file = recipe_dir / "build_output.sh"
+    test_file.write_text("{{ PYTHON }} -m pip install .\n")
+    messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
     assert len(messages) == 2 and all(
         "should be run with --no-deps" in msg.title for msg in messages
     )
@@ -922,14 +908,12 @@ def test_has_run_test_and_commands_good_cmd(base_yaml, tmpdir):
     assert len(messages) == 0
 
 
-def test_has_run_test_and_commands_good_script(base_yaml, tmpdir):
+def test_has_run_test_and_commands_good_script(base_yaml, recipe_dir):
     lint_check = "has_run_test_and_commands"
-    recipe_dir = os.path.join(tmpdir, "recipe")
-    os.mkdir(recipe_dir)
     for script in ["run_test.sh", "run_test.bat"]:
-        with open(os.path.join(recipe_dir, script), "w") as f:
-            f.write("pip check\n")
-    messages = check_dir(lint_check, tmpdir, base_yaml)
+        test_file = recipe_dir / script
+        test_file.write_text("pip check\n")
+    messages = check_dir(lint_check, recipe_dir.parent, base_yaml)
     assert len(messages) == 0
 
 
@@ -971,7 +955,7 @@ def test_has_run_test_and_commands_good_script_multi(base_yaml, tmpdir):
     assert len(messages) == 0
 
 
-def test_has_run_test_and_commands_bad(base_yaml, tmpdir):
+def test_has_run_test_and_commands_bad(base_yaml, recipe_dir):
     yaml_str = (
         base_yaml
         + """
@@ -981,12 +965,10 @@ def test_has_run_test_and_commands_bad(base_yaml, tmpdir):
         """
     )
     lint_check = "has_run_test_and_commands"
-    recipe_dir = os.path.join(tmpdir, "recipe")
-    os.mkdir(recipe_dir)
     for script in ["run_test.sh", "run_test.bat"]:
-        with open(os.path.join(recipe_dir, script), "w") as f:
-            f.write("pip check\n")
-    messages = check_dir(lint_check, tmpdir, yaml_str)
+        test_file = recipe_dir / script
+        test_file.write_text("pip check\n")
+    messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
     assert len(messages) == 1 and "Test commands are not executed" in messages[0].title
 
 
@@ -1096,7 +1078,7 @@ def test_missing_pip_check_pip_install_cmd_good_multi(base_yaml):
     assert len(messages) == 0
 
 
-def test_missing_pip_check_pip_install_script_good(base_yaml, tmpdir):
+def test_missing_pip_check_pip_install_script_good(base_yaml, recipe_dir):
     yaml_str = (
         base_yaml
         + """
@@ -1107,15 +1089,13 @@ def test_missing_pip_check_pip_install_script_good(base_yaml, tmpdir):
         """
     )
     lint_check = "missing_pip_check"
-    recipe_dir = os.path.join(tmpdir, "recipe")
-    os.mkdir(recipe_dir)
-    with open(os.path.join(recipe_dir, "run_test.sh"), "w") as f:
-        f.write("pip check\n")
-    messages = check_dir(lint_check, tmpdir, yaml_str)
+    test_file = recipe_dir / "run_test.sh"
+    test_file.write_text("pip check\n")
+    messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
     assert len(messages) == 0
 
 
-def test_missing_pip_check_pip_install_script_good_multi(base_yaml, tmpdir):
+def test_missing_pip_check_pip_install_script_good_multi(base_yaml, recipe_dir):
     yaml_str = (
         base_yaml
         + """
@@ -1130,11 +1110,9 @@ def test_missing_pip_check_pip_install_script_good_multi(base_yaml, tmpdir):
         """
     )
     lint_check = "missing_pip_check"
-    recipe_dir = os.path.join(tmpdir, "recipe")
-    os.mkdir(recipe_dir)
-    with open(os.path.join(recipe_dir, "test_output.sh"), "w") as f:
-        f.write("pip check\n")
-    messages = check_dir(lint_check, tmpdir, yaml_str)
+    test_file = recipe_dir / "test_output.sh"
+    test_file.write_text("pip check\n")
+    messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
     assert len(messages) == 0
 
 
@@ -1217,7 +1195,7 @@ def test_missing_pip_check_pip_install_cmd_bad_multi(base_yaml):
     )
 
 
-def test_missing_pip_check_pip_install_script_bad(base_yaml, tmpdir):
+def test_missing_pip_check_pip_install_script_bad(base_yaml, recipe_dir):
     yaml_str = (
         base_yaml
         + """
@@ -1228,15 +1206,13 @@ def test_missing_pip_check_pip_install_script_bad(base_yaml, tmpdir):
         """
     )
     lint_check = "missing_pip_check"
-    recipe_dir = os.path.join(tmpdir, "recipe")
-    os.mkdir(recipe_dir)
-    with open(os.path.join(recipe_dir, "run_test.sh"), "w") as f:
-        f.write("other_test_command\n")
-    messages = check_dir(lint_check, tmpdir, yaml_str)
+    test_file = recipe_dir / "run_test.sh"
+    test_file.write_text("other_test_command\n")
+    messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
     assert len(messages) == 1 and "pip check should be present" in messages[0].title
 
 
-def test_missing_pip_check_pip_install_script_bad_multi(base_yaml, tmpdir):
+def test_missing_pip_check_pip_install_script_bad_multi(base_yaml, recipe_dir):
     yaml_str = (
         base_yaml
         + """
@@ -1254,11 +1230,9 @@ def test_missing_pip_check_pip_install_script_bad_multi(base_yaml, tmpdir):
         """
     )
     lint_check = "missing_pip_check"
-    recipe_dir = os.path.join(tmpdir, "recipe")
-    os.mkdir(recipe_dir)
-    with open(os.path.join(recipe_dir, "test_output.sh"), "w") as f:
-        f.write("other_test_command\n")
-    messages = check_dir(lint_check, tmpdir, yaml_str)
+    test_file = recipe_dir / "test_output.sh"
+    test_file.write_text("other_test_command\n")
+    messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
     assert len(messages) == 2 and all(
         "pip check should be present" in msg.title for msg in messages
     )
@@ -1293,7 +1267,7 @@ def test_missing_test_requirement_pip_missing_multi(base_yaml):
     assert len(messages) == 0
 
 
-def test_missing_test_requirementk_pip_script_missing(base_yaml, tmpdir):
+def test_missing_test_requirement_pip_script_missing(base_yaml, recipe_dir):
     yaml_str = (
         base_yaml
         + """
@@ -1302,15 +1276,13 @@ def test_missing_test_requirementk_pip_script_missing(base_yaml, tmpdir):
         """
     )
     lint_check = "missing_test_requirement_pip"
-    recipe_dir = os.path.join(tmpdir, "recipe")
-    os.mkdir(recipe_dir)
-    with open(os.path.join(recipe_dir, "run_test.sh"), "w") as f:
-        f.write("some_other_command\n")
-    messages = check_dir(lint_check, tmpdir, yaml_str)
+    test_file = recipe_dir / "run_test.sh"
+    test_file.write_text("other_test_command\n")
+    messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
     assert len(messages) == 0
 
 
-def test_missing_test_requirement_pip_script_missing_multi(base_yaml, tmpdir):
+def test_missing_test_requirement_pip_script_missing_multi(base_yaml, recipe_dir):
     yaml_str = (
         base_yaml
         + """
@@ -1324,11 +1296,9 @@ def test_missing_test_requirement_pip_script_missing_multi(base_yaml, tmpdir):
         """
     )
     lint_check = "missing_test_requirement_pip"
-    recipe_dir = os.path.join(tmpdir, "recipe")
-    os.mkdir(recipe_dir)
-    with open(os.path.join(recipe_dir, "test_output.sh"), "w") as f:
-        f.write("some_other_command\n")
-    messages = check_dir(lint_check, tmpdir, yaml_str)
+    test_file = recipe_dir / "test_output.sh"
+    test_file.write_text("other_test_command\n")
+    messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
     assert len(messages) == 0
 
 
@@ -1376,7 +1346,7 @@ def test_missing_test_requirement_pip_cmd_good_multi(base_yaml):
     assert len(messages) == 0
 
 
-def test_missing_test_requirement_pip_script_good(base_yaml, tmpdir):
+def test_missing_test_requirement_pip_script_good(base_yaml, recipe_dir):
     yaml_str = (
         base_yaml
         + """
@@ -1388,15 +1358,13 @@ def test_missing_test_requirement_pip_script_good(base_yaml, tmpdir):
         """
     )
     lint_check = "missing_test_requirement_pip"
-    recipe_dir = os.path.join(tmpdir, "recipe")
-    os.mkdir(recipe_dir)
-    with open(os.path.join(recipe_dir, "run_test.sh"), "w") as f:
-        f.write("pip check\n")
-    messages = check_dir(lint_check, tmpdir, yaml_str)
+    test_file = recipe_dir / "run_test.sh"
+    test_file.write_text("pip check\n")
+    messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
     assert len(messages) == 0
 
 
-def test_missing_test_requirement_pip_script_good_multi(base_yaml, tmpdir):
+def test_missing_test_requirement_pip_script_good_multi(base_yaml, recipe_dir):
     yaml_str = (
         base_yaml
         + """
@@ -1412,11 +1380,9 @@ def test_missing_test_requirement_pip_script_good_multi(base_yaml, tmpdir):
         """
     )
     lint_check = "missing_test_requirement_pip"
-    recipe_dir = os.path.join(tmpdir, "recipe")
-    os.mkdir(recipe_dir)
-    with open(os.path.join(recipe_dir, "test_output.sh"), "w") as f:
-        f.write("pip check\n")
-    messages = check_dir(lint_check, tmpdir, yaml_str)
+    test_file = recipe_dir / "test_output.sh"
+    test_file.write_text("pip check\n")
+    messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
     assert len(messages) == 0
 
 
@@ -1458,7 +1424,7 @@ def test_missing_test_requirement_pip_cmd_bad_multi(base_yaml):
     assert len(messages) == 2 and all("pip is required" in msg.title for msg in messages)
 
 
-def test_missing_test_requirement_pip_script_bad(base_yaml, tmpdir):
+def test_missing_test_requirement_pip_script_bad(base_yaml, recipe_dir):
     yaml_str = (
         base_yaml
         + """
@@ -1467,15 +1433,13 @@ def test_missing_test_requirement_pip_script_bad(base_yaml, tmpdir):
         """
     )
     lint_check = "missing_test_requirement_pip"
-    recipe_dir = os.path.join(tmpdir, "recipe")
-    os.mkdir(recipe_dir)
-    with open(os.path.join(recipe_dir, "run_test.sh"), "w") as f:
-        f.write("pip check\n")
-    messages = check_dir(lint_check, tmpdir, yaml_str)
+    test_file = recipe_dir / "run_test.sh"
+    test_file.write_text("pip check\n")
+    messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
     assert len(messages) == 1 and "pip is required" in messages[0].title
 
 
-def test_missing_test_requirement_pip_script_bad_multi(base_yaml, tmpdir):
+def test_missing_test_requirement_pip_script_bad_multi(base_yaml, recipe_dir):
     yaml_str = (
         base_yaml
         + """
@@ -1491,11 +1455,9 @@ def test_missing_test_requirement_pip_script_bad_multi(base_yaml, tmpdir):
         """
     )
     lint_check = "missing_test_requirement_pip"
-    recipe_dir = os.path.join(tmpdir, "recipe")
-    os.mkdir(recipe_dir)
-    with open(os.path.join(recipe_dir, "test_output.sh"), "w") as f:
-        f.write("pip check\n")
-    messages = check_dir(lint_check, tmpdir, yaml_str)
+    test_file = recipe_dir / "test_output.sh"
+    test_file.write_text("pip check\n")
+    messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
     assert len(messages) == 2 and all("pip is required" in msg.title for msg in messages)
 
 

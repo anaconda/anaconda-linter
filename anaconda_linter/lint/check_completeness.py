@@ -11,6 +11,33 @@ import conda_build.license_family
 from . import WARNING, LintCheck
 
 
+class missing_section(LintCheck):
+    """The {} section is missing.
+
+    Please add this section to the recipe or output
+    """
+
+    def check_recipe(self, recipe):
+        global_sections = (
+            "package",
+            "build",
+            "about",
+        )
+        output_sections = ("requirements",)
+        for section in global_sections:
+            if not recipe.get(section, None):
+                self.message(section)
+        if outputs := recipe.get("outputs", None):
+            for o in range(len(outputs)):
+                for section in output_sections:
+                    if not recipe.get(f"outputs/{o}/{section}", None):
+                        self.message(section, output=o)
+        else:
+            for section in output_sections:
+                if not recipe.get(section, None):
+                    self.message(section)
+
+
 class missing_build_number(LintCheck):
     """The recipe is missing a build number
 
@@ -71,7 +98,7 @@ class missing_license(LintCheck):
 
 
 class missing_license_file(LintCheck):
-    """The recipe is missing the ``about/license_file`` key.
+    """The recipe is missing the ``about/license_file`` or ``about/license_url`` key.
 
     Please add::
 
@@ -85,11 +112,26 @@ class missing_license_file(LintCheck):
                 - <license file name>
                 - <license file name>
 
+    or::
+        about:
+           license_url: <license url>
+
     """
 
     def check_recipe(self, recipe):
-        if not recipe.get("about/license_file", ""):
-            self.message(section="about")
+        if not recipe.get("about/license_file", "") and not recipe.get("about/license_url", ""):
+            self.message(section="about", severity=WARNING)
+
+
+class license_file_overspecified(LintCheck):
+    """Using license_file and license_url is overspecified.
+
+    Please remove license_url.
+    """
+
+    def check_recipe(self, recipe):
+        if recipe.get("about/license_file", "") and recipe.get("about/license_url", ""):
+            self.message(section="about", severity=WARNING)
 
 
 class missing_license_family(LintCheck):
@@ -208,7 +250,7 @@ class missing_source(LintCheck):
 
     """
 
-    source_types = ["url", "git_url", "hg_url", "svn_url"]
+    source_types = ["url", "git_url", "hg_url", "svn_url", "path"]
 
     def check_source(self, source, section):
         if not any(source.get(chk) for chk in self.source_types):
@@ -216,7 +258,7 @@ class missing_source(LintCheck):
 
 
 class non_url_source(LintCheck):
-    """A source of the recipe is not url of url type.
+    """A source of the recipe is not a valid type. Allowed types are url, git_url, and path.
 
     Please change to::
 
@@ -225,32 +267,22 @@ class non_url_source(LintCheck):
 
     """
 
-    source_types = ["git_url", "hg_url", "svn_url"]
+    source_types = ["hg_url", "svn_url"]
 
     def check_source(self, source, section):
         if any(source.get(chk) for chk in self.source_types):
             self.message(section=section, severity=WARNING)
 
 
-class missing_doc_url(LintCheck):
-    """The recipe is missing a doc_url
+class missing_documentation(LintCheck):
+    """The recipe is missing a doc_url or doc_source_url
 
     Please add::
 
         about:
             doc_url: some_documentation_url
 
-    """
-
-    def check_recipe(self, recipe):
-        if not recipe.get("about/doc_url", ""):
-            self.message(section="about")
-
-
-class missing_doc_source_url(LintCheck):
-    """The recipe is missing a doc_source_url
-
-    Please add::
+    Or::
 
         about:
             doc_source_url: some-documentation-source-url
@@ -258,7 +290,19 @@ class missing_doc_source_url(LintCheck):
     """
 
     def check_recipe(self, recipe):
-        if not recipe.get("about/doc_source_url", ""):
+        if not recipe.get("about/doc_url", "") and not recipe.get("about/doc_source_url", ""):
+            self.message(section="about")
+
+
+class documentation_overspecified(LintCheck):
+    """Using doc_url and doc_source_url is overspecified
+
+    Please remove doc_source_url.
+
+    """
+
+    def check_recipe(self, recipe):
+        if recipe.get("about/doc_url", "") and recipe.get("about/doc_source_url", ""):
             self.message(section="about", severity=WARNING)
 
 
@@ -275,21 +319,6 @@ class missing_dev_url(LintCheck):
     def check_recipe(self, recipe):
         if not recipe.get("about/dev_url", ""):
             self.message(section="about")
-
-
-class missing_license_url(LintCheck):
-    """The recipe is missing a license_url
-
-    Please add::
-
-        about:
-            dev_url: some-dev-url
-
-    """
-
-    def check_recipe(self, recipe):
-        if not recipe.get("about/license_url", ""):
-            self.message(section="about", severity=WARNING)
 
 
 class missing_description(LintCheck):
