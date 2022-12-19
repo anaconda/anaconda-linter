@@ -80,7 +80,7 @@ def test_lint_none(base_yaml, linter):
     assert return_code == 0 and len(linter.get_messages()) == 0
 
 
-def test_lint_file(base_yaml, linter, tmpdir):
+def test_lint_file(base_yaml, linter, recipe_dir):
     yaml_str = (
         base_yaml
         + """
@@ -91,12 +91,9 @@ def test_lint_file(base_yaml, linter, tmpdir):
             - dummy_warning
         """
     )
-    recipe_dir = os.path.join(tmpdir, "recipe")
-    os.mkdir(recipe_dir)
-    meta_yaml = os.path.join(recipe_dir, "meta.yaml")
-    with open(meta_yaml, "w") as f:
-        f.write(yaml_str)
-    linter.lint([recipe_dir])
+    meta_yaml = recipe_dir / "meta.yaml"
+    meta_yaml.write_text(yaml_str)
+    linter.lint([str(recipe_dir)])
     assert len(linter.get_messages()) == 3
 
 
