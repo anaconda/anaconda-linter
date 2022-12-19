@@ -90,6 +90,8 @@ patch_unnecessary
 
 pip_install_args
 
+python_build_tool_in_run
+
 remove_python_pinning
 
 should_use_compilers
@@ -99,8 +101,6 @@ unknown_check
 unknown_selector
 
 uses_setup_py
-
-uses_setuptools
 
 version_constraints_missing_whitespace
 

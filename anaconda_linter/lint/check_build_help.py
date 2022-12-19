@@ -9,6 +9,17 @@ import os
 
 from . import INFO, WARNING, LintCheck
 
+PYTHON_BUILD_TOOLS = (
+    "flit",
+    "flit-core",
+    "hatchling",
+    "pdm",
+    "pip",
+    "poetry",
+    "setuptools",
+    "wheel",
+)
+
 
 def is_pypi_source(recipe):
     # is it a pypi package?
@@ -96,8 +107,8 @@ class compilers_must_be_in_build(LintCheck):
                         self.message(section=location)
 
 
-class uses_setuptools(LintCheck):
-    """The recipe uses setuptools in run depends
+class python_build_tool_in_run(LintCheck):
+    """The python build tool {} is in run depends
 
     Most Python packages only need setuptools during installation.
     Check if the package really needs setuptools (e.g. because it uses
@@ -107,9 +118,11 @@ class uses_setuptools(LintCheck):
 
     def check_recipe(self, recipe):
         deps = recipe.get_deps_dict("run")
-        if "setuptools" in deps:
-            for path in deps["setuptools"]["paths"]:
-                self.message(severity=WARNING, section=path)
+        for tool in PYTHON_BUILD_TOOLS:
+            if tool in deps:
+                for path in deps[tool]["paths"]:
+                    o = -1 if not path.startswith("outputs") else int(path.split("/")[1])
+                    self.message(tool, severity=WARNING, section=path, output=o)
 
 
 class missing_wheel(LintCheck):

@@ -158,73 +158,125 @@ def test_compilers_must_be_in_build_bad_multi(base_yaml, section):
     assert len(messages) == 2 and all("compiler in a section" in msg.title for msg in messages)
 
 
-def test_uses_setuptools_good(base_yaml):
+@pytest.mark.parametrize(
+    "tool",
+    (
+        "flit",
+        "flit-core",
+        "hatchling",
+        "pdm",
+        "pip",
+        "poetry",
+        "setuptools",
+        "wheel",
+    ),
+)
+def test_python_build_tool_in_run_good(base_yaml, tool):
     yaml_str = (
         base_yaml
-        + """
+        + f"""
         requirements:
           host:
-            - setuptools
+            - {tool}
         """
     )
-    lint_check = "uses_setuptools"
+    lint_check = "python_build_tool_in_run"
     messages = check(lint_check, yaml_str)
     assert len(messages) == 0
 
 
-def test_uses_setuptools_good_multi(base_yaml):
+@pytest.mark.parametrize(
+    "tool",
+    (
+        "flit",
+        "flit-core",
+        "hatchling",
+        "pdm",
+        "pip",
+        "poetry",
+        "setuptools",
+        "wheel",
+    ),
+)
+def test_python_build_tool_in_run_good_multi(base_yaml, tool):
     yaml_str = (
         base_yaml
-        + """
+        + f"""
         outputs:
           - name: output1
             requirements:
               host:
-                - setuptools
+                - {tool}
           - name: output2
             requirements:
               host:
-                - setuptools
+                - {tool}
         """
     )
-    lint_check = "uses_setuptools"
+    lint_check = "python_build_tool_in_run"
     messages = check(lint_check, yaml_str)
     assert len(messages) == 0
 
 
-def test_uses_setuptools_bad(base_yaml):
+@pytest.mark.parametrize(
+    "tool",
+    (
+        "flit",
+        "flit-core",
+        "hatchling",
+        "pdm",
+        "pip",
+        "poetry",
+        "setuptools",
+        "wheel",
+    ),
+)
+def test_python_build_tool_in_run_bad(base_yaml, tool):
     yaml_str = (
         base_yaml
-        + """
+        + f"""
         requirements:
           run:
-            - setuptools
+            - {tool}
         """
     )
-    lint_check = "uses_setuptools"
+    lint_check = "python_build_tool_in_run"
     messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "uses setuptools in run depends" in messages[0].title
+    assert len(messages) == 1 and f"python build tool {tool} is in run" in messages[0].title
 
 
-def test_uses_setuptools_bad_multi(base_yaml):
+@pytest.mark.parametrize(
+    "tool",
+    (
+        "flit",
+        "flit-core",
+        "hatchling",
+        "pdm",
+        "pip",
+        "poetry",
+        "setuptools",
+        "wheel",
+    ),
+)
+def test_python_build_tool_in_run_bad_multi(base_yaml, tool):
     yaml_str = (
         base_yaml
-        + """
+        + f"""
         outputs:
           - name: output1
             requirements:
               run:
-                - setuptools
+                - {tool}
           - name: output2
             requirements:
               run:
-                - setuptools
+                - {tool}
         """
     )
-    lint_check = "uses_setuptools"
+    lint_check = "python_build_tool_in_run"
     messages = check(lint_check, yaml_str)
     assert len(messages) == 2 and all(
-        "uses setuptools in run depends" in msg.title for msg in messages
+        f"python build tool {tool} is in run" in msg.title for msg in messages
     )
 
 
