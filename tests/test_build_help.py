@@ -1,6 +1,17 @@
 import pytest
 from conftest import check, check_dir
 
+PYTHON_BUILD_TOOLS = (
+    "flit",
+    "flit-core",
+    "hatchling",
+    "pdm",
+    "pip",
+    "poetry",
+    "setuptools",
+    "wheel",
+)
+
 
 @pytest.mark.parametrize(
     "compiler",
@@ -431,6 +442,164 @@ def test_python_build_tool_in_run_bad_multi(base_yaml, tool):
     messages = check(lint_check, yaml_str)
     assert len(messages) == 2 and all(
         f"python build tool {tool} is in run" in msg.title for msg in messages
+    )
+
+
+@pytest.mark.parametrize("tool", PYTHON_BUILD_TOOLS)
+def test_missing_python_build_tool_url_good(base_yaml, tool):
+    yaml_str = (
+        base_yaml
+        + f"""
+        source:
+          url: https://pypi.io/packages/source/D/Django/Django-4.1.tar.gz
+        requirements:
+          host:
+            - {tool}
+        """
+    )
+    lint_check = "missing_python_build_tool"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+@pytest.mark.parametrize("tool", PYTHON_BUILD_TOOLS)
+def test_missing_python_build_tool_url_good_multi(base_yaml, tool):
+    yaml_str = (
+        base_yaml
+        + f"""
+        source:
+          url: https://pypi.io/packages/source/D/Django/Django-4.1.tar.gz
+        outputs:
+          - name: outpu1
+            requirements:
+              host:
+                - {tool}
+          - name: outpu2
+            requirements:
+              host:
+                - {tool}
+        """
+    )
+    lint_check = "missing_python_build_tool"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_missing_python_build_tool_url_bad(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://pypi.io/packages/source/D/Django/Django-4.1.tar.gz
+        requirements:
+          host:
+        """
+    )
+    lint_check = "missing_python_build_tool"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 1 and "require a python build tool" in messages[0].title
+
+
+def test_missing_python_build_tool_url_bad_multi(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://pypi.io/packages/source/D/Django/Django-4.1.tar.gz
+        outputs:
+          - name: outpu1
+            requirements:
+              host:
+          - name: outpu2
+            requirements:
+              host:
+        """
+    )
+    lint_check = "missing_python_build_tool"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 2 and all(
+        "require a python build tool" in msg.title for msg in messages
+    )
+
+
+@pytest.mark.parametrize("tool", PYTHON_BUILD_TOOLS)
+def test_missing_python_build_tool_pip_install_good(base_yaml, tool):
+    yaml_str = (
+        base_yaml
+        + f"""
+        source:
+          url: https://github.com/joblib/joblib/archive/1.1.1.tar.gz
+        build:
+          script: {{{{ PYTHON }}}} -m pip install .
+        requirements:
+          host:
+            - {tool}
+        """
+    )
+    lint_check = "missing_python_build_tool"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+@pytest.mark.parametrize("tool", PYTHON_BUILD_TOOLS)
+def test_missing_python_build_tool_pip_install_good_multi(base_yaml, tool):
+    yaml_str = (
+        base_yaml
+        + f"""
+        outputs:
+          - name: output1
+            script: {{{{ PYTHON }}}} -m pip install .
+            requirements:
+              host:
+                - {tool}
+          - name: output2
+            script: {{{{ PYTHON }}}} -m pip install .
+            requirements:
+              host:
+                - {tool}
+        """
+    )
+    lint_check = "missing_python_build_tool"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_missing_python_build_tool_pip_install_bad(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://github.com/joblib/joblib/archive/1.1.1.tar.gz
+        build:
+          script: {{ PYTHON }} -m pip install .
+        requirements:
+          host:
+        """
+    )
+    lint_check = "missing_python_build_tool"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 1 and "require a python build tool" in messages[0].title
+
+
+def test_missing_python_build_tool_pip_install_bad_multi(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+            script: {{ PYTHON }} -m pip install .
+            requirements:
+              host:
+          - name: output2
+            script: {{ PYTHON }} -m pip install .
+            requirements:
+              host:
+        """
+    )
+    lint_check = "missing_python_build_tool"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 2 and all(
+        "require a python build tool" in msg.title for msg in messages
     )
 
 

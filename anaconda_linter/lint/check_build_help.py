@@ -161,6 +161,34 @@ class python_build_tool_in_run(LintCheck):
                     self.message(tool, severity=WARNING, section=path, output=o)
 
 
+class missing_python_build_tool(LintCheck):
+    """Python packages require a python build tool such as setuptools.
+
+    Please add the build tool specified by the upstream package to the host section.
+    """
+
+    def check_recipe(self, recipe):
+        is_pypi = is_pypi_source(recipe)
+        if outputs := recipe.get("outputs", None):
+            deps = recipe.get_deps_dict("host")
+            for o in range(len(outputs)):
+                # Create a list of build tool dependencies for each output
+                tools = []
+                for tool, paths in deps.items():
+                    if tool in PYTHON_BUILD_TOOLS and any(
+                        path.startswith(f"outputs/{o}") for path in paths
+                    ):
+                        tools.append(tool)
+                if (is_pypi or "pip install" in recipe.get(f"outputs/{o}/script", "")) and len(
+                    tools
+                ) == 0:
+                    self.message(section=f"outputs/{o}/requirements/host", output=o)
+        elif is_pypi or "pip install" in recipe.get("build/script", ""):
+            deps = recipe.get_deps("host")
+            if not any(tool in deps for tool in PYTHON_BUILD_TOOLS):
+                self.message(section="requirements/host")
+
+
 class missing_wheel(LintCheck):
     """For pypi packages, wheel should be present in the host section
 

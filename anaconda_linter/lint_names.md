@@ -60,6 +60,8 @@ missing_pip_check
 
 missing_python
 
+missing_python_build_tool
+
 missing_section
 
 missing_source
