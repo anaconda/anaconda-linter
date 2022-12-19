@@ -996,6 +996,201 @@ def test_has_run_test_and_commands_bad_multi(base_yaml, tmpdir):
     )
 
 
+def test_has_imports_and_run_test_py_good_imports(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        test:
+          imports:
+            - module
+        """
+    )
+    lint_check = "has_imports_and_run_test_py"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_has_imports_and_run_test_py_good_script(base_yaml, recipe_dir):
+    lint_check = "has_imports_and_run_test_py"
+    test_file = recipe_dir / "run_test.py"
+    test_file.write_text("import module\n")
+    messages = check_dir(lint_check, recipe_dir.parent, base_yaml)
+    assert len(messages) == 0
+
+
+def test_has_imports_and_run_test_py_good_multi(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+            test:
+              imports:
+                - module1
+          - name: output2
+            test:
+              script: test_output2.py
+        """
+    )
+    lint_check = "has_imports_and_run_test_py"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_has_imports_and_run_test_py_good_multi_testsh(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+            test:
+              imports:
+                - module1
+              script: test_output1.sh
+          - name: output2
+            test:
+              script: test_output2.py
+        """
+    )
+    lint_check = "has_imports_and_run_test_py"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_has_imports_and_run_test_py_bad(base_yaml, recipe_dir):
+    yaml_str = (
+        base_yaml
+        + """
+        test:
+          imports:
+            - module
+        """
+    )
+    lint_check = "has_imports_and_run_test_py"
+    test_file = recipe_dir / "run_test.py"
+    test_file.write_text("import module\n")
+    messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
+    assert len(messages) == 1 and "Imports and python test file" in messages[0].title
+
+
+def test_has_imports_and_run_test_py_bad_multi(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+            test:
+              script: test_output1.py
+              imports:
+                - module1
+          - name: output2
+            test:
+              script: test_output2.py
+              imports:
+                - module2
+        """
+    )
+    lint_check = "has_imports_and_run_test_py"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 2 and all(
+        "Imports and python test file" in msg.title for msg in messages
+    )
+
+
+def test_missing_imports_or_run_test_py_good_imports(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        requirements:
+          host:
+            - python
+        test:
+          imports:
+            - module
+        """
+    )
+    lint_check = "missing_imports_or_run_test_py"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_missing_imports_or_run_test_py_good_script(base_yaml, recipe_dir):
+    yaml_str = (
+        base_yaml
+        + """
+        requirements:
+          host:
+            - python
+        """
+    )
+    lint_check = "missing_imports_or_run_test_py"
+    test_file = recipe_dir / "run_test.py"
+    test_file.write_text("import module\n")
+    messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
+    assert len(messages) == 0
+
+
+def test_missing_imports_or_run_test_py_good_multi(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+            requirements:
+              host:
+                - python
+            test:
+              imports:
+                - module1
+          - name: output2
+            requirements:
+              host:
+                - python
+            test:
+              script: test_output2.py
+        """
+    )
+    lint_check = "missing_imports_or_run_test_py"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_missing_imports_or_run_test_py_bad(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        requirements:
+          host:
+            - python
+        """
+    )
+    lint_check = "missing_imports_or_run_test_py"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 1 and "Python packages require imports" in messages[0].title
+
+
+def test_missing_imports_or_run_test_py_bad_multi(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+            requirements:
+              host:
+                - python
+          - name: output2
+            requirements:
+              host:
+                - python
+        """
+    )
+    lint_check = "missing_imports_or_run_test_py"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 2 and all(
+        "Python packages require imports" in msg.title for msg in messages
+    )
+
+
 def test_missing_pip_check_url_good(base_yaml):
     yaml_str = (
         base_yaml

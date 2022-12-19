@@ -342,13 +342,7 @@ class patch_must_be_in_build(LintCheck):
 class has_run_test_and_commands(LintCheck):
     """Test commands are not executed when run_test.sh (.bat...) is present.
 
-    Remove ``test/commands`` or call ``run_test`` from ``test/commands``:
-
-      tests:
-        commands:
-          - run_test.sh    # [unix]
-          - run_test.bat   # [win]
-
+    Add the test commands to run_test.sh/.bat/.pl
     """
 
     def check_recipe(self, recipe):
@@ -363,10 +357,71 @@ class has_run_test_and_commands(LintCheck):
             if recipe.get("test/commands", []) and (
                 recipe.get("test/script", None)
                 or set(os.listdir(recipe.recipe_dir)).intersection(
-                    {"run_test.sh", "run_test.py", "run_test.bat"}
+                    {"run_test.sh", "run_test.pl", "run_test.bat"}
                 )
             ):
                 self.message(section="test/commands")
+
+
+class has_imports_and_run_test_py(LintCheck):
+    """Imports and python test file cannot coexist.
+
+    Add the imports to the python test file.
+    """
+
+    def check_recipe(self, recipe):
+        if outputs := recipe.get("outputs", None):
+            for o in range(len(outputs)):
+                test_section = f"outputs/{o}/test"
+                if recipe.get(f"{test_section}/imports", []) and recipe.get(
+                    f"{test_section}/script", ""
+                ).endswith(".py"):
+                    self.message(section=f"{test_section}/imports", output=o)
+        else:
+            if recipe.get("test/imports", []) and os.path.isfile(
+                os.path.join(recipe.recipe_dir, "run_test.py")
+            ):
+                self.message(section="test/imports")
+
+
+class missing_imports_or_run_test_py(LintCheck):
+    """Python packages require imports or a python test file in tests.
+
+    Add::
+        test:
+          imports:
+            - <module>
+
+    Or add a run_test.py file into the recipe directory.
+
+    For multi-ouput recipes, add imports or a python test file for each output::
+        test:
+          script: <test file>
+    """
+
+    def check_recipe(self, recipe):
+        is_pypi = is_pypi_source(recipe)
+        deps = recipe.get_deps_dict("host")
+        if not is_pypi and "python" not in deps:
+            return
+        if outputs := recipe.get("outputs", None):
+            paths_to_check = []
+            if is_pypi:
+                paths_to_check = [f"outputs/{o}" for o in range(len(outputs))]
+            else:
+                paths_to_check = ["/".join(path.split("/")[:2]) for path in deps["python"]["paths"]]
+            for path in paths_to_check:
+                if not recipe.get(f"{path}/test/imports", []) and not recipe.get(
+                    f"{path}/test/script", ""
+                ):
+                    o = int(path.split("/")[1])
+                    self.message(section=f"{path}/test", output=o)
+        elif (
+            (is_pypi or "python" in deps)
+            and not recipe.get("test/imports", [])
+            and not os.path.isfile(os.path.join(recipe.recipe_dir, "run_test.py"))
+        ):
+            self.message(section="test")
 
 
 class missing_pip_check(LintCheck):
