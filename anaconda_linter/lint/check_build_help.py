@@ -342,7 +342,7 @@ class patch_must_be_in_build(LintCheck):
 class has_run_test_and_commands(LintCheck):
     """Test commands are not executed when run_test.sh (.bat...) is present.
 
-    Add the test commands to run_test.sh/.bat
+    Add the test commands to run_test.sh/.bat/.pl
     """
 
     def check_recipe(self, recipe):
