@@ -384,6 +384,46 @@ class has_imports_and_run_test_py(LintCheck):
                 self.message(section="test/imports")
 
 
+class missing_imports_or_run_test_py(LintCheck):
+    """Python packages require imports or a python test file in tests.
+
+    Add::
+        test:
+          imports:
+            - <module>
+
+    Or add a run_test.py file into the recipe directory.
+
+    For multi-ouput recipes, add imports or a python test file for each output::
+        test:
+          script: <test file>
+    """
+
+    def check_recipe(self, recipe):
+        is_pypi = is_pypi_source(recipe)
+        deps = recipe.get_deps_dict("host")
+        if not is_pypi and "python" not in deps:
+            return
+        if outputs := recipe.get("outputs", None):
+            paths_to_check = []
+            if is_pypi:
+                paths_to_check = [f"outputs/{o}" for o in range(len(outputs))]
+            else:
+                paths_to_check = ["/".join(path.split("/")[:2]) for path in deps["python"]["paths"]]
+            for path in paths_to_check:
+                if not recipe.get(f"{path}/test/imports", []) and not recipe.get(
+                    f"{path}/test/script", ""
+                ):
+                    o = int(path.split("/")[1])
+                    self.message(section=f"{path}/test", output=o)
+        elif (
+            (is_pypi or "python" in deps)
+            and not recipe.get("test/imports", [])
+            and not os.path.isfile(os.path.join(recipe.recipe_dir, "run_test.py"))
+        ):
+            self.message(section="test")
+
+
 class missing_pip_check(LintCheck):
     """For pypi packages, pip check should be present in the test commands
 
