@@ -1056,6 +1056,7 @@ def test_has_imports_and_run_test_py_good_multi_testsh(base_yaml):
     messages = check(lint_check, yaml_str)
     assert len(messages) == 0
 
+
 def test_has_imports_and_run_test_py_bad(base_yaml, recipe_dir):
     yaml_str = (
         base_yaml
