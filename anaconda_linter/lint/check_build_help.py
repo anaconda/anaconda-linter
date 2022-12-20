@@ -199,15 +199,22 @@ class missing_wheel(LintCheck):
     """
 
     def check_recipe(self, recipe):
+        # similar algorithm as missing_python
         is_pypi = is_pypi_source(recipe)
-        if is_pypi or "pip install" in recipe.get("build/script", ""):
-            if "wheel" not in recipe.get("requirements/host", []):
-                self.message(section="requirements/host")
+        deps = recipe.get_deps_dict("host")
+        paths = (
+            []
+            if "wheel" not in deps
+            else ["/".join(path.split("/")[:-1]) for path in deps["wheel"]["paths"]]
+        )
         if outputs := recipe.get("outputs", None):
             for o in range(len(outputs)):
                 if is_pypi or "pip install" in recipe.get(f"outputs/{o}/script", ""):
-                    if "wheel" not in recipe.get(f"outputs/{o}/requirements/host", []):
+                    if f"outputs/{o}/requirements/host" not in paths:
                         self.message(section=f"outputs/{o}/requirements/host", output=o)
+        elif is_pypi or "pip install" in recipe.get("build/script", ""):
+            if "requirements/host" not in paths:
+                self.message(section="requirements/host")
 
 
 class uses_setup_py(LintCheck):
