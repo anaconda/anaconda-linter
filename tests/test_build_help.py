@@ -39,6 +39,7 @@ PYTHON_BUILD_TOOLS = (
     "flit",
     "flit-core",
     "hatchling",
+    "maturin",
     "pdm",
     "pip",
     "poetry",
