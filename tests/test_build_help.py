@@ -1,6 +1,40 @@
 import pytest
 from conftest import check, check_dir
 
+BUILD_TOOLS = (
+    "autoconf",
+    "automake",
+    "bison",
+    "cmake",
+    "distutils",
+    "flex",
+    "git",
+    "libtool",
+    "m4",
+    "make",
+    "ninja",
+    "patch",
+    "pkg-config",
+    "posix",
+)
+
+COMPILERS = (
+    "cgo",
+    "cuda",
+    "dpcpp",
+    "gcc",
+    "go",
+    "libgcc",
+    "libgfortran",
+    "llvm",
+    "m2w64_c",
+    "m2w64_cxx",
+    "m2w64_fortran",
+    "rust-gnu",
+    "rust",
+    "toolchain",
+)
+
 PYTHON_BUILD_TOOLS = (
     "flit",
     "flit-core",
@@ -9,29 +43,10 @@ PYTHON_BUILD_TOOLS = (
     "pip",
     "poetry",
     "setuptools",
-    "wheel",
 )
 
 
-@pytest.mark.parametrize(
-    "compiler",
-    (
-        "cgo",
-        "cuda",
-        "dpcpp",
-        "gcc",
-        "go",
-        "libgcc",
-        "libgfortran",
-        "llvm",
-        "m2w64_c",
-        "m2w64_cxx",
-        "m2w64_fortran",
-        "rust-gnu",
-        "rust",
-        "toolchain",
-    ),
-)
+@pytest.mark.parametrize("compiler", COMPILERS)
 def test_should_use_compilers_good(base_yaml, compiler):
     lint_check = "should_use_compilers"
     yaml_str = (
@@ -46,25 +61,7 @@ def test_should_use_compilers_good(base_yaml, compiler):
     assert len(messages) == 0
 
 
-@pytest.mark.parametrize(
-    "compiler",
-    (
-        "cgo",
-        "cuda",
-        "dpcpp",
-        "gcc",
-        "go",
-        "libgcc",
-        "libgfortran",
-        "llvm",
-        "m2w64_c",
-        "m2w64_cxx",
-        "m2w64_fortran",
-        "rust-gnu",
-        "rust",
-        "toolchain",
-    ),
-)
+@pytest.mark.parametrize("compiler", COMPILERS)
 def test_should_use_compilers_bad(base_yaml, compiler):
     lint_check = "should_use_compilers"
     yaml_str = (
@@ -169,26 +166,7 @@ def test_compilers_must_be_in_build_bad_multi(base_yaml, section):
     assert len(messages) == 2 and all("compiler in a section" in msg.title for msg in messages)
 
 
-@pytest.mark.parametrize(
-    "tool",
-    (
-        "autoconf",
-        "automake",
-        "bison",
-        "cmake",
-        "distutils",
-        "flex",
-        "git",
-        "libtool",
-        "m2-make",
-        "m4",
-        "make",
-        "ninja",
-        "patch",
-        "pkg-config",
-        "posix",
-    ),
-)
+@pytest.mark.parametrize("tool", BUILD_TOOLS)
 def test_build_tools_must_be_in_build_good(base_yaml, tool):
     yaml_str = (
         base_yaml
@@ -203,26 +181,7 @@ def test_build_tools_must_be_in_build_good(base_yaml, tool):
     assert len(messages) == 0
 
 
-@pytest.mark.parametrize(
-    "tool",
-    (
-        "autoconf",
-        "automake",
-        "bison",
-        "cmake",
-        "distutils",
-        "flex",
-        "git",
-        "libtool",
-        "m2-make",
-        "m4",
-        "make",
-        "ninja",
-        "patch",
-        "pkg-config",
-        "posix",
-    ),
-)
+@pytest.mark.parametrize("tool", BUILD_TOOLS)
 def test_build_tools_must_be_in_build_good_multi(base_yaml, tool):
     yaml_str = (
         base_yaml
@@ -244,26 +203,7 @@ def test_build_tools_must_be_in_build_good_multi(base_yaml, tool):
 
 
 @pytest.mark.parametrize("section", ("host", "run"))
-@pytest.mark.parametrize(
-    "tool",
-    (
-        "autoconf",
-        "automake",
-        "bison",
-        "cmake",
-        "distutils",
-        "flex",
-        "git",
-        "libtool",
-        "m2-make",
-        "m4",
-        "make",
-        "ninja",
-        "patch",
-        "pkg-config",
-        "posix",
-    ),
-)
+@pytest.mark.parametrize("tool", BUILD_TOOLS)
 def test_build_tools_must_be_in_build_bad(base_yaml, section, tool):
     yaml_str = (
         base_yaml
@@ -281,26 +221,7 @@ def test_build_tools_must_be_in_build_bad(base_yaml, section, tool):
 
 
 @pytest.mark.parametrize("section", ("host", "run"))
-@pytest.mark.parametrize(
-    "tool",
-    (
-        "autoconf",
-        "automake",
-        "bison",
-        "cmake",
-        "distutils",
-        "flex",
-        "git",
-        "libtool",
-        "m2-make",
-        "m4",
-        "make",
-        "ninja",
-        "patch",
-        "pkg-config",
-        "posix",
-    ),
-)
+@pytest.mark.parametrize("tool", BUILD_TOOLS)
 def test_build_tools_must_be_in_build_bad_multi(base_yaml, section, tool):
     yaml_str = (
         base_yaml
@@ -323,19 +244,7 @@ def test_build_tools_must_be_in_build_bad_multi(base_yaml, section, tool):
     )
 
 
-@pytest.mark.parametrize(
-    "tool",
-    (
-        "flit",
-        "flit-core",
-        "hatchling",
-        "pdm",
-        "pip",
-        "poetry",
-        "setuptools",
-        "wheel",
-    ),
-)
+@pytest.mark.parametrize("tool", PYTHON_BUILD_TOOLS)
 def test_python_build_tool_in_run_good(base_yaml, tool):
     yaml_str = (
         base_yaml
@@ -350,19 +259,7 @@ def test_python_build_tool_in_run_good(base_yaml, tool):
     assert len(messages) == 0
 
 
-@pytest.mark.parametrize(
-    "tool",
-    (
-        "flit",
-        "flit-core",
-        "hatchling",
-        "pdm",
-        "pip",
-        "poetry",
-        "setuptools",
-        "wheel",
-    ),
-)
+@pytest.mark.parametrize("tool", PYTHON_BUILD_TOOLS)
 def test_python_build_tool_in_run_good_multi(base_yaml, tool):
     yaml_str = (
         base_yaml
@@ -383,19 +280,7 @@ def test_python_build_tool_in_run_good_multi(base_yaml, tool):
     assert len(messages) == 0
 
 
-@pytest.mark.parametrize(
-    "tool",
-    (
-        "flit",
-        "flit-core",
-        "hatchling",
-        "pdm",
-        "pip",
-        "poetry",
-        "setuptools",
-        "wheel",
-    ),
-)
+@pytest.mark.parametrize("tool", PYTHON_BUILD_TOOLS)
 def test_python_build_tool_in_run_bad(base_yaml, tool):
     yaml_str = (
         base_yaml
@@ -410,19 +295,7 @@ def test_python_build_tool_in_run_bad(base_yaml, tool):
     assert len(messages) == 1 and f"python build tool {tool} is in run" in messages[0].title
 
 
-@pytest.mark.parametrize(
-    "tool",
-    (
-        "flit",
-        "flit-core",
-        "hatchling",
-        "pdm",
-        "pip",
-        "poetry",
-        "setuptools",
-        "wheel",
-    ),
-)
+@pytest.mark.parametrize("tool", PYTHON_BUILD_TOOLS)
 def test_python_build_tool_in_run_bad_multi(base_yaml, tool):
     yaml_str = (
         base_yaml

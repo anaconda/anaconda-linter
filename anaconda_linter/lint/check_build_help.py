@@ -35,7 +35,6 @@ PYTHON_BUILD_TOOLS = (
     "pip",
     "poetry",
     "setuptools",
-    "wheel",
 )
 
 
@@ -174,9 +173,9 @@ class missing_python_build_tool(LintCheck):
             for o in range(len(outputs)):
                 # Create a list of build tool dependencies for each output
                 tools = []
-                for tool, paths in deps.items():
+                for tool, dep in deps.items():
                     if tool in PYTHON_BUILD_TOOLS and any(
-                        path.startswith(f"outputs/{o}") for path in paths
+                        path.startswith(f"outputs/{o}") for path in dep["paths"]
                     ):
                         tools.append(tool)
                 if (is_pypi or "pip install" in recipe.get(f"outputs/{o}/script", "")) and len(
