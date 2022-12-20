@@ -35,6 +35,8 @@ PYTHON_BUILD_TOOLS = (
     "pip",
     "poetry",
     "setuptools",
+    "setuptools-rust",
+    "setuptools_scm",
 )
 
 
