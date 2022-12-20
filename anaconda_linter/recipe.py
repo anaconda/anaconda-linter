@@ -241,7 +241,7 @@ class Recipe:
                                 # but they can be converted into a list
                                 try:
                                     self.selector_dict[k] = list(v)[-1]
-                                except:
+                                except Exception:
                                     pass
                 except DuplicateKeyError as err:
                     line = err.problem_mark.line + 1
