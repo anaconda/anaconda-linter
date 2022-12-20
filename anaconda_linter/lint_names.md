@@ -20,6 +20,8 @@ gui_app
 
 has_run_test_and_commands
 
+host_section_needs_exact_pinnings
+
 http_url
 
 incorrect_license

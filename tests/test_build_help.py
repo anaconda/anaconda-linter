@@ -48,6 +48,160 @@ PYTHON_BUILD_TOOLS = (
 )
 
 
+def test_host_section_needs_exact_pinnings_good(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        requirements:
+            host:
+              - maturin 0.13.7
+        """
+    )
+    lint_check = "host_section_needs_exact_pinnings"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_host_section_needs_exact_pinnings_good_multi(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+            requirements:
+                host:
+                  - maturin 0.13.7
+          - name: output2
+            requirements:
+                host:
+                  - maturin 0.13.7
+        """
+    )
+    lint_check = "host_section_needs_exact_pinnings"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+@pytest.mark.parametrize("package", ("python", "toml", "wheel", *PYTHON_BUILD_TOOLS))
+def test_host_section_needs_exact_pinnings_good_exception(base_yaml, package):
+    yaml_str = (
+        base_yaml
+        + f"""
+        requirements:
+            host:
+              - {package}
+        """
+    )
+    lint_check = "host_section_needs_exact_pinnings"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+@pytest.mark.parametrize("package", ("python", "toml", "wheel", *PYTHON_BUILD_TOOLS))
+def test_host_section_needs_exact_pinnings_good_exception_multi(base_yaml, package):
+    yaml_str = (
+        base_yaml
+        + f"""
+        outputs:
+          - name: output1
+            requirements:
+                host:
+                  - {package}
+          - name: output2
+            requirements:
+                host:
+                  - {package}
+        """
+    )
+    lint_check = "host_section_needs_exact_pinnings"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_host_section_needs_exact_pinnings_good_cbc(base_yaml, recipe_dir):
+    yaml_str = (
+        base_yaml
+        + """
+        requirements:
+            host:
+              - maturin
+        """
+    )
+    cbc = """
+    maturin:
+      - 0.13.7
+    """
+    cbc_file = recipe_dir / "conda_build_config.yaml"
+    cbc_file.write_text(cbc)
+    lint_check = "host_section_needs_exact_pinnings"
+    messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
+    assert len(messages) == 0
+
+
+def test_host_section_needs_exact_pinnings_good_cbc_multi(base_yaml, recipe_dir):
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+            requirements:
+                host:
+                  - maturin
+          - name: output2
+            requirements:
+                host:
+                  - maturin
+        """
+    )
+    cbc = """
+    maturin:
+      - 0.13.7
+    """
+    cbc_file = recipe_dir / "conda_build_config.yaml"
+    cbc_file.write_text(cbc)
+    lint_check = "host_section_needs_exact_pinnings"
+    messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
+    assert len(messages) == 0
+
+
+@pytest.mark.parametrize("constraint", ("", ">=0.13", "<0.14", "!=0.13.7"))
+def test_host_section_needs_exact_pinnings_bad(base_yaml, constraint):
+    yaml_str = (
+        base_yaml
+        + f"""
+        requirements:
+            host:
+              - maturin {constraint}
+        """
+    )
+    lint_check = "host_section_needs_exact_pinnings"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 1 and "must have exact version pinnings" in messages[0].title
+
+
+@pytest.mark.parametrize("constraint", ("", ">=0.13", "<0.14", "!=0.13.7"))
+def test_host_section_needs_exact_pinnings_bad_multi(base_yaml, constraint):
+    yaml_str = (
+        base_yaml
+        + f"""
+        outputs:
+          - name: output1
+            requirements:
+                host:
+                  - maturin {constraint}
+          - name: output2
+            requirements:
+                host:
+                  - maturin {constraint}
+        """
+    )
+    lint_check = "host_section_needs_exact_pinnings"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 2 and all(
+        "must have exact version pinnings" in msg.title for msg in messages
+    )
+
+
 @pytest.mark.parametrize("compiler", COMPILERS)
 def test_should_use_compilers_good(base_yaml, compiler):
     lint_check = "should_use_compilers"

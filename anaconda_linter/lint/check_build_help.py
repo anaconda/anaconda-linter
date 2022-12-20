@@ -6,6 +6,7 @@ These checks catch errors relating to the use of ``-
 """
 
 import os
+import re
 
 from . import INFO, WARNING, LintCheck
 
@@ -65,6 +66,32 @@ def recipe_has_patches(recipe):
                 if src.get("patches", ""):
                     return True
     return False
+
+
+class host_section_needs_exact_pinnings(LintCheck):
+    """Packages in host must have exact version pinnings, except python build tools.
+
+    Specifically, comparison operators must not be used. The version numbers can be
+    speficified in a conda_build_config.yaml file.
+    """
+
+    def check_recipe(self, recipe):
+        deps = recipe.get_deps_dict("host")
+        exceptions = (
+            "python",
+            "toml",
+            "wheel",
+            *PYTHON_BUILD_TOOLS,
+        )
+        for package, dep in deps.items():
+            if package not in exceptions and not (
+                package in recipe.selector_dict and recipe.selector_dict[package]
+            ):
+                for c, constraint in enumerate(dep["constraints"]):
+                    if constraint == "" or re.search("^[<>!]", constraint) is not None:
+                        path = dep["paths"][c]
+                        output = -1 if not path.startswith("outputs") else int(path.split("/")[1])
+                        self.message(section=path, output=output)
 
 
 class should_use_compilers(LintCheck):
