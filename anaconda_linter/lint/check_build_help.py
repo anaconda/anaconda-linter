@@ -490,7 +490,7 @@ class missing_pip_check(LintCheck):
                     self._check_file(os.path.join(recipe.dir, script))
                 else:
                     self.message(section=test_section, output=o)
-        elif is_pypi or "pip install" in self.recipe.get("build/script", ""):
+        elif is_pypi or "pip install" in recipe.get("build/script", ""):
             if commands := recipe.get("test/commands", None):
                 if not any("pip check" in cmd for cmd in commands):
                     self.message(section="test/commands")
@@ -583,12 +583,12 @@ class missing_python(LintCheck):
         )
         if outputs := recipe.get("outputs", None):
             for o in range(len(outputs)):
-                if is_pypi or "pip install" in self.recipe.get(f"outputs/{o}/script", ""):
+                if is_pypi or "pip install" in recipe.get(f"outputs/{o}/script", ""):
                     for section in ["host", "run"]:
                         path_to_section = f"outputs/{o}/requirements/{section}"
                         if path_to_section not in paths:
                             self.message(section, section=path_to_section, output=o)
-        elif is_pypi or "pip install" in self.recipe.get("build/script", ""):
+        elif is_pypi or "pip install" in recipe.get("build/script", ""):
             for section in ["host", "run"]:
                 path_to_section = f"requirements/{section}"
                 if path_to_section not in paths:
