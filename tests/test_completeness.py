@@ -350,7 +350,7 @@ def test_missing_hash_good(base_yaml):
 
 
 @pytest.mark.parametrize("exempt_type", ("git_url", "path"))
-def test_missing_hash_good(base_yaml, exempt_type):
+def test_missing_hash_good_exceptions(base_yaml, exempt_type):
     yaml_str = (
         base_yaml
         + f"""
