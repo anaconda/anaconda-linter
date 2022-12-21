@@ -1,51 +1,7 @@
 import pytest
 from conftest import check, check_dir
 
-BUILD_TOOLS = (
-    "autoconf",
-    "automake",
-    "bison",
-    "cmake",
-    "distutils",
-    "flex",
-    "git",
-    "libtool",
-    "m4",
-    "make",
-    "ninja",
-    "patch",
-    "pkg-config",
-    "posix",
-)
-
-COMPILERS = (
-    "cgo",
-    "cuda",
-    "dpcpp",
-    "gcc",
-    "go",
-    "libgcc",
-    "libgfortran",
-    "llvm",
-    "m2w64_c",
-    "m2w64_cxx",
-    "m2w64_fortran",
-    "rust-gnu",
-    "rust",
-    "toolchain",
-)
-
-PYTHON_BUILD_TOOLS = (
-    "flit",
-    "flit-core",
-    "hatchling",
-    "pdm",
-    "pip",
-    "poetry",
-    "setuptools",
-    "setuptools-rust",
-    "setuptools_scm",
-)
+from anaconda_linter.lint.check_build_help import BUILD_TOOLS, COMPILERS, PYTHON_BUILD_TOOLS
 
 
 def test_host_section_needs_exact_pinnings_good(base_yaml):

@@ -40,6 +40,23 @@ PYTHON_BUILD_TOOLS = (
     "setuptools_scm",
 )
 
+COMPILERS = (
+    "cgo",
+    "cuda",
+    "dpcpp",
+    "gcc",
+    "go",
+    "libgcc",
+    "libgfortran",
+    "llvm",
+    "m2w64_c",
+    "m2w64_cxx",
+    "m2w64_fortran",
+    "rust-gnu",
+    "rust",
+    "toolchain",
+)
+
 
 def is_pypi_source(recipe):
     # is it a pypi package?
