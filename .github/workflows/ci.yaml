@@ -94,4 +94,5 @@ jobs:
           run: |
             source $CONDA/bin/activate
             conda activate anaconda-linter
-            [[ -z grep "All checks OK!" <<< `conda-lint .` ]] && exit 1
+            OUTPUT=`conda-lint .`
+            [[ ${OUTPUT} == "All checks OK" ]] || exit 1
