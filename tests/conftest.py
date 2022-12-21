@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 
 import pytest
@@ -11,7 +10,7 @@ from anaconda_linter.recipe import Recipe
 @pytest.fixture()
 def linter():
     """Sets up linter for use in other tests"""
-    config_file = os.path.abspath(os.path.dirname(__file__) + "/../anaconda_linter/config.yaml")
+    config_file = Path(__file__).parent / "config.yaml"
     config = utils.load_config(config_file)
     linter = Linter(config=config)
     return linter
@@ -36,7 +35,7 @@ def recipe_dir(tmpdir):
 
 
 def check(check_name, recipe_str):
-    config_file = Path(__file__).parent / "../anaconda_linter/config.yaml"
+    config_file = Path(__file__).parent / "config.yaml"
     config = utils.load_config(str(config_file.resolve()))
     linter = Linter(config=config)
     recipe = Recipe.from_string(recipe_str)
@@ -47,7 +46,7 @@ def check(check_name, recipe_str):
 def check_dir(check_name, feedstock_dir, recipe_str):
     if not isinstance(feedstock_dir, Path):
         feedstock_dir = Path(feedstock_dir)
-    config_file = Path(__file__).parent / "../anaconda_linter/config.yaml"
+    config_file = Path(__file__).parent / "config.yaml"
     config = utils.load_config(str(config_file.resolve()))
     linter = Linter(config=config)
     recipe_dir = feedstock_dir / "recipe"
