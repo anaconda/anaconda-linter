@@ -31,6 +31,7 @@ BUILD_TOOLS = (
 PYTHON_BUILD_TOOLS = (
     "flit",
     "flit-core",
+    "hatch",
     "hatchling",
     "pdm",
     "pip",
@@ -38,6 +39,7 @@ PYTHON_BUILD_TOOLS = (
     "setuptools",
     "setuptools-rust",
     "setuptools_scm",
+    "whey",
 )
 
 COMPILERS = (
