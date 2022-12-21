@@ -15,8 +15,10 @@ Note: version releases in the 0.x.y range may introduce breaking changes.
 - Bug fix: Correct error line reporting. PR: #131, Issues: #123
 - Bug fix: Handle YAML parsing errors. PR: #131, Issues: #126
 - Enhancement: Render recipe using cbc files defined variables. PR: #131
-- Add multi-output recipe support. PR: #149, Issues: #88
+- Add multi-output recipe support. PR: #149, #159, Issues: #88
 - Fix missing_pip_check for test scripts. PR: #149, Issues: #144
+- Implement new Perseverance Recipe Standards. PR: #160, #161, #162, #164, #165
+- Code clean-ups. PR: #154, #155, #163.
 
 ## 0.0.3
 

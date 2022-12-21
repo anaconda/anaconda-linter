@@ -6,8 +6,58 @@ These checks catch errors relating to the use of ``-
 """
 
 import os
+import re
 
 from . import INFO, WARNING, LintCheck
+
+# Does not include m2-tools, which should be checked using wild cards.
+BUILD_TOOLS = (
+    "autoconf",
+    "automake",
+    "bison",
+    "cmake",
+    "distutils",
+    "flex",
+    "git",
+    "libtool",
+    "m4",
+    "make",
+    "ninja",
+    "patch",
+    "pkg-config",
+    "posix",
+)
+
+PYTHON_BUILD_TOOLS = (
+    "flit",
+    "flit-core",
+    "hatch",
+    "hatchling",
+    "pdm",
+    "pip",
+    "poetry",
+    "setuptools",
+    "setuptools-rust",
+    "setuptools_scm",
+    "whey",
+)
+
+COMPILERS = (
+    "cgo",
+    "cuda",
+    "dpcpp",
+    "gcc",
+    "go",
+    "libgcc",
+    "libgfortran",
+    "llvm",
+    "m2w64_c",
+    "m2w64_cxx",
+    "m2w64_fortran",
+    "rust-gnu",
+    "rust",
+    "toolchain",
+)
 
 
 def is_pypi_source(recipe):
@@ -35,6 +85,32 @@ def recipe_has_patches(recipe):
                 if src.get("patches", ""):
                     return True
     return False
+
+
+class host_section_needs_exact_pinnings(LintCheck):
+    """Packages in host must have exact version pinnings, except python build tools.
+
+    Specifically, comparison operators must not be used. The version numbers can be
+    speficified in a conda_build_config.yaml file.
+    """
+
+    def check_recipe(self, recipe):
+        deps = recipe.get_deps_dict("host")
+        exceptions = (
+            "python",
+            "toml",
+            "wheel",
+            *PYTHON_BUILD_TOOLS,
+        )
+        for package, dep in deps.items():
+            if package not in exceptions and not (
+                package in recipe.selector_dict and recipe.selector_dict[package]
+            ):
+                for c, constraint in enumerate(dep["constraints"]):
+                    if constraint == "" or re.search("^[<>!]", constraint) is not None:
+                        path = dep["paths"][c]
+                        output = -1 if not path.startswith("outputs") else int(path.split("/")[1])
+                        self.message(section=path, output=output)
 
 
 class should_use_compilers(LintCheck):
@@ -96,20 +172,68 @@ class compilers_must_be_in_build(LintCheck):
                         self.message(section=location)
 
 
-class uses_setuptools(LintCheck):
-    """The recipe uses setuptools in run depends
+class build_tools_must_be_in_build(LintCheck):
+    """The build tool {} is not in the build section.
 
-    Most Python packages only need setuptools during installation.
-    Check if the package really needs setuptools (e.g. because it uses
+    Please add::
+        requirements:
+          build:
+            - {}
+    """
+
+    def check_recipe(self, recipe):
+        deps = recipe.get_deps_dict(["host", "run"])
+        for tool, dep in deps.items():
+            if tool.startswith("m2-") or tool in BUILD_TOOLS:
+                for path in dep["paths"]:
+                    o = -1 if not path.startswith("outputs") else int(path.split("/")[1])
+                    self.message(tool, severity=WARNING, section=path, output=o)
+
+
+class python_build_tool_in_run(LintCheck):
+    """The python build tool {} is in run depends
+
+    Most Python packages only need python build tools during installation.
+    Check if the package really needs this build tool (e.g. because it uses
     pkg_resources or setuptools console scripts).
 
     """
 
     def check_recipe(self, recipe):
         deps = recipe.get_deps_dict("run")
-        if "setuptools" in deps:
-            for path in deps["setuptools"]["paths"]:
-                self.message(severity=WARNING, section=path)
+        for tool in PYTHON_BUILD_TOOLS:
+            if tool in deps:
+                for path in deps[tool]["paths"]:
+                    o = -1 if not path.startswith("outputs") else int(path.split("/")[1])
+                    self.message(tool, severity=WARNING, section=path, output=o)
+
+
+class missing_python_build_tool(LintCheck):
+    """Python packages require a python build tool such as setuptools.
+
+    Please add the build tool specified by the upstream package to the host section.
+    """
+
+    def check_recipe(self, recipe):
+        is_pypi = is_pypi_source(recipe)
+        if outputs := recipe.get("outputs", None):
+            deps = recipe.get_deps_dict("host")
+            for o in range(len(outputs)):
+                # Create a list of build tool dependencies for each output
+                tools = []
+                for tool, dep in deps.items():
+                    if tool in PYTHON_BUILD_TOOLS and any(
+                        path.startswith(f"outputs/{o}") for path in dep["paths"]
+                    ):
+                        tools.append(tool)
+                if (is_pypi or "pip install" in recipe.get(f"outputs/{o}/script", "")) and len(
+                    tools
+                ) == 0:
+                    self.message(section=f"outputs/{o}/requirements/host", output=o)
+        elif is_pypi or "pip install" in recipe.get("build/script", ""):
+            deps = recipe.get_deps("host")
+            if not any(tool in deps for tool in PYTHON_BUILD_TOOLS):
+                self.message(section="requirements/host")
 
 
 class missing_wheel(LintCheck):
@@ -123,15 +247,22 @@ class missing_wheel(LintCheck):
     """
 
     def check_recipe(self, recipe):
+        # similar algorithm as missing_python
         is_pypi = is_pypi_source(recipe)
-        if is_pypi or "pip install" in recipe.get("build/script", ""):
-            if "wheel" not in recipe.get("requirements/host", []):
-                self.message(section="requirements/host")
+        deps = recipe.get_deps_dict("host")
+        paths = (
+            []
+            if "wheel" not in deps
+            else ["/".join(path.split("/")[:-1]) for path in deps["wheel"]["paths"]]
+        )
         if outputs := recipe.get("outputs", None):
             for o in range(len(outputs)):
                 if is_pypi or "pip install" in recipe.get(f"outputs/{o}/script", ""):
-                    if "wheel" not in recipe.get(f"outputs/{o}/requirements/host", []):
+                    if f"outputs/{o}/requirements/host" not in paths:
                         self.message(section=f"outputs/{o}/requirements/host", output=o)
+        elif is_pypi or "pip install" in recipe.get("build/script", ""):
+            if "requirements/host" not in paths:
+                self.message(section="requirements/host")
 
 
 class uses_setup_py(LintCheck):
@@ -462,7 +593,7 @@ class missing_pip_check(LintCheck):
                     self._check_file(os.path.join(recipe.dir, script))
                 else:
                     self.message(section=test_section, output=o)
-        elif is_pypi or "pip install" in self.recipe.get("build/script", ""):
+        elif is_pypi or "pip install" in recipe.get("build/script", ""):
             if commands := recipe.get("test/commands", None):
                 if not any("pip check" in cmd for cmd in commands):
                     self.message(section="test/commands")
@@ -555,12 +686,12 @@ class missing_python(LintCheck):
         )
         if outputs := recipe.get("outputs", None):
             for o in range(len(outputs)):
-                if is_pypi or "pip install" in self.recipe.get(f"outputs/{o}/script", ""):
+                if is_pypi or "pip install" in recipe.get(f"outputs/{o}/script", ""):
                     for section in ["host", "run"]:
                         path_to_section = f"outputs/{o}/requirements/{section}"
                         if path_to_section not in paths:
                             self.message(section, section=path_to_section, output=o)
-        elif is_pypi or "pip install" in self.recipe.get("build/script", ""):
+        elif is_pypi or "pip install" in recipe.get("build/script", ""):
             for section in ["host", "run"]:
                 path_to_section = f"requirements/{section}"
                 if path_to_section not in paths:

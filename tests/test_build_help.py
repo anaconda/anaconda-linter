@@ -1,26 +1,164 @@
 import pytest
 from conftest import check, check_dir
 
+from anaconda_linter.lint.check_build_help import BUILD_TOOLS, COMPILERS, PYTHON_BUILD_TOOLS
 
-@pytest.mark.parametrize(
-    "compiler",
-    (
-        "cgo",
-        "cuda",
-        "dpcpp",
-        "gcc",
-        "go",
-        "libgcc",
-        "libgfortran",
-        "llvm",
-        "m2w64_c",
-        "m2w64_cxx",
-        "m2w64_fortran",
-        "rust-gnu",
-        "rust",
-        "toolchain",
-    ),
-)
+
+def test_host_section_needs_exact_pinnings_good(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        requirements:
+            host:
+              - maturin 0.13.7
+        """
+    )
+    lint_check = "host_section_needs_exact_pinnings"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_host_section_needs_exact_pinnings_good_multi(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+            requirements:
+                host:
+                  - maturin 0.13.7
+          - name: output2
+            requirements:
+                host:
+                  - maturin 0.13.7
+        """
+    )
+    lint_check = "host_section_needs_exact_pinnings"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+@pytest.mark.parametrize("package", ("python", "toml", "wheel", *PYTHON_BUILD_TOOLS))
+def test_host_section_needs_exact_pinnings_good_exception(base_yaml, package):
+    yaml_str = (
+        base_yaml
+        + f"""
+        requirements:
+            host:
+              - {package}
+        """
+    )
+    lint_check = "host_section_needs_exact_pinnings"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+@pytest.mark.parametrize("package", ("python", "toml", "wheel", *PYTHON_BUILD_TOOLS))
+def test_host_section_needs_exact_pinnings_good_exception_multi(base_yaml, package):
+    yaml_str = (
+        base_yaml
+        + f"""
+        outputs:
+          - name: output1
+            requirements:
+                host:
+                  - {package}
+          - name: output2
+            requirements:
+                host:
+                  - {package}
+        """
+    )
+    lint_check = "host_section_needs_exact_pinnings"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_host_section_needs_exact_pinnings_good_cbc(base_yaml, recipe_dir):
+    yaml_str = (
+        base_yaml
+        + """
+        requirements:
+            host:
+              - maturin
+        """
+    )
+    cbc = """
+    maturin:
+      - 0.13.7
+    """
+    cbc_file = recipe_dir / "conda_build_config.yaml"
+    cbc_file.write_text(cbc)
+    lint_check = "host_section_needs_exact_pinnings"
+    messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
+    assert len(messages) == 0
+
+
+def test_host_section_needs_exact_pinnings_good_cbc_multi(base_yaml, recipe_dir):
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+            requirements:
+                host:
+                  - maturin
+          - name: output2
+            requirements:
+                host:
+                  - maturin
+        """
+    )
+    cbc = """
+    maturin:
+      - 0.13.7
+    """
+    cbc_file = recipe_dir / "conda_build_config.yaml"
+    cbc_file.write_text(cbc)
+    lint_check = "host_section_needs_exact_pinnings"
+    messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
+    assert len(messages) == 0
+
+
+@pytest.mark.parametrize("constraint", ("", ">=0.13", "<0.14", "!=0.13.7"))
+def test_host_section_needs_exact_pinnings_bad(base_yaml, constraint):
+    yaml_str = (
+        base_yaml
+        + f"""
+        requirements:
+            host:
+              - maturin {constraint}
+        """
+    )
+    lint_check = "host_section_needs_exact_pinnings"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 1 and "must have exact version pinnings" in messages[0].title
+
+
+@pytest.mark.parametrize("constraint", ("", ">=0.13", "<0.14", "!=0.13.7"))
+def test_host_section_needs_exact_pinnings_bad_multi(base_yaml, constraint):
+    yaml_str = (
+        base_yaml
+        + f"""
+        outputs:
+          - name: output1
+            requirements:
+                host:
+                  - maturin {constraint}
+          - name: output2
+            requirements:
+                host:
+                  - maturin {constraint}
+        """
+    )
+    lint_check = "host_section_needs_exact_pinnings"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 2 and all(
+        "must have exact version pinnings" in msg.title for msg in messages
+    )
+
+
+@pytest.mark.parametrize("compiler", COMPILERS)
 def test_should_use_compilers_good(base_yaml, compiler):
     lint_check = "should_use_compilers"
     yaml_str = (
@@ -35,25 +173,7 @@ def test_should_use_compilers_good(base_yaml, compiler):
     assert len(messages) == 0
 
 
-@pytest.mark.parametrize(
-    "compiler",
-    (
-        "cgo",
-        "cuda",
-        "dpcpp",
-        "gcc",
-        "go",
-        "libgcc",
-        "libgfortran",
-        "llvm",
-        "m2w64_c",
-        "m2w64_cxx",
-        "m2w64_fortran",
-        "rust-gnu",
-        "rust",
-        "toolchain",
-    ),
-)
+@pytest.mark.parametrize("compiler", COMPILERS)
 def test_should_use_compilers_bad(base_yaml, compiler):
     lint_check = "should_use_compilers"
     yaml_str = (
@@ -158,73 +278,313 @@ def test_compilers_must_be_in_build_bad_multi(base_yaml, section):
     assert len(messages) == 2 and all("compiler in a section" in msg.title for msg in messages)
 
 
-def test_uses_setuptools_good(base_yaml):
+@pytest.mark.parametrize("tool", BUILD_TOOLS)
+def test_build_tools_must_be_in_build_good(base_yaml, tool):
     yaml_str = (
         base_yaml
-        + """
+        + f"""
         requirements:
-          host:
-            - setuptools
+          build:
+            - {tool}
         """
     )
-    lint_check = "uses_setuptools"
+    lint_check = "build_tools_must_be_in_build"
     messages = check(lint_check, yaml_str)
     assert len(messages) == 0
 
 
-def test_uses_setuptools_good_multi(base_yaml):
+@pytest.mark.parametrize("tool", BUILD_TOOLS)
+def test_build_tools_must_be_in_build_good_multi(base_yaml, tool):
     yaml_str = (
         base_yaml
-        + """
+        + f"""
         outputs:
           - name: output1
             requirements:
-              host:
-                - setuptools
+              build:
+                - {tool}
           - name: output2
             requirements:
-              host:
-                - setuptools
+              build:
+                - {tool}
         """
     )
-    lint_check = "uses_setuptools"
+    lint_check = "build_tools_must_be_in_build"
     messages = check(lint_check, yaml_str)
     assert len(messages) == 0
 
 
-def test_uses_setuptools_bad(base_yaml):
+@pytest.mark.parametrize("section", ("host", "run"))
+@pytest.mark.parametrize("tool", BUILD_TOOLS)
+def test_build_tools_must_be_in_build_bad(base_yaml, section, tool):
     yaml_str = (
         base_yaml
-        + """
+        + f"""
         requirements:
-          run:
-            - setuptools
+          {section}:
+            - {tool}
         """
     )
-    lint_check = "uses_setuptools"
+    lint_check = "build_tools_must_be_in_build"
     messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "uses setuptools in run depends" in messages[0].title
+    assert (
+        len(messages) == 1 and f"build tool {tool} is not in the build section" in messages[0].title
+    )
 
 
-def test_uses_setuptools_bad_multi(base_yaml):
+@pytest.mark.parametrize("section", ("host", "run"))
+@pytest.mark.parametrize("tool", BUILD_TOOLS)
+def test_build_tools_must_be_in_build_bad_multi(base_yaml, section, tool):
     yaml_str = (
         base_yaml
-        + """
+        + f"""
         outputs:
           - name: output1
             requirements:
-              run:
-                - setuptools
+              {section}:
+                - {tool}
           - name: output2
             requirements:
-              run:
-                - setuptools
+              {section}:
+                - {tool}
         """
     )
-    lint_check = "uses_setuptools"
+    lint_check = "build_tools_must_be_in_build"
     messages = check(lint_check, yaml_str)
     assert len(messages) == 2 and all(
-        "uses setuptools in run depends" in msg.title for msg in messages
+        f"build tool {tool} is not in the build section" in msg.title for msg in messages
+    )
+
+
+@pytest.mark.parametrize("tool", PYTHON_BUILD_TOOLS)
+def test_python_build_tool_in_run_good(base_yaml, tool):
+    yaml_str = (
+        base_yaml
+        + f"""
+        requirements:
+          host:
+            - {tool}
+        """
+    )
+    lint_check = "python_build_tool_in_run"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+@pytest.mark.parametrize("tool", PYTHON_BUILD_TOOLS)
+def test_python_build_tool_in_run_good_multi(base_yaml, tool):
+    yaml_str = (
+        base_yaml
+        + f"""
+        outputs:
+          - name: output1
+            requirements:
+              host:
+                - {tool}
+          - name: output2
+            requirements:
+              host:
+                - {tool}
+        """
+    )
+    lint_check = "python_build_tool_in_run"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+@pytest.mark.parametrize("tool", PYTHON_BUILD_TOOLS)
+def test_python_build_tool_in_run_bad(base_yaml, tool):
+    yaml_str = (
+        base_yaml
+        + f"""
+        requirements:
+          run:
+            - {tool}
+        """
+    )
+    lint_check = "python_build_tool_in_run"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 1 and f"python build tool {tool} is in run" in messages[0].title
+
+
+@pytest.mark.parametrize("tool", PYTHON_BUILD_TOOLS)
+def test_python_build_tool_in_run_bad_multi(base_yaml, tool):
+    yaml_str = (
+        base_yaml
+        + f"""
+        outputs:
+          - name: output1
+            requirements:
+              run:
+                - {tool}
+          - name: output2
+            requirements:
+              run:
+                - {tool}
+        """
+    )
+    lint_check = "python_build_tool_in_run"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 2 and all(
+        f"python build tool {tool} is in run" in msg.title for msg in messages
+    )
+
+
+@pytest.mark.parametrize("tool", PYTHON_BUILD_TOOLS)
+def test_missing_python_build_tool_url_good(base_yaml, tool):
+    yaml_str = (
+        base_yaml
+        + f"""
+        source:
+          url: https://pypi.io/packages/source/D/Django/Django-4.1.tar.gz
+        requirements:
+          host:
+            - {tool}
+        """
+    )
+    lint_check = "missing_python_build_tool"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+@pytest.mark.parametrize("tool", PYTHON_BUILD_TOOLS)
+def test_missing_python_build_tool_url_good_multi(base_yaml, tool):
+    yaml_str = (
+        base_yaml
+        + f"""
+        source:
+          url: https://pypi.io/packages/source/D/Django/Django-4.1.tar.gz
+        outputs:
+          - name: outpu1
+            requirements:
+              host:
+                - {tool}
+          - name: outpu2
+            requirements:
+              host:
+                - {tool}
+        """
+    )
+    lint_check = "missing_python_build_tool"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_missing_python_build_tool_url_bad(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://pypi.io/packages/source/D/Django/Django-4.1.tar.gz
+        requirements:
+          host:
+        """
+    )
+    lint_check = "missing_python_build_tool"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 1 and "require a python build tool" in messages[0].title
+
+
+def test_missing_python_build_tool_url_bad_multi(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://pypi.io/packages/source/D/Django/Django-4.1.tar.gz
+        outputs:
+          - name: outpu1
+            requirements:
+              host:
+          - name: outpu2
+            requirements:
+              host:
+        """
+    )
+    lint_check = "missing_python_build_tool"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 2 and all(
+        "require a python build tool" in msg.title for msg in messages
+    )
+
+
+@pytest.mark.parametrize("tool", PYTHON_BUILD_TOOLS)
+def test_missing_python_build_tool_pip_install_good(base_yaml, tool):
+    yaml_str = (
+        base_yaml
+        + f"""
+        source:
+          url: https://github.com/joblib/joblib/archive/1.1.1.tar.gz
+        build:
+          script: {{{{ PYTHON }}}} -m pip install .
+        requirements:
+          host:
+            - {tool}
+        """
+    )
+    lint_check = "missing_python_build_tool"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+@pytest.mark.parametrize("tool", PYTHON_BUILD_TOOLS)
+def test_missing_python_build_tool_pip_install_good_multi(base_yaml, tool):
+    yaml_str = (
+        base_yaml
+        + f"""
+        outputs:
+          - name: output1
+            script: {{{{ PYTHON }}}} -m pip install .
+            requirements:
+              host:
+                - {tool}
+          - name: output2
+            script: {{{{ PYTHON }}}} -m pip install .
+            requirements:
+              host:
+                - {tool}
+        """
+    )
+    lint_check = "missing_python_build_tool"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_missing_python_build_tool_pip_install_bad(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://github.com/joblib/joblib/archive/1.1.1.tar.gz
+        build:
+          script: {{ PYTHON }} -m pip install .
+        requirements:
+          host:
+        """
+    )
+    lint_check = "missing_python_build_tool"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 1 and "require a python build tool" in messages[0].title
+
+
+def test_missing_python_build_tool_pip_install_bad_multi(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+            script: {{ PYTHON }} -m pip install .
+            requirements:
+              host:
+          - name: output2
+            script: {{ PYTHON }} -m pip install .
+            requirements:
+              host:
+        """
+    )
+    lint_check = "missing_python_build_tool"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 2 and all(
+        "require a python build tool" in msg.title for msg in messages
     )
 
 

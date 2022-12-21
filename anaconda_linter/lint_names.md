@@ -1,5 +1,7 @@
 avoid_noarch
 
+build_tools_must_be_in_build
+
 compilers_must_be_in_build
 
 conda_render_failure
@@ -19,6 +21,8 @@ gui_app
 has_imports_and_run_test_py
 
 has_run_test_and_commands
+
+host_section_needs_exact_pinnings
 
 http_url
 
@@ -62,6 +66,8 @@ missing_pip_check
 
 missing_python
 
+missing_python_build_tool
+
 missing_section
 
 missing_source
@@ -94,6 +100,8 @@ patch_unnecessary
 
 pip_install_args
 
+python_build_tool_in_run
+
 remove_python_pinning
 
 should_use_compilers
@@ -103,8 +111,6 @@ unknown_check
 unknown_selector
 
 uses_setup_py
-
-uses_setuptools
 
 version_constraints_missing_whitespace
 

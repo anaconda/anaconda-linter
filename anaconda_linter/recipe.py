@@ -236,6 +236,13 @@ class Recipe:
                         for k, v in cbc_selectors_yml.items():
                             if type(v) is list:
                                 self.selector_dict[k] = v[-1]
+                            else:
+                                # Items are often ruamel.yaml.comments.CommentedSeq objects,
+                                # but they can be converted into a list
+                                try:
+                                    self.selector_dict[k] = list(v)[-1]
+                                except Exception:
+                                    pass
                 except DuplicateKeyError as err:
                     line = err.problem_mark.line + 1
                     column = err.problem_mark.column + 1
