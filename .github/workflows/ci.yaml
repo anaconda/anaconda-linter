@@ -67,6 +67,7 @@ jobs:
         - name: Build package
           run: |
             source $CONDA/bin/activate
+            conda install conda-build
             conda-build .
   lint-recipe:
       runs-on: ubuntu-latest
