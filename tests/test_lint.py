@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 import pytest
 from conftest import check
@@ -114,7 +115,7 @@ def test_severity_level(base_yaml, level, string, lint_check):
 
 def test_severity_bad(base_yaml):
     with pytest.raises(ValueError):
-        config_file = os.path.abspath(os.path.dirname(__file__) + "/../anaconda_linter/config.yaml")
+        config_file = Path(__file__).parent / "config.yaml"
         config = utils.load_config(config_file)
         lint.Linter(config=config, severity_min="BADSEVERITY")
 
@@ -132,7 +133,7 @@ def test_severity_min_string(base_yaml, level, expected):
         """
     )
     recipes = [Recipe.from_string(yaml_str)]
-    config_file = os.path.abspath(os.path.dirname(__file__) + "/../anaconda_linter/config.yaml")
+    config_file = Path(__file__).parent / "config.yaml"
     config = utils.load_config(config_file)
     linter = lint.Linter(config=config, severity_min=level)
     linter.lint(recipes)
@@ -152,7 +153,7 @@ def test_severity_min_enum(base_yaml, level, expected):
         """
     )
     recipes = [Recipe.from_string(yaml_str)]
-    config_file = os.path.abspath(os.path.dirname(__file__) + "/../anaconda_linter/config.yaml")
+    config_file = Path(__file__).parent / "config.yaml"
     config = utils.load_config(config_file)
     linter = lint.Linter(config=config, severity_min=level)
     linter.lint(recipes)
@@ -186,7 +187,7 @@ def test_lint_list():
 )
 def test_jinja_functions(base_yaml, jinja_func, expected):
     def run_lint(yaml_str):
-        config_file = os.path.abspath(os.path.dirname(__file__) + "/../anaconda_linter/config.yaml")
+        config_file = Path(__file__).parent / "config.yaml"
         config = utils.load_config(config_file)
         linter = lint.Linter(config=config)
 
