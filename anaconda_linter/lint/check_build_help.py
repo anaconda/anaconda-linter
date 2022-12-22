@@ -501,8 +501,6 @@ class has_imports_and_run_test_py(LintCheck):
     """
 
     def check_recipe(self, recipe):
-        if recipe.recipe_dir:
-            print(os.listdir(recipe.recipe_dir))
         if outputs := recipe.get("outputs", None):
             for o in range(len(outputs)):
                 test_section = f"outputs/{o}/test"
