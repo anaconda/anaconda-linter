@@ -22,6 +22,7 @@ requirements:
     - wheel
   run:
     - python
+    - requests
     - ruamel.yaml
     - license-expression
     - jinja2
