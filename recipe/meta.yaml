@@ -39,7 +39,7 @@ test:
     - anaconda_linter
   commands:
     - pip check
-    - python -m pytest -vv tests -k 'not lint_list'
+    - cd tests && python -m pytest . -k 'not lint_list'
 
 about:
   home: https://github.com/anaconda-distribution/anaconda-linter
