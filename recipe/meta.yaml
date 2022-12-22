@@ -52,3 +52,7 @@ about:
     ongoing development.
   doc_url: https://github.com/anaconda-distribution/anaconda-linter/blob/main/README.md
   dev_url: https://github.com/anaconda-distribution/anaconda-linter
+
+extra:
+  recipe-maintainers:
+    - marcoesters
