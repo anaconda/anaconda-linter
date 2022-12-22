@@ -39,6 +39,9 @@ test:
     - anaconda_linter
   commands:
     - pip check
+    # pytest fails when called directly from the conda test environment,
+    # but not when inside the tests directory
+    # lint_list is only an important test for development
     - cd tests && python -m pytest . -k 'not lint_list'
 
 about:
