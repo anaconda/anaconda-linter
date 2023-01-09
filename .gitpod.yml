@@ -5,7 +5,7 @@
 tasks:
   - before: bash get.sh
     init: make environment
-  - name: Linter-Env
+    name: Linter-Env
     command: conda activate anaconda-linter
     openMode: split-right
 
