@@ -487,7 +487,7 @@ class has_run_test_and_commands(LintCheck):
         else:
             if recipe.get("test/commands", []) and (
                 recipe.get("test/script", None)
-                or set(os.listdir(recipe.recipe_dir)).intersection(
+                or set(os.listdir(recipe.dir)).intersection(
                     {"run_test.sh", "run_test.pl", "run_test.bat"}
                 )
             ):
@@ -510,7 +510,7 @@ class has_imports_and_run_test_py(LintCheck):
                     self.message(section=f"{test_section}/imports", output=o)
         else:
             if recipe.get("test/imports", []) and os.path.isfile(
-                os.path.join(recipe.recipe_dir, "run_test.py")
+                os.path.join(recipe.dir, "run_test.py")
             ):
                 self.message(section="test/imports")
 
@@ -550,7 +550,7 @@ class missing_imports_or_run_test_py(LintCheck):
         elif (
             (is_pypi or "python" in deps)
             and not recipe.get("test/imports", [])
-            and not os.path.isfile(os.path.join(recipe.recipe_dir, "run_test.py"))
+            and not os.path.isfile(os.path.join(recipe.dir, "run_test.py"))
         ):
             self.message(section="test")
 
@@ -599,7 +599,7 @@ class missing_pip_check(LintCheck):
                     self.message(section="test/commands")
             else:
                 test_files = (
-                    set(os.listdir(recipe.recipe_dir)).intersection({"run_test.sh", "run_test.bat"})
+                    set(os.listdir(recipe.dir)).intersection({"run_test.sh", "run_test.bat"})
                     if os.path.exists(recipe.dir)
                     else set()
                 )
@@ -638,7 +638,7 @@ class missing_test_requirement_pip(LintCheck):
             return self._check_file(os.path.join(recipe.dir, script))
         else:
             test_files = (
-                set(os.listdir(recipe.recipe_dir)).intersection({"run_test.sh", "run_test.bat"})
+                set(os.listdir(recipe.dir)).intersection({"run_test.sh", "run_test.bat"})
                 if os.path.exists(recipe.dir)
                 else set()
             )
