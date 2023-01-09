@@ -341,17 +341,18 @@ class pip_install_args(LintCheck):
             if not self._check_line(self.recipe.get(script, "")):
                 self.message(section=script)
                 continue
-            try:
-                if script == "build/script":
-                    build_file = "build.sh"
-                else:
-                    build_file = self.recipe.get(script)
-                with open(os.path.join(self.recipe.dir, build_file)) as buildsh:
-                    for num, line in enumerate(buildsh):
-                        if not self._check_line(line):
-                            self.message(fname=build_file, line=num, output=output)
-            except FileNotFoundError:
-                pass
+            if self.recipe.dir:
+                try:
+                    if script == "build/script":
+                        build_file = "build.sh"
+                    else:
+                        build_file = self.recipe.get(script)
+                    with open(os.path.join(self.recipe.dir, build_file)) as buildsh:
+                        for num, line in enumerate(buildsh):
+                            if not self._check_line(line):
+                                self.message(fname=build_file, line=num, output=output)
+                except FileNotFoundError:
+                    pass
 
 
 class cython_must_be_in_host(LintCheck):
@@ -487,8 +488,11 @@ class has_run_test_and_commands(LintCheck):
         else:
             if recipe.get("test/commands", []) and (
                 recipe.get("test/script", None)
-                or set(os.listdir(recipe.dir)).intersection(
-                    {"run_test.sh", "run_test.pl", "run_test.bat"}
+                or (
+                    recipe.dir
+                    and set(os.listdir(recipe.dir)).intersection(
+                        {"run_test.sh", "run_test.pl", "run_test.bat"}
+                    )
                 )
             ):
                 self.message(section="test/commands")
@@ -509,8 +513,10 @@ class has_imports_and_run_test_py(LintCheck):
                 ).endswith(".py"):
                     self.message(section=f"{test_section}/imports", output=o)
         else:
-            if recipe.get("test/imports", []) and os.path.isfile(
-                os.path.join(recipe.dir, "run_test.py")
+            if (
+                recipe.get("test/imports", [])
+                and recipe.dir
+                and os.path.isfile(os.path.join(recipe.dir, "run_test.py"))
             ):
                 self.message(section="test/imports")
 
@@ -550,7 +556,7 @@ class missing_imports_or_run_test_py(LintCheck):
         elif (
             (is_pypi or "python" in deps)
             and not recipe.get("test/imports", [])
-            and not os.path.isfile(os.path.join(recipe.dir, "run_test.py"))
+            and not (recipe.dir and os.path.isfile(os.path.join(recipe.dir, "run_test.py")))
         ):
             self.message(section="test")
 
@@ -589,7 +595,7 @@ class missing_pip_check(LintCheck):
                 if commands := recipe.get(f"{test_section}/commands", None):
                     if not any("pip check" in cmd for cmd in commands):
                         self.message(section=f"{test_section}/commands", output=o)
-                elif script := recipe.get(f"{test_section}/script", None):
+                elif recipe.dir and (script := recipe.get(f"{test_section}/script", None)):
                     self._check_file(os.path.join(recipe.dir, script))
                 else:
                     self.message(section=test_section, output=o)
@@ -633,18 +639,19 @@ class missing_test_requirement_pip(LintCheck):
         if commands := recipe.get(f"{test_section}/commands", None):
             if any("pip check" in cmd for cmd in commands):
                 return True
-        elif output.startswith("outputs"):
-            script = recipe.get(f"{test_section}/script", "")
-            return self._check_file(os.path.join(recipe.dir, script))
-        else:
-            test_files = (
-                set(os.listdir(recipe.dir)).intersection({"run_test.sh", "run_test.bat"})
-                if os.path.exists(recipe.dir)
-                else set()
-            )
-            for file in test_files:
-                if self._check_file(os.path.join(recipe.dir, file)):
-                    return True
+        elif self.recipe.dir:
+            if output.startswith("outputs"):
+                script = recipe.get(f"{test_section}/script", "")
+                return self._check_file(os.path.join(recipe.dir, script))
+            else:
+                test_files = (
+                    set(os.listdir(recipe.dir)).intersection({"run_test.sh", "run_test.bat"})
+                    if os.path.exists(recipe.dir)
+                    else set()
+                )
+                for file in test_files:
+                    if self._check_file(os.path.join(recipe.dir, file)):
+                        return True
         return False
 
     def check_recipe(self, recipe):
