@@ -349,6 +349,20 @@ def test_missing_hash_good(base_yaml):
     assert len(messages) == 0
 
 
+@pytest.mark.parametrize("exempt_type", ("git_url", "path"))
+def test_missing_hash_good_exceptions(base_yaml, exempt_type):
+    yaml_str = (
+        base_yaml
+        + f"""
+        source:
+          {exempt_type}: https://sqlite.com/2022/sqlite-autoconf-3380500.tar.gz
+        """
+    )
+    lint_check = "missing_hash"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
 def test_missing_hash_bad(base_yaml):
     yaml_str = (
         base_yaml

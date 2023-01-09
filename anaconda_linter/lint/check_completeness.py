@@ -231,8 +231,12 @@ class missing_hash(LintCheck):
 
     checksum_names = ["sha256"]
 
+    exempt_types = ["git_url", "path"]
+
     def check_source(self, source, section):
-        if not any(source.get(chk) for chk in self.checksum_names):
+        if not any(source.get(typ) for typ in self.exempt_types) and not any(
+            source.get(chk) for chk in self.checksum_names
+        ):
             self.message(section=section)
 
 
