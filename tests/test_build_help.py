@@ -1488,6 +1488,22 @@ def test_missing_imports_or_run_test_py_good_imports(base_yaml):
     assert len(messages) == 0
 
 
+def test_missing_imports_or_run_test_py_good_pypi(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://pypi.io/packages/source/D/Django/Django-4.1.tar.gz
+        test:
+          imports:
+            - module
+        """
+    )
+    lint_check = "missing_imports_or_run_test_py"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
 def test_missing_imports_or_run_test_py_good_script(base_yaml, recipe_dir):
     yaml_str = (
         base_yaml
@@ -1529,6 +1545,27 @@ def test_missing_imports_or_run_test_py_good_multi(base_yaml):
     assert len(messages) == 0
 
 
+def test_missing_imports_or_run_test_py_good_multi_pypi(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://pypi.io/packages/source/D/Django/Django-4.1.tar.gz
+        outputs:
+          - name: output1
+            test:
+              imports:
+                - module1
+          - name: output2
+            test:
+              script: test_output2.py
+        """
+    )
+    lint_check = "missing_imports_or_run_test_py"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
 def test_missing_imports_or_run_test_py_bad(base_yaml):
     yaml_str = (
         base_yaml
@@ -1536,6 +1573,20 @@ def test_missing_imports_or_run_test_py_bad(base_yaml):
         requirements:
           host:
             - python
+        """
+    )
+    lint_check = "missing_imports_or_run_test_py"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 1 and "Python packages require imports" in messages[0].title
+
+
+def test_missing_imports_or_run_test_py_bad_pypi(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://pypi.io/packages/source/D/Django/Django-4.1.tar.gz
+        test:
         """
     )
     lint_check = "missing_imports_or_run_test_py"
@@ -1556,6 +1607,26 @@ def test_missing_imports_or_run_test_py_bad_multi(base_yaml):
             requirements:
               host:
                 - python
+        """
+    )
+    lint_check = "missing_imports_or_run_test_py"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 2 and all(
+        "Python packages require imports" in msg.title for msg in messages
+    )
+
+
+def test_missing_imports_or_run_test_py_bad_multi_pypi(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://pypi.io/packages/source/D/Django/Django-4.1.tar.gz
+        outputs:
+          - name: output1
+            test:
+          - name: output2
+            test:
         """
     )
     lint_check = "missing_imports_or_run_test_py"
