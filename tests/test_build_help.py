@@ -814,6 +814,20 @@ def test_pip_install_args_good_missing(base_yaml):
     assert len(messages) == 0
 
 
+def test_pip_install_args_good_missing_file(base_yaml, recipe_dir):
+    yaml_str = (
+        base_yaml
+        + """
+        requirements:
+          host:
+            - pip
+        """
+    )
+    lint_check = "pip_install_args"
+    messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
+    assert len(messages) == 0
+
+
 def test_pip_install_args_good_cmd(base_yaml):
     yaml_str = (
         base_yaml
