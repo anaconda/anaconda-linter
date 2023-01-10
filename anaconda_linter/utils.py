@@ -263,13 +263,11 @@ def validate_config(config):
         directly.
     """
     if not isinstance(config, dict):
-        with open(config) as c:
-            conf = c.read()
-        config = yaml.load(conf)
+        with open(config) as conf:
+            config = yaml.load(conf.read())
     fn = os.path.abspath(os.path.dirname(__file__)) + "/config.schema.yaml"
     with open(fn) as f:
-        schema_str = f.read()
-    schema = yaml.load(schema_str)
+        schema = yaml.load(f.read())
     validate(config, schema)
 
 
