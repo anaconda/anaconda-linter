@@ -263,9 +263,11 @@ def validate_config(config):
         directly.
     """
     if not isinstance(config, dict):
-        config = yaml.load(open(config))
+        with open(config) as conf:
+            config = yaml.load(conf.read())
     fn = os.path.abspath(os.path.dirname(__file__)) + "/config.schema.yaml"
-    schema = yaml.load(open(fn))
+    with open(fn) as f:
+        schema = yaml.load(f.read())
     validate(config, schema)
 
 
@@ -291,7 +293,8 @@ def load_config(path):
         def relpath(p):
             return os.path.join(os.path.dirname(path), p)
 
-        config = yaml.load(open(path))
+        with open(path) as conf:
+            config = yaml.load(conf.read())
 
     def get_list(key):
         # always return empty list, also if NoneType is defined in yaml
