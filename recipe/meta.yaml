@@ -41,7 +41,7 @@ test:
   commands:
     - pip check
     # lint_list is only an important test for development
-    - python -m pytest -vv tests -k 'not lint_list'
+    - python -m pytest -vv tests -k "not lint_list"
 
 about:
   home: https://github.com/anaconda-distribution/anaconda-linter
