@@ -4,7 +4,7 @@
 image:
   file: .gitpod.Dockerfile
 tasks:
-  - before: conda init
+  - before: eval "$(/opt/conda/bin/python -m conda init --dev bash)"
     init: make environment
     name: Linter-Env
     command: conda activate anaconda-linter
