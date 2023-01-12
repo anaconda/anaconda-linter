@@ -3,11 +3,7 @@
 # and commit this file to your remote git repository to share the goodness with others.
 
 tasks:
-  - before: bash get.sh
-    init: make environment
+  - before: eval "$(/workspace/anaconda-linter/miniconda3/bin/conda shell.bash hook)"
+    init: conda init
     name: Linter-Env
     command: conda activate anaconda-linter
-    openMode: split-right
-
-
-
