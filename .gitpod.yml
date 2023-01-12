@@ -4,7 +4,7 @@
 image:
   file: .gitpod.Dockerfile
 tasks:
-  - before: eval "$(/workspace/anaconda-linter/miniconda3/bin/conda shell.bash hook)"
-    init: conda init
+  - before: conda init
+    init: make environment
     name: Linter-Env
     command: conda activate anaconda-linter
