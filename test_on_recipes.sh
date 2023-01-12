@@ -6,11 +6,10 @@ then
 else
     if [ ! -d "/workspace/anaconda-linter/test_feedstocks" ]
     then
-        git clone https://github.com/AnacondaRecipes/7zip-feedstock.git test_feedstocks/7zip
+        git clone https://github.com/AnacondaRecipes/airflow-feedstock.git test_feedstocks/airflow
         git clone https://github.com/AnacondaRecipes/anaconda-linter-feedstock.git test_feedstocks/anaconda-linter
-        git clone https://github.com/AnacondaRecipes/blinker-feedstock.git test_feedstocks/blinker
         git clone https://github.com/AnacondaRecipes/libtiff-feedstock.git test_feedstocks/libtiff
-        git clone https://github.com/AnacondaRecipes/jupyter_core-feedstock.git test_feedstocks/jupyter_core
+        git clone https://github.com/AnacondaRecipes/rust-feedstock.git test_feedstocks/rust
     fi
 
     for d in test_feedstocks/*/ ; do
