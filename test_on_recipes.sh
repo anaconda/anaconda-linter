@@ -8,8 +8,9 @@ else
     then
         git clone https://github.com/AnacondaRecipes/airflow-feedstock.git test_feedstocks/airflow
         git clone https://github.com/AnacondaRecipes/anaconda-linter-feedstock.git test_feedstocks/anaconda-linter
-        git clone https://github.com/AnacondaRecipes/libtiff-feedstock.git test_feedstocks/libtiff
         git clone https://github.com/AnacondaRecipes/rust-feedstock.git test_feedstocks/rust
+        git clone https://github.com/AnacondaRecipes/mamba-feedstock.git test_feedstocks/mamba-feedstock
+        git clone https://github.com/AnacondaRecipes/intel-compilers-repack-feedstock.git test_feedstocks/intel-compiler
     fi
 
     for d in test_feedstocks/*/ ; do
