@@ -22,7 +22,7 @@ jobs:
       - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
       - name: Cache conda env
         id: cache-conda
-        uses: actions/cache@4723a57e26efda3a62cbde1812113b730952852d # v3
+        uses: actions/cache@58c146cc91c5b9e778e71775dfe9bf1442ad9a12 # v3
         env:
           cache-name: conda-env-cache
         with:
@@ -54,7 +54,7 @@ jobs:
         - uses: actions/checkout@bf085276cecdb0cc76fbbe0687a5a0e786646936
         - name: Cache conda env
           id: cache-conda
-          uses: actions/cache@9b0c1fce7a93df8e3bb8926b0d6e9d89e92f20a7 # tag=v3
+          uses: actions/cache@58c146cc91c5b9e778e71775dfe9bf1442ad9a12 # v3
           env:
             cache-name: conda-env-cache
           with:
@@ -75,7 +75,7 @@ jobs:
         - uses: actions/checkout@bf085276cecdb0cc76fbbe0687a5a0e786646936
         - name: Cache conda env
           id: cache-conda
-          uses: actions/cache@9b0c1fce7a93df8e3bb8926b0d6e9d89e92f20a7 # tag=v3
+          uses: actions/cache@58c146cc91c5b9e778e71775dfe9bf1442ad9a12 # v3
           env:
             cache-name: conda-env-cache
           with:
