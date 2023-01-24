@@ -33,6 +33,8 @@ PYTHON_BUILD_TOOLS = (
     "flit-core",
     "hatch",
     "hatchling",
+    "meson",
+    "meson-python",
     "pdm",
     "pip",
     "poetry",
