@@ -297,17 +297,18 @@ class uses_setup_py(LintCheck):
             if not self._check_line(self.recipe.get(script, "")):
                 self.message(section=script)
                 continue
-            try:
-                if script == "build/script":
-                    build_file = "build.sh"
-                else:
-                    build_file = self.recipe.get(script, "")
-                if not build_file:
-                    continue
-                with open(os.path.join(self.recipe.dir, build_file)) as buildsh:
-                    for num, line in enumerate(buildsh):
-                        if not self._check_line(line):
-                            self.message(fname=build_file, line=num, output=output)
+            if self.recipe.dir:
+                try:
+                    if script == "build/script":
+                        build_file = "build.sh"
+                    else:
+                        build_file = self.recipe.get(script, "")
+                    if not build_file:
+                        continue
+                    with open(os.path.join(self.recipe.dir, build_file)) as buildsh:
+                        for num, line in enumerate(buildsh):
+                            if not self._check_line(line):
+                                self.message(fname=build_file, line=num, output=output)
             except FileNotFoundError:
                 pass
 
