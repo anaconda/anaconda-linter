@@ -309,8 +309,8 @@ class uses_setup_py(LintCheck):
                         for num, line in enumerate(buildsh):
                             if not self._check_line(line):
                                 self.message(fname=build_file, line=num, output=output)
-            except FileNotFoundError:
-                pass
+                except FileNotFoundError:
+                    pass
 
 
 class pip_install_args(LintCheck):
