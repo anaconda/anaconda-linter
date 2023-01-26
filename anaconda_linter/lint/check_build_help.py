@@ -297,17 +297,20 @@ class uses_setup_py(LintCheck):
             if not self._check_line(self.recipe.get(script, "")):
                 self.message(section=script)
                 continue
-            try:
-                if script == "build/script":
-                    build_file = "build.sh"
-                else:
-                    build_file = self.recipe.get(script)
-                with open(os.path.join(self.recipe.dir, build_file)) as buildsh:
-                    for num, line in enumerate(buildsh):
-                        if not self._check_line(line):
-                            self.message(fname=build_file, line=num, output=output)
-            except FileNotFoundError:
-                pass
+            if self.recipe.dir:
+                try:
+                    if script == "build/script":
+                        build_file = "build.sh"
+                    else:
+                        build_file = self.recipe.get(script, "")
+                    if not build_file:
+                        continue
+                    with open(os.path.join(self.recipe.dir, build_file)) as buildsh:
+                        for num, line in enumerate(buildsh):
+                            if not self._check_line(line):
+                                self.message(fname=build_file, line=num, output=output)
+                except FileNotFoundError:
+                    pass
 
 
 class pip_install_args(LintCheck):
@@ -346,7 +349,9 @@ class pip_install_args(LintCheck):
                     if script == "build/script":
                         build_file = "build.sh"
                     else:
-                        build_file = self.recipe.get(script)
+                        build_file = self.recipe.get(script, "")
+                    if not build_file:
+                        continue
                     with open(os.path.join(self.recipe.dir, build_file)) as buildsh:
                         for num, line in enumerate(buildsh):
                             if not self._check_line(line):
@@ -393,7 +398,7 @@ class cython_needs_compiler(LintCheck):
                 else:
                     section = "requirements/build"
                     output = -1
-                if "compiler_c" not in self.recipe.get(section):
+                if "compiler_c" not in self.recipe.get(section, ""):
                     self.message(section=section, output=output)
 
 

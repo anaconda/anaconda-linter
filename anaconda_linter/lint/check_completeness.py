@@ -236,8 +236,8 @@ class missing_hash(LintCheck):
     exempt_types = ["git_url", "path"]
 
     def check_source(self, source, section):
-        if not any(source.get(typ) for typ in self.exempt_types) and not any(
-            source.get(chk) for chk in self.checksum_names
+        if not any(source.get(typ, None) for typ in self.exempt_types) and not any(
+            source.get(chk, None) for chk in self.checksum_names
         ):
             self.message(section=section)
 
@@ -259,7 +259,7 @@ class missing_source(LintCheck):
     source_types = ["url", "git_url", "hg_url", "svn_url", "path"]
 
     def check_source(self, source, section):
-        if not any(source.get(chk) for chk in self.source_types):
+        if not any(source.get(chk, None) for chk in self.source_types):
             self.message(section=section)
 
 
@@ -276,7 +276,7 @@ class non_url_source(LintCheck):
     source_types = ["hg_url", "svn_url"]
 
     def check_source(self, source, section):
-        if any(source.get(chk) for chk in self.source_types):
+        if any(source.get(chk, None) for chk in self.source_types):
             self.message(section=section, severity=WARNING)
 
 
