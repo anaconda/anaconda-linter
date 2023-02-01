@@ -1,4 +1,4 @@
-from . import WARNING, LintCheck
+from . import INFO, WARNING, LintCheck
 
 
 class output_missing_name(LintCheck):

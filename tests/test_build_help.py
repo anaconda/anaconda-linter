@@ -124,16 +124,6 @@ def test_host_section_needs_exact_pinnings_good_cbc_multi(base_yaml, recipe_dir)
                 host:
                   - maturin
           - name: output2
-def test_host_section_needs_exact_pinnings_good_cbc_multi(base_yaml, recipe_dir):
-    yaml_str = (
-        base_yaml
-        + """
-        outputs:
-          - name: output1
-            requirements:
-                host:
-                  - maturin
-          - name: output2
             requirements:
                 host:
                   - maturin
