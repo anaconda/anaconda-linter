@@ -409,8 +409,11 @@ class Recipe:
         - normalize
         """
         try:
-            render_dict = {**self.JINJA_VARS, **self.selector_dict}
-            yaml_text = self.get_template().render(render_dict)
+            render_dict = {**self.JINJA_VARS}
+            for key, val in self.selector_dict.items():
+                if not isinstance(val, list):
+                    render_dict[key] = val
+            yaml_text = self.get_template().render(self.JINJA_VARS)
         except jinja2.exceptions.TemplateSyntaxError as exc:
             raise JinjaRenderFailure(self, message=exc.message, line=exc.lineno)
         except jinja2.exceptions.TemplateError as exc:
