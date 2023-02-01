@@ -68,7 +68,7 @@ class output_missing_script(LintCheck):
             ):
                 continue
             if recipe.get(f"outputs/{o}/script", "") == "":
-                self.message(output=o)
+                self.message(output=o, severity=INFO)
 
 
 class output_script_name_default(LintCheck):
