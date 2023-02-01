@@ -364,7 +364,7 @@ class Recipe:
                 cond_str = match.group(1)
                 try:
                     if not eval(cond_str, None, selector_dict):
-                        line = f"# {line}"
+                        line = "# " + line.replace("{%", "{# {%").replace("%}", "%} #}")
                 except Exception:
                     # todo: load selector with cbc content
                     continue
@@ -409,7 +409,8 @@ class Recipe:
         - normalize
         """
         try:
-            yaml_text = self.get_template().render(self.JINJA_VARS)
+            render_dict = {**self.JINJA_VARS, **self.selector_dict}
+            yaml_text = self.get_template().render(render_dict)
         except jinja2.exceptions.TemplateSyntaxError as exc:
             raise JinjaRenderFailure(self, message=exc.message, line=exc.lineno)
         except jinja2.exceptions.TemplateError as exc:

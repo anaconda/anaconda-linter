@@ -4,7 +4,7 @@ osx: 0
 linux: 0
 arch: None
 platform: None
-compiler: None
+c_compiler: None
 vc: None
 target_platform: None
 build_platform: None

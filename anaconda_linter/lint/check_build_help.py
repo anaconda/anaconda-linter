@@ -29,13 +29,20 @@ BUILD_TOOLS = (
 )
 
 PYTHON_BUILD_TOOLS = (
+    "cython",
     "flit",
     "flit-core",
     "hatch",
     "hatchling",
+    "meson",
+    "meson-python",
+    "packaging",
     "pdm",
+    "pdm-pep517",
     "pip",
     "poetry",
+    "poetry-core",
+    "pybind11",
     "setuptools",
     "setuptools-rust",
     "setuptools_scm",

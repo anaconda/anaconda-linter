@@ -1,4 +1,4 @@
-from . import WARNING, LintCheck
+from . import INFO, WARNING, LintCheck
 
 
 class output_missing_name(LintCheck):
@@ -68,7 +68,7 @@ class output_missing_script(LintCheck):
             ):
                 continue
             if recipe.get(f"outputs/{o}/script", "") == "":
-                self.message(output=o)
+                self.message(output=o, severity=INFO)
 
 
 class output_script_name_default(LintCheck):

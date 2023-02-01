@@ -94,6 +94,26 @@ def test_host_section_needs_exact_pinnings_good_cbc(base_yaml, recipe_dir):
     assert len(messages) == 0
 
 
+def test_host_section_needs_exact_pinnings_good_cbc_jinjavar(base_yaml, recipe_dir):
+    yaml_str = (
+        base_yaml
+        + """
+        requirements:
+            host:
+              - openblas-devel  {{ openblas }}
+        """
+    )
+    cbc = """
+    openblas:
+      - 0.3.20
+    """
+    cbc_file = recipe_dir / "conda_build_config.yaml"
+    cbc_file.write_text(cbc)
+    lint_check = "host_section_needs_exact_pinnings"
+    messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
+    assert len(messages) == 0
+
+
 def test_host_section_needs_exact_pinnings_good_cbc_multi(base_yaml, recipe_dir):
     yaml_str = (
         base_yaml
