@@ -364,7 +364,7 @@ class Recipe:
                 cond_str = match.group(1)
                 try:
                     if not eval(cond_str, None, selector_dict):
-                        line = f"# {line}"
+                        line = "# " + line.replace("{%", "{# {%").replace("%}", "%} #}")
                 except Exception:
                     # todo: load selector with cbc content
                     continue
