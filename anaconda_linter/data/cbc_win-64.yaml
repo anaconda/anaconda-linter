@@ -1,6 +1,6 @@
 arch: 64       # ppc64le aarch64 ppc64 s390x win
 platform: win  # linux os win
-compiler: vs2017
+c_compiler: vs2017
 vc: 14
 target_platform: win-64
 build_platform: win-32
