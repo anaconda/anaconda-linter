@@ -34,16 +34,16 @@ def recipe_dir(tmpdir):
     return recipe_directory
 
 
-def check(check_name, recipe_str):
+def check(check_name, recipe_str, arch="linux-64"):
     config_file = Path(__file__).parent / "config.yaml"
     config = utils.load_config(str(config_file.resolve()))
     linter = Linter(config=config)
-    recipe = Recipe.from_string(recipe_str)
+    recipe = Recipe.from_string(recipe_str, selector_dict=config[arch])
     messages = linter.check_instances[check_name].run(recipe=recipe)
     return messages
 
 
-def check_dir(check_name, feedstock_dir, recipe_str):
+def check_dir(check_name, feedstock_dir, recipe_str, arch="linux-64"):
     if not isinstance(feedstock_dir, Path):
         feedstock_dir = Path(feedstock_dir)
     config_file = Path(__file__).parent / "config.yaml"
@@ -53,6 +53,6 @@ def check_dir(check_name, feedstock_dir, recipe_str):
     recipe_dir.mkdir(parents=True, exist_ok=True)
     meta_yaml = recipe_dir / "meta.yaml"
     meta_yaml.write_text(recipe_str)
-    recipe = Recipe.from_file(str(meta_yaml))
+    recipe = Recipe.from_file(str(meta_yaml), selector_dict=config[arch])
     messages = linter.check_instances[check_name].run(recipe=recipe)
     return messages
