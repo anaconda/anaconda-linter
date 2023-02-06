@@ -711,7 +711,6 @@ class Linter:
         exclusive_config_files: List[str] = [],
         fix: bool = False,
     ) -> List[LintMessage]:
-
         # collect checks to skip
         checks_to_skip = set(self.exclude)
 
