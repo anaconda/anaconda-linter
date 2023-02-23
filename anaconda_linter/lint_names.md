@@ -82,6 +82,8 @@ missing_version_or_name
 
 missing_wheel
 
+no_git_on_windows
+
 no_global_test
 
 non_url_source

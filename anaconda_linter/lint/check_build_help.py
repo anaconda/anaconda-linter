@@ -744,6 +744,19 @@ class remove_python_pinning(LintCheck):
                         self.message(section=path, output=output)
 
 
+class no_git_on_windows(LintCheck):
+    """git should not be used as a dependency on Windows.
+
+    git is supplied by the cygwin environment. Installing it may break the build.
+    """
+
+    def check_deps(self, deps):
+        if self.recipe.selector_dict["win"] == 1 and "git" in deps:
+            for path in deps["git"]["paths"]:
+                output = -1 if not path.startswith("outputs") else int(path.split("/")[1])
+                self.message(section=path, output=output)
+
+
 class gui_app(LintCheck):
     """This may be a GUI application. It is advised to test the GUI."""
 

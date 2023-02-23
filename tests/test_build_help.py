@@ -2377,6 +2377,76 @@ def test_remove_python_pinning_bad_multi(base_yaml):
     )
 
 
+@pytest.mark.parametrize("arch", ("linux-64", "win-64"))
+def test_no_git_on_windows_good(base_yaml, arch):
+    yaml_str = (
+        base_yaml
+        + """
+        requirements:
+          build:
+            - git  # [not win]
+        """
+    )
+    lint_check = "no_git_on_windows"
+    messages = check(lint_check, yaml_str, arch="win-64")
+    assert len(messages) == 0
+
+
+def test_no_git_on_windows_bad(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        requirements:
+          build:
+            - git
+        """
+    )
+    lint_check = "no_git_on_windows"
+    messages = check(lint_check, yaml_str, arch="win-64")
+    assert len(messages) == 1 and "git should not be used" in messages[0].title
+
+
+@pytest.mark.parametrize("arch", ("linux-64", "win-64"))
+def test_no_git_on_windows_good_multi(base_yaml, arch):
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+            requirements:
+              build:
+                - git  # [not win]
+          - name: output2
+            requirements:
+              build:
+                - git  # [not win]
+        """
+    )
+    lint_check = "no_git_on_windows"
+    messages = check(lint_check, yaml_str, arch="win-64")
+    assert len(messages) == 0
+
+
+def test_no_git_on_windows_bad_multi(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+            requirements:
+              build:
+                - git
+          - name: output2
+            requirements:
+              build:
+                - git
+        """
+    )
+    lint_check = "no_git_on_windows"
+    messages = check(lint_check, yaml_str, arch="win-64")
+    assert len(messages) == 2 and all("git should not be used" in msg.title for msg in messages)
+
+
 def test_gui_app_good(base_yaml):
     lint_check = "gui_app"
     messages = check(lint_check, base_yaml)
