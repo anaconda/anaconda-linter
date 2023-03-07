@@ -1,0 +1,31 @@
+on:
+  schedule:
+    - cron: '0 0 1 1-12 *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+name: Update License Files
+jobs:
+  update_licenses:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Install Requests
+        run: pip install requests
+      - name: Run Script
+        run: python scripts/update_licenses.py
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@671dc9c9e0c2d73f07fa45a3eb0220e1622f0c5f # tag=v4
+        with:
+          title: Update Licenses and Exceptions
+          branch-suffix: TESTING
+          draft: false
+          add-paths: 'anaconda_linter/data/*.txt'
