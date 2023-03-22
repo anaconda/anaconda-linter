@@ -930,7 +930,10 @@ def test_pip_install_args_bad_cmd(base_yaml):
     )
     lint_check = "pip_install_args"
     messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "should be run with --no-deps and --no-build-isolation" in messages[0].title
+    assert (
+        len(messages) == 1
+        and "should be run with --no-deps and --no-build-isolation" in messages[0].title
+    )
 
 
 def test_pip_install_args_bad_cmd_multi(base_yaml):
@@ -970,7 +973,10 @@ def test_pip_install_args_bad_script(base_yaml, recipe_dir):
     test_file = recipe_dir / "build.sh"
     test_file.write_text("{{ PYTHON }} -m pip install .\n")
     messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
-    assert len(messages) == 1 and "should be run with --no-deps and --no-build-isolation" in messages[0].title
+    assert (
+        len(messages) == 1
+        and "should be run with --no-deps and --no-build-isolation" in messages[0].title
+    )
 
 
 def test_pip_install_args_bad_script_multi(base_yaml, recipe_dir):
@@ -1019,7 +1025,10 @@ def test_pip_install_args_multi_script_missing(base_yaml, recipe_dir):
     test_file = recipe_dir / "build_output.sh"
     test_file.write_text("{{ PYTHON }} -m pip install .\n")
     messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
-    assert len(messages) == 1 and "should be run with --no-deps and --no-build-isolation" in messages[0].title
+    assert (
+        len(messages) == 1
+        and "should be run with --no-deps and --no-build-isolation" in messages[0].title
+    )
 
 
 def test_cython_must_be_in_host_good(base_yaml):

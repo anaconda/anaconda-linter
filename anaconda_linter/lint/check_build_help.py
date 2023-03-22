@@ -332,10 +332,11 @@ class pip_install_args(LintCheck):
     @staticmethod
     def _check_line(line: str) -> bool:
         """Check a line for a broken call to setup.py"""
-        if not "pip install" in line: return True
+        if "pip install" not in line:
+            return True
 
         required_args = ["--no-deps", "--no-build-isolation"]
-        if any(not arg in line for arg in required_args):
+        if any(arg not in line for arg in required_args):
             return False
 
         return True
