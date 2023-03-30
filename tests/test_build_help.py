@@ -737,7 +737,7 @@ def test_uses_setup_py_good_cmd(base_yaml):
         base_yaml
         + """
         build:
-          script: {{ PYTHON }} -m pip install . --no-deps
+          script: {{ PYTHON }} -m pip install . --no-deps --no-build-isolation
         requirements:
           host:
             - setuptools
@@ -759,17 +759,18 @@ def test_uses_setup_py_good_script(base_yaml, recipe_dir):
     )
     lint_check = "uses_setup_py"
     test_file = recipe_dir / "build.sh"
-    test_file.write_text("{{ PYTHON }} -m pip install . --no-deps\n")
+    test_file.write_text("{{ PYTHON }} -m pip install . --no-deps --no-build-isolation\n")
     messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
     assert len(messages) == 0
 
 
-def test_uses_setup_py_bad_cmd(base_yaml):
+@pytest.mark.parametrize("arg_test", ["", "--no-deps", "--no-build-isolation"])
+def test_uses_setup_py_bad_cmd(base_yaml, arg_test):
     yaml_str = (
         base_yaml
-        + """
+        + f"""
         build:
-          script: {{ PYTHON }} -m setup.py install
+          script: {{{{ PYTHON }}}} -m setup.py install {arg_test}
         requirements:
           host:
             - setuptools
@@ -780,18 +781,19 @@ def test_uses_setup_py_bad_cmd(base_yaml):
     assert len(messages) == 1 and "python setup.py install" in messages[0].title
 
 
-def test_uses_setup_py_bad_cmd_multi(base_yaml):
+@pytest.mark.parametrize("arg_test", ["", "--no-deps", "--no-build-isolation"])
+def test_uses_setup_py_bad_cmd_multi(base_yaml, arg_test):
     yaml_str = (
         base_yaml
-        + """
+        + f"""
         outputs:
           - name: output1
-            script: {{ PYTHON }} -m setup.py install
+            script: {{{{ PYTHON }}}} -m setup.py install {arg_test}
             requirements:
               host:
                 - setuptools
           - name: output2
-            script: {{ PYTHON }} -m setup.py install
+            script: {{{{ PYTHON }}}} -m setup.py install {arg_test}
             requirements:
               host:
                 - setuptools
@@ -802,7 +804,8 @@ def test_uses_setup_py_bad_cmd_multi(base_yaml):
     assert len(messages) == 2 and all("python setup.py install" in msg.title for msg in messages)
 
 
-def test_uses_setup_py_bad_script(base_yaml, recipe_dir):
+@pytest.mark.parametrize("arg_test", ["", "--no-deps", "--no-build-isolation"])
+def test_uses_setup_py_bad_script(base_yaml, recipe_dir, arg_test):
     yaml_str = (
         base_yaml
         + """
@@ -813,12 +816,13 @@ def test_uses_setup_py_bad_script(base_yaml, recipe_dir):
     )
     lint_check = "uses_setup_py"
     test_file = recipe_dir / "build.sh"
-    test_file.write_text("{{ PYTHON }} -m setup.py install\n")
+    test_file.write_text(f"{{{{ PYTHON }}}} -m setup.py install {arg_test}\n")
     messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
     assert len(messages) == 1 and "python setup.py install" in messages[0].title
 
 
-def test_uses_setup_py_bad_script_multi(base_yaml, recipe_dir):
+@pytest.mark.parametrize("arg_test", ["", "--no-deps", "--no-build-isolation"])
+def test_uses_setup_py_bad_script_multi(base_yaml, recipe_dir, arg_test):
     yaml_str = (
         base_yaml
         + """
@@ -837,12 +841,13 @@ def test_uses_setup_py_bad_script_multi(base_yaml, recipe_dir):
     )
     lint_check = "uses_setup_py"
     test_file = recipe_dir / "build_output.sh"
-    test_file.write_text("{{ PYTHON }} -m setup.py install\n")
+    test_file.write_text(f"{{{{ PYTHON }} }}-m setup.py install {arg_test}\n")
     messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
     assert len(messages) == 2 and all("python setup.py install" in msg.title for msg in messages)
 
 
-def test_uses_setup_py_multi_script_missing(base_yaml, recipe_dir):
+@pytest.mark.parametrize("arg_test", ["", "--no-deps", "--no-build-isolation"])
+def test_uses_setup_py_multi_script_missing(base_yaml, recipe_dir, arg_test):
     yaml_str = (
         base_yaml
         + """
@@ -860,7 +865,7 @@ def test_uses_setup_py_multi_script_missing(base_yaml, recipe_dir):
     )
     lint_check = "uses_setup_py"
     test_file = recipe_dir / "build_output.sh"
-    test_file.write_text("{{ PYTHON }} -m setup.py install\n")
+    test_file.write_text(f"{{{{ PYTHON }}}} -m setup.py install {arg_test}\n")
     messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
     assert len(messages) == 1 and "python setup.py install" in messages[0].title
 
@@ -890,7 +895,7 @@ def test_pip_install_args_good_cmd(base_yaml):
         base_yaml
         + """
         build:
-          script: {{ PYTHON }} -m pip install . --no-deps
+          script: {{ PYTHON }} -m pip install . --no-deps --no-build-isolation
         requirements:
           host:
             - pip
@@ -912,7 +917,7 @@ def test_pip_install_args_good_script(base_yaml, recipe_dir):
     )
     lint_check = "pip_install_args"
     test_file = recipe_dir / "build.sh"
-    test_file.write_text("{{ PYTHON }} -m pip install . --no-deps\n")
+    test_file.write_text("{{ PYTHON }} -m pip install . --no-deps --no-build-isolation\n")
     messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
     assert len(messages) == 0
 
@@ -930,7 +935,10 @@ def test_pip_install_args_bad_cmd(base_yaml):
     )
     lint_check = "pip_install_args"
     messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "should be run with --no-deps" in messages[0].title
+    assert (
+        len(messages) == 1
+        and "should be run with --no-deps and --no-build-isolation" in messages[0].title
+    )
 
 
 def test_pip_install_args_bad_cmd_multi(base_yaml):
@@ -953,7 +961,7 @@ def test_pip_install_args_bad_cmd_multi(base_yaml):
     lint_check = "pip_install_args"
     messages = check(lint_check, yaml_str)
     assert len(messages) == 2 and all(
-        "should be run with --no-deps" in msg.title for msg in messages
+        "should be run with --no-deps and --no-build-isolation" in msg.title for msg in messages
     )
 
 
@@ -970,7 +978,10 @@ def test_pip_install_args_bad_script(base_yaml, recipe_dir):
     test_file = recipe_dir / "build.sh"
     test_file.write_text("{{ PYTHON }} -m pip install .\n")
     messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
-    assert len(messages) == 1 and "should be run with --no-deps" in messages[0].title
+    assert (
+        len(messages) == 1
+        and "should be run with --no-deps and --no-build-isolation" in messages[0].title
+    )
 
 
 def test_pip_install_args_bad_script_multi(base_yaml, recipe_dir):
@@ -995,7 +1006,7 @@ def test_pip_install_args_bad_script_multi(base_yaml, recipe_dir):
     test_file.write_text("{{ PYTHON }} -m pip install .\n")
     messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
     assert len(messages) == 2 and all(
-        "should be run with --no-deps" in msg.title for msg in messages
+        "should be run with --no-deps and --no-build-isolation" in msg.title for msg in messages
     )
 
 
@@ -1019,7 +1030,10 @@ def test_pip_install_args_multi_script_missing(base_yaml, recipe_dir):
     test_file = recipe_dir / "build_output.sh"
     test_file.write_text("{{ PYTHON }} -m pip install .\n")
     messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
-    assert len(messages) == 1 and "should be run with --no-deps" in messages[0].title
+    assert (
+        len(messages) == 1
+        and "should be run with --no-deps and --no-build-isolation" in messages[0].title
+    )
 
 
 def test_cython_must_be_in_host_good(base_yaml):

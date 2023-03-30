@@ -277,7 +277,7 @@ class uses_setup_py(LintCheck):
 
     Please use::
 
-        $PYTHON -m pip install . --no-deps
+        $PYTHON -m pip install . --no-deps --no-build-isolation
 
     Or use another python build tool.
     """
@@ -321,19 +321,24 @@ class uses_setup_py(LintCheck):
 
 
 class pip_install_args(LintCheck):
-    """`pip install` should be run with --no-deps.
+    """`pip install` should be run with --no-deps and --no-build-isolation.
 
     Please use::
 
-        $PYTHON -m pip install . --no-deps
+        $PYTHON -m pip install . --no-deps --no-build-isolation
 
     """
 
     @staticmethod
     def _check_line(line: str) -> bool:
         """Check a line for a broken call to setup.py"""
-        if "pip install" in line and "--no-deps" not in line:
+        if "pip install" not in line:
+            return True
+
+        required_args = ["--no-deps", "--no-build-isolation"]
+        if any(arg not in line for arg in required_args):
             return False
+
         return True
 
     def check_deps(self, deps):
