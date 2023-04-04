@@ -4,6 +4,7 @@ dependencies:
   - python
   # build
   - setuptools
+  - pip
   # run
   - ruamel.yaml
   - license-expression
