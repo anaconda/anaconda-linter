@@ -103,14 +103,8 @@ class host_section_needs_exact_pinnings(LintCheck):
 
     def check_recipe(self, recipe):
         deps = recipe.get_deps_dict("host")
-        exceptions = (
-            "python",
-            "toml",
-            "wheel",
-            *PYTHON_BUILD_TOOLS,
-        )
         for package, dep in deps.items():
-            if package not in exceptions and not (
+            if not self.is_exception(package) and not (
                 package in recipe.selector_dict and recipe.selector_dict[package]
             ):
                 for c, constraint in enumerate(dep["constraints"]):
@@ -118,6 +112,19 @@ class host_section_needs_exact_pinnings(LintCheck):
                         path = dep["paths"][c]
                         output = -1 if not path.startswith("outputs") else int(path.split("/")[1])
                         self.message(section=path, output=output)
+
+    @staticmethod
+    def is_exception(package):
+         exceptions = (
+             "python",
+             "toml",
+             "wheel",
+             *PYTHON_BUILD_TOOLS,
+         )
+         # It doesn't make sense to pin the versions of hatch plugins if we're not pinning
+         # hatch. We could explictly enumerate the 15 odd plugins in PYTHON_BUILD_TOOLS, but
+         # this seemed lower maintainance
+         return package in exceptions or re.match("^hatch-", package)
 
 
 class should_use_compilers(LintCheck):
