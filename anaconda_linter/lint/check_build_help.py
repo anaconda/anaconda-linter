@@ -115,16 +115,16 @@ class host_section_needs_exact_pinnings(LintCheck):
 
     @staticmethod
     def is_exception(package):
-         exceptions = (
-             "python",
-             "toml",
-             "wheel",
-             *PYTHON_BUILD_TOOLS,
-         )
-         # It doesn't make sense to pin the versions of hatch plugins if we're not pinning
-         # hatch. We could explictly enumerate the 15 odd plugins in PYTHON_BUILD_TOOLS, but
-         # this seemed lower maintainance
-         return package in exceptions or re.match("^hatch-", package)
+        exceptions = (
+            "python",
+            "toml",
+            "wheel",
+            *PYTHON_BUILD_TOOLS,
+        )
+        # It doesn't make sense to pin the versions of hatch plugins if we're not pinning
+        # hatch. We could explictly enumerate the 15 odd plugins in PYTHON_BUILD_TOOLS, but
+        # this seemed lower maintainance
+        return (package in exceptions) or package.startswith("hatch-")
 
 
 class should_use_compilers(LintCheck):
