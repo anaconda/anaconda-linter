@@ -38,7 +38,7 @@ def test_host_section_needs_exact_pinnings_good_multi(base_yaml):
     assert len(messages) == 0
 
 
-@pytest.mark.parametrize("package", ("python", "toml", "wheel", *PYTHON_BUILD_TOOLS))
+@pytest.mark.parametrize("package", ("python", "toml", "wheel", "hatch-vcs", *PYTHON_BUILD_TOOLS))
 def test_host_section_needs_exact_pinnings_good_exception(base_yaml, package):
     yaml_str = (
         base_yaml
