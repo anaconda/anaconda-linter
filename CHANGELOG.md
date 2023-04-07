@@ -1,6 +1,19 @@
 # Changelog
 Note: version releases in the 0.x.y range may introduce breaking changes.
 
+## 0.0.5
+
+- Add fallbacks to all get commands
+- Update recipe
+- Fix build tools bugs
+- Add no_git_on_windows check
+- updates licenses and exceptions to latest as of March
+- Add license automation
+- Enforce use of --no-build-isolation on pip install
+- Fix `pip` dependency for linter environment
+- Do not require version pin for hatch extensions
+- Remove has_imports_and_run_test_py
+
 ## 0.0.4
 
 - Add test suite
