@@ -1,6 +1,9 @@
 # Changelog
 Note: version releases in the 0.x.y range may introduce breaking changes.
 
+## 0.0.6
+
+
 ## 0.0.5
 
 - Add fallbacks to all get commands

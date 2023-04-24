@@ -1,5 +1,5 @@
 __name__ = "anaconda_linter"
-__version__ = "0.0.5"
+__version__ = "0.0.6"
 __author__ = "Anaconda, Inc."
 __email__ = "distribution_team@anaconda.com"
 __license__ = "BSD-3-Clause"
