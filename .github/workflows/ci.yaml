@@ -20,23 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@f095bcc56b7c2baf48f3ac70d6d6782f4f553222
-      - name: Cache conda env
-        id: cache-conda
-        uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8 # v3
-        env:
-          cache-name: conda-env-cache
-        with:
-          path: '/usr/share/miniconda/envs'
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/environment.yml') }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
-      - name: Create Environment
-        if: ${{ steps.cache-conda.outputs.cache-hit == false }}
-        run: |
-          source $CONDA/bin/activate
-          make environment
+      - uses: ./.github/actions/setup-env
       - name: Run tests
         run: |
           source $CONDA/bin/activate
@@ -73,23 +57,7 @@ jobs:
       runs-on: ubuntu-latest
       steps:
         - uses: actions/checkout@f095bcc56b7c2baf48f3ac70d6d6782f4f553222
-        - name: Cache conda env
-          id: cache-conda
-          uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8 # v3
-          env:
-            cache-name: conda-env-cache
-          with:
-            path: '/usr/share/miniconda/envs'
-            key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/environment.yml') }}
-            restore-keys: |
-              ${{ runner.os }}-build-${{ env.cache-name }}-
-              ${{ runner.os }}-build-
-              ${{ runner.os }}-
-        - name: Create Environment
-          if: ${{ steps.cache-conda.outputs.cache-hit == false }}
-          run: |
-            source $CONDA/bin/activate
-            make environment
+        - uses: ./.github/actions/setup-env
         - name: Run lint
           run: |
             source $CONDA/bin/activate
