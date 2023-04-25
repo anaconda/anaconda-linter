@@ -23,6 +23,8 @@ Concrete example:
 `cd ~/work/recipes/aggregate/`
 `conda-lint -v ../wip/airflow-feedstock`
 
+Full usage details can be found under the help menu (`conda-lint -h`). New users may find it easier to run the script with the verbose flag, `-v` which will provide additional context for linting errors.
+
 ## Skipping Lints
 
 In order to force the linter to ignore a certain type of lint, you can use the top-level `extra` key in a `meta.yaml file`. To skip lints individually, add lints from this [list of current lints](anaconda_linter/lint_names.md) to the `extra` key as a list with a `skip-lints` key. For example:
