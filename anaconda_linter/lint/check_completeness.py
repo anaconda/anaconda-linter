@@ -4,6 +4,7 @@ Verify that the recipe is not missing anything essential.
 """
 
 import os
+import re
 
 import conda_build.license_family
 
@@ -320,9 +321,11 @@ class documentation_specifies_language(LintCheck):
     """
 
     def check_recipe(self, recipe):
-        if recipe.get("about/doc_url", "") and recipe.get("about/doc_url", "").endswith("en/latest"):
+        lang_url = re.compile(
+            r"readthedocs.io\/[a-z]{2,3}/latest"
+        )  # assume ISO639-1 or similar language code
+        if recipe.get("about/doc_url", "") and lang_url.search(recipe.get("about/doc_url", "")):
             self.message(section="about/doc_url")
-
 
 
 class missing_dev_url(LintCheck):
