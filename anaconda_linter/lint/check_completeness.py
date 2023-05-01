@@ -312,6 +312,19 @@ class documentation_overspecified(LintCheck):
             self.message(section="about", severity=WARNING)
 
 
+class documentation_specifies_language(LintCheck):
+    """Use the generic link not a language specific one
+
+    Please use PACKAGE.readthedocs.io not  PACKAGE.readthedocs.io/en/latest
+
+    """
+
+    def check_recipe(self, recipe):
+        if recipe.get("about/doc_url", "") and recipe.get("about/doc_url", "").endswith("en/latest"):
+            self.message(section="about/doc_url")
+
+
+
 class missing_dev_url(LintCheck):
     """The recipe is missing a dev_url
 
