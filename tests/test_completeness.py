@@ -491,7 +491,7 @@ def test_missing_documentation_bad(base_yaml):
 def test_documentation_specifies_language(base_yaml):
     yaml_str = (
         base_yaml
-        + f"""
+        + """
         about:
           doc_url: builder.readthedocs.io/en/latest
         """
