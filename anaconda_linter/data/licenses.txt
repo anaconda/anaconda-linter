@@ -132,6 +132,7 @@ CC-BY-SA-2.5
 CC-BY-SA-3.0
 CC-BY-SA-3.0-AT
 CC-BY-SA-3.0-DE
+CC-BY-SA-3.0-IGO
 CC-BY-SA-4.0
 CC-PDDC
 CC0-1.0
@@ -293,6 +294,7 @@ Knuth-CTAN
 LAL-1.2
 LAL-1.3
 Latex2e
+Latex2e-translated-notice
 Leptonica
 LGPL-2.0
 LGPL-2.0+
@@ -329,6 +331,7 @@ LZMA-SDK-9.11-to-9.20
 LZMA-SDK-9.22
 MakeIndex
 Martin-Birgmeier
+metamail
 Minpack
 MirOS
 MIT
@@ -337,6 +340,7 @@ MIT-advertising
 MIT-CMU
 MIT-enna
 MIT-feh
+MIT-Festival
 MIT-Modern-Variant
 MIT-open-group
 MIT-Wu
@@ -370,6 +374,7 @@ NGPL
 NICTA-1.0
 NIST-PD
 NIST-PD-fallback
+NIST-Software
 NLOD-1.0
 NLOD-2.0
 NLPL
@@ -418,6 +423,7 @@ OLDAP-2.5
 OLDAP-2.6
 OLDAP-2.7
 OLDAP-2.8
+OLFL-1.3
 OML
 OpenPBS-2.3
 OpenSSL
@@ -463,6 +469,7 @@ Sendmail-8.23
 SGI-B-1.0
 SGI-B-1.1
 SGI-B-2.0
+SGP4
 SHL-0.5
 SHL-0.51
 SimPL-2.0
@@ -501,6 +508,7 @@ UCL-1.0
 Unicode-DFS-2015
 Unicode-DFS-2016
 Unicode-TOU
+UnixCrypt
 Unlicense
 UPL-1.0
 Vim
