@@ -167,11 +167,11 @@ class invalid_license_family(LintCheck):
                     " Using 'None' breaks some uploaders."
                     " Use skip-lint to skip this check instead."
                 )
-                self.message(
-            elif not license_family in [
+                self.message(msg, section="about")
+            elif license_family not in [
                 x.lower() for x in conda_build.license_family.allowed_license_families
             ]:
-            self.message(section="about")
+                self.message(section="about")
 
 
 class missing_tests(LintCheck):
