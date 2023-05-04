@@ -222,6 +222,19 @@ def test_invalid_license_family(base_yaml):
     assert len(messages) == 1 and "about/license_family` value" in messages[0].title
 
 
+def test_invalid_license_family_none(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        about:
+          license_family: None
+        """
+    )
+    lint_check = "invalid_license_family"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 1 and "about/license_family` value" in messages[0].title and "Using 'None' breaks" in messages[0].title
+
+
 def test_missing_tests_good_import(base_yaml):
     yaml_str = (
         base_yaml
