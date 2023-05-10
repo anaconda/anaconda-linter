@@ -36,7 +36,6 @@ PYTHON_BUILD_TOOLS = (
     "hatchling",
     "meson",
     "meson-python",
-    "packaging",
     "pdm",
     "pdm-pep517",
     "pip",
