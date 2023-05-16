@@ -547,6 +547,26 @@ def test_missing_python_build_tool_pip_install_good(base_yaml, tool):
 
 
 @pytest.mark.parametrize("tool", PYTHON_BUILD_TOOLS)
+def test_missing_python_build_tool_pip_install_good_list(base_yaml, tool):
+    yaml_str = (
+        base_yaml
+        + f"""
+        source:
+          url: https://github.com/joblib/joblib/archive/1.1.1.tar.gz
+        build:
+          script:
+            - {{{{ PYTHON }}}} -m pip install .
+        requirements:
+          host:
+            - {tool}
+        """
+    )
+    lint_check = "missing_python_build_tool"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+@pytest.mark.parametrize("tool", PYTHON_BUILD_TOOLS)
 def test_missing_python_build_tool_pip_install_good_multi(base_yaml, tool):
     yaml_str = (
         base_yaml
@@ -554,6 +574,30 @@ def test_missing_python_build_tool_pip_install_good_multi(base_yaml, tool):
         outputs:
           - name: output1
             script: {{{{ PYTHON }}}} -m pip install .
+            requirements:
+              host:
+                - {tool}
+          - name: output2
+            script: {{{{ PYTHON }}}} -m pip install .
+            requirements:
+              host:
+                - {tool}
+        """
+    )
+    lint_check = "missing_python_build_tool"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+@pytest.mark.parametrize("tool", PYTHON_BUILD_TOOLS)
+def test_missing_python_build_tool_pip_install_good_multi_list(base_yaml, tool):
+    yaml_str = (
+        base_yaml
+        + f"""
+        outputs:
+          - name: output1
+            script:
+              - {{{{ PYTHON }}}} -m pip install .
             requirements:
               host:
                 - {tool}
@@ -586,6 +630,24 @@ def test_missing_python_build_tool_pip_install_bad(base_yaml):
     assert len(messages) == 1 and "require a python build tool" in messages[0].title
 
 
+def test_missing_python_build_tool_pip_install_bad_list(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://github.com/joblib/joblib/archive/1.1.1.tar.gz
+        build:
+          script:
+            - {{ PYTHON }} -m pip install .
+        requirements:
+          host:
+        """
+    )
+    lint_check = "missing_python_build_tool"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 1 and "require a python build tool" in messages[0].title
+
+
 def test_missing_python_build_tool_pip_install_bad_multi(base_yaml):
     yaml_str = (
         base_yaml
@@ -593,6 +655,29 @@ def test_missing_python_build_tool_pip_install_bad_multi(base_yaml):
         outputs:
           - name: output1
             script: {{ PYTHON }} -m pip install .
+            requirements:
+              host:
+          - name: output2
+            script: {{ PYTHON }} -m pip install .
+            requirements:
+              host:
+        """
+    )
+    lint_check = "missing_python_build_tool"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 2 and all(
+        "require a python build tool" in msg.title for msg in messages
+    )
+
+
+def test_missing_python_build_tool_pip_install_bad_multi_list(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+            script:
+              - {{ PYTHON }} -m pip install .
             requirements:
               host:
           - name: output2
@@ -655,6 +740,25 @@ def test_missing_wheel_pip_install_good(base_yaml):
     assert len(messages) == 0
 
 
+def test_missing_wheel_pip_install_good_list(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://github.com/joblib/joblib/archive/1.1.1.tar.gz
+        build:
+          script:
+            - {{ PYTHON }} -m pip install .
+        requirements:
+          host:
+            - wheel
+        """
+    )
+    lint_check = "missing_wheel"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
 def test_missing_wheel_pip_install_good_multi(base_yaml):
     yaml_str = (
         base_yaml
@@ -662,6 +766,29 @@ def test_missing_wheel_pip_install_good_multi(base_yaml):
         outputs:
           - name: output1
             script: {{ PYTHON }} -m pip install .
+            requirements:
+              host:
+                - wheel
+          - name: output2
+            script: {{ PYTHON }} -m pip install .
+            requirements:
+              host:
+                - wheel
+        """
+    )
+    lint_check = "missing_wheel"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_missing_wheel_pip_install_good_multi_list(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+            script:
+              - {{ PYTHON }} -m pip install .
             requirements:
               host:
                 - wheel
@@ -692,6 +819,22 @@ def test_missing_wheel_pip_install_bad(base_yaml):
     assert len(messages) == 1 and "wheel should be present" in messages[0].title
 
 
+def test_missing_wheel_pip_install_bad_list(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://github.com/joblib/joblib/archive/1.1.1.tar.gz
+        build:
+          script:
+            - {{ PYTHON }} -m pip install .
+        """
+    )
+    lint_check = "missing_wheel"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 1 and "wheel should be present" in messages[0].title
+
+
 def test_missing_wheel_pip_install_bad_multi(base_yaml):
     yaml_str = (
         base_yaml
@@ -699,6 +842,27 @@ def test_missing_wheel_pip_install_bad_multi(base_yaml):
         outputs:
           - name: output1
             script: {{ PYTHON }} -m pip install .
+            requirements:
+              host:
+          - name: output2
+            script: {{ PYTHON }} -m pip install .
+            requirements:
+              host:
+        """
+    )
+    lint_check = "missing_wheel"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 2 and all("wheel should be present" in msg.title for msg in messages)
+
+
+def test_missing_wheel_pip_install_bad_multi_list(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+            script:
+              - {{ PYTHON }} -m pip install .
             requirements:
               host:
           - name: output2
@@ -782,6 +946,24 @@ def test_uses_setup_py_bad_cmd(base_yaml, arg_test):
 
 
 @pytest.mark.parametrize("arg_test", ["", "--no-deps", "--no-build-isolation"])
+def test_uses_setup_py_bad_cmd_list(base_yaml, arg_test):
+    yaml_str = (
+        base_yaml
+        + f"""
+        build:
+          script:
+            - {{{{ PYTHON }}}} -m setup.py install {arg_test}
+        requirements:
+          host:
+            - setuptools
+        """
+    )
+    lint_check = "uses_setup_py"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 1 and "python setup.py install" in messages[0].title
+
+
+@pytest.mark.parametrize("arg_test", ["", "--no-deps", "--no-build-isolation"])
 def test_uses_setup_py_bad_cmd_multi(base_yaml, arg_test):
     yaml_str = (
         base_yaml
@@ -789,6 +971,30 @@ def test_uses_setup_py_bad_cmd_multi(base_yaml, arg_test):
         outputs:
           - name: output1
             script: {{{{ PYTHON }}}} -m setup.py install {arg_test}
+            requirements:
+              host:
+                - setuptools
+          - name: output2
+            script: {{{{ PYTHON }}}} -m setup.py install {arg_test}
+            requirements:
+              host:
+                - setuptools
+        """
+    )
+    lint_check = "uses_setup_py"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 2 and all("python setup.py install" in msg.title for msg in messages)
+
+
+@pytest.mark.parametrize("arg_test", ["", "--no-deps", "--no-build-isolation"])
+def test_uses_setup_py_bad_cmd_multi_list(base_yaml, arg_test):
+    yaml_str = (
+        base_yaml
+        + f"""
+        outputs:
+          - name: output1
+            script:
+              - {{{{ PYTHON }}}} -m setup.py install {arg_test}
             requirements:
               host:
                 - setuptools
@@ -941,6 +1147,26 @@ def test_pip_install_args_bad_cmd(base_yaml):
     )
 
 
+def test_pip_install_args_bad_cmd_list(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        build:
+          script:
+            - {{ PYTHON }} -m pip install .
+        requirements:
+          host:
+            - pip
+        """
+    )
+    lint_check = "pip_install_args"
+    messages = check(lint_check, yaml_str)
+    assert (
+        len(messages) == 1
+        and "should be run with --no-deps and --no-build-isolation" in messages[0].title
+    )
+
+
 def test_pip_install_args_bad_cmd_multi(base_yaml):
     yaml_str = (
         base_yaml
@@ -948,6 +1174,31 @@ def test_pip_install_args_bad_cmd_multi(base_yaml):
         outputs:
           - name: output1
             script: {{ PYTHON }} -m pip install
+            requirements:
+              host:
+                - pip
+          - name: output2
+            script: {{ PYTHON }} -m pip install
+            requirements:
+              host:
+                - pip
+        """
+    )
+    lint_check = "pip_install_args"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 2 and all(
+        "should be run with --no-deps and --no-build-isolation" in msg.title for msg in messages
+    )
+
+
+def test_pip_install_args_bad_cmd_multi_list(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+            script:
+              - {{ PYTHON }} -m pip install
             requirements:
               host:
                 - pip
@@ -1691,6 +1942,25 @@ def test_missing_pip_check_pip_install_cmd_good(base_yaml):
     assert len(messages) == 0
 
 
+def test_missing_pip_check_pip_install_cmd_good_list(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://github.com/joblib/joblib/archive/1.1.1.tar.gz
+        build:
+          script:
+            - {{ PYTHON }} -m pip install .
+        test:
+          commands:
+            - pip check
+        """
+    )
+    lint_check = "missing_pip_check"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
 def test_missing_pip_check_pip_install_cmd_good_multi(base_yaml):
     yaml_str = (
         base_yaml
@@ -1711,6 +1981,27 @@ def test_missing_pip_check_pip_install_cmd_good_multi(base_yaml):
     assert len(messages) == 0
 
 
+def test_missing_pip_check_pip_install_cmd_good_multi_list(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://github.com/joblib/joblib/archive/1.1.1.tar.gz
+        outputs:
+          - name: output1
+          - name: output2
+            script:
+              - {{ PYTHON }} -m pip install .
+            test:
+              commands:
+                - pip check
+        """
+    )
+    lint_check = "missing_pip_check"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
 def test_missing_pip_check_pip_install_script_good(base_yaml, recipe_dir):
     yaml_str = (
         base_yaml
@@ -1719,6 +2010,24 @@ def test_missing_pip_check_pip_install_script_good(base_yaml, recipe_dir):
           url: https://github.com/joblib/joblib/archive/1.1.1.tar.gz
         build:
           script: {{ PYTHON }} -m pip install .
+        """
+    )
+    lint_check = "missing_pip_check"
+    test_file = recipe_dir / "run_test.sh"
+    test_file.write_text("pip check\n")
+    messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
+    assert len(messages) == 0
+
+
+def test_missing_pip_check_pip_install_script_good_list(base_yaml, recipe_dir):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://github.com/joblib/joblib/archive/1.1.1.tar.gz
+        build:
+          script:
+            - {{ PYTHON }} -m pip install .
         """
     )
     lint_check = "missing_pip_check"
@@ -1749,6 +2058,28 @@ def test_missing_pip_check_pip_install_script_good_multi(base_yaml, recipe_dir):
     assert len(messages) == 0
 
 
+def test_missing_pip_check_pip_install_script_good_multi_list(base_yaml, recipe_dir):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://github.com/joblib/joblib/archive/1.1.1.tar.gz
+        outputs:
+          - name: output1
+          - name: output2
+            script:
+              - {{ PYTHON }} -m pip install .
+            test:
+              script: test_output.sh
+        """
+    )
+    lint_check = "missing_pip_check"
+    test_file = recipe_dir / "test_output.sh"
+    test_file.write_text("pip check\n")
+    messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
+    assert len(messages) == 0
+
+
 def test_missing_pip_check_pip_install_missing_bad(base_yaml):
     yaml_str = (
         base_yaml
@@ -1757,6 +2088,22 @@ def test_missing_pip_check_pip_install_missing_bad(base_yaml):
           url: https://github.com/joblib/joblib/archive/1.1.1.tar.gz
         build:
           script: {{ PYTHON }} -m pip install .
+        """
+    )
+    lint_check = "missing_pip_check"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 1 and "pip check should be present" in messages[0].title
+
+
+def test_missing_pip_check_pip_install_missing_bad_list(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://github.com/joblib/joblib/archive/1.1.1.tar.gz
+        build:
+          script:
+            - {{ PYTHON }} -m pip install .
         """
     )
     lint_check = "missing_pip_check"
@@ -1784,6 +2131,27 @@ def test_missing_pip_check_pip_install_missing_bad_multi(base_yaml):
     )
 
 
+def test_missing_pip_check_pip_install_missing_bad_multi_list(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://github.com/joblib/joblib/archive/1.1.1.tar.gz
+        outputs:
+          - name: output1
+            script:
+              - {{ PYTHON }} -m pip install .
+          - name: output2
+            script: {{ PYTHON }} -m pip install .
+        """
+    )
+    lint_check = "missing_pip_check"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 2 and all(
+        "pip check should be present" in msg.title for msg in messages
+    )
+
+
 def test_missing_pip_check_pip_install_cmd_bad(base_yaml):
     yaml_str = (
         base_yaml
@@ -1792,6 +2160,25 @@ def test_missing_pip_check_pip_install_cmd_bad(base_yaml):
           url: https://github.com/joblib/joblib/archive/1.1.1.tar.gz
         build:
           script: {{ PYTHON }} -m pip install .
+        test:
+          commands:
+            - other_test_command
+        """
+    )
+    lint_check = "missing_pip_check"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 1 and "pip check should be present" in messages[0].title
+
+
+def test_missing_pip_check_pip_install_cmd_bad_list(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://github.com/joblib/joblib/archive/1.1.1.tar.gz
+        build:
+          script:
+            - {{ PYTHON }} -m pip install .
         test:
           commands:
             - other_test_command
@@ -1828,6 +2215,33 @@ def test_missing_pip_check_pip_install_cmd_bad_multi(base_yaml):
     )
 
 
+def test_missing_pip_check_pip_install_cmd_bad_multi_list(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://github.com/joblib/joblib/archive/1.1.1.tar.gz
+        outputs:
+          - name: output1
+            script:
+              - {{ PYTHON }} -m pip install .
+            test:
+              commands:
+                - other_test_command
+          - name: output2
+            script: {{ PYTHON }} -m pip install .
+            test:
+              commands:
+                - other_test_command
+        """
+    )
+    lint_check = "missing_pip_check"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 2 and all(
+        "pip check should be present" in msg.title for msg in messages
+    )
+
+
 def test_missing_pip_check_pip_install_script_bad(base_yaml, recipe_dir):
     yaml_str = (
         base_yaml
@@ -1836,6 +2250,24 @@ def test_missing_pip_check_pip_install_script_bad(base_yaml, recipe_dir):
           url: https://github.com/joblib/joblib/archive/1.1.1.tar.gz
         build:
           script: {{ PYTHON }} -m pip install .
+        """
+    )
+    lint_check = "missing_pip_check"
+    test_file = recipe_dir / "run_test.sh"
+    test_file.write_text("other_test_command\n")
+    messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
+    assert len(messages) == 1 and "pip check should be present" in messages[0].title
+
+
+def test_missing_pip_check_pip_install_script_bad_list(base_yaml, recipe_dir):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://github.com/joblib/joblib/archive/1.1.1.tar.gz
+        build:
+          script:
+            - {{ PYTHON }} -m pip install .
         """
     )
     lint_check = "missing_pip_check"
@@ -1854,6 +2286,33 @@ def test_missing_pip_check_pip_install_script_bad_multi(base_yaml, recipe_dir):
         outputs:
           - name: output1
             script: {{ PYTHON }} -m pip install .
+            test:
+              script: test_output.sh
+          - name: output2
+            script: {{ PYTHON }} -m pip install .
+            test:
+              script: test_output.sh
+        """
+    )
+    lint_check = "missing_pip_check"
+    test_file = recipe_dir / "test_output.sh"
+    test_file.write_text("other_test_command\n")
+    messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
+    assert len(messages) == 2 and all(
+        "pip check should be present" in msg.title for msg in messages
+    )
+
+
+def test_missing_pip_check_pip_install_script_bad_multi_list(base_yaml, recipe_dir):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://github.com/joblib/joblib/archive/1.1.1.tar.gz
+        outputs:
+          - name: output1
+            script:
+              - {{ PYTHON }} -m pip install .
             test:
               script: test_output.sh
           - name: output2
@@ -2145,6 +2604,27 @@ def test_missing_python_pip_install_good(base_yaml):
     assert len(messages) == 0
 
 
+def test_missing_python_pip_install_good_list(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://github.com/joblib/joblib/archive/1.1.1.tar.gz
+        build:
+          script:
+            - {{ PYTHON }} -m pip install .
+        requirements:
+          host:
+            - python
+          run:
+            - python
+        """
+    )
+    lint_check = "missing_python"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
 def test_missing_python_pip_install_good_multi(base_yaml):
     yaml_str = (
         base_yaml
@@ -2154,6 +2634,35 @@ def test_missing_python_pip_install_good_multi(base_yaml):
         outputs:
           - name: output1
             script: {{ PYTHON }} -m pip install .
+            requirements:
+              host:
+                - python
+              run:
+                - python
+          - name: output2
+            script: {{ PYTHON }} -m pip install .
+            requirements:
+              host:
+                - python
+              run:
+                - python
+        """
+    )
+    lint_check = "missing_python"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_missing_python_pip_install_good_multi_list(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://github.com/joblib/joblib/archive/1.1.1.tar.gz
+        outputs:
+          - name: output1
+            script:
+              - {{ PYTHON }} -m pip install .
             requirements:
               host:
                 - python
@@ -2188,6 +2697,22 @@ def test_missing_python_pip_install_bad(base_yaml):
     assert len(messages) == 2 and all(["python should be present" in m.title for m in messages])
 
 
+def test_missing_python_pip_install_bad_list(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://github.com/joblib/joblib/archive/1.1.1.tar.gz
+        build:
+          script:
+            - {{ PYTHON }} -m pip install .
+        """
+    )
+    lint_check = "missing_python"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 2 and all(["python should be present" in m.title for m in messages])
+
+
 def test_missing_python_pip_install_bad_multi(base_yaml):
     yaml_str = (
         base_yaml
@@ -2197,6 +2722,25 @@ def test_missing_python_pip_install_bad_multi(base_yaml):
         outputs:
           - name: output1
             script: {{ PYTHON }} -m pip install .
+          - name: output2
+            script: {{ PYTHON }} -m pip install .
+        """
+    )
+    lint_check = "missing_python"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 4 and all(["python should be present" in m.title for m in messages])
+
+
+def test_missing_python_pip_install_bad_multi_list(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url: https://github.com/joblib/joblib/archive/1.1.1.tar.gz
+        outputs:
+          - name: output1
+            script:
+              - {{ PYTHON }} -m pip install .
           - name: output2
             script: {{ PYTHON }} -m pip install .
         """

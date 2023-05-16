@@ -7,6 +7,7 @@ These checks catch errors relating to the use of ``-
 
 import os
 import re
+from typing import Any
 
 from . import INFO, WARNING, LintCheck
 
@@ -240,11 +241,11 @@ class missing_python_build_tool(LintCheck):
                         path.startswith(f"outputs/{o}") for path in dep["paths"]
                     ):
                         tools.append(tool)
-                if (is_pypi or "pip install" in recipe.get(f"outputs/{o}/script", "")) and len(
+                if (is_pypi or recipe.contains(f"outputs/{o}/script", "pip install", "")) and len(
                     tools
                 ) == 0:
                     self.message(section=f"outputs/{o}/requirements/host", output=o)
-        elif is_pypi or "pip install" in recipe.get("build/script", ""):
+        elif is_pypi or recipe.contains("build/script", "pip install", ""):
             deps = recipe.get_deps("host")
             if not any(tool in deps for tool in PYTHON_BUILD_TOOLS):
                 self.message(section="requirements/host")
@@ -271,10 +272,10 @@ class missing_wheel(LintCheck):
         )
         if outputs := recipe.get("outputs", None):
             for o in range(len(outputs)):
-                if is_pypi or "pip install" in recipe.get(f"outputs/{o}/script", ""):
+                if is_pypi or recipe.contains(f"outputs/{o}/script", "pip install", ""):
                     if f"outputs/{o}/requirements/host" not in paths:
                         self.message(section=f"outputs/{o}/requirements/host", output=o)
-        elif is_pypi or "pip install" in recipe.get("build/script", ""):
+        elif is_pypi or recipe.contains("build/script", "pip install", ""):
             if "requirements/host" not in paths:
                 self.message(section="requirements/host")
 
@@ -308,7 +309,7 @@ class uses_setup_py(LintCheck):
             else:
                 script = "build/script"
                 output = -1
-            if not self._check_line(self.recipe.get(script, "")):
+            if self.recipe.contains(script, "setup.py install", ""):
                 self.message(section=script)
                 continue
             if self.recipe.dir:
@@ -337,14 +338,18 @@ class pip_install_args(LintCheck):
     """
 
     @staticmethod
-    def _check_line(line: str) -> bool:
-        """Check a line for a broken call to setup.py"""
-        if "pip install" not in line:
+    def _check_line(x: Any) -> bool:
+        """Check a line (or list of lines) for a broken call to setup.py"""
+        if isinstance(x, str):
+            x = [x]
+        elif not isinstance(x, list):
             return True
 
-        required_args = ["--no-deps", "--no-build-isolation"]
-        if any(arg not in line for arg in required_args):
-            return False
+        for line in x:
+            if "pip install" in line:
+                required_args = ["--no-deps", "--no-build-isolation"]
+                if any(arg not in line for arg in required_args):
+                    return False
 
         return True
 
@@ -590,7 +595,7 @@ class missing_pip_check(LintCheck):
         is_pypi = is_pypi_source(recipe)
         if outputs := recipe.get("outputs", None):
             for o in range(len(outputs)):
-                if not is_pypi and "pip install" not in recipe.get(f"outputs/{o}/script", ""):
+                if not is_pypi and not recipe.contains(f"outputs/{o}/script", "pip install", ""):
                     continue
                 test_section = f"outputs/{o}/test"
                 if commands := recipe.get(f"{test_section}/commands", None):
@@ -600,7 +605,7 @@ class missing_pip_check(LintCheck):
                     self._check_file(os.path.join(recipe.dir, script))
                 else:
                     self.message(section=test_section, output=o)
-        elif is_pypi or "pip install" in recipe.get("build/script", ""):
+        elif is_pypi or recipe.contains("build/script", "pip install", ""):
             if commands := recipe.get("test/commands", None):
                 if not any("pip check" in cmd for cmd in commands):
                     self.message(section="test/commands")
@@ -694,12 +699,12 @@ class missing_python(LintCheck):
         )
         if outputs := recipe.get("outputs", None):
             for o in range(len(outputs)):
-                if is_pypi or "pip install" in recipe.get(f"outputs/{o}/script", ""):
+                if is_pypi or recipe.contains(f"outputs/{o}/script", "pip install", ""):
                     for section in ["host", "run"]:
                         path_to_section = f"outputs/{o}/requirements/{section}"
                         if path_to_section not in paths:
                             self.message(section, section=path_to_section, output=o)
-        elif is_pypi or "pip install" in recipe.get("build/script", ""):
+        elif is_pypi or recipe.contains("build/script", "pip install", ""):
             for section in ["host", "run"]:
                 path_to_section = f"requirements/{section}"
                 if path_to_section not in paths:
