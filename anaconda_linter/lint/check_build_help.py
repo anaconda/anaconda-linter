@@ -552,7 +552,11 @@ class missing_imports_or_run_test_py(LintCheck):
             if is_pypi:
                 paths_to_check = [f"outputs/{o}" for o in range(len(outputs))]
             else:
-                paths_to_check = ["/".join(path.split("/")[:2]) for path in deps["python"]["paths"]]
+                paths_to_check = [
+                    "/".join(path.split("/")[:2])
+                    for path in deps["python"]["paths"]
+                    if not path.startswith("requirements")
+                ]
             for path in paths_to_check:
                 if not recipe.get(f"{path}/test/imports", []) and not recipe.get(
                     f"{path}/test/script", ""
