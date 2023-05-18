@@ -118,6 +118,7 @@ class host_section_needs_exact_pinnings(LintCheck):
             "python",
             "toml",
             "wheel",
+            "packaging",
             *PYTHON_BUILD_TOOLS,
         )
         # It doesn't make sense to pin the versions of hatch plugins if we're not pinning
