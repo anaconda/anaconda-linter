@@ -12,6 +12,39 @@ that packages' meta.yaml files adhere to certain Anaconda standards.
 
 ## Usage
 
+```sh
+usage: anaconda-lint [-h] [-V] [-m VARIANT_CONFIG_FILES] [-e EXCLUSIVE_CONFIG_FILES] [-s SUBDIRS] [--severity {INFO,WARNING,ERROR}] [-v]
+                     RECIPE_PATH
+
+positional arguments:
+  RECIPE_PATH           Path to recipe directory.
+
+options:
+  -h, --help            show this help message and exit
+  -V, --version         The version of anaconda-linter
+  -m VARIANT_CONFIG_FILES, --variant-config-files VARIANT_CONFIG_FILES
+                        Additional variant config files to add. These yaml files
+                        can contain keys such as `c_compiler` and
+                        `target_platform` to form a build matrix.
+  -e EXCLUSIVE_CONFIG_FILES, --exclusive-config-files EXCLUSIVE_CONFIG_FILES, --exclusive-config-file EXCLUSIVE_CONFIG_FILES
+                        Exclusive variant config files to add. Providing files
+                        here disables searching in your home directory and in cwd.
+                        The files specified here come at the start of the order,
+                        as opposed to the end with --variant-config-files. Any
+                        config files in recipes and any config files specified with
+                        --variant-config-files will override values from these
+                        files.
+  -s SUBDIRS, --subdirs SUBDIRS
+                        List subdir to lint. Example: linux-64, win-64...
+  --severity {INFO,WARNING,ERROR}
+                        The minimum severity level displayed in the output.
+  -v, --verbose         Enable verbose output. This displays all of the checks
+                        that the linter is running.
+
+anaconda-lint:
+Performs linting on conda recipes.
+```
+
 The usage is similar to conda-build.
 
 1. navigate into the folder of your main `conda_build_config.yaml` file:
