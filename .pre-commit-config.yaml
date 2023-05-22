@@ -1,4 +1,4 @@
-# Apply to all files without commiting:
+# Apply to all files without committing:
 #   pre-commit run --all-files
 # Update this file:
 #   pre-commit autoupdate
@@ -59,3 +59,15 @@ repos:
   hooks:
   -   id: bandit
       files: '^gh-bridge/ghpeb/webhook.py'
+- repo: https://github.com/Lucas-C/pre-commit-hooks-nodejs
+  rev: v1.1.2
+  hooks:
+  - id: markdown-toc
+- repo: local
+  hooks:
+  - id: update_usage
+    name: update_usage
+    entry: ./scripts/update_usage.py
+    language: system
+    files: 'run.py'
+    types: [python]

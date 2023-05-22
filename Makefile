@@ -66,7 +66,7 @@ environment:       ## Handles environment creation
 	conda run --name $(CONDA_ENV_NAME) pip install -e .
 
 pre-commit:        ## Runs pre-commit against files
-	pre-commit run --all-files
+	pre-commit run --verbose --all-files
 
 test:              ## Run tests
 	mkdir -p $(ARTIFACTS_PATH)
