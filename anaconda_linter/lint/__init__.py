@@ -87,6 +87,7 @@ import inspect
 import logging
 import pkgutil
 from enum import IntEnum
+from pathlib import Path
 from typing import Any, Dict, List, NamedTuple, Tuple
 
 import networkx as nx
@@ -388,7 +389,7 @@ class LintCheck(metaclass=LintCheckMeta):
 
         if not fname:
             fname = recipe.path
-
+        fname = str(Path(*Path(fname).parts[-3:]))
         return LintMessage(
             recipe=recipe,
             check=cls,

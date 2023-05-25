@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import pytest
-from conftest import check
+from conftest import check, check_dir
 
 from anaconda_linter import lint, utils
 from anaconda_linter.lint import ERROR, INFO, WARNING
@@ -248,3 +248,11 @@ def test_message_title_format(base_yaml):
     lint_check = "dummy_error_format"
     messages = check(lint_check, base_yaml)
     assert len(messages) == 1 and messages[0].title == "Dummy message of severity ERROR"
+
+
+def test_message_path(base_yaml, tmpdir):
+    recipe_directory_short = Path("fake_feedstock/recipe")
+    recipe_directory = Path(tmpdir) / recipe_directory_short
+    lint_check = "dummy_error"
+    messages = check_dir(lint_check, recipe_directory.parent, base_yaml)
+    assert len(messages) == 1 and Path(messages[0].fname) == (recipe_directory_short / "meta.yaml")
