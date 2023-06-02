@@ -11,7 +11,7 @@ import re
 from collections import Counter
 from copy import deepcopy
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Sequence
 
 import requests
 from jsonschema import validate
