@@ -83,6 +83,46 @@ def test_missing_build_number_bad(base_yaml):
     assert len(messages) == 1 and "missing a build number" in messages[0].title
 
 
+def test_missing_package_name_good(base_yaml):
+    yaml_str = """
+        package:
+          name: plop
+        """
+    lint_check = "missing_package_name"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_missing_package_name_bad(base_yaml):
+    yaml_str = """
+        build:
+          number: 0
+        """
+    lint_check = "missing_package_name"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 1 and "missing a package name" in messages[0].title
+
+
+def test_missing_package_version_good(base_yaml):
+    yaml_str = """
+        package:
+          version: 1.2.3
+        """
+    lint_check = "missing_package_version"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_missing_package_version_bad(base_yaml):
+    yaml_str = """
+        build:
+          number: 0
+        """
+    lint_check = "missing_package_version"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 1 and "missing a package version" in messages[0].title
+
+
 def test_missing_home_good(base_yaml):
     yaml_str = (
         base_yaml
