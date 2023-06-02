@@ -5,23 +5,15 @@ This module collects small pieces of code used throughout
 :py:mod:`anaconda_linter`.
 """
 
-import fnmatch
-import glob
 import logging
 import os
+import re
 from collections import Counter
 from copy import deepcopy
 from pathlib import Path
-from typing import Sequence
+from typing import Any, Sequence
 
-# FIXME(upstream): For conda>=4.7.0 initialize_logging is (erroneously) called
-#                  by conda.core.index.get_index which messes up our logging.
-# => Prevent custom conda logging init before importing anything conda-related.
-import conda.gateways.logging
-import jinja2
 import requests
-from conda_build import api
-from jinja2 import Environment
 from jsonschema import validate
 
 try:
@@ -29,227 +21,10 @@ try:
 except ModuleNotFoundError:
     from ruamel_yaml import YAML
 
-
-conda.gateways.logging.initialize_logging = lambda: None
-
-
 logger = logging.getLogger(__name__)
 
 
 yaml = YAML(typ="safe")  # pylint: disable=invalid-name
-
-
-def ensure_list(obj):
-    """Wraps **obj** in a list if necessary
-
-    >>> ensure_list("one")
-    ["one"]
-    >>> ensure_list(["one", "two"])
-    ["one", "two"]
-    """
-    if isinstance(obj, Sequence) and not isinstance(obj, str):
-        return obj
-    return [obj]
-
-
-class JinjaSilentUndefined(jinja2.Undefined):
-    def _fail_with_undefined_error(self, *args, **kwargs):
-        return ""
-
-    __add__ = (
-        __radd__
-    ) = (
-        __mul__
-    ) = (
-        __rmul__
-    ) = (
-        __div__
-    ) = (
-        __rdiv__
-    ) = (
-        __truediv__
-    ) = (
-        __rtruediv__
-    ) = (
-        __floordiv__
-    ) = (
-        __rfloordiv__
-    ) = (
-        __mod__
-    ) = (
-        __rmod__
-    ) = (
-        __pos__
-    ) = (
-        __neg__
-    ) = (
-        __call__
-    ) = (
-        __getitem__
-    ) = (
-        __lt__
-    ) = (
-        __le__
-    ) = (
-        __gt__
-    ) = __ge__ = __int__ = __float__ = __complex__ = __pow__ = __rpow__ = _fail_with_undefined_error
-
-
-jinja = Environment(
-    # loader=PackageLoader('bioconda_utils', 'templates'),
-    trim_blocks=True,
-    lstrip_blocks=True,
-)
-
-
-jinja_silent_undef = Environment(undefined=JinjaSilentUndefined)
-
-
-def load_all_meta(recipe, config=None, finalize=True):
-    """
-    For each environment, yield the rendered meta.yaml.
-
-    Parameters
-    ----------
-    finalize : bool
-        If True, do a full conda-build render. Determines exact package builds
-        of build/host dependencies. It involves costly dependency resolution
-        via conda and also download of those packages (to inspect possible
-        run_exports). For fast-running tasks like linting, set to False.
-    """
-    if config is None:
-        config = load_conda_build_config()
-    # `bypass_env_check=True` prevents evaluating (=environment solving) the
-    # package versions used for `pin_compatible` and the like.
-    # To avoid adding a separate `bypass_env_check` alongside every `finalize`
-    # parameter, just assume we do not want to bypass if `finalize is True`.
-    metas = [
-        meta
-        for (meta, _, _) in api.render(
-            recipe,
-            config=config,
-            finalize=False,
-            bypass_env_check=True,
-        )
-    ]
-    # Render again if we want the finalized version.
-    # Rendering the non-finalized version beforehand lets us filter out
-    # variants that get skipped. (E.g., with a global `numpy 1.16` pin for
-    # py==27 the env check fails when evaluating `pin_compatible('numpy')` for
-    # recipes that use a pinned `numpy` and also require `numpy>=1.17` but
-    # actually skip py==27. Filtering out that variant beforehand avoids this.
-    if finalize:
-        metas = [
-            meta
-            for non_finalized_meta in metas
-            for (meta, _, _) in api.render(
-                recipe,
-                config=config,
-                variants=non_finalized_meta.config.variant,
-                finalize=True,
-                bypass_env_check=False,
-            )
-        ]
-    return metas
-
-
-def load_conda_build_config(platform=None, trim_skip=True):
-    """
-    Load conda build config while considering global pinnings from conda-forge.
-    """
-    config = api.Config(no_download_source=True, set_build_id=False)
-
-    # # get environment root
-    # env_root = PurePath(shutil.which("conda-lint")).parents[1]
-    # # set path to pinnings from conda forge package
-    # config.exclusive_config_files = [
-    #     os.path.join(env_root, "conda_build_config.yaml"),
-    # ]
-    # for cfg in chain(config.exclusive_config_files, config.variant_config_files or []):
-    #     assert os.path.exists(cfg), ('error: {0} does not exist'.format(cfg))
-    if platform:
-        config.platform = platform
-    config.trim_skip = trim_skip
-    return config
-
-
-def get_deps(recipe=None, build=True):
-    """
-    Generator of dependencies for a single recipe
-
-    Only names (not versions) of dependencies are yielded.
-
-    If the variant/version matrix yields multiple instances of the metadata,
-    the union of these dependencies is returned.
-
-    Parameters
-    ----------
-    recipe : str or MetaData
-        If string, it is a path to the recipe; otherwise assume it is a parsed
-        conda_build.metadata.MetaData instance.
-
-    build : bool
-        If True yield build dependencies, if False yield run dependencies.
-    """
-    # TODO: Fix this. Setting Meta to None to fix linting
-    meta = None
-    if recipe is not None:
-        assert isinstance(recipe, str)
-        metadata = load_all_meta(recipe, finalize=False)
-    elif meta is not None:
-        metadata = [meta]
-    else:
-        raise ValueError("Either meta or recipe has to be specified.")
-
-    all_deps = set()
-    for meta in metadata:
-        if build:
-            deps = meta.get_value("requirements/build", [])
-        else:
-            deps = meta.get_value("requirements/run", [])
-        all_deps.update(dep.split()[0] for dep in deps)
-    return all_deps
-
-
-def get_recipes(aggregate_folder, package="*", exclude=None):
-    """
-    Generator of recipes.
-
-    Finds (possibly nested) directories containing a ``meta.yaml`` file.
-
-    Parameters
-    ----------
-    aggregate_folder : str
-        Top-level dir of the recipes
-
-    package : str or iterable
-        Pattern or patterns to restrict the results.
-    """
-    if isinstance(package, str):
-        package = [package]
-    if isinstance(exclude, str):
-        exclude = [exclude]
-    if exclude is None:
-        exclude = []
-    for p in package:
-        logger.debug("get_recipes(%s, package='%s'): %s", aggregate_folder, package, p)
-        path = os.path.join(aggregate_folder, p)
-        for new_dir in glob.glob(path):
-            meta_yaml_found_or_excluded = False
-            for dir_path, dir_names, file_names in os.walk(new_dir):
-                if any(fnmatch.fnmatch(dir_path[len(aggregate_folder) :], pat) for pat in exclude):
-                    meta_yaml_found_or_excluded = True
-                    continue
-                if "meta.yaml" in file_names:
-                    meta_yaml_found_or_excluded = True
-                    yield dir_path
-            if not meta_yaml_found_or_excluded and os.path.isdir(new_dir):
-                logger.warn(
-                    "No meta.yaml found in %s."
-                    " If you want to ignore this directory, add it to the blocklist.",
-                    new_dir,
-                )
-                yield new_dir
 
 
 def validate_config(config):
@@ -425,54 +200,45 @@ def find_closest_match(string: str) -> str:
     return closest_match
 
 
-# copied and adapted from conda-build
-def find_config_files(metadata_or_path, variant_config_files, exclusive_config_files):
+def ensure_list(obj):
+    """Wraps **obj** in a list if necessary
+
+    >>> ensure_list("one")
+    ["one"]
+    >>> ensure_list(["one", "two"])
+    ["one", "two"]
     """
-    Find config files to load. Config files are stacked in the following order:
-        1. exclusive config files (see config.exclusive_config_files)
-        2. user config files
-           (see context.conda_build["config_file"] or ~/conda_build_config.yaml)
-        3. cwd config files (see ./conda_build_config.yaml)
-        4. recipe config files (see ${RECIPE_DIR}/conda_build_config.yaml)
-        5. additional config files (see config.variant_config_files)
+    if isinstance(obj, Sequence) and not isinstance(obj, str):
+        return obj
+    return [obj]
 
-    .. note::
-        Order determines clobbering with later files clobbering earlier ones.
 
-    :param metadata_or_path: the metadata or path within which to find recipe config files
-    :type metadata_or_path:
-    :param exclusive_config_files
-    :param variant_config_files
-    :return: List of config files
-    :rtype: `list` of paths (`str`)
-    """
+def get_deps_dict(recipe, sections=None, outputs=True):
+    if not sections:
+        sections = ("build", "run", "host")
+    else:
+        sections = ensure_list(sections)
+    check_paths = []
+    for section in sections:
+        check_paths.append(f"requirements/{section}")
+    if outputs:
+        for section in sections:
+            for n in range(len(recipe.get("outputs", []))):
+                check_paths.append(f"outputs/{n}/requirements/{section}")
+    deps = {}
+    for path in check_paths:
+        for n, spec in enumerate(recipe.get(path, [])):
+            if spec is None:  # Fixme: lint this
+                continue
+            splits = re.split(r"[\s<=>]", spec, 1)
+            d = deps.setdefault(splits[0], {"paths": [], "constraints": []})
+            d["paths"].append(f"{path}/{n}")
+            if len(splits) > 1:
+                d["constraints"].append(splits[1])
+            else:
+                d["constraints"].append("")
+    return deps
 
-    def resolve(p):
-        return os.path.abspath(os.path.expanduser(os.path.expandvars(p)))
 
-    # exclusive configs
-    files = [resolve(f) for f in ensure_list(exclusive_config_files)]
-
-    if not files:
-        # if not files and not config.ignore_system_variants:
-        # user config
-        # if cc_conda_build.get('config_file'):
-        #     cfg = resolve(cc_conda_build['config_file'])
-        # else:
-        #     cfg = resolve(os.path.join('~', "conda_build_config.yaml"))
-        cfg = resolve(os.path.join("~", "conda_build_config.yaml"))
-        if os.path.isfile(cfg):
-            files.append(cfg)
-
-        cfg = resolve("conda_build_config.yaml")
-        if os.path.isfile(cfg):
-            files.append(cfg)
-
-    path = getattr(metadata_or_path, "path", metadata_or_path)
-    cfg = resolve(os.path.join(path, "conda_build_config.yaml"))
-    if os.path.isfile(cfg):
-        files.append(cfg)
-
-    files.extend([resolve(f) for f in ensure_list(variant_config_files)])
-
-    return files
+def get_deps(recipe, sections=None, output=True):
+    return list(get_deps_dict(recipe, sections, output).keys())

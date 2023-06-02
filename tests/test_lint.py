@@ -2,10 +2,10 @@ from pathlib import Path
 
 import pytest
 from conftest import check, check_dir
+from percy.render.recipe import Recipe, RecipeError, RendererType
 
 from anaconda_linter import lint, utils
 from anaconda_linter.lint import ERROR, INFO, WARNING
-from anaconda_linter.recipe import Recipe, RecipeError
 
 
 class dummy_info(lint.LintCheck):
@@ -47,7 +47,7 @@ def test_only_lint(base_yaml, linter):
             - dummy_warning
         """
     )
-    recipes = [Recipe.from_string(yaml_str)]
+    recipes = [Recipe.from_string(recipe_text=yaml_str, renderer=RendererType.RUAMEL)]
     linter.lint(recipes)
     assert len(linter.get_messages()) == 3
 
@@ -63,12 +63,12 @@ def test_skip_lints(base_yaml, linter):
             - dummy_warning
         """
     )
-    recipes_base = [Recipe.from_string(base_yaml)]
+    recipes_base = [Recipe.from_string(recipe_text=base_yaml, renderer=RendererType.RUAMEL)]
     linter.lint(recipes_base)
     messages_base = linter.get_messages()
     linter.clear_messages()
     assert len(linter.get_messages()) == 0
-    recipes_skip = [Recipe.from_string(yaml_str)]
+    recipes_skip = [Recipe.from_string(recipe_text=yaml_str, renderer=RendererType.RUAMEL)]
     linter.lint(recipes_skip)
     messages_skip = linter.get_messages()
     assert len(messages_base) == len(messages_skip) + 3
@@ -131,7 +131,7 @@ def test_severity_min_string(base_yaml, level, expected):
             - dummy_warning
         """
     )
-    recipes = [Recipe.from_string(yaml_str)]
+    recipes = [Recipe.from_string(recipe_text=yaml_str, renderer=RendererType.RUAMEL)]
     config_file = Path(__file__).parent / "config.yaml"
     config = utils.load_config(config_file)
     linter = lint.Linter(config=config, severity_min=level)
@@ -151,7 +151,7 @@ def test_severity_min_enum(base_yaml, level, expected):
             - dummy_warning
         """
     )
-    recipes = [Recipe.from_string(yaml_str)]
+    recipes = [Recipe.from_string(recipe_text=yaml_str, renderer=RendererType.RUAMEL)]
     config_file = Path(__file__).parent / "config.yaml"
     config = utils.load_config(config_file)
     linter = lint.Linter(config=config, severity_min=level)
@@ -191,7 +191,7 @@ def test_jinja_functions(base_yaml, jinja_func, expected):
         linter = lint.Linter(config=config)
 
         try:
-            _recipe = Recipe.from_string(yaml_str)
+            _recipe = Recipe.from_string(recipe_text=yaml_str, renderer=RendererType.RUAMEL)
             linter.lint([_recipe])
             messages = linter.get_messages()
         except RecipeError as exc:

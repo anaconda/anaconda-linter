@@ -9,6 +9,7 @@ import os
 import re
 from typing import Any
 
+from .. import utils as _utils
 from . import INFO, WARNING, LintCheck
 
 # Does not include m2-tools, which should be checked using wild cards.
@@ -103,7 +104,7 @@ class host_section_needs_exact_pinnings(LintCheck):
     """
 
     def check_recipe(self, recipe):
-        deps = recipe.get_deps_dict("host")
+        deps = _utils.get_deps_dict(recipe, "host")
         for package, dep in deps.items():
             if not self.is_exception(package) and not (
                 package in recipe.selector_dict and recipe.selector_dict[package]
@@ -197,7 +198,7 @@ class build_tools_must_be_in_build(LintCheck):
     """
 
     def check_recipe(self, recipe):
-        deps = recipe.get_deps_dict(["host", "run"])
+        deps = _utils.get_deps_dict(recipe, ["host", "run"])
         for tool, dep in deps.items():
             if tool.startswith("m2-") or tool in BUILD_TOOLS:
                 for path in dep["paths"]:
@@ -215,7 +216,7 @@ class python_build_tool_in_run(LintCheck):
     """
 
     def check_recipe(self, recipe):
-        deps = recipe.get_deps_dict("run")
+        deps = _utils.get_deps_dict(recipe, "run")
         for tool in PYTHON_BUILD_TOOLS:
             if tool in deps:
                 for path in deps[tool]["paths"]:
@@ -232,7 +233,7 @@ class missing_python_build_tool(LintCheck):
     def check_recipe(self, recipe):
         is_pypi = is_pypi_source(recipe)
         if outputs := recipe.get("outputs", None):
-            deps = recipe.get_deps_dict("host")
+            deps = _utils.get_deps_dict(recipe, "host")
             for o in range(len(outputs)):
                 # Create a list of build tool dependencies for each output
                 tools = []
@@ -246,7 +247,7 @@ class missing_python_build_tool(LintCheck):
                 ) == 0:
                     self.message(section=f"outputs/{o}/requirements/host", output=o)
         elif is_pypi or recipe.contains("build/script", "pip install", ""):
-            deps = recipe.get_deps("host")
+            deps = _utils.get_deps(recipe, "host")
             if not any(tool in deps for tool in PYTHON_BUILD_TOOLS):
                 self.message(section="requirements/host")
 
@@ -264,7 +265,7 @@ class missing_wheel(LintCheck):
     def check_recipe(self, recipe):
         # similar algorithm as missing_python
         is_pypi = is_pypi_source(recipe)
-        deps = recipe.get_deps_dict("host")
+        deps = _utils.get_deps_dict(recipe, "host")
         paths = (
             []
             if "wheel" not in deps
@@ -471,7 +472,9 @@ class patch_unnecessary(LintCheck):
 
     def check_recipe(self, recipe):
         if not recipe_has_patches(recipe):
-            deps = recipe.get_deps_dict()
+            deps = _utils.get_deps_dict(
+                recipe,
+            )
             if "patch" in deps or "m2-patch" in deps:
                 self.message(section="build")
 
@@ -489,7 +492,9 @@ class patch_must_be_in_build(LintCheck):
 
     def check_recipe(self, recipe):
         if recipe_has_patches(recipe):
-            deps = recipe.get_deps_dict()
+            deps = _utils.get_deps_dict(
+                recipe,
+            )
             if "patch" in deps:
                 if any("build" not in location for location in deps["patch"]["paths"]):
                     self.message(section="requirements/build")
@@ -544,7 +549,7 @@ class missing_imports_or_run_test_py(LintCheck):
 
     def check_recipe(self, recipe):
         is_pypi = is_pypi_source(recipe)
-        deps = recipe.get_deps_dict("host")
+        deps = _utils.get_deps_dict(recipe, "host")
         if not is_pypi and "python" not in deps:
             return
         if outputs := recipe.get("outputs", None):
@@ -692,7 +697,7 @@ class missing_python(LintCheck):
         # and compare with the existing dependency dictionary.
         # Since this dictionary has everything parsed already, there is no need for regex.
         is_pypi = is_pypi_source(recipe)
-        deps = recipe.get_deps_dict(["host", "run"])
+        deps = _utils.get_deps_dict(recipe, ["host", "run"])
         # The `paths` dictionary stores dependencies as, e.g., `requirements/host/{n}/`
         # with the list index n. For multi-output recipes, it the paths are of the form
         # `outputs/{o}/requirements/host/{n}`. To compare, the list index needs to be stripped.
@@ -733,7 +738,7 @@ class remove_python_pinning(LintCheck):
     def check_recipe(self, recipe):
         if recipe.get("build/noarch", "") == "":
             sections = ["host", "run"]
-            deps = recipe.get_deps_dict(sections=sections)
+            deps = _utils.get_deps_dict(recipe, sections=sections)
             if "python" in deps:
                 for c, constraint in enumerate(deps["python"]["constraints"]):
                     if constraint != "":
@@ -749,7 +754,7 @@ class no_git_on_windows(LintCheck):
     """
 
     def check_deps(self, deps):
-        if self.recipe.selector_dict["win"] == 1 and "git" in deps:
+        if self.recipe.selector_dict.get("win", 0) == 1 and "git" in deps:
             for path in deps["git"]["paths"]:
                 output = -1 if not path.startswith("outputs") else int(path.split("/")[1])
                 self.message(section=path, output=output)
@@ -774,5 +779,5 @@ class gui_app(LintCheck):
     )
 
     def check_recipe(self, recipe):
-        if set(self.guis).intersection(set(recipe.get_deps("run"))):
+        if set(self.guis).intersection(set(_utils.get_deps(recipe, "run"))):
             self.message(severity=INFO)

@@ -21,8 +21,12 @@ def test_output_missing_name_bad(base_yaml):
         base_yaml
         + """
         outputs:
-          - requirements
-          - requirements
+          - requirements:
+              host:
+                - python
+          - requirements:
+              host:
+                - python
         """
     )
     lint_check = "output_missing_name"
