@@ -178,7 +178,7 @@ class missing_license_family(LintCheck):
 
 
 class invalid_license_family(LintCheck):
-    """The recipe has an incorrect ``about/license_family`` value.
+    """The recipe has an incorrect ``about/license_family`` value.{}
 
     Please change::
 
@@ -188,11 +188,18 @@ class invalid_license_family(LintCheck):
     """
 
     def check_recipe(self, recipe):
-        license_family = recipe.get("about/license_family", "")
-        if license_family and not license_family.lower() in [
-            x.lower() for x in conda_build.license_family.allowed_license_families
-        ]:
-            self.message(section="about")
+        license_family = recipe.get("about/license_family", "").lower()
+        if license_family:
+            if license_family == "none":
+                msg = (
+                    " Using 'NONE' breaks some uploaders."
+                    " Use skip-lint to skip this check instead."
+                )
+                self.message(msg, section="about")
+            elif license_family not in [
+                x.lower() for x in conda_build.license_family.allowed_license_families
+            ]:
+                self.message(section="about")
 
 
 class missing_tests(LintCheck):
