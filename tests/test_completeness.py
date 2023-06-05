@@ -235,7 +235,7 @@ def test_invalid_license_family_none(base_yaml):
     assert (
         len(messages) == 1
         and "about/license_family` value" in messages[0].title
-        and "Using 'None' breaks" in messages[0].title
+        and "Using 'NONE' breaks" in messages[0].title
     )
 
 

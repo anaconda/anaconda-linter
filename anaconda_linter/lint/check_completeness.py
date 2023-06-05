@@ -164,7 +164,7 @@ class invalid_license_family(LintCheck):
         if license_family:
             if license_family == "none":
                 msg = (
-                    " Using 'None' breaks some uploaders."
+                    " Using 'NONE' breaks some uploaders."
                     " Use skip-lint to skip this check instead."
                 )
                 self.message(msg, section="about")
