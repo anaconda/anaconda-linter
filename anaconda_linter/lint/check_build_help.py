@@ -38,7 +38,6 @@ PYTHON_BUILD_TOOLS = (
     "hatchling",
     "meson",
     "meson-python",
-    "packaging",
     "pdm",
     "pdm-pep517",
     "pip",
@@ -121,6 +120,7 @@ class host_section_needs_exact_pinnings(LintCheck):
             "python",
             "toml",
             "wheel",
+            "packaging",
             *PYTHON_BUILD_TOOLS,
         )
         # It doesn't make sense to pin the versions of hatch plugins if we're not pinning
