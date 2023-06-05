@@ -52,6 +52,34 @@ class missing_build_number(LintCheck):
             self.message(section="build")
 
 
+class missing_package_name(LintCheck):
+    """The recipe is missing a package name
+
+    Please add::
+
+        package:
+            name: <package name>
+    """
+
+    def check_recipe(self, recipe):
+        if not recipe.get("package/name", ""):
+            self.message(section="package")
+
+
+class missing_package_version(LintCheck):
+    """The recipe is missing a package version
+
+    Please add::
+
+        package:
+            version: <package version>
+    """
+
+    def check_recipe(self, recipe):
+        if not recipe.get("package/version", ""):
+            self.message(section="package")
+
+
 class missing_home(LintCheck):
     """The recipe is missing a homepage URL
 

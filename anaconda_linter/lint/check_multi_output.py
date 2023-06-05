@@ -1,3 +1,4 @@
+from .. import utils as _utils
 from . import INFO, WARNING, LintCheck
 
 
@@ -57,7 +58,7 @@ class output_missing_script(LintCheck):
         # Pinned subpackages are expanded to their names.
         outputs = recipe.get("outputs", [])
         output_names = {recipe.get(f"outputs/{n}/name", None) for n in range(len(outputs))}
-        deps = recipe.get_deps_dict("run")
+        deps = _utils.get_deps_dict(recipe, "run")
         subpackages = output_names.intersection(set(deps.keys()))
         for o in range(len(recipe.get("outputs", []))):
             # True if subpackage is a run dependency

@@ -115,3 +115,7 @@ uses_setup_py
 version_constraints_missing_whitespace
 
 yaml_load_failure
+
+missing_package_name
+
+missing_package_version

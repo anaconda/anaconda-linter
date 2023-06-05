@@ -43,5 +43,3 @@ numpy: "1.16"
 nunpy: "1.16"
 np: "1.16"
 pl: "5.26"
-lua: ""
-luajit: 0
