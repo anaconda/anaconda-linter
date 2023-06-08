@@ -38,6 +38,7 @@ Artistic-1.0
 Artistic-1.0-cl8
 Artistic-1.0-Perl
 Artistic-2.0
+ASWF-Digital-Assets-1.0
 Baekmuk
 Bahyph
 Barr
@@ -171,6 +172,7 @@ CPAL-1.0
 CPL-1.0
 CPOL-1.02
 Crossword
+cryptsetup-OpenSSL-exception
 CrystalStacker
 CUA-OPL-1.0
 Cube
@@ -311,6 +313,7 @@ LGPL-3.0-or-later
 LGPLLR
 Libpng
 libpng-2.0
+libpri-OpenH323-exception
 libselinux-1.0
 libtiff
 libutil-David-Nugent
@@ -318,6 +321,7 @@ LiLiQ-P-1.1
 LiLiQ-R-1.1
 LiLiQ-Rplus-1.1
 Linux-man-pages-copyleft
+Linux-man-pages-one-para
 Linux-OpenIB
 LOOP
 LPL-1.0
@@ -495,6 +499,7 @@ Symlinks
 TAPR-OHL-1.0
 TCL
 TCP-wrappers
+TermReadKey
 TMate
 TORQUE-1.1
 TOSL
@@ -519,12 +524,15 @@ W3C-19980720
 W3C-20150513
 w3m
 Watcom-1.0
+Widget-Workshop
 Wsuipa
 WTFPL
 wxWindows
 X11
 X11-distribute-modifications-variant
+Xdebug-1.03
 Xerox
+Xfig
 XFree86-1.1
 xinetd
 xlock
