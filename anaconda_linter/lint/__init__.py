@@ -92,6 +92,12 @@ from typing import Any, Dict, List, NamedTuple, Tuple
 
 import networkx as nx
 import percy.render.recipe as _recipe
+from percy.render.exceptions import (
+    EmptyRecipe,
+    JinjaRenderFailure,
+    MissingMetaYaml,
+    YAMLRenderFailure,
+)
 from percy.render.recipe import RendererType
 from percy.render.variants import read_conda_build_config
 
@@ -496,10 +502,10 @@ class unknown_check(LintCheck):
 
 #: Maps `_recipe.RecipeError` to `LintCheck`
 recipe_error_to_lint_check = {
-    _recipe.EmptyRecipe: empty_meta_yaml,
-    _recipe.MissingMetaYaml: missing_meta_yaml,
-    _recipe.JinjaRenderFailure: jinja_render_failure,
-    _recipe.YAMLRenderFailure: yaml_load_failure,
+    EmptyRecipe: empty_meta_yaml,
+    MissingMetaYaml: missing_meta_yaml,
+    JinjaRenderFailure: jinja_render_failure,
+    YAMLRenderFailure: yaml_load_failure,
 }
 
 
