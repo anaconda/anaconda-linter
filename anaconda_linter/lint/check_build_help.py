@@ -454,14 +454,51 @@ class avoid_noarch(LintCheck):
     """
 
     def check_recipe(self, recipe):
-        noarch = recipe.get("build/noarch", "")
-        if (
-            noarch == "python"
-            and int(recipe.get("build/number", 0)) == 0
-            and not recipe.get("build/osx_is_app", False)
-            and not recipe.get("app", None)
-        ):
-            self.message(section="build", severity=WARNING)
+        for package in recipe.packages.values():
+            noarch = recipe.get(f"{package.path_prefix}build/noarch", "")
+            if (
+                noarch == "python"
+                and int(recipe.get(f"{package.path_prefix}build/number", 0)) == 0
+                and not recipe.get(f"{package.path_prefix}build/osx_is_app", False)
+                and not recipe.get(f"{package.path_prefix}app", None)
+            ):
+                self.message(
+                    section=f"{package.path_prefix}build", severity=WARNING, data=(recipe, package)
+                )
+
+    def fix(self, _message, _data):
+        (recipe, package) = _data
+        skip_selector = " # [py<38]"
+        for dep in recipe.get(f"{package.path_prefix}requirements/run", []):
+            if dep.startswith("python"):
+                s = dep.split(">=")
+                if len(s) > 1:
+                    skip_selector = f" # [py<{s[1].replace('.','')}]"
+                break
+        op = [
+            {"op": "remove", "path": "@output/build/noarch"},
+            {"op": "add", "path": "@output/build/skip", "value": f"True {skip_selector}"},
+            {
+                "op": "add",
+                "path": "@output/requirements/host",
+                "match": "python",
+                "value": ["python"],
+            },
+            {
+                "op": "add",
+                "path": "@output/requirements/run",
+                "match": "python",
+                "value": ["python"],
+            },
+            {
+                "op": "replace",
+                "path": "@output/test/requires",
+                "match": "python",
+                "value": ["python"],
+            },
+        ]
+        recipe.patch(op)
+        return True
 
 
 class patch_unnecessary(LintCheck):
