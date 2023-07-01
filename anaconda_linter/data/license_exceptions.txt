@@ -1,4 +1,5 @@
 389-exception
+Asterisk-exception
 Autoconf-exception-2.0
 Autoconf-exception-3.0
 Autoconf-exception-generic
@@ -7,6 +8,7 @@ Bison-exception-2.2
 Bootloader-exception
 Classpath-exception-2.0
 CLISP-exception-2.0
+cryptsetup-OpenSSL-exception
 DigiRule-FOSS-exception
 eCos-exception-2.0
 Fawkes-Runtime-exception
@@ -26,8 +28,10 @@ GStreamer-exception-2008
 i2p-gpl-java-exception
 KiCad-libraries-exception
 LGPL-3.0-linking-exception
+libpri-OpenH323-exception
 Libtool-exception
 Linux-syscall-note
+LLGPL
 LLVM-exception
 LZMA-exception
 mif-exception

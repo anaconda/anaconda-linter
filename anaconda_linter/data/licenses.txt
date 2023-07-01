@@ -39,6 +39,7 @@ Artistic-1.0-cl8
 Artistic-1.0-Perl
 Artistic-2.0
 ASWF-Digital-Assets-1.0
+ASWF-Digital-Assets-1.1
 Baekmuk
 Bahyph
 Barr
@@ -49,6 +50,7 @@ BitTorrent-1.0
 BitTorrent-1.1
 blessing
 BlueOak-1.0.0
+Boehm-GC
 Borceux
 Brian-Gladman-3-Clause
 BSD-1-Clause
@@ -172,7 +174,6 @@ CPAL-1.0
 CPL-1.0
 CPOL-1.02
 Crossword
-cryptsetup-OpenSSL-exception
 CrystalStacker
 CUA-OPL-1.0
 Cube
@@ -184,6 +185,7 @@ DOC
 Dotseqn
 DRL-1.0
 DSDP
+dtoa
 dvipdfm
 ECL-1.0
 ECL-2.0
@@ -280,6 +282,7 @@ ImageMagick
 iMatix
 Imlib2
 Info-ZIP
+Inner-Net-2.0
 Intel
 Intel-ACPI
 Interbase-1.0
@@ -313,15 +316,16 @@ LGPL-3.0-or-later
 LGPLLR
 Libpng
 libpng-2.0
-libpri-OpenH323-exception
 libselinux-1.0
 libtiff
 libutil-David-Nugent
 LiLiQ-P-1.1
 LiLiQ-R-1.1
 LiLiQ-Rplus-1.1
+Linux-man-pages-1-para
 Linux-man-pages-copyleft
-Linux-man-pages-one-para
+Linux-man-pages-copyleft-2-para
+Linux-man-pages-copyleft-var
 Linux-OpenIB
 LOOP
 LPL-1.0
@@ -432,6 +436,7 @@ OML
 OpenPBS-2.3
 OpenSSL
 OPL-1.0
+OPL-UK-3.0
 OPUBL-1.0
 OSET-PL-2.1
 OSL-1.0
