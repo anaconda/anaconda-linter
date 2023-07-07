@@ -616,17 +616,33 @@ class Linter:
         :param verbose: (Optional) Enables additional reporting.
         :returns: String, containing information about all the linting messages, as a report.
         """
-        messages = sorted(messages, key=lambda d: (d.fname, d.end_line))
-        if verbose:
-            return "\n".join(
-                f"{msg.severity.name}: {msg.fname}:{msg.end_line}: {msg.check}: {msg.title}\
-                    \n\t{msg.body}"
-                for msg in messages
-            )
-        else:
-            return "\n".join(
-                f"{msg.severity.name}: {msg.fname}:{msg.end_line}: {msg.check}: {msg.title}" for msg in messages
-            )
+        messages_sorted = {sev: [] for sev in Severity}
+        num_errors = {sev: 0 for sev in [Severity.ERROR, Severity.WARNING]}
+
+        for msg in messages:
+            messages_sorted[msg.severity].append(msg)
+            if msg.severity in [Severity.ERROR, Severity.WARNING]:
+                num_errors[msg.severity] += 1
+
+        report = ""
+        report_sections = []
+
+        for severity in [Severity.WARNING, Severity.ERROR]:
+            if messages_sorted[severity]:
+                report_sections.append(
+                    f"===== {severity.name.upper()}S ===== \n"
+                    + "\n".join(
+                        f"- {msg.fname}:{msg.end_line}: {msg.check}: {msg.title}"
+                        for msg in messages_sorted[severity]
+                    )
+                    + "\n"
+                )
+        if report_sections:
+            report += "\n\n".join(report_sections)
+
+        report += '\n'f"==== Ending Report: =====\n{num_errors[Severity.ERROR]} Error{'s' if num_errors[Severity.ERROR] != 1 else ''} and {num_errors[Severity.WARNING]} Warning{'s' if num_errors[Severity.WARNING] != 1 else ''} were found"
+        return report
+
 
     def lint(
         self,
@@ -848,3 +864,4 @@ class Linter:
             logger.debug("Found: %s", message)
 
         return messages
+def get_report(cls, messages: List[LintMessage], verbose: bool = False) -> str:
