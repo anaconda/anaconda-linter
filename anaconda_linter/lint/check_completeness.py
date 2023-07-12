@@ -316,7 +316,7 @@ class documentation_overspecified(LintCheck):
 class documentation_specifies_language(LintCheck):
     """Use the generic link, not a language specific one
 
-    Please use PACKAGE.readthedocs.io not  PACKAGE.readthedocs.io/en/latest
+    Please use PACKAGE.readthedocs.io not PACKAGE.readthedocs.io/en/latest
 
     """
 
