@@ -325,7 +325,7 @@ class documentation_specifies_language(LintCheck):
             r"readthedocs.io\/[a-z]{2,3}/latest"
         )  # assume ISO639-1 or similar language code
         if recipe.get("about/doc_url", "") and lang_url.search(recipe.get("about/doc_url", "")):
-            self.message(section="about/doc_url")
+            self.message(section="about/doc_url", severity=WARNING)
 
 
 class missing_dev_url(LintCheck):
