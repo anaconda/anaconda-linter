@@ -500,7 +500,7 @@ def test_documentation_specifies_language(base_yaml):
     messages = check(lint_check, yaml_str)
     assert (
         len(messages) == 1
-        and "Use the generic link not a language specific one" in messages[0].title
+        and "Use the generic link, not a language specific one" in messages[0].title
     )
 
 
