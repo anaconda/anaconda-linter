@@ -233,7 +233,8 @@ def get_recipes(aggregate_folder, package="*", exclude=None):
         exclude = []
     for p in package:
         logger.debug("get_recipes(%s, package='%s'): %s", aggregate_folder, package, p)
-        path = os.path.join(aggregate_folder, p)
+        # path = os.path.join(aggregate_folder, p)
+        path = Path(aggregate_folder) / p
         for new_dir in glob.glob(path):
             meta_yaml_found_or_excluded = False
             for dir_path, dir_names, file_names in os.walk(new_dir):
@@ -243,7 +244,8 @@ def get_recipes(aggregate_folder, package="*", exclude=None):
                 if "meta.yaml" in file_names:
                     meta_yaml_found_or_excluded = True
                     yield dir_path
-            if not meta_yaml_found_or_excluded and os.path.isdir(new_dir):
+            #if not meta_yaml_found_or_excluded and os.path.isdir(new_dir):
+            if not meta_yaml_found_or_excluded and Path(new_dir).is_dir():
                 logger.warn(
                     "No meta.yaml found in %s."
                     " If you want to ignore this directory, add it to the blocklist.",
@@ -265,7 +267,8 @@ def validate_config(config):
     if not isinstance(config, dict):
         with open(config) as conf:
             config = yaml.load(conf.read())
-    fn = os.path.abspath(os.path.dirname(__file__)) + "/config.schema.yaml"
+    # fn = os.path.abspath(os.path.dirname(__file__)) + "/config.schema.yaml"
+    fn = Path(__file__).resolve().parent / "config.schema.yaml"
     with open(fn) as f:
         schema = yaml.load(f.read())
     validate(config, schema)
@@ -291,7 +294,7 @@ def load_config(path):
     else:
 
         def relpath(p):
-            return os.path.join(os.path.dirname(path), p)
+            return Path(path).parent / p
 
         with open(path) as conf:
             config = yaml.load(conf.read())
@@ -448,7 +451,8 @@ def find_config_files(metadata_or_path, variant_config_files, exclusive_config_f
     """
 
     def resolve(p):
-        return os.path.abspath(os.path.expanduser(os.path.expandvars(p)))
+        #return os.path.abspath(os.path.expanduser(os.path.expandvars(p)))
+        return Path(p).expanduser().resolve()
 
     # exclusive configs
     files = [resolve(f) for f in ensure_list(exclusive_config_files)]
@@ -460,17 +464,23 @@ def find_config_files(metadata_or_path, variant_config_files, exclusive_config_f
         #     cfg = resolve(cc_conda_build['config_file'])
         # else:
         #     cfg = resolve(os.path.join('~', "conda_build_config.yaml"))
-        cfg = resolve(os.path.join("~", "conda_build_config.yaml"))
-        if os.path.isfile(cfg):
+        ## cfg = resolve(os.path.join("~", "conda_build_config.yaml"))
+        cfg = resolve(Path.home() / "conda_build_config.yaml")
+        # if os.path.isfile(cfg):
+        if Path.is_file(cfg):
             files.append(cfg)
 
+
         cfg = resolve("conda_build_config.yaml")
-        if os.path.isfile(cfg):
+        # if os.path.isfile(cfg):
+        if Path.is_file(cfg):
             files.append(cfg)
 
     path = getattr(metadata_or_path, "path", metadata_or_path)
-    cfg = resolve(os.path.join(path, "conda_build_config.yaml"))
-    if os.path.isfile(cfg):
+    ## cfg = resolve(os.path.join(path, "conda_build_config.yaml"))
+    cfg = resolve(Path(path) / "conda_build_config.yaml")
+    ## if os.path.isfile(cfg):
+    if Path(cfg).is_file():
         files.append(cfg)
 
     files.extend([resolve(f) for f in ensure_list(variant_config_files)])
