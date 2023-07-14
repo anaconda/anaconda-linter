@@ -468,7 +468,7 @@ class avoid_noarch(LintCheck):
 
     def fix(self, _message, _data):
         (recipe, package) = _data
-        skip_selector = " # [py<38]"
+        skip_selector = None
         for dep in recipe.get(f"{package.path_prefix}requirements/run", []):
             if dep.startswith("python"):
                 s = dep.split(">=")
@@ -477,7 +477,6 @@ class avoid_noarch(LintCheck):
                 break
         op = [
             {"op": "remove", "path": "@output/build/noarch"},
-            {"op": "add", "path": "@output/build/skip", "value": f"True {skip_selector}"},
             {
                 "op": "add",
                 "path": "@output/requirements/host",
@@ -497,6 +496,8 @@ class avoid_noarch(LintCheck):
                 "value": ["python"],
             },
         ]
+        if skip_selector:
+            op.append({"op": "add", "path": "@output/build/skip", "value": f"True {skip_selector}"})
         recipe.patch(op)
         return True
 
