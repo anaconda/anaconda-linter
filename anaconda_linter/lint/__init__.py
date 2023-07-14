@@ -696,10 +696,10 @@ class Linter:
                     exclusive_config_files=exclusive_config_files,
                 )
             else:
-                logging.warning(
+                logging.debug(
                     "No cbc in current path. Loading copy of aggregate cbc embedded in linter."
                 )
-                logging.warning("Please run from your aggregate dir for better results.")
+                logging.debug("Please run from your aggregate dir for better results.")
                 local_cbc = Path(__file__).parent.parent / "data" / "conda_build_config.yaml"
                 var_config_files = variant_config_files
                 var_config_files.append(str(local_cbc))
@@ -725,15 +725,16 @@ class Linter:
                     variant=variant,
                     renderer=RendererType.RUAMEL,
                 )
-                messages.update(
-                    self.lint_recipe(
-                        recipe,
-                        fix=fix,
+                if not recipe.skip:
+                    messages.update(
+                        self.lint_recipe(
+                            recipe,
+                            fix=fix,
+                        )
                     )
-                )
-                if fix and recipe.is_modified():
-                    with open(recipe.path, "w", encoding="utf-8") as fdes:
-                        fdes.write(recipe.dump())
+                    if fix and recipe.is_modified():
+                        with open(recipe.path, "w", encoding="utf-8") as fdes:
+                            fdes.write(recipe.dump())
         except RecipeError as exc:
             recipe = _recipe.Recipe(recipe_name)
             check_cls = recipe_error_to_lint_check.get(exc.__class__, linter_failure)
