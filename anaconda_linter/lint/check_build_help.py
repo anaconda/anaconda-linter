@@ -263,22 +263,30 @@ class missing_wheel(LintCheck):
     """
 
     def check_recipe(self, recipe):
-        # similar algorithm as missing_python
         is_pypi = is_pypi_source(recipe)
-        deps = _utils.get_deps_dict(recipe, "host")
-        paths = (
-            []
-            if "wheel" not in deps
-            else ["/".join(path.split("/")[:-1]) for path in deps["wheel"]["paths"]]
-        )
-        if outputs := recipe.get("outputs", None):
-            for o in range(len(outputs)):
-                if is_pypi or recipe.contains(f"outputs/{o}/script", "pip install", ""):
-                    if f"outputs/{o}/requirements/host" not in paths:
-                        self.message(section=f"outputs/{o}/requirements/host", output=o)
-        elif is_pypi or recipe.contains("build/script", "pip install", ""):
-            if "requirements/host" not in paths:
-                self.message(section="requirements/host")
+        for package in recipe.packages.values():
+            if (
+                is_pypi
+                or recipe.contains(f"{package.path_prefix}build/script", "pip install", "")
+                or recipe.contains(f"{package.path_prefix}script", "pip install", "")
+            ):
+                if not package.has_dep("host", "wheel"):
+                    self.message(
+                        section=f"{package.path_prefix}requirements/host",
+                        data=(recipe, package),
+                    )
+
+    def fix(self, _message, _data):
+        (recipe, package) = _data
+        op = [
+            {
+                "op": "add",
+                "path": f"{package.path_prefix}requirements/host",
+                "match": "wheel",
+                "value": ["wheel"],
+            },
+        ]
+        return recipe.patch(op)
 
 
 class uses_setup_py(LintCheck):
@@ -367,7 +375,7 @@ class pip_install_args(LintCheck):
                 script = "build/script"
                 output = -1
             if not self._check_line(self.recipe.get(script, "")):
-                self.message(section=script)
+                self.message(section=script, data=self.recipe)
                 continue
             if self.recipe.dir:
                 try:
@@ -380,9 +388,22 @@ class pip_install_args(LintCheck):
                     with open(os.path.join(self.recipe.dir, build_file)) as buildsh:
                         for num, line in enumerate(buildsh):
                             if not self._check_line(line):
-                                self.message(fname=build_file, line=num, output=output)
+                                self.message(
+                                    fname=build_file, line=num, output=output, data=self.recipe
+                                )
                 except FileNotFoundError:
                     pass
+
+    def fix(self, _message, recipe):
+        op = [
+            {
+                "op": "replace",
+                "path": "@output/build/script",
+                "match": "pip install(?!=.*--no-build-isolation).*",
+                "value": "pip install . --no-deps --no-build-isolation --ignore-installed --no-cache-dir -vv",
+            },
+        ]
+        return recipe.patch(op)
 
 
 class cython_must_be_in_host(LintCheck):
@@ -476,30 +497,35 @@ class avoid_noarch(LintCheck):
                     skip_selector = f" # [py<{s[1].replace('.','')}]"
                 break
         op = [
-            {"op": "remove", "path": "@output/build/noarch"},
+            {"op": "remove", "path": f"{package.path_prefix}build/noarch"},
             {
                 "op": "add",
-                "path": "@output/requirements/host",
+                "path": f"{package.path_prefix}requirements/host",
                 "match": "python",
                 "value": ["python"],
             },
             {
                 "op": "add",
-                "path": "@output/requirements/run",
+                "path": f"{package.path_prefix}requirements/run",
                 "match": "python",
                 "value": ["python"],
             },
             {
                 "op": "replace",
-                "path": "@output/test/requires",
+                "path": f"{package.path_prefix}test/requires",
                 "match": "python",
                 "value": ["python"],
             },
         ]
         if skip_selector:
-            op.append({"op": "add", "path": "@output/build/skip", "value": f"True {skip_selector}"})
-        recipe.patch(op)
-        return True
+            op.append(
+                {
+                    "op": "add",
+                    "path": f"{package.path_prefix}build/skip",
+                    "value": f"True {skip_selector}",
+                }
+            )
+        return recipe.patch(op)
 
 
 class patch_unnecessary(LintCheck):
@@ -624,7 +650,7 @@ class missing_pip_check(LintCheck):
           - pip check
     """
 
-    def _check_file(self, file, output=-1):
+    def _check_file(self, file, recipe, package):
         """Reads the file for a `pip check` command and outputs a message if not found.
 
         Args:
@@ -636,26 +662,37 @@ class missing_pip_check(LintCheck):
                 for line in test_file:
                     if "pip check" in line:
                         return
-        self.message(fname=file, output=output)
+        self.message(fname=file, data=(recipe, package))
 
     def check_recipe(self, recipe):
         is_pypi = is_pypi_source(recipe)
-        if outputs := recipe.get("outputs", None):
-            for o in range(len(outputs)):
-                if not is_pypi and not recipe.contains(f"outputs/{o}/script", "pip install", ""):
-                    continue
-                test_section = f"outputs/{o}/test"
-                if commands := recipe.get(f"{test_section}/commands", None):
-                    if not any("pip check" in cmd for cmd in commands):
-                        self.message(section=f"{test_section}/commands", output=o)
-                elif recipe.dir and (script := recipe.get(f"{test_section}/script", None)):
-                    self._check_file(os.path.join(recipe.dir, script))
-                else:
-                    self.message(section=test_section, output=o)
-        elif is_pypi or recipe.contains("build/script", "pip install", ""):
-            if commands := recipe.get("test/commands", None):
+
+        single_output = True
+        if len(recipe.packages) > 1:
+            single_output = False
+
+        for package in recipe.packages.values():
+            if (
+                not single_output
+                and not is_pypi
+                and not recipe.contains(f"{package.path_prefix}script", "pip install", "")
+            ):
+                continue
+            if (
+                single_output
+                and not is_pypi
+                and not recipe.contains(f"{package.path_prefix}build/script", "pip install", "")
+            ):
+                continue
+            if commands := recipe.get(f"{package.path_prefix}test/commands", None):
                 if not any("pip check" in cmd for cmd in commands):
-                    self.message(section="test/commands")
+                    self.message(
+                        section=f"{package.path_prefix}test/commands", data=(recipe, package)
+                    )
+            elif recipe.dir and (script := recipe.get(f"{package.path_prefix}test/script", None)):
+                self._check_file(os.path.join(recipe.dir, script), recipe, package)
+            elif not single_output:
+                self.message(section=f"{package.path_prefix}test", data=(recipe, package))
             else:
                 test_files = (
                     set(os.listdir(recipe.dir)).intersection({"run_test.sh", "run_test.bat"})
@@ -664,9 +701,21 @@ class missing_pip_check(LintCheck):
                 )
                 if len(test_files) > 0:
                     for file in test_files:
-                        self._check_file(os.path.join(recipe.dir, file))
+                        self._check_file(os.path.join(recipe.dir, file), recipe, package)
                 else:
-                    self.message(section="test")
+                    self.message(section=f"{package.path_prefix}test")
+
+    def fix(self, _message, _data):
+        (recipe, package) = _data
+        op = [
+            {
+                "op": "add",
+                "path": f"{package.path_prefix}test/commands",
+                "match": "pip check",
+                "value": ["pip check"],
+            },
+        ]
+        return recipe.patch(op)
 
 
 class missing_test_requirement_pip(LintCheck):
@@ -708,14 +757,23 @@ class missing_test_requirement_pip(LintCheck):
         return False
 
     def check_recipe(self, recipe):
-        if outputs := recipe.get("outputs", None):
-            for o in range(len(outputs)):
-                if self._has_pip_check(recipe, output=f"outputs/{o}/") and "pip" not in recipe.get(
-                    f"outputs/{o}/test/requires", []
-                ):
-                    self.message(section=f"outputs/{o}/test/requires/", output=o)
-        elif self._has_pip_check(recipe) and "pip" not in recipe.get("test/requires", []):
-            self.message(section="test/requires")
+        for package in recipe.packages.values():
+            if self._has_pip_check(recipe, output=package.path_prefix) and "pip" not in recipe.get(
+                f"{package.path_prefix}test/requires", []
+            ):
+                self.message(section=f"{package.path_prefix}test/requires", data=(recipe, package))
+
+    def fix(self, _message, _data):
+        (recipe, package) = _data
+        op = [
+            {
+                "op": "add",
+                "path": f"{package.path_prefix}test/requires",
+                "match": "pip",
+                "value": ["pip"],
+            },
+        ]
+        return recipe.patch(op)
 
 
 class missing_python(LintCheck):
@@ -731,31 +789,37 @@ class missing_python(LintCheck):
     """
 
     def check_recipe(self, recipe):
-        # To check for a missing python, find the paths that require python
-        # and compare with the existing dependency dictionary.
-        # Since this dictionary has everything parsed already, there is no need for regex.
         is_pypi = is_pypi_source(recipe)
-        deps = _utils.get_deps_dict(recipe, ["host", "run"])
-        # The `paths` dictionary stores dependencies as, e.g., `requirements/host/{n}/`
-        # with the list index n. For multi-output recipes, it the paths are of the form
-        # `outputs/{o}/requirements/host/{n}`. To compare, the list index needs to be stripped.
-        paths = (
-            []
-            if "python" not in deps
-            else ["/".join(path.split("/")[:-1]) for path in deps["python"]["paths"]]
-        )
-        if outputs := recipe.get("outputs", None):
-            for o in range(len(outputs)):
-                if is_pypi or recipe.contains(f"outputs/{o}/script", "pip install", ""):
-                    for section in ["host", "run"]:
-                        path_to_section = f"outputs/{o}/requirements/{section}"
-                        if path_to_section not in paths:
-                            self.message(section, section=path_to_section, output=o)
-        elif is_pypi or recipe.contains("build/script", "pip install", ""):
-            for section in ["host", "run"]:
-                path_to_section = f"requirements/{section}"
-                if path_to_section not in paths:
-                    self.message(section, section=path_to_section)
+        for package in recipe.packages.values():
+            if (
+                is_pypi
+                or recipe.contains(f"{package.path_prefix}build/script", "pip install", "")
+                or recipe.contains(f"{package.path_prefix}script", "pip install", "")
+            ):
+                for section in ["host", "run"]:
+                    if not package.has_dep(section, "python"):
+                        self.message(
+                            section=f"{package.path_prefix}requirements/{section}",
+                            data=(recipe, package),
+                        )
+
+    def fix(self, _message, _data):
+        (recipe, package) = _data
+        op = [
+            {
+                "op": "add",
+                "path": f"{package.path_prefix}requirements/host",
+                "match": "python",
+                "value": ["python"],
+            },
+            {
+                "op": "add",
+                "path": f"{package.path_prefix}requirements/run",
+                "match": "python",
+                "value": ["python"],
+            },
+        ]
+        return recipe.patch(op)
 
 
 class remove_python_pinning(LintCheck):
@@ -774,15 +838,27 @@ class remove_python_pinning(LintCheck):
     """
 
     def check_recipe(self, recipe):
-        if recipe.get("build/noarch", "") == "":
-            sections = ["host", "run"]
-            deps = _utils.get_deps_dict(recipe, sections=sections)
-            if "python" in deps:
-                for c, constraint in enumerate(deps["python"]["constraints"]):
-                    if constraint != "":
-                        path = deps["python"]["paths"][c]
-                        output = -1 if not path.startswith("outputs") else int(path.split("/")[1])
-                        self.message(section=path, output=output)
+        for package in recipe.packages.values():
+            if recipe.get(f"{package.path_prefix}build/noarch", "") == "":
+                for section in ["host", "run"]:
+                    for dep in package.get(section):
+                        if dep.pkg == "python" and dep.constraint != "":
+                            self.message(section=dep.path, data=(recipe, package, dep))
+
+    def fix(self, _message, _data):
+        (recipe, package, dep) = _data
+        s = dep.split(">=")
+        if len(s) > 1:
+            skip_selector = f" # [py<{s[1].replace('.','')}]"
+            op = [
+                {
+                    "op": "add",
+                    "path": f"{package.path_prefix}build/skip",
+                    "value": f"True {skip_selector}",
+                }
+            ]
+            return recipe.patch(op)
+        return False
 
 
 class no_git_on_windows(LintCheck):
