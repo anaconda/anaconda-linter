@@ -545,6 +545,35 @@ def test_missing_documentation_bad(base_yaml):
     assert len(messages) == 1 and "doc_url or doc_source_url" in messages[0].title
 
 
+def test_documentation_specifies_language(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        about:
+          doc_url: builder.readthedocs.io/en/latest
+        """
+    )
+    lint_check = "documentation_specifies_language"
+    messages = check(lint_check, yaml_str)
+    assert (
+        len(messages) == 1
+        and "Use the generic link, not a language specific one" in messages[0].title
+    )
+
+
+def test_documentation_does_not_specify_language(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        about:
+          doc_url: builder.readthedocs.io
+        """
+    )
+    lint_check = "documentation_specifies_language"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
 @pytest.mark.parametrize("doc_type", ("doc_url", "doc_source_url"))
 def test_documentation_overspecified_good(base_yaml, doc_type):
     yaml_str = (

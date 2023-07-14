@@ -12,6 +12,8 @@ cython_needs_compiler
 
 documentation_overspecified
 
+documentation_specifies_language
+
 duplicate_key_in_meta_yaml
 
 empty_meta_yaml

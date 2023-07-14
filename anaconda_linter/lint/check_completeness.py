@@ -4,6 +4,7 @@ Verify that the recipe is not missing anything essential.
 """
 
 import os
+import re
 
 import conda_build.license_family
 
@@ -345,6 +346,21 @@ class documentation_overspecified(LintCheck):
     def check_recipe(self, recipe):
         if recipe.get("about/doc_url", "") and recipe.get("about/doc_source_url", ""):
             self.message(section="about", severity=WARNING)
+
+
+class documentation_specifies_language(LintCheck):
+    """Use the generic link, not a language specific one
+
+    Please use PACKAGE.readthedocs.io not PACKAGE.readthedocs.io/en/latest
+
+    """
+
+    def check_recipe(self, recipe):
+        lang_url = re.compile(
+            r"readthedocs.io\/[a-z]{2,3}/latest"
+        )  # assume ISO639-1 or similar language code
+        if recipe.get("about/doc_url", "") and lang_url.search(recipe.get("about/doc_url", "")):
+            self.message(section="about/doc_url", severity=WARNING)
 
 
 class missing_dev_url(LintCheck):
