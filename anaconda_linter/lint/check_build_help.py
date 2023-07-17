@@ -490,12 +490,23 @@ class avoid_noarch(LintCheck):
     def fix(self, _message, _data):
         (recipe, package) = _data
         skip_selector = None
+        sep_map = {
+            ">=": "<",
+            ">": "<=",
+            "==": "!=",
+            "!=": "==",
+            "<=": ">",
+            "<": ">=",
+        }
         for dep in recipe.get(f"{package.path_prefix}requirements/run", []):
             if dep.startswith("python"):
-                s = dep.split(">=")
-                if len(s) > 1:
-                    skip_selector = f" # [py<{s[1].replace('.','')}]"
-                break
+                for sep, opp in sep_map.items():
+                    s = dep.split(sep)
+                    if len(s) > 1:
+                        skip_selector = f" # [py{opp}{s[1].strip().replace('.','')}]"
+                        break
+                if skip_selector:
+                    break
         op = [
             {"op": "remove", "path": f"{package.path_prefix}build/noarch"},
             {
