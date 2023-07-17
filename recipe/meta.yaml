@@ -43,6 +43,9 @@ test:
     - anaconda_linter.lint
   commands:
     - pip check
+    # Check entry points
+    - anaconda-lint -h
+    - conda-lint -h
     # lint_list is only an important test for development
     - python -m pytest tests -k "not lint_list"
 
