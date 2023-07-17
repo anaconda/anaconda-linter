@@ -20,7 +20,6 @@ def main():
         "networkx",
         "requests",
         "ruamel.yaml",
-        "percy==0.0.3",
     ]
     test_requirements = ["pytest", "pytest-cov", "pytest-html"]
 

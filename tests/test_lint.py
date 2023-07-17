@@ -2,7 +2,8 @@ from pathlib import Path
 
 import pytest
 from conftest import check, check_dir
-from percy.render.recipe import Recipe, RecipeError, RendererType
+from percy.render.exceptions import RecipeError
+from percy.render.recipe import Recipe, RendererType
 
 from anaconda_linter import lint, utils
 from anaconda_linter.lint import ERROR, INFO, WARNING

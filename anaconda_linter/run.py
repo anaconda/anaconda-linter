@@ -82,6 +82,13 @@ def lint_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Enable verbose output. This displays all of the checks that the linter is running.",
     )
+    # this is here because we have a different default than build
+    parser.add_argument(
+        "-f",
+        "--fix",
+        action="store_true",
+        help="Attempt to fix issues.",
+    )
     return parser
 
 
@@ -105,7 +112,7 @@ def main():
     overall_result = 0
     for subdir in args.subdirs:
         result = linter.lint(
-            recipes, subdir, args.variant_config_files, args.exclusive_config_files
+            recipes, subdir, args.variant_config_files, args.exclusive_config_files, args.fix
         )
         if result > overall_result:
             overall_result = result
