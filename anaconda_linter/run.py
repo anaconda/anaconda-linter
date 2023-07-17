@@ -12,7 +12,7 @@ def lint_parser() -> argparse.ArgumentParser:
         return os.path.abspath(value)
 
     parser = argparse.ArgumentParser(
-        prog="conda-lint",
+        prog="anaconda-lint",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=textwrap.dedent(
             """\
