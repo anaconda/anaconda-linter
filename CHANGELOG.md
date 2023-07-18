@@ -1,8 +1,15 @@
 # Changelog
 Note: version releases in the 0.x.y range may introduce breaking changes.
 
-## 0.0.6
+## 0.1.0
 - Use percy as render backend
+- Fix linter parsing bugs
+- Shorten file paths in linter messages
+- Support lists in `scripts` recipe fields
+- Remove `packaging` from python build tools list
+- Check for English-specific doc links
+- Prohibit license_family: none
+- Add `anaconda-lint` entry point
 
 ## 0.0.5
 
