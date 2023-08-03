@@ -12,6 +12,8 @@ cython_needs_compiler
 
 documentation_overspecified
 
+documentation_specifies_language
+
 duplicate_key_in_meta_yaml
 
 empty_meta_yaml
@@ -115,3 +117,7 @@ uses_setup_py
 version_constraints_missing_whitespace
 
 yaml_load_failure
+
+missing_package_name
+
+missing_package_version

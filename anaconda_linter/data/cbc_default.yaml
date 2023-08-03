@@ -25,7 +25,7 @@ osx-64: 0
 osx-arm64: 0
 arm64: 0
 
-py: 39
+py: 310
 py3k: 1
 py2k: 0
 py26: 0
@@ -36,12 +36,10 @@ py35: 0
 py36: 0
 py37: 0
 py38: 0
-py39: 1
-py310: 0
+py39: 0
+py310: 1
 py311: 0
-numpy: "1.16"
-nunpy: "1.16"
+numpy: "1.21"
+nunpy: "1.21"
 np: "1.16"
 pl: "5.26"
-lua: ""
-luajit: 0

@@ -1,4 +1,4 @@
-{% set version = "0.0.6" %}
+{% set version = "0.1.1" %}
 
 package:
   name: anaconda-linter
@@ -13,6 +13,7 @@ build:
   script: {{ PYTHON }} -m pip install . --no-deps --no-build-isolation --ignore-installed --no-cache-dir -vvv
   entry_points:
     - conda-lint = anaconda_linter.run:main
+    - anaconda-lint = anaconda_linter.run:main
 
 requirements:
   host:
@@ -29,6 +30,7 @@ requirements:
     - conda-build
     - jsonschema
     - networkx
+    - percy ==0.0.5
 
 test:
   source_files:
@@ -41,6 +43,9 @@ test:
     - anaconda_linter.lint
   commands:
     - pip check
+    # Check entry points
+    - anaconda-lint -h
+    - conda-lint -h
     # lint_list is only an important test for development
     - python -m pytest tests -k "not lint_list"
 

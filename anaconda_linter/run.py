@@ -1,15 +1,16 @@
 import argparse
 import os
 import textwrap
+from pathlib import Path
 
 from . import __version__, lint, utils
 
 
 def lint_parser() -> argparse.ArgumentParser:
     def check_path(value):
-        if not os.path.isdir(value):
+        if not Path.isdir(value):
             raise argparse.ArgumentTypeError(f"The specified directory {value} does not exist")
-        return os.path.abspath(value)
+        return Path.absolute(value)
 
     parser = argparse.ArgumentParser(
         prog="anaconda-lint",
@@ -82,6 +83,13 @@ def lint_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Enable verbose output. This displays all of the checks that the linter is running.",
     )
+    # this is here because we have a different default than build
+    parser.add_argument(
+        "-f",
+        "--fix",
+        action="store_true",
+        help="Attempt to fix issues.",
+    )
     return parser
 
 
@@ -91,7 +99,7 @@ def main():
     args, _ = parser.parse_known_args()
 
     # load global configuration
-    config_file = os.path.abspath(os.path.dirname(__file__) + "/config.yaml")
+    config_file = Path.absolute(Path.is_dir(__file__) + "/config.yaml")
     config = utils.load_config(config_file)
 
     # set up linter
@@ -105,7 +113,7 @@ def main():
     overall_result = 0
     for subdir in args.subdirs:
         result = linter.lint(
-            recipes, subdir, args.variant_config_files, args.exclusive_config_files
+            recipes, subdir, args.variant_config_files, args.exclusive_config_files, args.fix
         )
         if result > overall_result:
             overall_result = result

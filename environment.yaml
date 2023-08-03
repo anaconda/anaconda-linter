@@ -1,4 +1,6 @@
 name: anaconda-linter
+channels:
+  - defaults
 
 dependencies:
   - python
@@ -6,6 +8,7 @@ dependencies:
   - setuptools
   - pip
   # run
+  - percy ==0.0.5
   - ruamel.yaml
   - license-expression
   - jinja2

@@ -83,6 +83,46 @@ def test_missing_build_number_bad(base_yaml):
     assert len(messages) == 1 and "missing a build number" in messages[0].title
 
 
+def test_missing_package_name_good(base_yaml):
+    yaml_str = """
+        package:
+          name: plop
+        """
+    lint_check = "missing_package_name"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_missing_package_name_bad(base_yaml):
+    yaml_str = """
+        build:
+          number: 0
+        """
+    lint_check = "missing_package_name"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 1 and "missing a package name" in messages[0].title
+
+
+def test_missing_package_version_good(base_yaml):
+    yaml_str = """
+        package:
+          version: 1.2.3
+        """
+    lint_check = "missing_package_version"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_missing_package_version_bad(base_yaml):
+    yaml_str = """
+        build:
+          number: 0
+        """
+    lint_check = "missing_package_version"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 1 and "missing a package version" in messages[0].title
+
+
 def test_missing_home_good(base_yaml):
     yaml_str = (
         base_yaml
@@ -220,6 +260,23 @@ def test_invalid_license_family(base_yaml):
     lint_check = "invalid_license_family"
     messages = check(lint_check, yaml_str)
     assert len(messages) == 1 and "about/license_family` value" in messages[0].title
+
+
+def test_invalid_license_family_none(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        about:
+          license_family: None
+        """
+    )
+    lint_check = "invalid_license_family"
+    messages = check(lint_check, yaml_str)
+    assert (
+        len(messages) == 1
+        and "about/license_family` value" in messages[0].title
+        and "Using 'NONE' breaks" in messages[0].title
+    )
 
 
 def test_missing_tests_good_import(base_yaml):
@@ -486,6 +543,35 @@ def test_missing_documentation_bad(base_yaml):
     lint_check = "missing_documentation"
     messages = check(lint_check, yaml_str)
     assert len(messages) == 1 and "doc_url or doc_source_url" in messages[0].title
+
+
+def test_documentation_specifies_language(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        about:
+          doc_url: builder.readthedocs.io/en/latest
+        """
+    )
+    lint_check = "documentation_specifies_language"
+    messages = check(lint_check, yaml_str)
+    assert (
+        len(messages) == 1
+        and "Use the generic link, not a language specific one" in messages[0].title
+    )
+
+
+def test_documentation_does_not_specify_language(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        about:
+          doc_url: builder.readthedocs.io
+        """
+    )
+    lint_check = "documentation_specifies_language"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
 
 
 @pytest.mark.parametrize("doc_type", ("doc_url", "doc_source_url"))

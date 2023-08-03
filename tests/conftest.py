@@ -1,10 +1,11 @@
 from pathlib import Path
 
 import pytest
+from percy.render.recipe import Recipe, RendererType
+from percy.render.variants import read_conda_build_config
 
 from anaconda_linter import utils
 from anaconda_linter.lint import Linter
-from anaconda_linter.recipe import Recipe
 
 
 @pytest.fixture()
@@ -38,7 +39,12 @@ def check(check_name, recipe_str, arch="linux-64"):
     config_file = Path(__file__).parent / "config.yaml"
     config = utils.load_config(str(config_file.resolve()))
     linter = Linter(config=config)
-    recipe = Recipe.from_string(recipe_str, selector_dict=config[arch])
+    recipe = Recipe.from_string(
+        recipe_text=recipe_str,
+        variant_id="dummy",
+        variant=config[arch],
+        renderer=RendererType.RUAMEL,
+    )
     messages = linter.check_instances[check_name].run(recipe=recipe)
     return messages
 
@@ -53,6 +59,16 @@ def check_dir(check_name, feedstock_dir, recipe_str, arch="linux-64"):
     recipe_dir.mkdir(parents=True, exist_ok=True)
     meta_yaml = recipe_dir / "meta.yaml"
     meta_yaml.write_text(recipe_str)
-    recipe = Recipe.from_file(str(meta_yaml), selector_dict=config[arch])
+    variants = read_conda_build_config(recipe_path=meta_yaml, subdir=arch)
+    if variants:
+        # for when a cbc is provided
+        (vid, variant) = variants[0]
+    else:
+        # for when no cbc is provided
+        vid = "dummy"
+        variant = config[arch]
+    recipe = Recipe.from_file(
+        recipe_fname=str(meta_yaml), variant_id=vid, variant=variant, renderer=RendererType.RUAMEL
+    )
     messages = linter.check_instances[check_name].run(recipe=recipe)
     return messages

@@ -87,11 +87,22 @@ import inspect
 import logging
 import pkgutil
 from enum import IntEnum
+from pathlib import Path
 from typing import Any, Dict, List, NamedTuple, Tuple
 
 import networkx as nx
+import percy.render.recipe as _recipe
+from percy.render.exceptions import (
+    EmptyRecipe,
+    JinjaRenderFailure,
+    MissingMetaYaml,
+    RecipeError,
+    YAMLRenderFailure,
+)
+from percy.render.recipe import RendererType
+from percy.render.variants import read_conda_build_config
 
-from .. import recipe as _recipe
+from .. import utils as _utils
 
 logger = logging.getLogger(__name__)
 
@@ -255,7 +266,7 @@ class LintCheck(metaclass=LintCheckMeta):
                 self.check_source(src, f"source/{num}")
 
         # Run depends checks
-        self.check_deps(recipe.get_deps_dict())
+        self.check_deps(_utils.get_deps_dict(recipe))
 
         return self.messages
 
@@ -388,7 +399,7 @@ class LintCheck(metaclass=LintCheckMeta):
 
         if not fname:
             fname = recipe.path
-
+        fname = str(Path(*Path(fname).parts[-3:]))
         return LintMessage(
             recipe=recipe,
             check=cls,
@@ -490,17 +501,12 @@ class unknown_check(LintCheck):
     """
 
 
-#: Maps `_recipe.RecipeError` to `LintCheck`
+#: Maps `RecipeError` to `LintCheck`
 recipe_error_to_lint_check = {
-    _recipe.DuplicateKey: duplicate_key_in_meta_yaml,
-    _recipe.MissingKey: missing_version_or_name,
-    _recipe.EmptyRecipe: empty_meta_yaml,
-    _recipe.MissingBuild: missing_build,
-    _recipe.HasSelector: unknown_selector,
-    _recipe.MissingMetaYaml: missing_meta_yaml,
-    _recipe.CondaRenderFailure: conda_render_failure,
-    _recipe.JinjaRenderFailure: jinja_render_failure,
-    _recipe.YAMLRenderFailure: yaml_load_failure,
+    EmptyRecipe: empty_meta_yaml,
+    MissingMetaYaml: missing_meta_yaml,
+    JinjaRenderFailure: jinja_render_failure,
+    YAMLRenderFailure: yaml_load_failure,
 }
 
 
@@ -636,9 +642,6 @@ class Linter:
                 try:
                     msgs = self.lint_recipe(
                         recipe,
-                        arch_name=arch_name,
-                        variant_config_files=variant_config_files,
-                        exclusive_config_files=exclusive_config_files,
                         fix=fix,
                     )
                 except Exception:
@@ -666,7 +669,7 @@ class Linter:
         exclusive_config_files: List[str] = [],
         fix: bool = False,
     ) -> List[LintMessage]:
-        """Run the linter on a single recipe
+        """Run the linter on a single recipe for a subdir
 
         Args:
           recipe_name: Name of recipe to lint
@@ -680,35 +683,68 @@ class Linter:
         if self.verbose:
             print(f"Linting subdir:{arch_name} recipe:{recipe_name}")
 
+        # Gather variants for specified subdir
+        variants = None
         try:
-            recipe = _recipe.Recipe.from_file(
-                recipe_name, self.config[arch_name], variant_config_files, exclusive_config_files
-            )
-        except _recipe.RecipeError as exc:
+            meta_yaml = Path(recipe_name) / "meta.yaml"
+            if (Path(__file__) / "conda_build_config.yaml").is_file():
+                logging.debug("Using cbc in current path.")
+                variants = read_conda_build_config(
+                    recipe_path=meta_yaml,
+                    subdir=arch_name,
+                    variant_config_files=variant_config_files,
+                    exclusive_config_files=exclusive_config_files,
+                )
+            else:
+                logging.debug(
+                    "No cbc in current path. Loading copy of aggregate cbc embedded in linter."
+                )
+                logging.debug("Please run from your aggregate dir for better results.")
+                local_cbc = Path(__file__).parent.parent / "data" / "conda_build_config.yaml"
+                var_config_files = variant_config_files
+                var_config_files.append(str(local_cbc))
+                variants = read_conda_build_config(
+                    recipe_path=meta_yaml,
+                    subdir=arch_name,
+                    variant_config_files=var_config_files,
+                    exclusive_config_files=exclusive_config_files,
+                )
+        except RecipeError as exc:
             recipe = _recipe.Recipe(recipe_name)
             check_cls = recipe_error_to_lint_check.get(exc.__class__, linter_failure)
             return [check_cls.make_message(recipe=recipe, line=getattr(exc, "line"))]
 
-        messages = self.lint_recipe(
-            recipe,
-            arch_name=arch_name,
-            variant_config_files=variant_config_files,
-            exclusive_config_files=exclusive_config_files,
-            fix=fix,
-        )
+        # lint variants
+        messages = set()
+        try:
+            for vid, variant in variants:
+                logging.debug(f"Linting variant {vid}")
+                recipe = _recipe.Recipe.from_file(
+                    recipe_fname=str(meta_yaml),
+                    variant_id=vid,
+                    variant=variant,
+                    renderer=RendererType.RUAMEL,
+                )
+                if not recipe.skip:
+                    messages.update(
+                        self.lint_recipe(
+                            recipe,
+                            fix=fix,
+                        )
+                    )
+                    if fix and recipe.is_modified():
+                        with open(recipe.path, "w", encoding="utf-8") as fdes:
+                            fdes.write(recipe.dump())
+        except RecipeError as exc:
+            recipe = _recipe.Recipe(recipe_name)
+            check_cls = recipe_error_to_lint_check.get(exc.__class__, linter_failure)
+            return [check_cls.make_message(recipe=recipe, line=getattr(exc, "line"))]
 
-        if fix and recipe.is_modified():
-            with open(recipe.path, "w", encoding="utf-8") as fdes:
-                fdes.write(recipe.dump())
-
-        return messages
+        return list(messages)
 
     def lint_recipe(
         self,
         recipe: _recipe.Recipe,
-        arch_name: str = "linux-64",
-        variant_config_files: List[str] = [],
-        exclusive_config_files: List[str] = [],
         fix: bool = False,
     ) -> List[LintMessage]:
         # collect checks to skip

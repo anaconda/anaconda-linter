@@ -49,6 +49,7 @@ def main():
         entry_points={
             "console_scripts": [
                 "conda-lint=anaconda_linter.run:main",
+                "anaconda-lint=anaconda_linter.run:main",
             ]
         },
         extras_require={
