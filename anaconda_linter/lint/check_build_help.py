@@ -59,7 +59,7 @@ PYTHON_BUILD_TOOLS = (
 PYTHON_BUILD_BACKENDS = (
     "flit",  # Our packages are not supposed to depend on flit, but apparently they do, so we need to support it here.
     "flit-core",  # Backend of flit.
-    "hatch",  # Same as flit, we should not depende on it. We should instead depend on hatchling, which is the backend.
+    "hatch",  # Same as flit, we should not depend on it. We should instead depend on hatchling, which is the backend.
     "hatchling",  # Backend of hatch.
     "meson-python",  # Backend that uses meson.
     "pdm-backend",  # Backend of pdm (new). Not yet in our repo, but if it ever does, we'll be able to handle it.
