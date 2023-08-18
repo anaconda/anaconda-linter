@@ -50,6 +50,25 @@ PYTHON_BUILD_TOOLS = (
     "whey",
 )
 
+# List of known PEP-517 backends (https://peps.python.org/pep-0517/) that are not setuptools
+# and that don't require wheel since they create wheels themselves.
+# The backend is defined using the pyproject.toml file (which was intruduced by PEP-518).
+# Historical note: pyproject.toml file was introduced initially to specify the build system (backend).
+# Only later was the ability to specify all the project metadata (name, version, dependencies, etc)
+# into it added, via PEP-621.
+PYTHON_BUILD_BACKENDS = (
+    "flit",  # Our packages are not supposed to depend on flit, but apparently they do, so we need to support it here.
+    "flit-core",  # Backend of flit.
+    "hatch",  # Same as flit, we should not depend on it. We should instead depend on hatchling, which is the backend.
+    "hatchling",  # Backend of hatch.
+    "meson-python",  # Backend that uses meson.
+    "pdm-backend",  # Backend of pdm (new). Not yet in our repo, but if it ever does, we'll be able to handle it.
+    "pdm-pep517",  # Deprecated backend of pdm but we still need to support it, see https://pypi.org/project/pdm-pep517
+    "poetry-core",  # Backend of poetry.
+    "scikit-build-core",  # Backend that uses cmake.
+    "whey",
+)
+
 COMPILERS = (
     "cgo",
     "cuda",
@@ -264,13 +283,25 @@ class missing_wheel(LintCheck):
 
     def check_recipe(self, recipe):
         is_pypi = is_pypi_source(recipe)
+
         for package in recipe.packages.values():
             if (
                 is_pypi
                 or recipe.contains(f"{package.path_prefix}build/script", "pip install", "")
                 or recipe.contains(f"{package.path_prefix}script", "pip install", "")
             ):
-                if not package.has_dep("host", "wheel"):
+                # Note that we do the assumption that if none of the backends defined in exceptions are present
+                # and that setuptools is also not present, that setuptools will be used via the good old
+                # setup.py file. This is because pip defaults to doing that for historical reasons.
+                # This means that if pip is used in the install script and there is no host dependencies,
+                # we want this check to raise a warning because wheel should be added there!
+                #
+                # In theory we would also need to warn if setuptools missing in the host
+                # section and none of the new build backends are used.
+                # TODO: add a missing_setuptools rule?
+                if not package.has_dep("host", "wheel") and not set(
+                    PYTHON_BUILD_BACKENDS
+                ).intersection({dep.pkg.lower() for dep in package.get("host")}):
                     self.message(
                         section=f"{package.path_prefix}requirements/host",
                         data=(recipe, package),
