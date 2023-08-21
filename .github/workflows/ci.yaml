@@ -19,7 +19,7 @@ jobs:
   tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@96f53100ba2a5449eb71d2e6604bbcd94b9449b5
+      - uses: actions/checkout@7739b9ba2efcda9dde65ad1e3c2dbe65b41dfba7
       - uses: ./.github/actions/setup-env
       - name: Run tests
         run: |
@@ -35,7 +35,7 @@ jobs:
   build-recipe:
       runs-on: ubuntu-latest
       steps:
-        - uses: actions/checkout@96f53100ba2a5449eb71d2e6604bbcd94b9449b5
+        - uses: actions/checkout@7739b9ba2efcda9dde65ad1e3c2dbe65b41dfba7
         - name: Cache conda env
           id: cache-conda
           uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8 # v3
@@ -56,7 +56,7 @@ jobs:
   lint-recipe:
       runs-on: ubuntu-latest
       steps:
-        - uses: actions/checkout@96f53100ba2a5449eb71d2e6604bbcd94b9449b5
+        - uses: actions/checkout@7739b9ba2efcda9dde65ad1e3c2dbe65b41dfba7
         - uses: ./.github/actions/setup-env
         - name: Run lint
           run: |
