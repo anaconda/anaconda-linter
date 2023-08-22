@@ -13,7 +13,6 @@ def write_to_file(dest_file: Path or str, data: List[str]):
     with open(dest_file, "w+") as f:
         f.write("\n".join(data))
         f.write("\n")
-    #return os.path.getsize(dest_file) > 0
     return dest_file.stat().st_size > 0
 
 

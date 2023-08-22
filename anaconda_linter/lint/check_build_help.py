@@ -329,7 +329,6 @@ class uses_setup_py(LintCheck):
                         build_file = self.recipe.get(script, "")
                     if not build_file:
                         continue
-                    #with open(os.path.join(self.recipe.dir, build_file)) as buildsh:
                     with open(self.recipe.dir / build_file) as buildsh:
                         for num, line in enumerate(buildsh):
                             if not self._check_line(line):

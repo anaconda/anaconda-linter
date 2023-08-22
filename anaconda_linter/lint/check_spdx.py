@@ -50,11 +50,9 @@ class incorrect_license(LintCheck):
             if not licenseref_regex.match(license):
                 filtered_licenses.append(license)
 
-        #with open(os.path.join(os.path.dirname(__file__), LICENSES_PATH)) as f:
         with open(Path(__file__).resolve().parent / LICENSES_PATH) as f:
             expected_licenses = f.readlines()
             expected_licenses = {l.strip() for l in expected_licenses}  # noqa
-        # with open(os.path.join(os.path.dirname(__file__), EXCEPTIONS_PATH)) as f:
         with open(Path(__file__).resolve().parent / LICENSES_PATH) as f:
             expected_exceptions = f.readlines()
             expected_exceptions = {l.strip() for l in expected_exceptions}  # noqa
