@@ -40,7 +40,7 @@ def validate_config(config):
     if not isinstance(config, dict):
         with open(config) as conf:
             config = yaml.load(conf.read())
-    fn = Path(__file__).resolve().parent / "config.schema.yaml"
+    fn = Path(__file__).absolute().parent / "config.schema.yaml"
     with open(fn) as f:
         schema = yaml.load(f.read())
     validate(config, schema)
@@ -64,9 +64,8 @@ def load_config(path):
 
         config = path
     else:
-
         def relpath(p):
-            return Path(path).parent / p
+            return os.path.join(os.path.dirname(path), p)
 
         with open(path) as conf:
             config = yaml.load(conf.read())

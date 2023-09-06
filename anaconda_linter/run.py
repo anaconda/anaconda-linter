@@ -7,7 +7,7 @@ from . import __version__, lint, utils
 
 
 def lint_parser() -> argparse.ArgumentParser:
-    def check_path(value):
+    def check_path(value: str):
         if not Path.isdir(value):
             raise argparse.ArgumentTypeError(f"The specified directory {value} does not exist")
         return Path.absolute(value)
@@ -99,7 +99,7 @@ def main():
     args, _ = parser.parse_known_args()
 
     # load global configuration
-    config_file = Path.absolute(Path.is_dir(__file__) + "/config.yaml")
+    config_file = Path(__file__).parent.absolute() / "config.yaml"
     config = utils.load_config(config_file)
 
     # set up linter

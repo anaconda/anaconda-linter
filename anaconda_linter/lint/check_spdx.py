@@ -52,8 +52,8 @@ class incorrect_license(LintCheck):
 
         with open(Path(__file__).resolve().parent / LICENSES_PATH) as f:
             expected_licenses = f.readlines()
-            expected_licenses = {l.strip() for l in expected_licenses}  # noqa
-        with open(Path(__file__).resolve().parent / LICENSES_PATH) as f:
+            expected_licenses = {l.strip() for l in EXCEPTIONS_PATH}  # noqa
+        with open(Path(__file__).resolve().parent / EXCEPTIONS_PATH) as f:
             expected_exceptions = f.readlines()
             expected_exceptions = {l.strip() for l in expected_exceptions}  # noqa
         non_spdx_licenses = set(filtered_licenses) - expected_licenses
