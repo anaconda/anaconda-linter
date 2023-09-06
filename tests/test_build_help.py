@@ -1,7 +1,12 @@
 import pytest
 from conftest import check, check_dir
 
-from anaconda_linter.lint.check_build_help import BUILD_TOOLS, COMPILERS, PYTHON_BUILD_TOOLS
+from anaconda_linter.lint.check_build_help import (
+    BUILD_TOOLS,
+    COMPILERS,
+    PYTHON_BUILD_BACKENDS,
+    PYTHON_BUILD_TOOLS,
+)
 
 
 def test_host_section_needs_exact_pinnings_good(base_yaml):
@@ -711,6 +716,23 @@ def test_missing_wheel_url_good(base_yaml):
     assert len(messages) == 0
 
 
+@pytest.mark.parametrize("build_backend", PYTHON_BUILD_BACKENDS)
+def test_missing_wheel_url_good_alt_backend(base_yaml, build_backend):
+    yaml_str = (
+        base_yaml
+        + f"""
+        source:
+          url: https://pypi.io/packages/source/D/Django/Django-4.1.tar.gz
+        requirements:
+          host:
+            - {build_backend}
+        """
+    )
+    lint_check = "missing_wheel"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
 def test_missing_wheel_url_bad(base_yaml):
     yaml_str = (
         base_yaml
@@ -776,6 +798,29 @@ def test_missing_wheel_pip_install_good_multi(base_yaml):
             requirements:
               host:
                 - wheel
+        """
+    )
+    lint_check = "missing_wheel"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+@pytest.mark.parametrize("build_backend", PYTHON_BUILD_BACKENDS)
+def test_missing_wheel_pip_install_good_multi_alt_backend(base_yaml, build_backend):
+    yaml_str = (
+        base_yaml
+        + f"""
+        outputs:
+          - name: output1
+            script: {{{{ PYTHON }}}} -m pip install .
+            requirements:
+              host:
+                - {build_backend}
+          - name: output2
+            script: {{{{ PYTHON }}}} -m pip install .
+            requirements:
+              host:
+                - {build_backend}
         """
     )
     lint_check = "missing_wheel"
