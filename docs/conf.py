@@ -14,7 +14,7 @@ import os
 import sys
 from pathlib import Path
 
-sys.path.insert(0, Path(".").resolve())
+sys.path.insert(0, os.path.abspath("."))
 
 
 # -- Project information -----------------------------------------------------
