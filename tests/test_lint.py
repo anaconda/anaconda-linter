@@ -274,3 +274,27 @@ def test_message_path(base_yaml: str, tmpdir: Path) -> None:
     lint_check = "DummyError"
     messages = check_dir(lint_check, recipe_directory.parent, base_yaml)
     assert len(messages) == 1 and Path(messages[0].fname) == (recipe_directory_short / "meta.yaml")
+
+
+def test_get_report(base_yaml):
+    messages = [LintMessage(severity=ERROR, recipe= “meta.yaml" )
+        (ERROR, "fake_feedstock/recipe/meta.yaml", 1, "dummy_error", "Error message 1"),
+        (WARNING, "fake_feedstock/recipe/meta.yaml", 10, "dummy_warning", "Warning message 1"),
+        (ERROR, "fake_feedstock/recipe/meta.yaml", 1, "dummy_error", "Error message 2"),
+    ]
+
+    report = Linter.get_report(messages)
+
+    lint_check = """The following problems have been found:
+
+===== WARNINGS: =====
+- fake_feedstock/recipe/meta.yaml:10: dummy_warning: Warning message 1
+
+===== ERRORS: =====
+- fake_feedstock/recipe/meta.yaml:1: dummy_error: Error message 1
+- fake_feedstock/recipe/meta.yaml:1: dummy_error: Error message 2
+
+==== Ending Report: =====
+2 Errors and 1 Warning were found"""
+
+    assert report == lint_check
