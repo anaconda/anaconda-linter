@@ -52,7 +52,7 @@ PYTHON_BUILD_TOOLS = (
 
 # List of known PEP-517 backends (https://peps.python.org/pep-0517/) that are not setuptools
 # and that don't require wheel since they create wheels themselves.
-# The backend is defined using the pyproject.toml file (which was intruduced by PEP-518).
+# The backend is defined using the pyproject.toml file (which was introduced by PEP-518).
 # Historical note: pyproject.toml file was introduced initially to specify the build system (backend).
 # Only later was the ability to specify all the project metadata (name, version, dependencies, etc)
 # into it added, via PEP-621.
@@ -118,7 +118,7 @@ class host_section_needs_exact_pinnings(LintCheck):
     """Packages in host must have exact version pinnings, except python build tools.
 
     Specifically, comparison operators must not be used. The version numbers can be
-    speficified in a conda_build_config.yaml file.
+    specified in a conda_build_config.yaml file.
     """
 
     def check_recipe(self, recipe):
@@ -143,8 +143,8 @@ class host_section_needs_exact_pinnings(LintCheck):
             *PYTHON_BUILD_TOOLS,
         )
         # It doesn't make sense to pin the versions of hatch plugins if we're not pinning
-        # hatch. We could explictly enumerate the 15 odd plugins in PYTHON_BUILD_TOOLS, but
-        # this seemed lower maintainance
+        # hatch. We could explicitly enumerate the 15 odd plugins in PYTHON_BUILD_TOOLS, but
+        # this seemed lower maintenance
         return (package in exceptions) or package.startswith("hatch-")
 
 
