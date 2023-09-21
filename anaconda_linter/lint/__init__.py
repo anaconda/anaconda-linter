@@ -17,7 +17,7 @@ Briefly, each class becomes a check by:
   on Github when the check fails and in the documentation.
 
   The first line is considered a title or one line summary used where
-  a brief description is needed. The remainder is a long desription
+  a brief description is needed. The remainder is a long description
   and should include brief help on how to fix the detected issue.
 
 - The input property ``severity`` defaults to ``ERROR`` but can be

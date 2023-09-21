@@ -1,7 +1,5 @@
 name: Set up environment
 description: Set up an anaconda-linter environment
-on:
-  workflow_call:
 
 runs:
   using: "composite"
