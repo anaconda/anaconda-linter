@@ -51,6 +51,7 @@ SHL-2.1
 SWI-exception
 Swift-exception
 u-boot-exception-2.0
+UBDL-exception
 Universal-FOSS-exception-1.0
 vsftpd-openssl-exception
 WxWindows-exception-3.1
