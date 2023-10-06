@@ -9,6 +9,7 @@ import os
 import re
 from pathlib import Path
 from typing import Any
+from percy.render.recipe_parser import RecipeParser, SelectorConflictMode
 
 from .. import utils as _utils
 from . import INFO, WARNING, LintCheck
@@ -982,7 +983,20 @@ class no_git_on_windows(LintCheck):
         if self.recipe.selector_dict.get("win", 0) == 1 and "git" in deps:
             for path in deps["git"]["paths"]:
                 output = -1 if not path.startswith("outputs") else int(path.split("/")[1])
-                self.message(section=path, output=output)
+                self.message(section=path, output=output, data=path)
+
+    def fix(self, _message, _data) -> bool:
+        # NOTE: The path found in `check_deps()` is a post-selector-rendering
+        # path to the dependency. So in order to change the recipe file, we need
+        # to relocate `git`, relative to the raw file.
+        def _add_git_selector(parser: RecipeParser) -> None:
+            paths = parser.find_value("git")
+            for path in paths:
+                # Attempt to filter-out false-positives
+                if not path.startswith("/requirements/"):
+                    continue
+                parser.add_selector(path, "[not win]", SelectorConflictMode.AND)
+        return self.recipe.patch_with_parser(_add_git_selector)
 
 
 class gui_app(LintCheck):
