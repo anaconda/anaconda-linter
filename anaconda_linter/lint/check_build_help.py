@@ -9,7 +9,8 @@ import os
 import re
 from pathlib import Path
 from typing import Any
-from percy.render.recipe_parser import RecipeParser, SelectorConflictMode
+
+from percy.parser.recipe_parser import RecipeParser, SelectorConflictMode
 
 from .. import utils as _utils
 from . import INFO, WARNING, LintCheck
@@ -996,6 +997,7 @@ class no_git_on_windows(LintCheck):
                 if not path.startswith("/requirements/"):
                     continue
                 parser.add_selector(path, "[not win]", SelectorConflictMode.AND)
+
         return self.recipe.patch_with_parser(_add_git_selector)
 
 
