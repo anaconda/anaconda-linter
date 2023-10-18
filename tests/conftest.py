@@ -35,14 +35,17 @@ def recipe_dir(tmpdir):
     return recipe_directory
 
 
-def check(check_name, recipe_str, arch="linux-64"):
+def check(check_name, recipe_str, arch="linux-64", expand_variant=None):
     config_file = Path(__file__).parent / "config.yaml"
     config = utils.load_config(str(config_file.resolve()))
     linter = Linter(config=config)
+    variant = config[arch]
+    if expand_variant:
+        variant.update(expand_variant)
     recipe = Recipe.from_string(
         recipe_text=recipe_str,
         variant_id="dummy",
-        variant=config[arch],
+        variant=variant,
         renderer=RendererType.RUAMEL,
     )
     messages = linter.check_instances[check_name].run(recipe=recipe)

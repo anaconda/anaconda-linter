@@ -370,20 +370,25 @@ class uses_setup_py(LintCheck):
     """
 
     @staticmethod
-    def _check_line(line: str) -> bool:
+    def _check_line(x: str) -> bool:
         """Check a line for a broken call to setup.py"""
-        if "setup.py install" in line:
-            return False
+        if isinstance(x, str):
+            x = [x]
+        elif not isinstance(x, list):
+            return True
+        for line in x:
+            if "setup.py install" in line:
+                return False
         return True
 
     def check_recipe(self, recipe):
         for package in recipe.packages.values():
-            if not self._check_line(recipe.get(f"{package.path_prefix}build/script", "")):
+            if not self._check_line(recipe.get(f"{package.path_prefix}build/script", None)):
                 self.message(
                     section=f"{package.path_prefix}build/script",
                     data=(recipe, f"{package.path_prefix}build/script"),
                 )
-            elif not self._check_line(recipe.get(f"{package.path_prefix}/script", "")):
+            elif not self._check_line(recipe.get(f"{package.path_prefix}script", None)):
                 self.message(
                     section=f"{package.path_prefix}script",
                     data=(recipe, f"{package.path_prefix}script"),
@@ -448,12 +453,12 @@ class pip_install_args(LintCheck):
 
     def check_recipe(self, recipe):
         for package in recipe.packages.values():
-            if not self._check_line(recipe.get(f"{package.path_prefix}build/script", "")):
+            if not self._check_line(recipe.get(f"{package.path_prefix}build/script", None)):
                 self.message(
                     section=f"{package.path_prefix}build/script",
                     data=(recipe, f"{package.path_prefix}build/script"),
                 )
-            elif not self._check_line(recipe.get(f"{package.path_prefix}/script", "")):
+            elif not self._check_line(recipe.get(f"{package.path_prefix}script", None)):
                 self.message(
                     section=f"{package.path_prefix}script",
                     data=(recipe, f"{package.path_prefix}script"),
