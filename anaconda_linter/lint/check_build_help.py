@@ -7,6 +7,7 @@ These checks catch errors relating to the use of ``-
 
 import os
 import re
+from pathlib import Path
 from typing import Any
 
 from .. import utils as _utils
@@ -115,7 +116,8 @@ def recipe_has_patches(recipe):
 
 
 class host_section_needs_exact_pinnings(LintCheck):
-    """Packages in host must have exact version pinnings, except python build tools.
+    """Linked libraries host should have exact version pinnings.
+    Other dependencies are case by case.
 
     Specifically, comparison operators must not be used. The version numbers can be
     specified in a conda_build_config.yaml file.
@@ -131,7 +133,7 @@ class host_section_needs_exact_pinnings(LintCheck):
                     if constraint == "" or re.search("^[<>!]", constraint) is not None:
                         path = dep["paths"][c]
                         output = -1 if not path.startswith("outputs") else int(path.split("/")[1])
-                        self.message(section=path, output=output)
+                        self.message(section=path, severity=WARNING, output=output)
 
     @staticmethod
     def is_exception(package):
@@ -145,7 +147,44 @@ class host_section_needs_exact_pinnings(LintCheck):
         # It doesn't make sense to pin the versions of hatch plugins if we're not pinning
         # hatch. We could explicitly enumerate the 15 odd plugins in PYTHON_BUILD_TOOLS, but
         # this seemed lower maintenance
-        return (package in exceptions) or package.startswith("hatch-")
+        return (package in exceptions) or any(
+            [package.startswith(f"{pkg}-") for pkg in PYTHON_BUILD_TOOLS]
+        )
+
+
+class cbc_dep_in_run_missing_from_host(LintCheck):
+    """Run dependencies listed in the cbc should also be present in the host section."""
+
+    def check_recipe(self, recipe):
+        for package in recipe.packages.values():
+            for dep in package.run:
+                if dep.pkg in recipe.selector_dict and recipe.selector_dict[dep.pkg]:
+                    if not self.is_exception(dep.pkg) and not package.has_dep("host", dep.pkg):
+                        dep_path = _utils.get_dep_path(recipe, dep)
+                        self.message(
+                            section=dep_path,
+                            data=(recipe, f"{package.path_prefix}requirements/host", dep.pkg),
+                        )
+
+    @staticmethod
+    def is_exception(package):
+        exceptions = (
+            "python",
+            "numpy",
+        )
+        return package in exceptions
+
+    def fix(self, _message, _data):
+        (recipe, path, dep) = _data
+        op = [
+            {
+                "op": "add",
+                "path": path,
+                "match": f"{dep}.*",
+                "value": [f"{dep} " + "{{ " + f"{dep}" + " }}"],
+            },
+        ]
+        return recipe.patch(op)
 
 
 class should_use_compilers(LintCheck):
@@ -337,35 +376,49 @@ class uses_setup_py(LintCheck):
             return False
         return True
 
-    def check_deps(self, deps):
-        if "setuptools" not in deps:
-            return  # no setuptools, no problem
-
-        for path in deps["setuptools"]["paths"]:
-            if path.startswith("output"):
-                n = path.split("/")[1]
-                script = f"outputs/{n}/script"
-                output = int(n)
-            else:
-                script = "build/script"
-                output = -1
-            if self.recipe.contains(script, "setup.py install", ""):
-                self.message(section=script)
-                continue
-            if self.recipe.dir:
+    def check_recipe(self, recipe):
+        for package in recipe.packages.values():
+            if not self._check_line(recipe.get(f"{package.path_prefix}build/script", "")):
+                self.message(
+                    section=f"{package.path_prefix}build/script",
+                    data=(recipe, f"{package.path_prefix}build/script"),
+                )
+            elif not self._check_line(recipe.get(f"{package.path_prefix}/script", "")):
+                self.message(
+                    section=f"{package.path_prefix}script",
+                    data=(recipe, f"{package.path_prefix}script"),
+                )
+            elif self.recipe.dir:
                 try:
-                    if script == "build/script":
-                        build_file = "build.sh"
-                    else:
-                        build_file = self.recipe.get(script, "")
+                    build_file = self.recipe.get(f"{package.path_prefix}script", "")
                     if not build_file:
-                        continue
-                    with open(os.path.join(self.recipe.dir, build_file)) as buildsh:
-                        for num, line in enumerate(buildsh):
-                            if not self._check_line(line):
-                                self.message(fname=build_file, line=num, output=output)
+                        build_file = self.recipe.get(
+                            f"{package.path_prefix}build/script", "build.sh"
+                        )
+                    build_file = self.recipe.dir / Path(build_file)
+                    if build_file.exists():
+                        with open(str(build_file)) as buildsh:
+                            for num, line in enumerate(buildsh):
+                                if not self._check_line(line):
+                                    if package.path_prefix.startswith("output"):
+                                        output = int(package.path_prefix.split("/")[1])
+                                    else:
+                                        output = -1
+                                    self.message(fname=build_file, line=num, output=output)
                 except FileNotFoundError:
                     pass
+
+    def fix(self, _message, _data):
+        (recipe, path) = _data
+        op = [
+            {
+                "op": "replace",
+                "path": path,
+                "match": ".* setup.py .*",
+                "value": "{{PYTHON}} -m pip install . --no-deps --no-build-isolation --ignore-installed --no-cache-dir -vv",  # noqa: E501
+            },
+        ]
+        return recipe.patch(op)
 
 
 class pip_install_args(LintCheck):
@@ -393,45 +446,46 @@ class pip_install_args(LintCheck):
 
         return True
 
-    def check_deps(self, deps):
-        if "pip" not in deps:
-            return  # no pip, no problem
-
-        for path in deps["pip"]["paths"]:
-            if path.startswith("output"):
-                n = path.split("/")[1]
-                script = f"outputs/{n}/script"
-                output = int(n)
-            else:
-                script = "build/script"
-                output = -1
-            if not self._check_line(self.recipe.get(script, "")):
-                self.message(section=script, data=self.recipe)
-                continue
-            if self.recipe.dir:
+    def check_recipe(self, recipe):
+        for package in recipe.packages.values():
+            if not self._check_line(recipe.get(f"{package.path_prefix}build/script", "")):
+                self.message(
+                    section=f"{package.path_prefix}build/script",
+                    data=(recipe, f"{package.path_prefix}build/script"),
+                )
+            elif not self._check_line(recipe.get(f"{package.path_prefix}/script", "")):
+                self.message(
+                    section=f"{package.path_prefix}script",
+                    data=(recipe, f"{package.path_prefix}script"),
+                )
+            elif self.recipe.dir:
                 try:
-                    if script == "build/script":
-                        build_file = "build.sh"
-                    else:
-                        build_file = self.recipe.get(script, "")
+                    build_file = self.recipe.get(f"{package.path_prefix}script", "")
                     if not build_file:
-                        continue
-                    with open(os.path.join(self.recipe.dir, build_file)) as buildsh:
-                        for num, line in enumerate(buildsh):
-                            if not self._check_line(line):
-                                self.message(
-                                    fname=build_file, line=num, output=output, data=self.recipe
-                                )
+                        build_file = self.recipe.get(
+                            f"{package.path_prefix}build/script", "build.sh"
+                        )
+                    build_file = self.recipe.dir / Path(build_file)
+                    if build_file.exists():
+                        with open(str(build_file)) as buildsh:
+                            for num, line in enumerate(buildsh):
+                                if not self._check_line(line):
+                                    if package.path_prefix.startswith("output"):
+                                        output = int(package.path_prefix.split("/")[1])
+                                    else:
+                                        output = -1
+                                    self.message(fname=build_file, line=num, output=output)
                 except FileNotFoundError:
                     pass
 
-    def fix(self, _message, recipe):
+    def fix(self, _message, _data):
+        (recipe, path) = _data
         op = [
             {
                 "op": "replace",
-                "path": "@output/build/script",
-                "match": "pip install(?!=.*--no-build-isolation).*",
-                "value": "pip install . --no-deps --no-build-isolation --ignore-installed --no-cache-dir -vv",
+                "path": path,
+                "match": r"(.*\s)?pip install(?!=.*--no-build-isolation).*",
+                "value": "{{ PYTHON }} -m pip install . --no-deps --no-build-isolation --ignore-installed --no-cache-dir -vv",  # noqa: E501
             },
         ]
         return recipe.patch(op)
