@@ -71,6 +71,7 @@ pre-commit:        ## Runs pre-commit against files
 test:              ## Run tests
 	mkdir -p $(ARTIFACTS_PATH)
 	python -m pytest \
+		-n auto \
 		--junit-xml="$(ARTIFACTS_PATH)/test-report.xml" \
 		--html="$(ARTIFACTS_PATH)/test-report.html" \
 		--cov \

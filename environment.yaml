@@ -23,3 +23,4 @@ dependencies:
   # plug ins
   - pytest-cov
   - pytest-html
+  - pytest-xdist
