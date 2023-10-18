@@ -123,3 +123,5 @@ missing_package_name
 missing_package_version
 
 cbc_dep_in_run_missing_from_host
+
+wrong_output_script_key
