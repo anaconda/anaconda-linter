@@ -188,7 +188,7 @@ class cbc_dep_in_run_missing_from_host(LintCheck):
 
 
 class potentially_bad_ignore_run_exports(LintCheck):
-    """Ignoring run_export of a host dependency. In some cases it is more appropriate to remove the --error-overdepending flag of conda-build."""   # noqa: E501
+    """Ignoring run_export of a host dependency. In some cases it is more appropriate to remove the --error-overdepending flag of conda-build."""  # noqa: E501
 
     def check_recipe(self, recipe):
         for package in recipe.packages.values():
