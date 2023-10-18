@@ -125,3 +125,5 @@ missing_package_version
 cbc_dep_in_run_missing_from_host
 
 wrong_output_script_key
+
+potentially_bad_ignore_run_exports

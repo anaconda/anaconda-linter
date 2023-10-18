@@ -3078,3 +3078,79 @@ def test_cbc_dep_in_run_missing_from_host_bad_multi(base_yaml):
     lint_check = "cbc_dep_in_run_missing_from_host"
     messages = check(lint_check, yaml_str, "linux-64", {"hdf5": "1.2.3"})
     assert len(messages) == 2
+
+
+def test_potentially_bad_ignore_run_exports_good(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+
+        build:
+          ignore_run_exports:
+            - bb
+        requirements:
+            host:
+              - aa
+        """
+    )
+    lint_check = "potentially_bad_ignore_run_exports"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_potentially_bad_ignore_run_exports_good_multi(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+
+        outputs:
+          - name: output1
+            build:
+              ignore_run_exports:
+                - bb
+            requirements:
+              host:
+                - aa
+        """
+    )
+    lint_check = "potentially_bad_ignore_run_exports"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_potentially_bad_ignore_run_exports_bad(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+
+        build:
+          ignore_run_exports:
+            - aa
+        requirements:
+            host:
+              - aa
+        """
+    )
+    lint_check = "potentially_bad_ignore_run_exports"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 1
+
+
+def test_potentially_bad_ignore_run_exports_bad_multi(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+
+        outputs:
+          - name: output1
+            build:
+              ignore_run_exports:
+                - aa
+            requirements:
+              host:
+                - aa
+        """
+    )
+    lint_check = "potentially_bad_ignore_run_exports"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 1

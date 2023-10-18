@@ -187,6 +187,16 @@ class cbc_dep_in_run_missing_from_host(LintCheck):
         return recipe.patch(op)
 
 
+class potentially_bad_ignore_run_exports(LintCheck):
+    """Ignoring run_export of a host dependency. In some cases it is more appropriate to remove the --error-overdepending flag of conda-build."""
+
+    def check_recipe(self, recipe):
+        for package in recipe.packages.values():
+            for dep in package.host:
+                if dep.pkg in package.ignore_run_exports:
+                    self.message(section=_utils.get_dep_path(recipe, dep), severity=INFO)
+
+
 class should_use_compilers(LintCheck):
     """The recipe requires a compiler directly
 
