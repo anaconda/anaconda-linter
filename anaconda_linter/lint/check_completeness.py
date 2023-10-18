@@ -391,3 +391,26 @@ class missing_description(LintCheck):
     def check_recipe(self, recipe):
         if not recipe.get("about/description", ""):
             self.message(section="about", severity=WARNING)
+
+
+class wrong_output_script_key(LintCheck):
+    """It should be `outputs/x/script`, not `outputs/x/build/script`
+
+    Please change from::
+        outputs:
+          - name: output1
+            build:
+              script: build_script.sh
+
+    To::
+
+        outputs:
+          - name: output1
+            script: build_script.sh
+    """
+
+    def check_recipe(self, recipe):
+        for package in recipe.packages.values():
+            if package.path_prefix.startswith("outputs"):
+                if recipe.get(f"{package.path_prefix}build/script", None):
+                    self.message(section=f"{package.path_prefix}build/script")

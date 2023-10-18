@@ -213,6 +213,15 @@ def ensure_list(obj):
     return [obj]
 
 
+def get_dep_path(recipe, dep):
+    for n, spec in enumerate(recipe.get(dep.path, [])):
+        if spec is None:  # Fixme: lint this
+            continue
+        if spec == dep.raw_dep:
+            return f"{dep.path}/{n}"
+    return dep.path
+
+
 def get_deps_dict(recipe, sections=None, outputs=True):
     if not sections:
         sections = ("build", "run", "host")

@@ -159,7 +159,10 @@ def test_host_section_needs_exact_pinnings_bad(base_yaml, constraint):
     )
     lint_check = "host_section_needs_exact_pinnings"
     messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "must have exact version pinnings" in messages[0].title
+    assert (
+        len(messages) == 1
+        and "Linked libraries host should have exact version pinnings." in messages[0].title
+    )
 
 
 @pytest.mark.parametrize("constraint", ("", ">=0.13", "<0.14", "!=0.13.7"))
@@ -181,7 +184,7 @@ def test_host_section_needs_exact_pinnings_bad_multi(base_yaml, constraint):
     lint_check = "host_section_needs_exact_pinnings"
     messages = check(lint_check, yaml_str)
     assert len(messages) == 2 and all(
-        "must have exact version pinnings" in msg.title for msg in messages
+        "Linked libraries host should have exact version pinnings." in msg.title for msg in messages
     )
 
 
@@ -2986,3 +2989,168 @@ def test_gui_app_bad(base_yaml, gui):
     )
     messages = check(lint_check, yaml_str)
     assert len(messages) == 1 and "GUI application" in messages[0].title
+
+
+def test_cbc_dep_in_run_missing_from_host_good(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        requirements:
+            host:
+              - python
+              - hdf5
+            run:
+              - python
+              - hdf5
+        """
+    )
+    lint_check = "cbc_dep_in_run_missing_from_host"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_cbc_dep_in_run_missing_from_host_good_multi(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+            requirements:
+              host:
+                - python
+                - hdf5
+              run:
+                - python
+                - hdf5
+          - name: output2
+            requirements:
+              host:
+                - python
+                - hdf5
+              run:
+                - python
+                - hdf5
+        """
+    )
+    lint_check = "cbc_dep_in_run_missing_from_host"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_cbc_dep_in_run_missing_from_host_bad(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        requirements:
+            host:
+              - python
+            run:
+              - python
+              - hdf5
+        """
+    )
+    lint_check = "cbc_dep_in_run_missing_from_host"
+    messages = check(lint_check, yaml_str, "linux-64", {"hdf5": "1.2.3"})
+    assert len(messages) == 1
+
+
+def test_cbc_dep_in_run_missing_from_host_bad_multi(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+            requirements:
+              host:
+                - python
+              run:
+                - python
+                - hdf5
+          - name: output2
+            requirements:
+              host:
+                - python
+              run:
+                - python
+                - hdf5
+        """
+    )
+    lint_check = "cbc_dep_in_run_missing_from_host"
+    messages = check(lint_check, yaml_str, "linux-64", {"hdf5": "1.2.3"})
+    assert len(messages) == 2
+
+
+def test_potentially_bad_ignore_run_exports_good(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+
+        build:
+          ignore_run_exports:
+            - bb
+        requirements:
+            host:
+              - aa
+        """
+    )
+    lint_check = "potentially_bad_ignore_run_exports"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_potentially_bad_ignore_run_exports_good_multi(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+
+        outputs:
+          - name: output1
+            build:
+              ignore_run_exports:
+                - bb
+            requirements:
+              host:
+                - aa
+        """
+    )
+    lint_check = "potentially_bad_ignore_run_exports"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_potentially_bad_ignore_run_exports_bad(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+
+        build:
+          ignore_run_exports:
+            - aa
+        requirements:
+            host:
+              - aa
+        """
+    )
+    lint_check = "potentially_bad_ignore_run_exports"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 1
+
+
+def test_potentially_bad_ignore_run_exports_bad_multi(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+
+        outputs:
+          - name: output1
+            build:
+              ignore_run_exports:
+                - aa
+            requirements:
+              host:
+                - aa
+        """
+    )
+    lint_check = "potentially_bad_ignore_run_exports"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 1

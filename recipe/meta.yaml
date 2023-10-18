@@ -30,7 +30,7 @@ requirements:
     - conda-build
     - jsonschema
     - networkx
-    - percy ==0.0.5
+    - percy >=0.1.0,<0.2.0
 
 test:
   source_files:

@@ -27,7 +27,7 @@ Briefly, each class becomes a check by:
 - The class property ``requires`` may contain a list of other check
   classes that are required to have passed before this check is
   executed. Use this to avoid duplicate errors presented, or to
-  ensure that asumptions made by your check are met by the recipe.
+  ensure that assumptions made by your check are met by the recipe.
 
 - Each class is instantiated once per linting run. Do slow preparation
   work in the constructor. E.g. the `recipe_in_blocklist` check

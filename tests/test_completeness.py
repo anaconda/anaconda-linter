@@ -650,3 +650,32 @@ def test_missing_description_bad(base_yaml):
     lint_check = "missing_description"
     messages = check(lint_check, yaml_str)
     assert len(messages) == 1 and "missing a description" in messages[0].title
+
+
+def test_wrong_output_script_key_good(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+            script: build_script.sh
+        """
+    )
+    lint_check = "wrong_output_script_key"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_wrong_output_script_key_bad(base_yaml):
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+            build:
+              script: build_script.sh
+        """
+    )
+    lint_check = "wrong_output_script_key"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 1

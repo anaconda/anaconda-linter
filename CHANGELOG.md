@@ -2,7 +2,14 @@
 Note: version releases in the 0.x.y range may introduce breaking changes.
 
 ## 0.1.1
-
+- Add knowledge of Python build backends to the missing_wheel rule
+- Relax host_section_needs_exact_pinnings
+- Add cbc_dep_in_run_missing_from_host
+- Make uses_setup_py an error
+- Add auto-fix for cbc_dep_in_run_missing_from_host, uses_setup_py, pip_install_args
+- Update percy to >=0.1.0,<0.2.0
+- Add wrong_output_script_key
+- Add potentially_bad_ignore_run_exports
 
 ## 0.1.0
 - Use percy as render backend
