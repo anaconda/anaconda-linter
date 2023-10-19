@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Final, Optional, Union
+from unittest.mock import mock_open, patch
 
 import pytest
 from percy.render.recipe import Recipe, RendererType
@@ -9,8 +10,6 @@ from percy.render.variants import Variant, read_conda_build_config
 
 from anaconda_linter import utils
 from anaconda_linter.lint import Linter, LintMessage
-
-from unittest.mock import mock_open, patch
 
 # Locations of test files
 TEST_FILES_PATH: Final[str] = "tests/test_aux_files"
@@ -50,11 +49,13 @@ def load_file(file: Path | str) -> str:
     :param file:    Filename of the file to read
     :return: Text from the file
     """
-    with open(Path(file), "r", encoding="utf-8") as f:
+    with open(Path(file), encoding="utf-8") as f:
         return f.read()
 
 
-def load_linter_and_recipe(recipe_str: str, arch: str="linux-64", expand_variant: Optional[Variant]=None) -> tuple[Linter, Recipe]:
+def load_linter_and_recipe(
+    recipe_str: str, arch: str = "linux-64", expand_variant: Optional[Variant] = None
+) -> tuple[Linter, Recipe]:
     """
     Convenience function that loads instantiates linter and recipe objects based on default configurations.
     :param recipe_str:      Recipe file, as a raw string
@@ -77,13 +78,20 @@ def load_linter_and_recipe(recipe_str: str, arch: str="linux-64", expand_variant
     return linter, recipe
 
 
-def check(check_name: str, recipe_str: str, arch: str="linux-64", expand_variant: Optional[Variant]=None) -> list[LintMessage]:
+def check(
+    check_name: str,
+    recipe_str: str,
+    arch: str = "linux-64",
+    expand_variant: Optional[Variant] = None,
+) -> list[LintMessage]:
     linter, recipe = load_linter_and_recipe(recipe_str, arch, expand_variant)
     messages = linter.check_instances[check_name].run(recipe=recipe)
     return messages
 
 
-def check_dir(check_name: str, feedstock_dir: Union[str, Path], recipe_str: str, arch: str="linux-64") -> list[LintMessage]:
+def check_dir(
+    check_name: str, feedstock_dir: Union[str, Path], recipe_str: str, arch: str = "linux-64"
+) -> list[LintMessage]:
     if not isinstance(feedstock_dir, Path):
         feedstock_dir = Path(feedstock_dir)
     config_file = Path(__file__).parent / "config.yaml"
@@ -106,6 +114,7 @@ def check_dir(check_name: str, feedstock_dir: Union[str, Path], recipe_str: str,
     )
     messages = linter.check_instances[check_name].run(recipe=recipe)
     return messages
+
 
 def assert_on_auto_fix(check_name: str, arch="linux-64") -> None:
     """
