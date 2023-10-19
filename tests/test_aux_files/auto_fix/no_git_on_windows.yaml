@@ -1,0 +1,64 @@
+{% set name = "fastparquet" %}
+{% set version = "2023.8.0" %}
+
+package:
+  name: {{ name }}
+  version: {{ version }}
+
+source:
+  url: https://pypi.io/packages/source/f/{{ name }}/{{ name }}-{{ version  }}.tar.gz
+  sha256: 2ff39bc20869829ea8fd85bf0336c5006d0ffcc276d0de070030cf8ffd929160
+
+build:
+  number: 0
+  #skip s390x because of lack of cramjam and numba
+  skip: true  # [py<38 or s390x]
+  script: {{ PYTHON }} -m pip install . --no-deps --no-build-isolation -vv
+
+requirements:
+  build:
+    - {{ compiler('c') }}
+    - git
+  host:
+    - python
+    - pip
+    - wheel
+    - setuptools
+    - numpy {{ numpy }}
+    - cython 0.29
+    - pytest-runner
+  run:
+    - python
+    - {{ pin_compatible('numpy') }}
+    - pandas >=1.5.0
+    - cramjam >=2.3.0
+    - fsspec
+    - packaging
+
+test:
+  imports:
+    - fastparquet
+  requires:
+    - pip
+  commands:
+    - pip check
+
+about:
+  home: https://github.com/dask/fastparquet
+  license: Apache-2.0
+  license_family: Apache
+  license_file: LICENSE
+  summary: Python interface to the parquet format
+  description: |
+    The fastparquet is a python implementation of the parquet format, aiming integrate into python-based big data work-flows.
+    It is used implicitly by the projects Dask, Pandas and intake-parquet.
+    The Parquet format is a common binary data store, used particularly in the Hadoop/big-data sphere.
+    It provides several advantages relevant to big-data processing.
+  dev_url: https://github.com/dask/fastparquet
+  doc_url: https://fastparquet.readthedocs.io
+
+extra:
+  recipe-maintainers:
+    - martindurant
+    - mrocklin
+    - TomAugspurger

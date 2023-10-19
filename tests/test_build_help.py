@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 import pytest
-from conftest import check, check_dir
+from conftest import check, check_dir, assert_on_auto_fix
 
 from anaconda_linter.lint.check_build_help import (
     BUILD_TOOLS,
@@ -2952,6 +2954,12 @@ def test_no_git_on_windows_bad_multi(base_yaml):
     lint_check = "no_git_on_windows"
     messages = check(lint_check, yaml_str, arch="win-64")
     assert len(messages) == 2 and all("git should not be used" in msg.title for msg in messages)
+
+def test_no_git_on_windows_auto_fix() -> None:
+    """
+    Tests the auto-fix functionality of the `no_git_on_windows` rule.
+    """
+    assert_on_auto_fix("no_git_on_windows", "win-64")
 
 
 def test_gui_app_good(base_yaml):

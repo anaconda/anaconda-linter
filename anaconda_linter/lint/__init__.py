@@ -565,7 +565,7 @@ class Linter:
             self.checks_ordered = reversed(list(nx.topological_sort(dag)))
         except nx.NetworkXUnfeasible:
             raise RuntimeError("Cycle in LintCheck requirements!")
-        self.check_instances = {str(check): check(self) for check in get_checks()}
+        self.check_instances: dict[str, LintCheck] = {str(check): check(self) for check in get_checks()}
 
     def get_messages(self) -> List[LintMessage]:
         """Returns the lint messages collected during linting"""

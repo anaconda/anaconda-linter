@@ -1,11 +1,20 @@
+from __future__ import annotations
+
 from pathlib import Path
+from typing import Final, Optional, Union
 
 import pytest
 from percy.render.recipe import Recipe, RendererType
-from percy.render.variants import read_conda_build_config
+from percy.render.variants import Variant, read_conda_build_config
 
 from anaconda_linter import utils
-from anaconda_linter.lint import Linter
+from anaconda_linter.lint import Linter, LintMessage
+
+from unittest.mock import mock_open, patch
+
+# Locations of test files
+TEST_FILES_PATH: Final[str] = "tests/test_aux_files"
+TEST_AUTO_FIX_FILES_PATH: Final[str] = f"{TEST_FILES_PATH}/auto_fix"
 
 
 @pytest.fixture()
@@ -35,12 +44,29 @@ def recipe_dir(tmpdir):
     return recipe_directory
 
 
-def check(check_name, recipe_str, arch="linux-64", expand_variant=None):
+def load_file(file: Path | str) -> str:
+    """
+    Loads a file into a single string
+    :param file:    Filename of the file to read
+    :return: Text from the file
+    """
+    with open(Path(file), "r", encoding="utf-8") as f:
+        return f.read()
+
+
+def load_linter_and_recipe(recipe_str: str, arch: str="linux-64", expand_variant: Optional[Variant]=None) -> tuple[Linter, Recipe]:
+    """
+    Convenience function that loads instantiates linter and recipe objects based on default configurations.
+    :param recipe_str:      Recipe file, as a raw string
+    :param arch:            (Optional) Target architecture to render recipe as
+    :param expand_variant:  (Optional) Dictionary of variant information to augment the recipe with.
+    :return: `Linter` and `Recipe` instances, as a tuple
+    """
     config_file = Path(__file__).parent / "config.yaml"
     config = utils.load_config(str(config_file.resolve()))
     linter = Linter(config=config)
-    variant = config[arch]
-    if expand_variant:
+    variant: Variant = config[arch]
+    if expand_variant is not None:
         variant.update(expand_variant)
     recipe = Recipe.from_string(
         recipe_text=recipe_str,
@@ -48,11 +74,16 @@ def check(check_name, recipe_str, arch="linux-64", expand_variant=None):
         variant=variant,
         renderer=RendererType.RUAMEL,
     )
+    return linter, recipe
+
+
+def check(check_name: str, recipe_str: str, arch: str="linux-64", expand_variant: Optional[Variant]=None) -> list[LintMessage]:
+    linter, recipe = load_linter_and_recipe(recipe_str, arch, expand_variant)
     messages = linter.check_instances[check_name].run(recipe=recipe)
     return messages
 
 
-def check_dir(check_name, feedstock_dir, recipe_str, arch="linux-64"):
+def check_dir(check_name: str, feedstock_dir: Union[str, Path], recipe_str: str, arch: str="linux-64") -> list[LintMessage]:
     if not isinstance(feedstock_dir, Path):
         feedstock_dir = Path(feedstock_dir)
     config_file = Path(__file__).parent / "config.yaml"
@@ -75,3 +106,24 @@ def check_dir(check_name, feedstock_dir, recipe_str, arch="linux-64"):
     )
     messages = linter.check_instances[check_name].run(recipe=recipe)
     return messages
+
+def assert_on_auto_fix(check_name: str, arch="linux-64") -> None:
+    """
+    Utility function executes a fix function against an offending recipe file. Then asserts the resulting file against
+    a known fixed equivalent of the offending recipe file.
+    :param check_name:      Name of the linting rule. This corresponds with input and output files.
+    :param arch:            (Optional) Target architecture to render recipe as
+    """
+    broken_file: Final[str] = f"{TEST_AUTO_FIX_FILES_PATH}/{check_name}.yaml"
+    fixed_file: Final[str] = f"{TEST_AUTO_FIX_FILES_PATH}/{check_name}_fixed.yaml"
+
+    linter, recipe = load_linter_and_recipe(load_file(broken_file), arch)
+
+    messages: list[LintMessage]
+    # Prevent writing to the test file. The `Recipe` instance will contain the file contents of interest in a string
+    with patch("builtins.open", mock_open()):
+        messages = linter.check_instances[check_name].run(recipe=recipe, fix=True)
+
+    # Fixed issues emit no messages
+    assert len(messages) == 0
+    assert recipe.dump() == load_file(fixed_file)
