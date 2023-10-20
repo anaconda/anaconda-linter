@@ -2,12 +2,23 @@
 #   pre-commit run --all-files
 # Update this file:
 #   pre-commit autoupdate
-exclude: tests/test_aux_files/.*
+# TODO remove when other files are updated to pass. NOTE: keep the first line
+# as-is.
+exclude: |
+  (?x)^(
+    tests/test_aux_files/.*|
+    anaconda_linter/.*|
+    docs/.*|
+    scripts/.*|
+    setup.py|
+    tests/.*
+  )$
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
     hooks:
       - id: check-added-large-files
+        exclude_types: ["json", "yaml"]
       - id: check-ast
       - id: fix-byte-order-marker
       - id: check-case-conflict
@@ -21,31 +32,28 @@ repos:
       - id: end-of-file-fixer
       - id: mixed-line-ending
       - id: trailing-whitespace
+  # Notes:
+  # - By default, `black` uses a line-length of 88.
+  # - `isort` will conflict with `black`, if not properly configured
   - repo: https://github.com/PyCQA/isort
     rev: 5.12.0
     hooks:
       - id: isort
+        args: ["--profile", "black", --line-length=120]
   - repo: https://github.com/psf/black
-    rev: 23.9.1
+    rev: 23.10.0
     hooks:
-      - id: black
-  - repo: https://github.com/asottile/pyupgrade
-    rev: v3.15.0
+    - id: black
+      args: [--line-length=120]
+  - repo: https://github.com/PyCQA/pylint
+    rev: v3.0.1
     hooks:
-      - id: pyupgrade
-        args: [--py37-plus, --keep-runtime-typing]
-  - repo: https://github.com/pycqa/flake8
-    rev: 6.1.0
-    hooks:
-      - id: flake8
+    - id: pylint
+      args: ["--rcfile=.pylintrc"]
   - repo: https://github.com/lovesegfault/beautysh
     rev: v6.2.1
     hooks:
       - id: beautysh
-  - repo: https://github.com/koalaman/shellcheck-precommit
-    rev: v0.9.0
-    hooks:
-      - id: shellcheck
   - repo: https://github.com/python-jsonschema/check-jsonschema
     rev: 0.27.0
     hooks:
@@ -57,7 +65,26 @@ repos:
     hooks:
       - id: codespell
         args: [--write]
-  - repo: meta
+  - repo: local
     hooks:
-      - id: check-hooks-apply
-      - id: check-useless-excludes
+      # Run shellcheck without needing `docker` to run
+      - id: shellcheck
+        name: shellcheck
+        description: Test shell scripts with shellcheck
+        entry: shellcheck
+        language: python
+        types: [shell]
+        require_serial: true # shellcheck can detect sourcing this way
+      # Run tests through `make` to be consistent with manually run commands.
+      - id: pytest
+        language: system
+        name: pytest
+        always_run: true
+        pass_filenames: false
+        entry: make test
+      - id: pytest-cov
+        language: system
+        name: pytest-cov
+        always_run: true
+        pass_filenames: false
+        entry: make test-cov
