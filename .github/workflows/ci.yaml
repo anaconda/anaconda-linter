@@ -43,6 +43,7 @@ jobs:
         - uses: ./.github/actions/setup-env
         - name: Run lint
           run: |
+            source $CONDA/bin/activate
             conda activate anaconda-linter
             OUTPUT=`conda-lint .`
             [[ ${OUTPUT} == "All checks OK" ]] || exit 1
