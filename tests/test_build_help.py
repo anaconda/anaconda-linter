@@ -3,12 +3,7 @@ from __future__ import annotations
 import pytest
 from conftest import assert_on_auto_fix, check, check_dir
 
-from anaconda_linter.lint.check_build_help import (
-    BUILD_TOOLS,
-    COMPILERS,
-    PYTHON_BUILD_BACKENDS,
-    PYTHON_BUILD_TOOLS,
-)
+from anaconda_linter.lint.check_build_help import BUILD_TOOLS, COMPILERS, PYTHON_BUILD_BACKENDS, PYTHON_BUILD_TOOLS
 
 
 def test_host_section_needs_exact_pinnings_good(base_yaml):
@@ -45,9 +40,7 @@ def test_host_section_needs_exact_pinnings_good_multi(base_yaml):
     assert len(messages) == 0
 
 
-@pytest.mark.parametrize(
-    "package", ("python", "toml", "wheel", "packaging", "hatch-vcs", *PYTHON_BUILD_TOOLS)
-)
+@pytest.mark.parametrize("package", ("python", "toml", "wheel", "packaging", "hatch-vcs", *PYTHON_BUILD_TOOLS))
 def test_host_section_needs_exact_pinnings_good_exception(base_yaml, package):
     yaml_str = (
         base_yaml
@@ -161,10 +154,7 @@ def test_host_section_needs_exact_pinnings_bad(base_yaml, constraint):
     )
     lint_check = "host_section_needs_exact_pinnings"
     messages = check(lint_check, yaml_str)
-    assert (
-        len(messages) == 1
-        and "Linked libraries host should have exact version pinnings." in messages[0].title
-    )
+    assert len(messages) == 1 and "Linked libraries host should have exact version pinnings." in messages[0].title
 
 
 @pytest.mark.parametrize("constraint", ("", ">=0.13", "<0.14", "!=0.13.7"))
@@ -359,9 +349,7 @@ def test_build_tools_must_be_in_build_bad(base_yaml, section, tool):
     )
     lint_check = "build_tools_must_be_in_build"
     messages = check(lint_check, yaml_str)
-    assert (
-        len(messages) == 1 and f"build tool {tool} is not in the build section" in messages[0].title
-    )
+    assert len(messages) == 1 and f"build tool {tool} is not in the build section" in messages[0].title
 
 
 @pytest.mark.parametrize("section", ("host", "run"))
@@ -383,9 +371,7 @@ def test_build_tools_must_be_in_build_bad_multi(base_yaml, section, tool):
     )
     lint_check = "build_tools_must_be_in_build"
     messages = check(lint_check, yaml_str)
-    assert len(messages) == 2 and all(
-        f"build tool {tool} is not in the build section" in msg.title for msg in messages
-    )
+    assert len(messages) == 2 and all(f"build tool {tool} is not in the build section" in msg.title for msg in messages)
 
 
 @pytest.mark.parametrize("tool", PYTHON_BUILD_TOOLS)
@@ -457,9 +443,7 @@ def test_python_build_tool_in_run_bad_multi(base_yaml, tool):
     )
     lint_check = "python_build_tool_in_run"
     messages = check(lint_check, yaml_str)
-    assert len(messages) == 2 and all(
-        f"python build tool {tool} is in run" in msg.title for msg in messages
-    )
+    assert len(messages) == 2 and all(f"python build tool {tool} is in run" in msg.title for msg in messages)
 
 
 @pytest.mark.parametrize("tool", PYTHON_BUILD_TOOLS)
@@ -534,9 +518,7 @@ def test_missing_python_build_tool_url_bad_multi(base_yaml):
     )
     lint_check = "missing_python_build_tool"
     messages = check(lint_check, yaml_str)
-    assert len(messages) == 2 and all(
-        "require a python build tool" in msg.title for msg in messages
-    )
+    assert len(messages) == 2 and all("require a python build tool" in msg.title for msg in messages)
 
 
 @pytest.mark.parametrize("tool", PYTHON_BUILD_TOOLS)
@@ -677,9 +659,7 @@ def test_missing_python_build_tool_pip_install_bad_multi(base_yaml):
     )
     lint_check = "missing_python_build_tool"
     messages = check(lint_check, yaml_str)
-    assert len(messages) == 2 and all(
-        "require a python build tool" in msg.title for msg in messages
-    )
+    assert len(messages) == 2 and all("require a python build tool" in msg.title for msg in messages)
 
 
 def test_missing_python_build_tool_pip_install_bad_multi_list(base_yaml):
@@ -700,9 +680,7 @@ def test_missing_python_build_tool_pip_install_bad_multi_list(base_yaml):
     )
     lint_check = "missing_python_build_tool"
     messages = check(lint_check, yaml_str)
-    assert len(messages) == 2 and all(
-        "require a python build tool" in msg.title for msg in messages
-    )
+    assert len(messages) == 2 and all("require a python build tool" in msg.title for msg in messages)
 
 
 def test_missing_wheel_url_good(base_yaml):
@@ -1193,10 +1171,7 @@ def test_pip_install_args_bad_cmd(base_yaml):
     )
     lint_check = "pip_install_args"
     messages = check(lint_check, yaml_str)
-    assert (
-        len(messages) == 1
-        and "should be run with --no-deps and --no-build-isolation" in messages[0].title
-    )
+    assert len(messages) == 1 and "should be run with --no-deps and --no-build-isolation" in messages[0].title
 
 
 def test_pip_install_args_bad_cmd_list(base_yaml):
@@ -1213,10 +1188,7 @@ def test_pip_install_args_bad_cmd_list(base_yaml):
     )
     lint_check = "pip_install_args"
     messages = check(lint_check, yaml_str)
-    assert (
-        len(messages) == 1
-        and "should be run with --no-deps and --no-build-isolation" in messages[0].title
-    )
+    assert len(messages) == 1 and "should be run with --no-deps and --no-build-isolation" in messages[0].title
 
 
 def test_pip_install_args_bad_cmd_multi(base_yaml):
@@ -1281,10 +1253,7 @@ def test_pip_install_args_bad_script(base_yaml, recipe_dir):
     test_file = recipe_dir / "build.sh"
     test_file.write_text("{{ PYTHON }} -m pip install .\n")
     messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
-    assert (
-        len(messages) == 1
-        and "should be run with --no-deps and --no-build-isolation" in messages[0].title
-    )
+    assert len(messages) == 1 and "should be run with --no-deps and --no-build-isolation" in messages[0].title
 
 
 def test_pip_install_args_bad_script_multi(base_yaml, recipe_dir):
@@ -1333,10 +1302,7 @@ def test_pip_install_args_multi_script_missing(base_yaml, recipe_dir):
     test_file = recipe_dir / "build_output.sh"
     test_file.write_text("{{ PYTHON }} -m pip install .\n")
     messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
-    assert (
-        len(messages) == 1
-        and "should be run with --no-deps and --no-build-isolation" in messages[0].title
-    )
+    assert len(messages) == 1 and "should be run with --no-deps and --no-build-isolation" in messages[0].title
 
 
 def test_cython_must_be_in_host_good(base_yaml):
@@ -1762,9 +1728,7 @@ def test_has_run_test_and_commands_bad_multi(base_yaml, tmpdir):
     )
     lint_check = "has_run_test_and_commands"
     messages = check_dir(lint_check, tmpdir, yaml_str)
-    assert len(messages) == 2 and all(
-        "Test commands are not executed" in msg.title for msg in messages
-    )
+    assert len(messages) == 2 and all("Test commands are not executed" in msg.title for msg in messages)
 
 
 def test_missing_imports_or_run_test_py_good_imports(base_yaml):
@@ -1907,9 +1871,7 @@ def test_missing_imports_or_run_test_py_bad_multi(base_yaml):
     )
     lint_check = "missing_imports_or_run_test_py"
     messages = check(lint_check, yaml_str)
-    assert len(messages) == 2 and all(
-        "Python packages require imports" in msg.title for msg in messages
-    )
+    assert len(messages) == 2 and all("Python packages require imports" in msg.title for msg in messages)
 
 
 def test_missing_imports_or_run_test_py_bad_multi_pypi(base_yaml):
@@ -1927,9 +1889,7 @@ def test_missing_imports_or_run_test_py_bad_multi_pypi(base_yaml):
     )
     lint_check = "missing_imports_or_run_test_py"
     messages = check(lint_check, yaml_str)
-    assert len(messages) == 2 and all(
-        "Python packages require imports" in msg.title for msg in messages
-    )
+    assert len(messages) == 2 and all("Python packages require imports" in msg.title for msg in messages)
 
 
 def test_missing_pip_check_url_good(base_yaml):
@@ -2178,9 +2138,7 @@ def test_missing_pip_check_pip_install_missing_bad_multi(base_yaml):
     )
     lint_check = "missing_pip_check"
     messages = check(lint_check, yaml_str)
-    assert len(messages) == 2 and all(
-        "pip check should be present" in msg.title for msg in messages
-    )
+    assert len(messages) == 2 and all("pip check should be present" in msg.title for msg in messages)
 
 
 def test_missing_pip_check_pip_install_missing_bad_multi_list(base_yaml):
@@ -2199,9 +2157,7 @@ def test_missing_pip_check_pip_install_missing_bad_multi_list(base_yaml):
     )
     lint_check = "missing_pip_check"
     messages = check(lint_check, yaml_str)
-    assert len(messages) == 2 and all(
-        "pip check should be present" in msg.title for msg in messages
-    )
+    assert len(messages) == 2 and all("pip check should be present" in msg.title for msg in messages)
 
 
 def test_missing_pip_check_pip_install_cmd_bad(base_yaml):
@@ -2262,9 +2218,7 @@ def test_missing_pip_check_pip_install_cmd_bad_multi(base_yaml):
     )
     lint_check = "missing_pip_check"
     messages = check(lint_check, yaml_str)
-    assert len(messages) == 2 and all(
-        "pip check should be present" in msg.title for msg in messages
-    )
+    assert len(messages) == 2 and all("pip check should be present" in msg.title for msg in messages)
 
 
 def test_missing_pip_check_pip_install_cmd_bad_multi_list(base_yaml):
@@ -2289,9 +2243,7 @@ def test_missing_pip_check_pip_install_cmd_bad_multi_list(base_yaml):
     )
     lint_check = "missing_pip_check"
     messages = check(lint_check, yaml_str)
-    assert len(messages) == 2 and all(
-        "pip check should be present" in msg.title for msg in messages
-    )
+    assert len(messages) == 2 and all("pip check should be present" in msg.title for msg in messages)
 
 
 def test_missing_pip_check_pip_install_script_bad(base_yaml, recipe_dir):
@@ -2350,9 +2302,7 @@ def test_missing_pip_check_pip_install_script_bad_multi(base_yaml, recipe_dir):
     test_file = recipe_dir / "test_output.sh"
     test_file.write_text("other_test_command\n")
     messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
-    assert len(messages) == 2 and all(
-        "pip check should be present" in msg.title for msg in messages
-    )
+    assert len(messages) == 2 and all("pip check should be present" in msg.title for msg in messages)
 
 
 def test_missing_pip_check_pip_install_script_bad_multi_list(base_yaml, recipe_dir):
@@ -2377,9 +2327,7 @@ def test_missing_pip_check_pip_install_script_bad_multi_list(base_yaml, recipe_d
     test_file = recipe_dir / "test_output.sh"
     test_file.write_text("other_test_command\n")
     messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
-    assert len(messages) == 2 and all(
-        "pip check should be present" in msg.title for msg in messages
-    )
+    assert len(messages) == 2 and all("pip check should be present" in msg.title for msg in messages)
 
 
 def test_missing_test_requirement_pip_missing(base_yaml):
@@ -2855,9 +2803,7 @@ def test_remove_python_pinning_bad(base_yaml):
     )
     lint_check = "remove_python_pinning"
     messages = check(lint_check, yaml_str)
-    assert len(messages) == 2 and all(
-        "python deps should not be constrained" in m.title for m in messages
-    )
+    assert len(messages) == 2 and all("python deps should not be constrained" in m.title for m in messages)
 
 
 def test_remove_python_pinning_bad_multi(base_yaml):
@@ -2881,9 +2827,7 @@ def test_remove_python_pinning_bad_multi(base_yaml):
     )
     lint_check = "remove_python_pinning"
     messages = check(lint_check, yaml_str)
-    assert len(messages) == 4 and all(
-        "python deps should not be constrained" in m.title for m in messages
-    )
+    assert len(messages) == 4 and all("python deps should not be constrained" in m.title for m in messages)
 
 
 @pytest.mark.parametrize("arch", ("linux-64", "win-64"))

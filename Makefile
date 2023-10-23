@@ -114,8 +114,8 @@ lint:			## runs the linter against the project
 	pylint --rcfile=.pylintrc $(LINTER_FILES)
 
 format:			## runs the code auto-formatter
-	isort --profile black --line-length=120 $(LINTER_FILES)
-	black --line-length=120 $(LINTER_FILES)
+	isort --profile black --line-length=120 $(ALL_PY_FILES)
+	black --line-length=120 $(ALL_PY_FILES)
 
 analyze:		## runs static analyzer on the project
 	mypy --config-file=.mypy.ini $(LINTER_FILES)

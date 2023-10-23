@@ -149,9 +149,7 @@ class host_section_needs_exact_pinnings(LintCheck):
         # It doesn't make sense to pin the versions of hatch plugins if we're not pinning
         # hatch. We could explicitly enumerate the 15 odd plugins in PYTHON_BUILD_TOOLS, but
         # this seemed lower maintenance
-        return (package in exceptions) or any(
-            [package.startswith(f"{pkg}-") for pkg in PYTHON_BUILD_TOOLS]
-        )
+        return (package in exceptions) or any([package.startswith(f"{pkg}-") for pkg in PYTHON_BUILD_TOOLS])
 
 
 class cbc_dep_in_run_missing_from_host(LintCheck):
@@ -308,13 +306,9 @@ class missing_python_build_tool(LintCheck):
                 # Create a list of build tool dependencies for each output
                 tools = []
                 for tool, dep in deps.items():
-                    if tool in PYTHON_BUILD_TOOLS and any(
-                        path.startswith(f"outputs/{o}") for path in dep["paths"]
-                    ):
+                    if tool in PYTHON_BUILD_TOOLS and any(path.startswith(f"outputs/{o}") for path in dep["paths"]):
                         tools.append(tool)
-                if (is_pypi or recipe.contains(f"outputs/{o}/script", "pip install", "")) and len(
-                    tools
-                ) == 0:
+                if (is_pypi or recipe.contains(f"outputs/{o}/script", "pip install", "")) and len(tools) == 0:
                     self.message(section=f"outputs/{o}/requirements/host", output=o)
         elif is_pypi or recipe.contains("build/script", "pip install", ""):
             deps = _utils.get_deps(recipe, "host")
@@ -350,9 +344,9 @@ class missing_wheel(LintCheck):
                 # In theory we would also need to warn if setuptools missing in the host
                 # section and none of the new build backends are used.
                 # TODO: add a missing_setuptools rule?
-                if not package.has_dep("host", "wheel") and not set(
-                    PYTHON_BUILD_BACKENDS
-                ).intersection({dep.pkg.lower() for dep in package.get("host")}):
+                if not package.has_dep("host", "wheel") and not set(PYTHON_BUILD_BACKENDS).intersection(
+                    {dep.pkg.lower() for dep in package.get("host")}
+                ):
                     self.message(
                         section=f"{package.path_prefix}requirements/host",
                         data=(recipe, package),
@@ -409,9 +403,7 @@ class uses_setup_py(LintCheck):
                 try:
                     build_file = self.recipe.get(f"{package.path_prefix}script", "")
                     if not build_file:
-                        build_file = self.recipe.get(
-                            f"{package.path_prefix}build/script", "build.sh"
-                        )
+                        build_file = self.recipe.get(f"{package.path_prefix}build/script", "build.sh")
                     build_file = self.recipe.dir / Path(build_file)
                     if build_file.exists():
                         with open(str(build_file)) as buildsh:
@@ -479,9 +471,7 @@ class pip_install_args(LintCheck):
                 try:
                     build_file = self.recipe.get(f"{package.path_prefix}script", "")
                     if not build_file:
-                        build_file = self.recipe.get(
-                            f"{package.path_prefix}build/script", "build.sh"
-                        )
+                        build_file = self.recipe.get(f"{package.path_prefix}build/script", "build.sh")
                     build_file = self.recipe.dir / Path(build_file)
                     if build_file.exists():
                         with open(str(build_file)) as buildsh:
@@ -585,9 +575,7 @@ class avoid_noarch(LintCheck):
                 and not recipe.get(f"{package.path_prefix}build/osx_is_app", False)
                 and not recipe.get(f"{package.path_prefix}app", None)
             ):
-                self.message(
-                    section=f"{package.path_prefix}build", severity=WARNING, data=(recipe, package)
-                )
+                self.message(section=f"{package.path_prefix}build", severity=WARNING, data=(recipe, package))
 
     def fix(self, _message, _data):
         (recipe, package) = _data
@@ -692,18 +680,14 @@ class has_run_test_and_commands(LintCheck):
         if outputs := recipe.get("outputs", None):
             for o in range(len(outputs)):
                 test_section = f"outputs/{o}/test"
-                if recipe.get(f"{test_section}/script", None) and recipe.get(
-                    f"{test_section}/commands", None
-                ):
+                if recipe.get(f"{test_section}/script", None) and recipe.get(f"{test_section}/commands", None):
                     self.message(section=f"{test_section}/commands", output=o)
         else:
             if recipe.get("test/commands", []) and (
                 recipe.get("test/script", None)
                 or (
                     recipe.dir
-                    and set(os.listdir(recipe.dir)).intersection(
-                        {"run_test.sh", "run_test.pl", "run_test.bat"}
-                    )
+                    and set(os.listdir(recipe.dir)).intersection({"run_test.sh", "run_test.pl", "run_test.bat"})
                 )
             ):
                 self.message(section="test/commands")
@@ -740,9 +724,7 @@ class missing_imports_or_run_test_py(LintCheck):
                     if not path.startswith("requirements")
                 ]
             for path in paths_to_check:
-                if not recipe.get(f"{path}/test/imports", []) and not recipe.get(
-                    f"{path}/test/script", ""
-                ):
+                if not recipe.get(f"{path}/test/imports", []) and not recipe.get(f"{path}/test/script", ""):
                     o = int(path.split("/")[1])
                     self.message(section=f"{path}/test", output=o)
         elif (
@@ -799,9 +781,7 @@ class missing_pip_check(LintCheck):
                 continue
             if commands := recipe.get(f"{package.path_prefix}test/commands", None):
                 if not any("pip check" in cmd for cmd in commands):
-                    self.message(
-                        section=f"{package.path_prefix}test/commands", data=(recipe, package)
-                    )
+                    self.message(section=f"{package.path_prefix}test/commands", data=(recipe, package))
             elif recipe.dir and (script := recipe.get(f"{package.path_prefix}test/script", None)):
                 self._check_file(os.path.join(recipe.dir, script), recipe, package)
             elif not single_output:

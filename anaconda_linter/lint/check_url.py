@@ -37,9 +37,7 @@ class invalid_url(LintCheck):
                 response_data = utils.check_url(url)
                 if response_data["code"] < 0 or response_data["code"] >= 400:
                     severity = INFO if "domain_redirect" in response_data else ERROR
-                    self.message(
-                        url, response_data["message"], section=url_field, severity=severity
-                    )
+                    self.message(url, response_data["message"], section=url_field, severity=severity)
 
 
 class http_url(LintCheck):

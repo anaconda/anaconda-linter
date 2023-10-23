@@ -225,9 +225,7 @@ def test_license_file_overspecified_bad(base_yaml):
     )
     lint_check = "license_file_overspecified"
     messages = check(lint_check, yaml_str)
-    assert (
-        len(messages) == 1 and "license_file and license_url is overspecified" in messages[0].title
-    )
+    assert len(messages) == 1 and "license_file and license_url is overspecified" in messages[0].title
 
 
 def test_missing_license_family_good(base_yaml):
@@ -555,10 +553,7 @@ def test_documentation_specifies_language(base_yaml):
     )
     lint_check = "documentation_specifies_language"
     messages = check(lint_check, yaml_str)
-    assert (
-        len(messages) == 1
-        and "Use the generic link, not a language specific one" in messages[0].title
-    )
+    assert len(messages) == 1 and "Use the generic link, not a language specific one" in messages[0].title
 
 
 def test_documentation_does_not_specify_language(base_yaml):

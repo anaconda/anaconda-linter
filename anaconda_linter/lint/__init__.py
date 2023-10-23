@@ -92,13 +92,7 @@ from typing import Any, Dict, List, NamedTuple, Tuple
 
 import networkx as nx
 import percy.render.recipe as _recipe
-from percy.render.exceptions import (
-    EmptyRecipe,
-    JinjaRenderFailure,
-    MissingMetaYaml,
-    RecipeError,
-    YAMLRenderFailure,
-)
+from percy.render.exceptions import EmptyRecipe, JinjaRenderFailure, MissingMetaYaml, RecipeError, YAMLRenderFailure
 from percy.render.recipe import RendererType
 from percy.render.variants import read_conda_build_config
 
@@ -199,9 +193,7 @@ class LintCheckMeta(abc.ABCMeta):
 
     registry: List["LintCheck"] = []
 
-    def __new__(
-        cls, name: str, bases: Tuple[type, ...], namespace: Dict[str, Any], **kwargs
-    ) -> type:
+    def __new__(cls, name: str, bases: Tuple[type, ...], namespace: Dict[str, Any], **kwargs) -> type:
         """Creates LintCheck classes"""
         typ = super().__new__(cls, name, bases, namespace, **kwargs)
         if name != "LintCheck":  # don't register base class
@@ -556,18 +548,14 @@ class Linter:
     def reload_checks(self):
         dag = nx.DiGraph()
         dag.add_nodes_from(str(check) for check in get_checks())
-        dag.add_edges_from(
-            (str(check), str(check_dep)) for check in get_checks() for check_dep in check.requires
-        )
+        dag.add_edges_from((str(check), str(check_dep)) for check in get_checks() for check_dep in check.requires)
         self.checks_dag = dag
 
         try:
             self.checks_ordered = reversed(list(nx.topological_sort(dag)))
         except nx.NetworkXUnfeasible:
             raise RuntimeError("Cycle in LintCheck requirements!")
-        self.check_instances: dict[str, LintCheck] = {
-            str(check): check(self) for check in get_checks()
-        }
+        self.check_instances: dict[str, LintCheck] = {str(check): check(self) for check in get_checks()}
 
     def get_messages(self) -> List[LintMessage]:
         """Returns the lint messages collected during linting"""
@@ -595,8 +583,7 @@ class Linter:
             )
         else:
             return "\n".join(
-                f"{msg.severity.name}: {msg.fname}:{msg.end_line}: {msg.check}: {msg.title}"
-                for msg in messages
+                f"{msg.severity.name}: {msg.fname}:{msg.end_line}: {msg.check}: {msg.title}" for msg in messages
             )
 
     def lint(
@@ -698,9 +685,7 @@ class Linter:
                     exclusive_config_files=exclusive_config_files,
                 )
             else:
-                logging.debug(
-                    "No cbc in current path. Loading copy of aggregate cbc embedded in linter."
-                )
+                logging.debug("No cbc in current path. Loading copy of aggregate cbc embedded in linter.")
                 logging.debug("Please run from your aggregate dir for better results.")
                 local_cbc = Path(__file__).parent.parent / "data" / "conda_build_config.yaml"
                 var_config_files = variant_config_files

@@ -192,14 +192,9 @@ class invalid_license_family(LintCheck):
         license_family = recipe.get("about/license_family", "").lower()
         if license_family:
             if license_family == "none":
-                msg = (
-                    " Using 'NONE' breaks some uploaders."
-                    " Use skip-lint to skip this check instead."
-                )
+                msg = " Using 'NONE' breaks some uploaders." " Use skip-lint to skip this check instead."
                 self.message(msg, section="about")
-            elif license_family not in [
-                x.lower() for x in conda_build.license_family.allowed_license_families
-            ]:
+            elif license_family not in [x.lower() for x in conda_build.license_family.allowed_license_families]:
                 self.message(section="about")
 
 
@@ -249,9 +244,7 @@ class missing_tests(LintCheck):
                 if not recipe.get(f"outputs/{o}/test/script", ""):
                     self.check_output(recipe, f"outputs/{o}/")
         # multi-output recipes do not execute test files automatically
-        elif not (
-            recipe.dir and any(os.path.exists(os.path.join(recipe.dir, f)) for f in self.test_files)
-        ):
+        elif not (recipe.dir and any(os.path.exists(os.path.join(recipe.dir, f)) for f in self.test_files)):
             self.check_output(recipe)
 
 
@@ -356,9 +349,7 @@ class documentation_specifies_language(LintCheck):
     """
 
     def check_recipe(self, recipe):
-        lang_url = re.compile(
-            r"readthedocs.io\/[a-z]{2,3}/latest"
-        )  # assume ISO639-1 or similar language code
+        lang_url = re.compile(r"readthedocs.io\/[a-z]{2,3}/latest")  # assume ISO639-1 or similar language code
         if recipe.get("about/doc_url", "") and lang_url.search(recipe.get("about/doc_url", "")):
             self.message(section="about/doc_url", severity=WARNING)
 
