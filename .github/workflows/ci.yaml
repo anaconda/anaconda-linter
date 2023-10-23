@@ -8,37 +8,20 @@ on:
 name: Test
 
 jobs:
+  # NOTE: Tests run via `pre-commit`
   pre-commit:
       runs-on: ubuntu-latest
       steps:
-        - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4
-        - uses: actions/setup-python@65d7f2d534ac1bc67fcd62888c5f4f3d2cb2b236 # v4
-          with:
-            python-version: '3.9'
-        - uses: pre-commit/action@646c83fcd040023954eafda54b4db0192ce70507 # tag=v3.0.0
-  tests:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@7cdaf2fbc075e6f3b9ca94cfd6cec5adc8a75622
-      - uses: ./.github/actions/setup-env
-      - name: Run tests
-        run: |
-          source $CONDA/bin/activate
-          conda activate anaconda-linter
-          make test
-      - name: Archive CI Artefacts
-        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32
-        with:
-          name: ci-artifacts
-          path: artifacts/**
-          retention-days: 5
+        - uses: actions/checkout@v4.1.1
+        - uses: ./.github/actions/setup-env
+        - uses: pre-commit/action@v3.0.0
   build-recipe:
       runs-on: ubuntu-latest
       steps:
-        - uses: actions/checkout@7cdaf2fbc075e6f3b9ca94cfd6cec5adc8a75622
+        - uses: actions/checkout@v4.1.1
         - name: Cache conda env
           id: cache-conda
-          uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3
+          uses: actions/cache@v3.3.2
           env:
             cache-name: conda-env-cache
           with:
@@ -56,7 +39,7 @@ jobs:
   lint-recipe:
       runs-on: ubuntu-latest
       steps:
-        - uses: actions/checkout@7cdaf2fbc075e6f3b9ca94cfd6cec5adc8a75622
+        - uses: actions/checkout@v4.1.1
         - uses: ./.github/actions/setup-env
         - name: Run lint
           run: |

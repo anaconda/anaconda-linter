@@ -4,12 +4,17 @@ description: Set up an anaconda-linter environment
 runs:
   using: "composite"
   steps:
+    - uses: actions/setup-python@v4.7.1
+      with:
+        python-version: '3.9'
+        cache: 'pip'
     - name: Cache conda env
       id: cache-conda
-      uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3
+      uses: actions/cache@v3.3.2
       env:
         cache-name: conda-env-cache
       with:
+        cache: 'pip'
         path: '/usr/share/miniconda/envs'
         key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/environment.yml') }}
         restore-keys: |
@@ -17,8 +22,12 @@ runs:
           ${{ runner.os }}-build-
           ${{ runner.os }}-
     - name: Create Environment
+      shell: bash
       if: ${{ steps.cache-conda.outputs.cache-hit == false }}
       run: |
-        source $CONDA/bin/activate
-        make environment
-      shell: bash
+        conda update -n base -c defaults conda
+        source $CONDA/etc/profile.d/conda.sh
+        conda init bash
+        conda env create -f environment.yaml --name anaconda-linter --force
+        conda run --name anaconda-linter pip install .
+        conda activate anaconda-linter

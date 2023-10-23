@@ -3,7 +3,7 @@ channels:
   - defaults
 
 dependencies:
-  - python
+  - python >=3.8
   # build
   - setuptools
   - pip
@@ -17,9 +17,14 @@ dependencies:
   - networkx
   - requests
   # test
-  - make
   - pytest
   - pre-commit
+  # developer tools
+  - black
+  - isort
+  - mypy
+  - pylint
+  - shellcheck
   # plug ins
   - pytest-cov
   - pytest-html

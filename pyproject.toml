@@ -1,20 +1,7 @@
-[tool.black]
-line-length = 100
-target-version = ['py37', 'py38', 'py39']
+# TODO Complete later
+# [tool.setuptools.package-data]
+# "anaconda-linter" = ["py.typed"]
 
-[tool.isort]
-profile = "black"
-line_length = 100
-src_paths = ["anaconda_linter"]
-
-[tool.pytest.ini_options]
-filterwarnings = [
-    # Skip PendingDeprecationWarning from conda-build
-    "ignore:.*`conda\\.exports\\.memoized`.*:PendingDeprecationWarning",
-    "ignore:.*`conda\\._vendor\\.toolz`.*:PendingDeprecationWarning",
-]
-
-[tool.coverage.run]
-omit = [
-    "anaconda_linter/run.py",
-]
+# [project]
+# name = "anaconda-linter"
+# version = "v0.1.1"
