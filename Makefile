@@ -107,7 +107,8 @@ test-debug:		## runs test cases with debugging info enabled
 	$(PYTHON3) -m pytest -n auto -vv --capture=no tests/
 
 test-cov:		## checks test coverage requirements
-	$(PYTHON3) -m pytest -n auto --cov-config=.coveragerc --cov=anaconda_linter tests/ --cov-fail-under=80 --cov-report term-missing
+	$(PYTHON3) -m pytest -n auto --cov-config=.coveragerc --cov=anaconda_linter tests/ --cov-fail-under=80 \
+		--cov-report term-missing
 
 lint:			## runs the linter against the project
 	pylint --rcfile=.pylintrc $(LINTER_FILES)
