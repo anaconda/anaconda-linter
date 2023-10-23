@@ -6,7 +6,7 @@ runs:
   steps:
     - name: Cache conda env
       id: cache-conda
-      uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3
+      uses: actions/cache@v3.3.2
       env:
         cache-name: conda-env-cache
       with:
@@ -19,6 +19,10 @@ runs:
     - name: Create Environment
       if: ${{ steps.cache-conda.outputs.cache-hit == false }}
       run: |
-        source $CONDA/bin/activate
-        make environment
+        conda update -n base -c defaults conda
+        source $CONDA/etc/profile.d/conda.sh
+        conda init bash
+        conda env create -f environment.yaml --name anaconda-linter --force
+        conda run --name anaconda-linter pip install .
+        conda activate anaconda-linter
       shell: bash
