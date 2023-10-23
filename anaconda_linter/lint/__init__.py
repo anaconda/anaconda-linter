@@ -96,7 +96,7 @@ from percy.render.exceptions import EmptyRecipe, JinjaRenderFailure, MissingMeta
 from percy.render.recipe import RendererType
 from percy.render.variants import read_conda_build_config
 
-from .. import utils as _utils
+from anaconda_linter import utils as _utils
 
 logger = logging.getLogger(__name__)
 

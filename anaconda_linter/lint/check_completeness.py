@@ -8,8 +8,7 @@ import re
 
 import conda_build.license_family
 
-# from . import ERROR, INFO
-from . import WARNING, LintCheck
+from anaconda_linter.lint import WARNING, LintCheck
 
 
 class missing_section(LintCheck):

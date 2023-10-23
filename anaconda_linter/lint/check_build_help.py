@@ -12,8 +12,8 @@ from typing import Any
 
 from percy.parser.recipe_parser import RecipeParser, SelectorConflictMode
 
-from .. import utils as _utils
-from . import INFO, WARNING, LintCheck
+from anaconda_linter import utils as _utils
+from anaconda_linter.lint import INFO, WARNING, LintCheck
 
 # Does not include m2-tools, which should be checked using wild cards.
 BUILD_TOOLS = (

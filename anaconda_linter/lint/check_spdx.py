@@ -9,8 +9,8 @@ from pathlib import Path
 
 import license_expression
 
-from .. import utils
-from . import LintCheck
+from anaconda_linter import utils
+from anaconda_linter.lint import LintCheck
 
 LICENSES_PATH = Path("..", "data", "licenses.txt")
 EXCEPTIONS_PATH = Path("..", "data", "license_exceptions.txt")

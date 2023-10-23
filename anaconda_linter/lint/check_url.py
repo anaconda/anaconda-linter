@@ -4,8 +4,8 @@ Check URL
 Verify that the URLs in the recipe are valid
 """
 
-from .. import utils
-from . import ERROR, INFO, LintCheck
+from anaconda_linter import utils
+from anaconda_linter.lint import ERROR, INFO, LintCheck
 
 
 class invalid_url(LintCheck):

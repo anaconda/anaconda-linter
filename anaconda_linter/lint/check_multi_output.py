@@ -1,5 +1,5 @@
-from .. import utils as _utils
-from . import INFO, WARNING, LintCheck
+from anaconda_linter import utils as _utils
+from anaconda_linter.lint import INFO, WARNING, LintCheck
 
 
 class output_missing_name(LintCheck):
