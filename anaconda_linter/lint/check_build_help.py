@@ -1,9 +1,8 @@
-"""Build tool usage
-
-These checks catch errors relating to the use of ``-
-{{compiler('xx')}}`` and ``setuptools``.
-
 """
+File:           check_build_help.py
+Description:    Contains linter checks for build section based rules.
+"""
+from __future__ import annotations
 
 import os
 import re
@@ -11,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from percy.parser.recipe_parser import RecipeParser, SelectorConflictMode
+from percy.render.recipe import Recipe
 
 from anaconda_linter import utils as _utils
 from anaconda_linter.lint import INFO, WARNING, LintCheck
@@ -90,7 +90,12 @@ COMPILERS = (
 )
 
 
-def is_pypi_source(recipe):
+def is_pypi_source(recipe: Recipe) -> bool:
+    """
+    Determines if a recipe has it's source hosted on PyPi
+    :param recipe:  Recipe to check
+    :return: True if the recipe is hosted on PyPi. False otherwise.
+    """
     # is it a pypi package?
     pypi_urls = ["pypi.io", "pypi.org", "pypi.python.org"]
     pypi_source = False
@@ -105,7 +110,12 @@ def is_pypi_source(recipe):
     return pypi_source
 
 
-def recipe_has_patches(recipe):
+def recipe_has_patches(recipe: Recipe) -> bool:
+    """
+    Determines if a recipe uses patch files.
+    :param recipe:  Recipe to check
+    :return: True if the recipe contains patches. False otherwise.
+    """
     if source := recipe.get("source", None):
         if isinstance(source, dict):
             if source.get("patches", ""):
@@ -125,6 +135,25 @@ class host_section_needs_exact_pinnings(LintCheck):
     specified in a conda_build_config.yaml file.
     """
 
+    @staticmethod
+    def is_exception(package: str) -> bool:
+        """
+        Determines if a package is an exception to this pinning linter check.
+        :param package: Package name to check
+        :return: True if the package is an exception. False otherwise.
+        """
+        exceptions = (
+            "python",
+            "toml",
+            "wheel",
+            "packaging",
+            *PYTHON_BUILD_TOOLS,
+        )
+        # It doesn't make sense to pin the versions of hatch plugins if we're not pinning
+        # hatch. We could explicitly enumerate the 15 odd plugins in PYTHON_BUILD_TOOLS, but
+        # this seemed lower maintenance
+        return (package in exceptions) or any(package.startswith(f"{pkg}-") for pkg in PYTHON_BUILD_TOOLS)
+
     def check_recipe(self, recipe):
         deps = _utils.get_deps_dict(recipe, "host")
         for package, dep in deps.items():
@@ -136,20 +165,6 @@ class host_section_needs_exact_pinnings(LintCheck):
                         path = dep["paths"][c]
                         output = -1 if not path.startswith("outputs") else int(path.split("/")[1])
                         self.message(section=path, severity=WARNING, output=output)
-
-    @staticmethod
-    def is_exception(package):
-        exceptions = (
-            "python",
-            "toml",
-            "wheel",
-            "packaging",
-            *PYTHON_BUILD_TOOLS,
-        )
-        # It doesn't make sense to pin the versions of hatch plugins if we're not pinning
-        # hatch. We could explicitly enumerate the 15 odd plugins in PYTHON_BUILD_TOOLS, but
-        # this seemed lower maintenance
-        return (package in exceptions) or any([package.startswith(f"{pkg}-") for pkg in PYTHON_BUILD_TOOLS])
 
 
 class cbc_dep_in_run_missing_from_host(LintCheck):
@@ -174,8 +189,8 @@ class cbc_dep_in_run_missing_from_host(LintCheck):
         )
         return package in exceptions
 
-    def fix(self, _message, _data):
-        (recipe, path, dep) = _data
+    def fix(self, message, data):
+        (recipe, path, dep) = data
         op = [
             {
                 "op": "add",
@@ -188,7 +203,10 @@ class cbc_dep_in_run_missing_from_host(LintCheck):
 
 
 class potentially_bad_ignore_run_exports(LintCheck):
-    """Ignoring run_export of a host dependency. In some cases it is more appropriate to remove the --error-overdepending flag of conda-build."""  # noqa: E501
+    """
+    Ignoring run_export of a host dependency. In some cases it is more appropriate to remove the `--error-overdepending`
+    flag of conda-build.
+    """
 
     def check_recipe(self, recipe):
         for package in recipe.packages.values():
@@ -352,8 +370,8 @@ class missing_wheel(LintCheck):
                         data=(recipe, package),
                     )
 
-    def fix(self, _message, _data):
-        (recipe, package) = _data
+    def fix(self, message, data):
+        (recipe, package) = data
         op = [
             {
                 "op": "add",
@@ -406,7 +424,7 @@ class uses_setup_py(LintCheck):
                         build_file = self.recipe.get(f"{package.path_prefix}build/script", "build.sh")
                     build_file = self.recipe.dir / Path(build_file)
                     if build_file.exists():
-                        with open(str(build_file)) as buildsh:
+                        with open(str(build_file), encoding="utf-8") as buildsh:
                             for num, line in enumerate(buildsh):
                                 if not self._check_line(line):
                                     if package.path_prefix.startswith("output"):
@@ -417,14 +435,17 @@ class uses_setup_py(LintCheck):
                 except (FileNotFoundError, TypeError):
                     pass
 
-    def fix(self, _message, _data):
-        (recipe, path) = _data
+    def fix(self, message, data):
+        (recipe, path) = data
         op = [
             {
                 "op": "replace",
                 "path": path,
                 "match": ".* setup.py .*",
-                "value": "{{PYTHON}} -m pip install . --no-deps --no-build-isolation --ignore-installed --no-cache-dir -vv",  # noqa: E501
+                "value": (
+                    "{{PYTHON}} -m pip install . --no-deps --no-build-isolation --ignore-installed"
+                    " --no-cache-dir -vv"
+                ),
             },
         ]
         return recipe.patch(op)
@@ -474,7 +495,7 @@ class pip_install_args(LintCheck):
                         build_file = self.recipe.get(f"{package.path_prefix}build/script", "build.sh")
                     build_file = self.recipe.dir / Path(build_file)
                     if build_file.exists():
-                        with open(str(build_file)) as buildsh:
+                        with open(str(build_file), encoding="utf-8") as buildsh:
                             for num, line in enumerate(buildsh):
                                 if not self._check_line(line):
                                     if package.path_prefix.startswith("output"):
@@ -485,14 +506,17 @@ class pip_install_args(LintCheck):
                 except (FileNotFoundError, TypeError):
                     pass
 
-    def fix(self, _message, _data):
-        (recipe, path) = _data
+    def fix(self, message, data):
+        (recipe, path) = data
         op = [
             {
                 "op": "replace",
                 "path": path,
                 "match": r"(.*\s)?pip install(?!=.*--no-build-isolation).*",
-                "value": "{{ PYTHON }} -m pip install . --no-deps --no-build-isolation --ignore-installed --no-cache-dir -vv",  # noqa: E501
+                "value": (
+                    "{{ PYTHON }} -m pip install . --no-deps --no-build-isolation --ignore-installed"
+                    " --no-cache-dir -vv"
+                ),
             },
         ]
         return recipe.patch(op)
@@ -577,8 +601,8 @@ class avoid_noarch(LintCheck):
             ):
                 self.message(section=f"{package.path_prefix}build", severity=WARNING, data=(recipe, package))
 
-    def fix(self, _message, _data):
-        (recipe, package) = _data
+    def fix(self, message, data):
+        (recipe, package) = data
         skip_selector = None
         sep_map = {
             ">=": "<",
@@ -745,15 +769,15 @@ class missing_pip_check(LintCheck):
           - pip check
     """
 
-    def _check_file(self, file, recipe, package):
-        """Reads the file for a `pip check` command and outputs a message if not found.
-
-        Args:
-          file: The path of the file.
-          output: The output number for multi-output recipes.
+    def _check_file(self, file: str, recipe: Recipe, package: str) -> None:
+        """
+        Reads the file for a `pip check` command and outputs a message if not found.
+        :param file:    The path of the file.
+        :param recipe:  Recipe instance tied to the file
+        :param package: Name of the package of interest
         """
         if os.path.isfile(file):
-            with open(file) as test_file:
+            with open(file, encoding="utf-8") as test_file:
                 for line in test_file:
                     if "pip check" in line:
                         return
@@ -798,8 +822,8 @@ class missing_pip_check(LintCheck):
                 else:
                     self.message(section=f"{package.path_prefix}test")
 
-    def fix(self, _message, _data):
-        (recipe, package) = _data
+    def fix(self, message, data):
+        (recipe, package) = data
         op = [
             {
                 "op": "add",
@@ -820,16 +844,29 @@ class missing_test_requirement_pip(LintCheck):
             - pip
     """
 
-    def _check_file(self, file):
+    def _check_file(self, file: str) -> bool:
+        """
+        Determines if `pip check` is found in the file
+        TODO Future: This `pip check` utility seems to be used in an identically named function that varies slightly.
+                     Hopefully both can be de-duplicated.
+        :param file:    Path to the file to check.
+        :return: True if the file contains `pip check`. False otherwise.
+        """
         if not os.path.isfile(file):
             return False
-        with open(file) as test_file:
+        with open(file, encoding="utf-8") as test_file:
             for line in test_file:
                 if "pip check" in line:
                     return True
         return False
 
-    def _has_pip_check(self, recipe, output=""):
+    def _has_pip_check(self, recipe: Recipe, output: str = "") -> None:
+        """
+        Indicates if a feedstock (recipe and script files) contains a `pip check`
+        :param recipe:  Recipe instance to check against
+        :param output:  (Optional) Output file to check against
+        :return: True if the feedstock contains `pip check`. False otherwise.
+        """
         test_section = f"{output}test"
         if commands := recipe.get(f"{test_section}/commands", None):
             if any("pip check" in cmd for cmd in commands):
@@ -856,8 +893,8 @@ class missing_test_requirement_pip(LintCheck):
             ):
                 self.message(section=f"{package.path_prefix}test/requires", data=(recipe, package))
 
-    def fix(self, _message, _data):
-        (recipe, package) = _data
+    def fix(self, message, data):
+        (recipe, package) = data
         op = [
             {
                 "op": "add",
@@ -896,8 +933,8 @@ class missing_python(LintCheck):
                             data=(recipe, package),
                         )
 
-    def fix(self, _message, _data):
-        (recipe, package) = _data
+    def fix(self, message, data):
+        (recipe, package) = data
         op = [
             {
                 "op": "add",
@@ -938,8 +975,8 @@ class remove_python_pinning(LintCheck):
                         if dep.pkg == "python" and dep.constraint != "":
                             self.message(section=dep.path, data=(recipe, package, dep))
 
-    def fix(self, _message, _data):
-        (recipe, package, dep) = _data
+    def fix(self, message, data):
+        (recipe, package, dep) = data
         s = dep.split(">=")
         if len(s) > 1:
             skip_selector = f" # [py<{s[1].replace('.','')}]"
@@ -966,7 +1003,7 @@ class no_git_on_windows(LintCheck):
                 output = -1 if not path.startswith("outputs") else int(path.split("/")[1])
                 self.message(section=path, output=output, data=path)
 
-    def fix(self, _message, _data) -> bool:
+    def fix(self, message, data) -> bool:
         # NOTE: The path found in `check_deps()` is a post-selector-rendering
         # path to the dependency. So in order to change the recipe file, we need
         # to relocate `git`, relative to the raw file.

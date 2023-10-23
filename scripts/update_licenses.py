@@ -1,30 +1,40 @@
+"""
+File:           update_licenses.py
+Description:    Stand-alone script
+"""
+from __future__ import annotations
+
 import os
 from json.decoder import JSONDecodeError
 from pathlib import Path
-from typing import List
+from typing import Final, List
 
 import requests
 
-LICENSES = "https://raw.githubusercontent.com/spdx/license-list-data/main/json/licenses.json"
-EXCEPTIONS = "https://raw.githubusercontent.com/spdx/license-list-data/main/json/exceptions.json"
+LICENSES: Final[str] = "https://raw.githubusercontent.com/spdx/license-list-data/main/json/licenses.json"
+EXCEPTIONS: Final[str] = "https://raw.githubusercontent.com/spdx/license-list-data/main/json/exceptions.json"
+HTTP_TIMEOUT: Final[int] = 120
 
 
 def write_to_file(dest_file: Path or str, data: List[str]):
-    with open(dest_file, "w+") as f:
+    with open(dest_file, "w+", encoding="utf-8") as f:
         f.write("\n".join(data))
         f.write("\n")
     return os.path.getsize(dest_file) > 0
 
 
 if __name__ == "__main__":
-    lic_resp = requests.get(LICENSES)
-    exc_resp = requests.get(EXCEPTIONS)
+    lic_resp = requests.get(LICENSES, timeout=HTTP_TIMEOUT)
+    exc_resp = requests.get(EXCEPTIONS, timeout=HTTP_TIMEOUT)
     try:
-        licenses = [l.get("licenseId") for l in lic_resp.json()["licenses"]]  # noqa: E741
-        exceptions = [e.get("licenseExceptionId") for e in exc_resp.json()["exceptions"]]  # noqa: E741
-    except JSONDecodeError:
-        raise ConnectionError("There was an error with the license source address.")
+        licenses = [l.get("licenseId") for l in lic_resp.json()["licenses"]]
+        exceptions = [e.get("licenseExceptionId") for e in exc_resp.json()["exceptions"]]
+    except JSONDecodeError as e:
+        raise ConnectionError("There was an error with the license source address.") from e
 
     lic = write_to_file(Path("anaconda_linter", "data", "licenses.txt"), licenses)
     exc = write_to_file(Path("anaconda_linter", "data", "license_exceptions.txt"), exceptions)
-    print("Problem fetching data") if not all([lic, exc]) else print("Files updated!")
+    if all([lic, exc]):
+        print("Files updated!")
+    else:
+        print("Problem fetching data")

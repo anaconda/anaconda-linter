@@ -223,7 +223,8 @@ class-attribute-rgx=^(_?[A-Z][A-Z0-9_]*|__[a-z0-9_]+__|_?[a-z][a-z0-9_]*)$
 inlinevar-rgx=^[a-z][a-z0-9_]*$
 
 # Regular expression matching correct class names
-class-rgx=^_?[A-Z][a-zA-Z0-9]*$
+# Anaconda Delta: (Specific to anaconda-linter) class names can be snake-cased to match the linting rules styling.
+class-rgx=^_?[a-zA-Z0-9_]*$
 
 # Regular expression matching correct module names
 module-rgx=^(_?[a-z][a-z0-9_]*|__init__)$

@@ -1,7 +1,8 @@
-"""Completeness
-
-Verify that the recipe is not missing anything essential.
 """
+File:           check_completeness.py
+Description:    Contains linter checks for missing essential information.
+"""
+from __future__ import annotations
 
 import os
 import re

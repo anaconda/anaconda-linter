@@ -80,6 +80,7 @@ Module Autodocs
    check_url
 
 """
+from __future__ import annotations
 
 import abc
 import importlib
@@ -88,7 +89,7 @@ import logging
 import pkgutil
 from enum import IntEnum
 from pathlib import Path
-from typing import Any, Dict, List, NamedTuple, Tuple
+from typing import Any, Dict, Final, List, NamedTuple, Optional, Tuple, Union
 
 import networkx as nx
 import percy.render.recipe as _recipe
@@ -114,12 +115,12 @@ class Severity(IntEnum):
     ERROR = 30
 
 
-INFO = Severity.INFO
-WARNING = Severity.WARNING
-ERROR = Severity.ERROR
+INFO: Final[Severity] = Severity.INFO
+WARNING: Final[Severity] = Severity.WARNING
+ERROR: Final[Severity] = Severity.ERROR
 
-SEVERITY_DEFAULT = ERROR
-SEVERITY_MIN_DEFAULT = INFO
+SEVERITY_DEFAULT: Final[Severity] = ERROR
+SEVERITY_MIN_DEFAULT: Final[Severity] = INFO
 
 
 class LintMessage(NamedTuple):
@@ -193,11 +194,11 @@ class LintCheckMeta(abc.ABCMeta):
 
     registry: List["LintCheck"] = []
 
-    def __new__(cls, name: str, bases: Tuple[type, ...], namespace: Dict[str, Any], **kwargs) -> type:
+    def __new__(mcs, name: str, bases: Tuple[type, ...], namespace: Dict[str, Any], **kwargs) -> type:
         """Creates LintCheck classes"""
-        typ = super().__new__(cls, name, bases, namespace, **kwargs)
+        typ = super().__new__(mcs, name, bases, namespace, **kwargs)
         if name != "LintCheck":  # don't register base class
-            cls.registry.append(typ)
+            mcs.registry.append(typ)
         return typ
 
     def __str__(cls):
@@ -211,7 +212,7 @@ def get_checks():
     """Loads and returns the available lint checks"""
     global _checks_loaded
     if not _checks_loaded:
-        for _loader, name, _ispkg in pkgutil.iter_modules(__path__):
+        for _, name, _ in pkgutil.iter_modules(__path__):
             if name.startswith("check_"):
                 importlib.import_module(__name__ + "." + name)
         _checks_loaded = True
@@ -224,7 +225,7 @@ class LintCheck(metaclass=LintCheckMeta):
     #: Checks that must have passed for this check to be executed.
     requires: List["LintCheck"] = []
 
-    def __init__(self, _linter: "Linter") -> None:
+    def __init__(self, linter: "Linter") -> None:  # pylint: disable=W0613
         #: Messages collected running tests
         self.messages: List[LintMessage] = []
         #: Recipe currently being checked
@@ -318,6 +319,7 @@ class LintCheck(metaclass=LintCheckMeta):
         Also calls `fix` if we are supposed to be fixing.
 
         Args:
+          *args: Additional arguments to pass directly to the message
           section: If specified, a lint location within the recipe
                    meta.yaml pointing to this section/subsection will
                    be added to the message
@@ -346,26 +348,27 @@ class LintCheck(metaclass=LintCheckMeta):
     @classmethod
     def make_message(
         cls,
-        *args,
+        *args: Any,
         recipe: _recipe.Recipe,
         section: str = None,
         severity: Severity = SEVERITY_DEFAULT,
         fname: str = None,
-        line=None,
+        line: int = None,
         canfix: bool = False,
         output: int = -1,
     ) -> LintMessage:
         """Create a LintMessage
 
         Args:
-          section: If specified, a lint location within the recipe
-                   meta.yaml pointing to this section/subsection will
-                   be added to the message
+          *args: Additional arguments to pass directly to the message
+          recipe: Recipe instance being checked
+          section: If specified, a lint location within the recipe meta.yaml pointing to this section/subsection will be
+                   added to the message
           severity: The severity level of the message.
-          fname: If specified, the message will apply to this file, rather than the
-                 recipe meta.yaml
+          fname: If specified, the message will apply to this file, rather than the recipe meta.yaml
           line: If specified, sets the line number for the message directly
-          output: the output the error occurred in (multi-output recipes only)
+          canfix: If specified, indicates if the rule can/can't be auto-fixed
+          output: The output the error occurred in (multi-output recipes only)
         """
         doc = inspect.getdoc(cls)
         doc = doc.replace("::", ":").replace("``", "`")
@@ -378,10 +381,9 @@ class LintCheck(metaclass=LintCheckMeta):
                 title = f'output "{name}": {title}'
         if section:
             try:
-                sl, sc, el, ec = recipe.get_raw_range(section)
+                sl, _, el, ec = recipe.get_raw_range(section)
             except KeyError:
-                # TODO: Look into this - sc is not used
-                sl, sc, el, ec = 1, 1, 1, 1  # noqa: F841
+                sl, el, ec = 1, 1, 1
             if ec == 0:
                 el = el - 1
             start_line = sl
@@ -503,21 +505,8 @@ recipe_error_to_lint_check = {
 
 
 class Linter:
-    """Lint executor
-
-    Arguments:
-      config: Configuration dict as provided by `utils.load_config()`.
-      exclude: List of function names in ``registry`` to skip globally.
-               When running on CI, this will be merged with anything
-               else detected from the commit message or LINT_SKIP
-               environment variable using the special string "[skip
-               lint <function name> for <recipe name>]". While those
-               other mechanisms define skipping on a recipe-specific
-               basis, this argument can be used to skip tests for all
-               recipes. Use sparingly.
-      nocatch: Don't catch exceptions in lint checks and turn them into
-               linter_error lint messages. Used by tests.
-      severity_min: The minimum severity level to display in messages.
+    """
+    Lint executor class
     """
 
     def __init__(
@@ -526,8 +515,24 @@ class Linter:
         verbose: bool = False,
         exclude: List[str] = None,
         nocatch: bool = False,
-        severity_min=None,
+        severity_min: Optional[Severity] = None,
     ) -> None:
+        """Constructs a linter instance
+        Arguments:
+          config: Configuration dict as provided by `utils.load_config()`.
+          verbose: Enables verbose logging
+          exclude: List of function names in ``registry`` to skip globally.
+                   When running on CI, this will be merged with anything
+                   else detected from the commit message or LINT_SKIP
+                   environment variable using the special string "[skip
+                   lint <function name> for <recipe name>]". While those
+                   other mechanisms define skipping on a recipe-specific
+                   basis, this argument can be used to skip tests for all
+                   recipes. Use sparingly.
+          nocatch: Don't catch exceptions in lint checks and turn them into
+                   linter_error lint messages. Used by tests.
+          severity_min: The minimum severity level to display in messages.
+        """
         self.config = config
         self.exclude = exclude or []
         self.nocatch = nocatch
@@ -538,14 +543,15 @@ class Linter:
         elif isinstance(severity_min, str):
             try:
                 self.severity_min = Severity[severity_min]
-            except KeyError:
-                raise ValueError(f"Unrecognized severity level {severity_min}")
+            except KeyError as e:
+                raise ValueError(f"Unrecognized severity level {severity_min}") from e
         else:
             self.severity_min = SEVERITY_MIN_DEFAULT
 
         self.reload_checks()
 
-    def reload_checks(self):
+    def reload_checks(self) -> None:
+        """Reloads linter checks"""
         dag = nx.DiGraph()
         dag.add_nodes_from(str(check) for check in get_checks())
         dag.add_edges_from((str(check), str(check_dep)) for check in get_checks() for check_dep in check.requires)
@@ -553,8 +559,8 @@ class Linter:
 
         try:
             self.checks_ordered = reversed(list(nx.topological_sort(dag)))
-        except nx.NetworkXUnfeasible:
-            raise RuntimeError("Cycle in LintCheck requirements!")
+        except nx.NetworkXUnfeasible as e:
+            raise RuntimeError("Cycle in LintCheck requirements!") from e
         self.check_instances: dict[str, LintCheck] = {str(check): check(self) for check in get_checks()}
 
     def get_messages(self) -> List[LintMessage]:
@@ -573,7 +579,13 @@ class Linter:
         cls,
         messages: List[LintMessage],
         verbose: bool = False,
-    ) -> LintMessage:
+    ) -> str:
+        """
+        Returns a report of all the linting messages.
+        :param messages:    List of messages to process.
+        :param verbose:     (Optional) Enables additional reporting.
+        :return: String, containing information about all the linting messages, as a report.
+        """
         messages = sorted(messages, key=lambda d: (d.fname, d.end_line))
         if verbose:
             return "\n".join(
@@ -588,10 +600,10 @@ class Linter:
 
     def lint(
         self,
-        recipes,
+        recipes: list[Union[str, _recipe.Recipe]],
         arch_name: str = "linux-64",
-        variant_config_files: List[str] = [],
-        exclusive_config_files: List[str] = [],
+        variant_config_files: Optional[list[str]] = None,
+        exclusive_config_files: Optional[list[str]] = None,
         fix: bool = False,
     ) -> bool:
         """Run linter on multiple recipes
@@ -600,13 +612,20 @@ class Linter:
         with `get_messages` and the list cleared with `clear_messages`.
 
         Args:
-          recipe: List of names of recipes or Recipe objects to lint
+          recipes: List of names of recipes or Recipe objects to lint
+          arch_name: Target architecture to run against
+          variant_config_files: Configuration information for variants
+          exclusive_config_files: Configuration information for exclusive files
           fix: Whether checks should attempt to fix detected issues
 
         Returns:
           True if issues with errors were found
 
         """
+        if variant_config_files is None:
+            variant_config_files = []
+        if exclusive_config_files is None:
+            exclusive_config_files = []
         if len(recipes) == 0:
             return 0
         if isinstance(recipes[0], str):
@@ -619,7 +638,7 @@ class Linter:
                         exclusive_config_files=exclusive_config_files,
                         fix=fix,
                     )
-                except Exception:
+                except Exception:  # pylint: disable=broad-exception-caught
                     if self.nocatch:
                         raise
                     logger.exception("Unexpected exception in lint")
@@ -633,7 +652,7 @@ class Linter:
                         recipe,
                         fix=fix,
                     )
-                except Exception:
+                except Exception:  # pylint: disable=broad-exception-caught
                     if self.nocatch:
                         raise
                     logger.exception("Unexpected exception in lint")
@@ -654,8 +673,8 @@ class Linter:
         self,
         recipe_name: str,
         arch_name: str = "linux-64",
-        variant_config_files: List[str] = [],
-        exclusive_config_files: List[str] = [],
+        variant_config_files: Optional[list[str]] = None,
+        exclusive_config_files: Optional[list[str]] = None,
         fix: bool = False,
     ) -> List[LintMessage]:
         """Run the linter on a single recipe for a subdir
@@ -663,11 +682,17 @@ class Linter:
         Args:
           recipe_name: Name of recipe to lint
           arch_name: Architecture to consider
+          variant_config_files: Configuration information for variants
+          exclusive_config_files: Configuration information for exclusive files
           fix: Whether checks should attempt to fix detected issues
 
         Returns:
           List of collected messages
         """
+        if variant_config_files is None:
+            variant_config_files = []
+        if exclusive_config_files is None:
+            exclusive_config_files = []
 
         if self.verbose:
             print(f"Linting subdir:{arch_name} recipe:{recipe_name}")
@@ -705,7 +730,7 @@ class Linter:
         messages = set()
         try:
             for vid, variant in variants:
-                logging.debug(f"Linting variant {vid}")
+                logging.debug("Linting variant %s", vid)
                 recipe = _recipe.Recipe.from_file(
                     recipe_fname=str(meta_yaml),
                     variant_id=vid,
@@ -733,7 +758,13 @@ class Linter:
         self,
         recipe: _recipe.Recipe,
         fix: bool = False,
-    ) -> List[LintMessage]:
+    ) -> list[LintMessage]:
+        """
+        Lints a recipe
+        :param recipe:  Recipe to lint against.
+        :param fix:     (Optional) Enables auto-fixing of the lint checks
+        :return: List of linting messages returned from executing checks against the linter.
+        """
         # collect checks to skip
         checks_to_skip = set(self.exclude)
 
@@ -756,7 +787,7 @@ class Linter:
                 checks_to_skip.add(check_dep)
 
         # run checks
-        messages = []
+        messages: list[LintMessage] = []
         self.reload_checks()
         for check in self.checks_ordered:
             if str(check) in checks_to_skip:
@@ -769,7 +800,7 @@ class Linter:
 
             try:
                 res = self.check_instances[check].run(recipe, fix)
-            except Exception:
+            except Exception:  # pylint: disable=broad-exception-caught
                 if self.nocatch:
                     raise
                 logger.exception("Unexpected exception in lint_recipe")

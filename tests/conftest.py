@@ -1,3 +1,7 @@
+"""
+File:           conftest.py
+Description:    Provides utilities and test fixtures for test files.
+"""
 from __future__ import annotations
 
 from pathlib import Path
@@ -21,8 +25,7 @@ def linter():
     """Sets up linter for use in other tests"""
     config_file = Path(__file__).parent / "config.yaml"
     config = utils.load_config(config_file)
-    linter = Linter(config=config)
-    return linter
+    return Linter(config=config)
 
 
 @pytest.fixture()
@@ -65,7 +68,7 @@ def load_linter_and_recipe(
     """
     config_file = Path(__file__).parent / "config.yaml"
     config = utils.load_config(str(config_file.resolve()))
-    linter = Linter(config=config)
+    linter_obj = Linter(config=config)
     variant: Variant = config[arch]
     if expand_variant is not None:
         variant.update(expand_variant)
@@ -75,7 +78,7 @@ def load_linter_and_recipe(
         variant=variant,
         renderer=RendererType.RUAMEL,
     )
-    return linter, recipe
+    return linter_obj, recipe
 
 
 def check(
@@ -84,22 +87,36 @@ def check(
     arch: str = "linux-64",
     expand_variant: Optional[Variant] = None,
 ) -> list[LintMessage]:
-    linter, recipe = load_linter_and_recipe(recipe_str, arch, expand_variant)
-    messages = linter.check_instances[check_name].run(recipe=recipe)
+    """
+    Utility function that checks a linting rule against a recipe file.
+    :param check_name:      Name of the linting rule. This corresponds with input and output files.
+    :param recipe_str:      Recipe file, as a single string.
+    :param arch:            (Optional) Target architecture to render recipe as
+    :param expand_variant:  (Optional) Dictionary of variant information to augment the recipe with.
+    """
+    linter_obj, recipe = load_linter_and_recipe(recipe_str, arch, expand_variant)
+    messages = linter_obj.check_instances[check_name].run(recipe=recipe)
     return messages
 
 
 def check_dir(
     check_name: str, feedstock_dir: Union[str, Path], recipe_str: str, arch: str = "linux-64"
 ) -> list[LintMessage]:
+    """
+    Utility function that checks a linting rule against a feedstock directory.
+    :param check_name:      Name of the linting rule. This corresponds with input and output files.
+    :param feedstock_dir:   Path to feedstock directory to use.
+    :param recipe_str:      Recipe file, as a single string.
+    :param arch:            (Optional) Target architecture to render recipe as
+    """
     if not isinstance(feedstock_dir, Path):
         feedstock_dir = Path(feedstock_dir)
     config_file = Path(__file__).parent / "config.yaml"
     config = utils.load_config(str(config_file.resolve()))
-    linter = Linter(config=config)
-    recipe_dir = feedstock_dir / "recipe"
-    recipe_dir.mkdir(parents=True, exist_ok=True)
-    meta_yaml = recipe_dir / "meta.yaml"
+    linter_obj = Linter(config=config)
+    recipe_directory = feedstock_dir / "recipe"
+    recipe_directory.mkdir(parents=True, exist_ok=True)
+    meta_yaml = recipe_directory / "meta.yaml"
     meta_yaml.write_text(recipe_str)
     variants = read_conda_build_config(recipe_path=meta_yaml, subdir=arch)
     if variants:
@@ -112,11 +129,11 @@ def check_dir(
     recipe = Recipe.from_file(
         recipe_fname=str(meta_yaml), variant_id=vid, variant=variant, renderer=RendererType.RUAMEL
     )
-    messages = linter.check_instances[check_name].run(recipe=recipe)
+    messages = linter_obj.check_instances[check_name].run(recipe=recipe)
     return messages
 
 
-def assert_on_auto_fix(check_name: str, arch="linux-64") -> None:
+def assert_on_auto_fix(check_name: str, arch: str = "linux-64") -> None:
     """
     Utility function executes a fix function against an offending recipe file. Then asserts the resulting file against
     a known fixed equivalent of the offending recipe file.
@@ -126,12 +143,12 @@ def assert_on_auto_fix(check_name: str, arch="linux-64") -> None:
     broken_file: Final[str] = f"{TEST_AUTO_FIX_FILES_PATH}/{check_name}.yaml"
     fixed_file: Final[str] = f"{TEST_AUTO_FIX_FILES_PATH}/{check_name}_fixed.yaml"
 
-    linter, recipe = load_linter_and_recipe(load_file(broken_file), arch)
+    linter_obj, recipe = load_linter_and_recipe(load_file(broken_file), arch)
 
     messages: list[LintMessage]
     # Prevent writing to the test file. The `Recipe` instance will contain the file contents of interest in a string
     with patch("builtins.open", mock_open()):
-        messages = linter.check_instances[check_name].run(recipe=recipe, fix=True)
+        messages = linter_obj.check_instances[check_name].run(recipe=recipe, fix=True)
 
     # Fixed issues emit no messages
     assert len(messages) == 0

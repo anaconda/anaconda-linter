@@ -38,10 +38,10 @@ def validate_config(config):
         directly.
     """
     if not isinstance(config, dict):
-        with open(config) as conf:
+        with open(config, encoding="utf-8") as conf:
             config = yaml.load(conf.read())
     fn = os.path.abspath(os.path.dirname(__file__)) + "/config.schema.yaml"
-    with open(fn) as f:
+    with open(fn, encoding="utf-8") as f:
         schema = yaml.load(f.read())
     validate(config, schema)
 
@@ -68,7 +68,7 @@ def load_config(path):
         def relpath(p):
             return os.path.join(os.path.dirname(path), p)
 
-        with open(path) as conf:
+        with open(path, encoding="utf-8") as conf:
             config = yaml.load(conf.read())
 
     def get_list(key):
@@ -87,13 +87,13 @@ def load_config(path):
     default_config.update(config)
 
     # store architecture information
-    with open(Path(__file__).parent / "data" / "cbc_default.yaml") as text:
+    with open(Path(__file__, encoding="utf-8").parent / "data" / "cbc_default.yaml") as text:
         init_arch = yaml.load(text.read())
         data_path = Path(__file__).parent / "data"
         for arch_config_path in data_path.glob("cbc_*.yaml"):
             arch = arch_config_path.stem.split("cbc_")[1]
             if arch != "default":
-                with open(arch_config_path) as text:
+                with open(arch_config_path, encoding="utf-8") as text:
                     default_config[arch] = deepcopy(init_arch)
                     default_config[arch].update(yaml.load(text.read()))
 
@@ -152,7 +152,7 @@ def check_url(url):
 
 
 def generate_correction(pkg_license, compfile=Path(__file__).parent / "data" / "licenses.txt"):
-    with open(compfile) as f:
+    with open(compfile, encoding="utf-8") as f:
         words = f.readlines()
 
     words = [w.strip("\n") for w in words]
