@@ -4,7 +4,6 @@ description: Set up an anaconda-linter environment
 runs:
   using: "composite"
   steps:
-    - uses: actions/checkout@v4.1.1
     - uses: actions/setup-python@v4.7.1
       with:
         python-version: '3.9'
