@@ -12,16 +12,16 @@ jobs:
   pre-commit:
       runs-on: ubuntu-latest
       steps:
-        - uses: actions/checkout@v4.1.1
+        - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         - uses: ./.github/actions/setup-env
-        - uses: pre-commit/action@v3.0.0
+        - uses: pre-commit/action@646c83fcd040023954eafda54b4db0192ce70507 # v3.0.0
   build-recipe:
       runs-on: ubuntu-latest
       steps:
-        - uses: actions/checkout@v4.1.1
+        - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         - name: Cache conda env
           id: cache-conda
-          uses: actions/cache@v3.3.2
+          uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
           env:
             cache-name: conda-env-cache
           with:
@@ -39,7 +39,7 @@ jobs:
   lint-recipe:
       runs-on: ubuntu-latest
       steps:
-        - uses: actions/checkout@v4.1.1
+        - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         - uses: ./.github/actions/setup-env
         - name: Run lint
           run: |
