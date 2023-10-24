@@ -414,7 +414,7 @@ class uses_setup_py(LintCheck):
                                     else:
                                         output = -1
                                     self.message(fname=build_file, line=num, output=output)
-                except FileNotFoundError:
+                except (FileNotFoundError, TypeError):
                     pass
 
     def fix(self, _message, _data):
@@ -482,7 +482,7 @@ class pip_install_args(LintCheck):
                                     else:
                                         output = -1
                                     self.message(fname=build_file, line=num, output=output)
-                except FileNotFoundError:
+                except (FileNotFoundError, TypeError):
                     pass
 
     def fix(self, _message, _data):
