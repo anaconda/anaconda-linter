@@ -1,16 +1,37 @@
 # Anaconda Linter
 
+## Table of Contents
+<!-- TOC -->
+
+- [Anaconda Linter](#anaconda-linter)
+    - [Table of Contents](#table-of-contents)
+    - [Overview](#overview)
+- [Installation](#installation)
+- [Usage](#usage)
+    - [Skipping Lints](#skipping-lints)
+    - [Testing the Anaconda Linter](#testing-the-anaconda-linter)
+- [Contributing](#contributing)
+    - [Development setup](#development-setup)
+    - [Contributions](#contributions)
+- [License](#license)
+
+<!-- /TOC -->
+
+## Overview
 Anaconda Linter is a utility to validate that a recipe for a conda package
 will render correctly.
 
 The package is currently a very rough draft of a pure Python linter specifically to make sure
 that packages' meta.yaml files adhere to certain Anaconda standards.
 
-## Installation
-1. `make environment`
-2. `conda activate anaconda-linter`
 
-## Usage
+# Installation
+```sh
+$ make environment
+$ conda activate anaconda-linter
+```
+
+# Usage
 
 ```sh
 usage: conda-lint [-h] [-V] [-m VARIANT_CONFIG_FILES] [-e EXCLUSIVE_CONFIG_FILES] [-s SUBDIRS] [--severity {INFO,WARNING,ERROR}] [-v] [-f] RECIPE_PATH
@@ -75,7 +96,7 @@ Make sure that your `anaconda-linter` environment is activated, then:
 
 It's that easy!
 
-## Contributing
+# Contributing
 
 We welcome contributions for bug fixes, enhancements, or new tests.
 For a list of projects, please see the [Issues page](https://github.com/anaconda-distribution/anaconda-linter/issues)
@@ -88,10 +109,30 @@ Before submitting a PR, please make sure to:
 
 If you would like to develop in a hosted linux environment, a [gitpod instance](https://gitpod.io/#https://github.com/anaconda-distribution/anaconda-linter/tree/gitpod-poc) is available to test linter changes with real life packages, without having to download them to your own machine.
 
+## Development setup
+To get started as a developer:
+```sh
+$ make dev
+$ conda activate anaconda-linter
+```
+This will automatically configure `pre-commit` for the `anaconda-linter` environment. Our automated tooling will run
+when you make a commit in this environment. Running `make dev` will also blow away any existing environments for a
+clean install, every time.
+
+Running `make help` will show all of the available commands. Here are some that may be immediately useful:
+1. `make test`: Runs all the unit tests
+1. `make test-cov`: Reports the current test coverage percentage and indicates
+   which lines are currently untested.
+1. `make lint`: Runs our `pylint` configuration, based on Google's Python
+   standards.
+1. `make format`: Automatically formats code
+1. `make analyze`: Runs the static analyzer, `mypy`.
+1. `make pre-commit`: Runs all the `pre-commit` checks
+
 ## Contributions
 This package is inspired by bioconda's [linter](https://github.com/bioconda/bioconda-utils/blob/master/bioconda_utils/lint/__init__.py).
 
 Some of the code for suggesting hints comes from [Peter Norvig](http://norvig.com/spell-correct.html).
 
-## License
+# License
 [BSD-3-Clause](https://choosealicense.com/licenses/bsd-3-clause/)

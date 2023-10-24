@@ -1,5 +1,5 @@
-from .. import utils as _utils
-from . import INFO, WARNING, LintCheck
+from anaconda_linter import utils as _utils
+from anaconda_linter.lint import INFO, WARNING, LintCheck
 
 
 class output_missing_name(LintCheck):
@@ -62,11 +62,7 @@ class output_missing_script(LintCheck):
         subpackages = output_names.intersection(set(deps.keys()))
         for o in range(len(recipe.get("outputs", []))):
             # True if subpackage is a run dependency
-            if any(
-                path.startswith(f"outputs/{o}/")
-                for name in subpackages
-                for path in deps[name]["paths"]
-            ):
+            if any(path.startswith(f"outputs/{o}/") for name in subpackages for path in deps[name]["paths"]):
                 continue
             if recipe.get(f"outputs/{o}/script", "") == "":
                 self.message(output=o, severity=INFO)

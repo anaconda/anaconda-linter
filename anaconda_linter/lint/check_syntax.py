@@ -6,8 +6,7 @@ section that is otherwise free-form.
 """
 import re
 
-# from . import ERROR, INFO, WARNING
-from . import LintCheck
+from anaconda_linter.lint import LintCheck
 
 
 class version_constraints_missing_whitespace(LintCheck):

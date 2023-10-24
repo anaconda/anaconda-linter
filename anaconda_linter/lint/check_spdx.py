@@ -9,8 +9,8 @@ from pathlib import Path
 
 import license_expression
 
-from .. import utils
-from . import LintCheck
+from anaconda_linter import utils
+from anaconda_linter.lint import LintCheck
 
 LICENSES_PATH = Path("..", "data", "licenses.txt")
 EXCEPTIONS_PATH = Path("..", "data", "license_exceptions.txt")
@@ -32,9 +32,7 @@ class incorrect_license(LintCheck):
         parsed_exceptions = []
         try:
             parsed_licenses = []
-            parsed_licenses_with_exception = licensing.license_symbols(
-                license.strip(), decompose=False
-            )
+            parsed_licenses_with_exception = licensing.license_symbols(license.strip(), decompose=False)
             for l in parsed_licenses_with_exception:  # noqa
                 if isinstance(l, license_expression.LicenseWithExceptionSymbol):
                     parsed_licenses.append(l.license_symbol.key)

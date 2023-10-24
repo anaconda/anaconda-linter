@@ -21,9 +21,7 @@ if __name__ == "__main__":
     exc_resp = requests.get(EXCEPTIONS)
     try:
         licenses = [l.get("licenseId") for l in lic_resp.json()["licenses"]]  # noqa: E741
-        exceptions = [
-            e.get("licenseExceptionId") for e in exc_resp.json()["exceptions"]
-        ]  # noqa: E741
+        exceptions = [e.get("licenseExceptionId") for e in exc_resp.json()["exceptions"]]  # noqa: E741
     except JSONDecodeError:
         raise ConnectionError("There was an error with the license source address.")
 
