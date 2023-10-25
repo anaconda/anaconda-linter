@@ -11,9 +11,10 @@ from typing import Final, List
 
 import requests
 
+from anaconda_linter.utils import HTTP_TIMEOUT
+
 LICENSES: Final[str] = "https://raw.githubusercontent.com/spdx/license-list-data/main/json/licenses.json"
 EXCEPTIONS: Final[str] = "https://raw.githubusercontent.com/spdx/license-list-data/main/json/exceptions.json"
-HTTP_TIMEOUT: Final[int] = 120
 
 
 def write_to_file(dest_file: Path or str, data: List[str]):

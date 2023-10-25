@@ -1,3 +1,9 @@
+"""
+File:           run.py
+Description:    Primary execution point of the linter's CLI
+"""
+from __future__ import annotations
+
 import argparse
 import os
 import textwrap
@@ -6,6 +12,11 @@ from anaconda_linter import __version__, lint, utils
 
 
 def lint_parser() -> argparse.ArgumentParser:
+    """
+    Configures the `argparser` instance used for the linter's CLI
+    :return: An `argparser` instance to parse command line arguments
+    """
+
     def check_path(value):
         if not os.path.isdir(value):
             raise argparse.ArgumentTypeError(f"The specified directory {value} does not exist")
@@ -93,6 +104,9 @@ def lint_parser() -> argparse.ArgumentParser:
 
 
 def main():
+    """
+    Primary execution point of the linter's CLI
+    """
     # parse arguments
     parser = lint_parser()
     args, _ = parser.parse_known_args()
