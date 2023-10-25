@@ -102,18 +102,14 @@ def main():
     config = utils.load_config(config_file)
 
     # set up linter
-    linter = lint.Linter(
-        config=config, verbose=args.verbose, exclude=None, nocatch=True, severity_min=args.severity
-    )
+    linter = lint.Linter(config=config, verbose=args.verbose, exclude=None, nocatch=True, severity_min=args.severity)
 
     # run linter
     recipes = [f"{args.recipe}/recipe/"]
     messages = set()
     overall_result = 0
     for subdir in args.subdirs:
-        result = linter.lint(
-            recipes, subdir, args.variant_config_files, args.exclusive_config_files, args.fix
-        )
+        result = linter.lint(recipes, subdir, args.variant_config_files, args.exclusive_config_files, args.fix)
         if result > overall_result:
             overall_result = result
         messages = messages | set(linter.get_messages())

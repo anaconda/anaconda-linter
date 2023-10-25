@@ -129,9 +129,7 @@ def check_url(url):
                     redirect_domain = requests.utils.urlparse(response.headers["Location"]).netloc
                 if origin_domain != redirect_domain:  # For redirects to other domain
                     response_data["code"] = -1
-                    response_data[
-                        "message"
-                    ] = f"URL domain redirect {origin_domain} ->  {redirect_domain}"
+                    response_data["message"] = f"URL domain redirect {origin_domain} ->  {redirect_domain}"
                     response_data["url"] = response.headers["Location"]
                     response_data["domain_origin"] = origin_domain
                     response_data["domain_redirect"] = redirect_domain

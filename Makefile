@@ -41,7 +41,7 @@ BROWSER := python -c "$$BROWSER_PYSCRIPT"
 # For now, most tools only run on new files, not the entire project.
 MYPY_FILES := anaconda_linter/lint/*.py tests/*.py
 # Tracks all python files. This will eventually be used by the auto formatter, linter, and static analyzer.
-ALL_PY_FILES := anaconda_linter/**/*.py scripts/*.py tests/*.py
+ALL_PY_FILES := anaconda_linter/*.py anaconda_linter/**/*.py scripts/*.py tests/*.py
 
 clean: clean-cov clean-build clean-env clean-pyc clean-test ## remove all build, test, coverage and Python artifacts
 
