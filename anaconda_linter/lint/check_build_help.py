@@ -1011,7 +1011,7 @@ class no_git_on_windows(LintCheck):
             paths = parser.find_value("git")
             for path in paths:
                 # Attempt to filter-out false-positives
-                if not path.startswith("/requirements/"):
+                if "/requirements" not in path:
                     continue
                 parser.add_selector(path, "[not win]", SelectorConflictMode.AND)
 
