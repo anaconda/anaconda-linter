@@ -2,10 +2,9 @@
 #   pre-commit run --all-files
 # Update this file:
 #   pre-commit autoupdate
-# TODO remove when other files are updated to pass. NOTE: keep the first line
-# as-is.
 exclude: |
   (?x)^(
+    tests/test_aux_files/.*|
     docs/.*|
     setup.py|
   )$
