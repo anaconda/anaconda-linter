@@ -1,3 +1,7 @@
+"""
+File:           test_build_help.py
+Description:    Tests build section rules
+"""
 from __future__ import annotations
 
 import pytest
@@ -1591,7 +1595,7 @@ def test_patch_must_be_in_build_bad(base_yaml):
             )
             messages = check(lint_check, yaml_str)
             assert (
-                len(messages) == 1 and "patch must be in build" and messages[0].title
+                len(messages) == 1 and "patch must be in build" in messages[0].title
             ), f"Check failed for {patch} in {section}"
 
 
@@ -1613,7 +1617,7 @@ def test_patch_must_be_in_build_list_bad(base_yaml, patch, section):
         """
     )
     messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "patch must be in build" and messages[0].title
+    assert len(messages) == 1 and "patch must be in build" in messages[0].title
 
 
 def test_patch_must_be_in_build_missing(base_yaml):
@@ -2581,7 +2585,7 @@ def test_missing_python_url_bad(base_yaml):
     )
     lint_check = "missing_python"
     messages = check(lint_check, yaml_str)
-    assert len(messages) == 2 and all(["python should be present" in m.title for m in messages])
+    assert len(messages) == 2 and all("python should be present" in m.title for m in messages)
 
 
 def test_missing_python_pip_install_good(base_yaml):
@@ -2694,7 +2698,7 @@ def test_missing_python_pip_install_bad(base_yaml):
     )
     lint_check = "missing_python"
     messages = check(lint_check, yaml_str)
-    assert len(messages) == 2 and all(["python should be present" in m.title for m in messages])
+    assert len(messages) == 2 and all("python should be present" in m.title for m in messages)
 
 
 def test_missing_python_pip_install_bad_list(base_yaml):
@@ -2710,7 +2714,7 @@ def test_missing_python_pip_install_bad_list(base_yaml):
     )
     lint_check = "missing_python"
     messages = check(lint_check, yaml_str)
-    assert len(messages) == 2 and all(["python should be present" in m.title for m in messages])
+    assert len(messages) == 2 and all("python should be present" in m.title for m in messages)
 
 
 def test_missing_python_pip_install_bad_multi(base_yaml):
@@ -2728,7 +2732,7 @@ def test_missing_python_pip_install_bad_multi(base_yaml):
     )
     lint_check = "missing_python"
     messages = check(lint_check, yaml_str)
-    assert len(messages) == 4 and all(["python should be present" in m.title for m in messages])
+    assert len(messages) == 4 and all("python should be present" in m.title for m in messages)
 
 
 def test_missing_python_pip_install_bad_multi_list(base_yaml):
@@ -2747,7 +2751,7 @@ def test_missing_python_pip_install_bad_multi_list(base_yaml):
     )
     lint_check = "missing_python"
     messages = check(lint_check, yaml_str)
-    assert len(messages) == 4 and all(["python should be present" in m.title for m in messages])
+    assert len(messages) == 4 and all("python should be present" in m.title for m in messages)
 
 
 def test_remove_python_pinning_good(base_yaml):
@@ -2831,7 +2835,7 @@ def test_remove_python_pinning_bad_multi(base_yaml):
 
 
 @pytest.mark.parametrize("arch", ("linux-64", "win-64"))
-def test_no_git_on_windows_good(base_yaml, arch):
+def test_no_git_on_windows_good(base_yaml, arch):  # pylint: disable=unused-argument
     yaml_str = (
         base_yaml
         + """
@@ -2860,7 +2864,7 @@ def test_no_git_on_windows_bad(base_yaml):
 
 
 @pytest.mark.parametrize("arch", ("linux-64", "win-64"))
-def test_no_git_on_windows_good_multi(base_yaml, arch):
+def test_no_git_on_windows_good_multi(base_yaml, arch):  # pylint: disable=unused-argument
     yaml_str = (
         base_yaml
         + """

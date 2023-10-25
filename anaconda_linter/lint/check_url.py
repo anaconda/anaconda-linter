@@ -1,8 +1,8 @@
 """
-Check URL
-
-Verify that the URLs in the recipe are valid
+File:           check_url.py
+Description:    Contains linter checks for URL validation.
 """
+from __future__ import annotations
 
 from anaconda_linter import utils
 from anaconda_linter.lint import ERROR, INFO, LintCheck
@@ -69,4 +69,4 @@ class http_url(LintCheck):
         ]
         for url_field in url_fields:
             url = recipe.get(url_field, "")
-            self._check_url(url, url_field.split("/")[0])
+            self._check_url(url, url_field.split("/", maxsplit=1)[0])

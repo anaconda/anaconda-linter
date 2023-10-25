@@ -1,4 +1,8 @@
-__name__ = "anaconda_linter"
+"""
+File:           __init__.py
+Description:    Module configurations for the `anaconda-linter` project
+"""
+__name__ = "anaconda_linter"  # pylint: disable=redefined-builtin
 __version__ = "0.1.1"
 __author__ = "Anaconda, Inc."
 __email__ = "distribution_team@anaconda.com"

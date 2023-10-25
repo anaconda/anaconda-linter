@@ -1,3 +1,9 @@
+"""
+File:           run.py
+Description:    Primary execution point of the linter's CLI
+"""
+from __future__ import annotations
+
 import argparse
 import os
 import textwrap
@@ -6,6 +12,11 @@ from anaconda_linter import __version__, lint, utils
 
 
 def lint_parser() -> argparse.ArgumentParser:
+    """
+    Configures the `argparser` instance used for the linter's CLI
+    :return: An `argparser` instance to parse command line arguments
+    """
+
     def check_path(value):
         if not os.path.isdir(value):
             raise argparse.ArgumentTypeError(f"The specified directory {value} does not exist")
@@ -93,6 +104,9 @@ def lint_parser() -> argparse.ArgumentParser:
 
 
 def main():
+    """
+    Primary execution point of the linter's CLI
+    """
     # parse arguments
     parser = lint_parser()
     args, _ = parser.parse_known_args()
@@ -102,18 +116,14 @@ def main():
     config = utils.load_config(config_file)
 
     # set up linter
-    linter = lint.Linter(
-        config=config, verbose=args.verbose, exclude=None, nocatch=True, severity_min=args.severity
-    )
+    linter = lint.Linter(config=config, verbose=args.verbose, exclude=None, nocatch=True, severity_min=args.severity)
 
     # run linter
     recipes = [f"{args.recipe}/recipe/"]
     messages = set()
     overall_result = 0
     for subdir in args.subdirs:
-        result = linter.lint(
-            recipes, subdir, args.variant_config_files, args.exclusive_config_files, args.fix
-        )
+        result = linter.lint(recipes, subdir, args.variant_config_files, args.exclusive_config_files, args.fix)
         if result > overall_result:
             overall_result = result
         messages = messages | set(linter.get_messages())

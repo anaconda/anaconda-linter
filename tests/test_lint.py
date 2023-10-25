@@ -1,3 +1,9 @@
+"""
+File:           test_.py
+Description:    Tests linting infrastructure
+"""
+from __future__ import annotations
+
 from pathlib import Path
 
 import pytest
@@ -9,28 +15,28 @@ from anaconda_linter import lint, utils
 from anaconda_linter.lint import ERROR, INFO, WARNING
 
 
-class dummy_info(lint.LintCheck):
+class DummyInfo(lint.LintCheck):
     """Info message"""
 
-    def check_recipe(self, recipe):
+    def check_recipe(self, _):
         self.message(severity=INFO)
 
 
-class dummy_warning(lint.LintCheck):
+class DummyWarning(lint.LintCheck):
     """Warning message"""
 
-    def check_recipe(self, recipe):
+    def check_recipe(self, _):
         self.message(severity=WARNING)
 
 
-class dummy_error(lint.LintCheck):
+class DummyError(lint.LintCheck):
     """Error message"""
 
-    def check_recipe(self, recipe):
+    def check_recipe(self, _):
         self.message(severity=ERROR)
 
 
-class dummy_error_format(lint.LintCheck):
+class DummyErrorFormat(lint.LintCheck):
     """{} message of severity {}"""
 
     def check_recipe(self, recipe):
@@ -43,9 +49,9 @@ def test_only_lint(base_yaml, linter):
         + """
         extra:
           only-lint:
-            - dummy_info
-            - dummy_error
-            - dummy_warning
+            - DummyInfo
+            - DummyError
+            - DummyWarning
         """
     )
     recipes = [Recipe.from_string(recipe_text=yaml_str, renderer=RendererType.RUAMEL)]
@@ -59,9 +65,9 @@ def test_skip_lints(base_yaml, linter):
         + """
         extra:
           skip-lints:
-            - dummy_info
-            - dummy_error
-            - dummy_warning
+            - DummyInfo
+            - DummyError
+            - DummyWarning
         """
     )
     recipes_base = [Recipe.from_string(recipe_text=base_yaml, renderer=RendererType.RUAMEL)]
@@ -75,7 +81,7 @@ def test_skip_lints(base_yaml, linter):
     assert len(messages_base) == len(messages_skip) + 3
 
 
-def test_lint_none(base_yaml, linter):
+def test_lint_none(base_yaml, linter):  # pylint: disable=unused-argument
     recipes = []
     return_code = linter.lint(recipes)
     assert return_code == 0 and len(linter.get_messages()) == 0
@@ -87,9 +93,9 @@ def test_lint_file(base_yaml, linter, recipe_dir):
         + """
         extra:
           only-lint:
-            - dummy_info
-            - dummy_error
-            - dummy_warning
+            - DummyInfo
+            - DummyError
+            - DummyWarning
         """
     )
     meta_yaml = recipe_dir / "meta.yaml"
@@ -101,9 +107,9 @@ def test_lint_file(base_yaml, linter, recipe_dir):
 @pytest.mark.parametrize(
     "level,string,lint_check",
     (
-        (INFO, "notice", "dummy_info"),
-        (WARNING, "warning", "dummy_warning"),
-        (ERROR, "failure", "dummy_error"),
+        (INFO, "notice", "DummyInfo"),
+        (WARNING, "warning", "DummyWarning"),
+        (ERROR, "failure", "DummyError"),
     ),
 )
 def test_severity_level(base_yaml, level, string, lint_check):
@@ -113,7 +119,7 @@ def test_severity_level(base_yaml, level, string, lint_check):
     assert messages[0].get_level() == string
 
 
-def test_severity_bad(base_yaml):
+def test_severity_bad(base_yaml):  # pylint: disable=unused-argument
     with pytest.raises(ValueError):
         config_file = Path(__file__).parent / "config.yaml"
         config = utils.load_config(config_file)
@@ -127,9 +133,9 @@ def test_severity_min_string(base_yaml, level, expected):
         + """
         extra:
           only-lint:
-            - dummy_info
-            - dummy_error
-            - dummy_warning
+            - DummyInfo
+            - DummyError
+            - DummyWarning
         """
     )
     recipes = [Recipe.from_string(recipe_text=yaml_str, renderer=RendererType.RUAMEL)]
@@ -147,9 +153,9 @@ def test_severity_min_enum(base_yaml, level, expected):
         + """
         extra:
           only-lint:
-            - dummy_info
-            - dummy_error
-            - dummy_warning
+            - DummyInfo
+            - DummyError
+            - DummyWarning
         """
     )
     recipes = [Recipe.from_string(recipe_text=yaml_str, renderer=RendererType.RUAMEL)]
@@ -162,9 +168,9 @@ def test_severity_min_enum(base_yaml, level, expected):
 
 def test_lint_list():
     checks_file = Path(__file__).parent / "../anaconda_linter/lint_names.md"
-    with open(checks_file.resolve()) as f:
+    with open(checks_file.resolve(), encoding="utf-8") as f:
         lint_checks_file = [line.strip() for line in f.readlines() if line.strip()]
-    lint_checks_lint = [str(chk) for chk in lint.get_checks() if not str(chk).startswith("dummy_")]
+    lint_checks_lint = [str(chk) for chk in lint.get_checks() if not str(chk).startswith("Dummy")]
     assert sorted(lint_checks_file) == sorted(lint_checks_lint)
 
 
@@ -192,13 +198,13 @@ def test_jinja_functions(base_yaml, jinja_func, expected):
         linter = lint.Linter(config=config)
 
         try:
-            _recipe = Recipe.from_string(recipe_text=yaml_str, renderer=RendererType.RUAMEL)
-            linter.lint([_recipe])
+            recipe = Recipe.from_string(recipe_text=yaml_str, renderer=RendererType.RUAMEL)
+            linter.lint([recipe])
             messages = linter.get_messages()
         except RecipeError as exc:
-            _recipe = Recipe("")
+            recipe = Recipe("")
             check_cls = lint.recipe_error_to_lint_check.get(exc.__class__, lint.linter_failure)
-            messages = [check_cls.make_message(recipe=_recipe, line=getattr(exc, "line"))]
+            messages = [check_cls.make_message(recipe=recipe, line=getattr(exc, "line"))]
 
         return messages
 
@@ -220,7 +226,7 @@ def test_jinja_functions(base_yaml, jinja_func, expected):
 
     lint_check = "jinja_render_failure"
     messages = run_lint(yaml_str)
-    assert any([str(msg.check) == lint_check for msg in messages]) == expected
+    assert any(str(msg.check) == lint_check for msg in messages) == expected
 
 
 def test_error_report_line(base_yaml):
@@ -240,13 +246,13 @@ def test_error_report_line(base_yaml):
 
 
 def test_message_title(base_yaml):
-    lint_check = "dummy_error"
+    lint_check = "DummyError"
     messages = check(lint_check, base_yaml)
     assert len(messages) == 1 and messages[0].title == "Error message"
 
 
 def test_message_title_format(base_yaml):
-    lint_check = "dummy_error_format"
+    lint_check = "DummyErrorFormat"
     messages = check(lint_check, base_yaml)
     assert len(messages) == 1 and messages[0].title == "Dummy message of severity ERROR"
 
@@ -254,6 +260,6 @@ def test_message_title_format(base_yaml):
 def test_message_path(base_yaml, tmpdir):
     recipe_directory_short = Path("fake_feedstock/recipe")
     recipe_directory = Path(tmpdir) / recipe_directory_short
-    lint_check = "dummy_error"
+    lint_check = "DummyError"
     messages = check_dir(lint_check, recipe_directory.parent, base_yaml)
     assert len(messages) == 1 and Path(messages[0].fname) == (recipe_directory_short / "meta.yaml")

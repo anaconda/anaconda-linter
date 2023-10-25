@@ -1,9 +1,9 @@
-"""Syntax checks
-
-These checks verify syntax (schema), in particular for the ``extra``
-section that is otherwise free-form.
-
 """
+File:           check_syntax.py
+Description:    Contains linter checks for syntax rules.
+"""
+from __future__ import annotations
+
 import re
 
 from anaconda_linter.lint import LintCheck
@@ -40,7 +40,7 @@ class version_constraints_missing_whitespace(LintCheck):
                     if not space_separated:
                         self.message(section=f"{path}/{n}", data=True, output=output)
 
-    def fix(self, _message, _data):
+    def fix(self, message, data):
         check_paths = []
         for section in ("build", "run", "host"):
             check_paths.append(f"requirements/{section}")

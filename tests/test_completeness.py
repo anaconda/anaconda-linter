@@ -1,3 +1,9 @@
+"""
+File:           test_completeness.py
+Description:    Tests completeness rules (i.e. `missing_*`)
+"""
+from __future__ import annotations
+
 import pytest
 from conftest import check, check_dir
 
@@ -83,7 +89,7 @@ def test_missing_build_number_bad(base_yaml):
     assert len(messages) == 1 and "missing a build number" in messages[0].title
 
 
-def test_missing_package_name_good(base_yaml):
+def test_missing_package_name_good(base_yaml):  # pylint: disable=unused-argument
     yaml_str = """
         package:
           name: plop
@@ -93,7 +99,7 @@ def test_missing_package_name_good(base_yaml):
     assert len(messages) == 0
 
 
-def test_missing_package_name_bad(base_yaml):
+def test_missing_package_name_bad(base_yaml):  # pylint: disable=unused-argument
     yaml_str = """
         build:
           number: 0
@@ -103,7 +109,7 @@ def test_missing_package_name_bad(base_yaml):
     assert len(messages) == 1 and "missing a package name" in messages[0].title
 
 
-def test_missing_package_version_good(base_yaml):
+def test_missing_package_version_good(base_yaml):  # pylint: disable=unused-argument
     yaml_str = """
         package:
           version: 1.2.3
@@ -113,7 +119,7 @@ def test_missing_package_version_good(base_yaml):
     assert len(messages) == 0
 
 
-def test_missing_package_version_bad(base_yaml):
+def test_missing_package_version_bad(base_yaml):  # pylint: disable=unused-argument
     yaml_str = """
         build:
           number: 0
@@ -488,7 +494,7 @@ def test_missing_source_bad_type(base_yaml):
 
 
 @pytest.mark.parametrize("src_type", ("url", "git_url", "path"))
-def test_non_url_source_good(base_yaml, src_type):
+def test_non_url_source_good(base_yaml, src_type):  # pylint: disable=unused-argument
     yaml_str = (
         base_yaml
         + """

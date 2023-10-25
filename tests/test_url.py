@@ -1,3 +1,9 @@
+"""
+File:           test_url.py
+Description:    Tests URL-based rules
+"""
+from __future__ import annotations
+
 import pytest
 from conftest import check
 

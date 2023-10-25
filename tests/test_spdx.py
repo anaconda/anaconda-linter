@@ -1,7 +1,13 @@
+"""
+File:           test_spdx.py
+Description:    Tests licensing rules using the SPDX database
+"""
+from __future__ import annotations
+
 from conftest import check
 
 
-def test_spdx_good(linter, base_yaml):
+def test_spdx_good(linter, base_yaml):  # pylint: disable=unused-argument
     yaml_str = (
         base_yaml
         + """
@@ -14,7 +20,7 @@ def test_spdx_good(linter, base_yaml):
     assert len(messages) == 0
 
 
-def test_spdx_bad(linter, base_yaml):
+def test_spdx_bad(linter, base_yaml):  # pylint: disable=unused-argument
     yaml_str = (
         base_yaml
         + """
@@ -27,7 +33,7 @@ def test_spdx_bad(linter, base_yaml):
     assert len(messages) == 1 and "closest match" not in messages[0].title
 
 
-def test_spdx_close(linter, base_yaml):
+def test_spdx_close(linter, base_yaml):  # pylint: disable=unused-argument
     yaml_str = (
         base_yaml
         + """

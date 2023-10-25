@@ -2,16 +2,11 @@
 #   pre-commit run --all-files
 # Update this file:
 #   pre-commit autoupdate
-# TODO remove when other files are updated to pass. NOTE: keep the first line
-# as-is.
 exclude: |
   (?x)^(
     tests/test_aux_files/.*|
-    anaconda_linter/.*|
     docs/.*|
-    scripts/.*|
     setup.py|
-    tests/.*
   )$
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks

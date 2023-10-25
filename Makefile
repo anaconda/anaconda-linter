@@ -39,9 +39,9 @@ export PRINT_HELP_PYSCRIPT
 BROWSER := python -c "$$BROWSER_PYSCRIPT"
 
 # For now, most tools only run on new files, not the entire project.
-LINTER_FILES := tests/*.py
+MYPY_FILES := anaconda_linter/lint/*.py tests/*.py
 # Tracks all python files. This will eventually be used by the auto formatter, linter, and static analyzer.
-ALL_PY_FILES := anaconda_linter/**/*.py scripts/*.py tests/*.py
+ALL_PY_FILES := anaconda_linter/*.py anaconda_linter/**/*.py scripts/*.py tests/*.py
 
 clean: clean-cov clean-build clean-env clean-pyc clean-test ## remove all build, test, coverage and Python artifacts
 
@@ -111,11 +111,11 @@ test-cov:		## checks test coverage requirements
 		--cov-report term-missing
 
 lint:			## runs the linter against the project
-	pylint --rcfile=.pylintrc $(LINTER_FILES)
+	pylint --rcfile=.pylintrc $(ALL_PY_FILES)
 
 format:			## runs the code auto-formatter
 	isort --profile black --line-length=120 $(ALL_PY_FILES)
 	black --line-length=120 $(ALL_PY_FILES)
 
 analyze:		## runs static analyzer on the project
-	mypy --config-file=.mypy.ini $(LINTER_FILES)
+	mypy --config-file=.mypy.ini $(MYPY_FILES)

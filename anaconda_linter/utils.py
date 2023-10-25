@@ -1,9 +1,10 @@
 """
-Utility Functions and Classes
-
-This module collects small pieces of code used throughout
-:py:mod:`anaconda_linter`.
+File:           utils.py
+Description:    Utility Functions and Classes
+                This module collects small pieces of code used throughout
+                :py:mod:`anaconda_linter`.
 """
+from __future__ import annotations
 
 import logging
 import os
@@ -11,15 +12,18 @@ import re
 from collections import Counter
 from copy import deepcopy
 from pathlib import Path
-from typing import Sequence
+from typing import Final, Optional, Sequence
 
 import requests
 from jsonschema import validate
+from percy.render.recipe import Recipe
 
 try:
     from ruamel.yaml import YAML
 except ModuleNotFoundError:
     from ruamel_yaml import YAML
+
+HTTP_TIMEOUT: Final[int] = 120
 
 logger = logging.getLogger(__name__)
 
@@ -38,10 +42,10 @@ def validate_config(config):
         directly.
     """
     if not isinstance(config, dict):
-        with open(config) as conf:
+        with open(config, encoding="utf-8") as conf:
             config = yaml.load(conf.read())
     fn = os.path.abspath(os.path.dirname(__file__)) + "/config.schema.yaml"
-    with open(fn) as f:
+    with open(fn, encoding="utf-8") as f:
         schema = yaml.load(f.read())
     validate(config, schema)
 
@@ -68,7 +72,7 @@ def load_config(path):
         def relpath(p):
             return os.path.join(os.path.dirname(path), p)
 
-        with open(path) as conf:
+        with open(path, encoding="utf-8") as conf:
             config = yaml.load(conf.read())
 
     def get_list(key):
@@ -87,13 +91,13 @@ def load_config(path):
     default_config.update(config)
 
     # store architecture information
-    with open(Path(__file__).parent / "data" / "cbc_default.yaml") as text:
+    with open(Path(__file__).parent / "data" / "cbc_default.yaml", encoding="utf-8") as text:
         init_arch = yaml.load(text.read())
         data_path = Path(__file__).parent / "data"
         for arch_config_path in data_path.glob("cbc_*.yaml"):
             arch = arch_config_path.stem.split("cbc_")[1]
             if arch != "default":
-                with open(arch_config_path) as text:
+                with open(arch_config_path, encoding="utf-8") as text:
                     default_config[arch] = deepcopy(init_arch)
                     default_config[arch].update(yaml.load(text.read()))
 
@@ -121,7 +125,7 @@ def check_url(url):
     if url not in check_url_cache:
         response_data = {"url": url}
         try:
-            response = requests.head(url, allow_redirects=False)
+            response = requests.head(url, allow_redirects=False, timeout=HTTP_TIMEOUT)
             if response.status_code >= 200 and response.status_code < 400:
                 origin_domain = requests.utils.urlparse(url).netloc
                 redirect_domain = origin_domain
@@ -129,9 +133,7 @@ def check_url(url):
                     redirect_domain = requests.utils.urlparse(response.headers["Location"]).netloc
                 if origin_domain != redirect_domain:  # For redirects to other domain
                     response_data["code"] = -1
-                    response_data[
-                        "message"
-                    ] = f"URL domain redirect {origin_domain} ->  {redirect_domain}"
+                    response_data["message"] = f"URL domain redirect {origin_domain} ->  {redirect_domain}"
                     response_data["url"] = response.headers["Location"]
                     response_data["domain_origin"] = origin_domain
                     response_data["domain_redirect"] = redirect_domain
@@ -144,49 +146,56 @@ def check_url(url):
         except requests.HTTPError as e:
             response_data["code"] = e.response.status_code
             response_data["message"] = e.response.text
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-exception-caught
             response_data["code"] = -1
             response_data["message"] = str(e)
         check_url_cache[url] = response_data
     return check_url_cache[url]
 
 
-def generate_correction(pkg_license, compfile=Path(__file__).parent / "data" / "licenses.txt"):
-    with open(compfile) as f:
+def generate_correction(pkg_license: str, compfile: Path = Path(__file__).parent / "data" / "licenses.txt") -> str:
+    """
+    Uses a probabilistic model to generate corrections on a license file
+    TODO: Evaluate if this is the best method to use
+    :param pkg_license: Contents of the license file to correct, as a string.
+    :param compfile:    Path to a license file to compare/diff against.
+    :return: Modified version of the original license file string.
+    """
+    with open(compfile, encoding="utf-8") as f:
         words = f.readlines()
 
-    words = [w.strip("\n") for w in words]
-    WORDS = Counter(words)
+    words: list[str] = [w.strip("\n") for w in words]
+    words_cntr: Final[Counter] = Counter(words)
 
-    def P(word, N=sum(WORDS.values())):
+    def probability(word: str, n=sum(words_cntr.values())):
         "Probability of `word`."
-        return WORDS[word] / N
+        return words_cntr[word] / n
 
-    def correction(word):
+    def correction(word: str) -> str:
         "Most probable spelling correction for word."
-        return max(candidates(word), key=P)
+        return max(candidates(word), key=probability)
 
-    def candidates(word):
+    def candidates(word: str):
         "Generate possible spelling corrections for word."
         return known([word]) or known(edits1(word)) or known(edits2(word)) or [word]
 
-    def known(words):
-        "The subset of `words` that appear in the dictionary of WORDS."
-        return {w for w in words if w in WORDS}
+    def known(words: list[str]):
+        "The subset of `words` that appear in the dictionary of `words_cntr`."
+        return {w for w in words if w in words_cntr}
 
-    def edits1(word):
+    def edits1(word: str):
         "All edits that are one edit away from `word`."
         letters = "abcdefghijklmnopqrstuvwxyz"
         symbols = "-.0123456789"
         letters += letters.upper() + symbols
         splits = [(word[:i], word[i:]) for i in range(len(word) + 1)]
-        deletes = [L + R[1:] for L, R in splits if R]
-        transposes = [L + R[1] + R[0] + R[2:] for L, R in splits if len(R) > 1]
-        replaces = [L + c + R[1:] for L, R in splits if R for c in letters]
-        inserts = [L + c + R for L, R in splits for c in letters]
+        deletes = [l + r[1:] for l, r in splits if r]
+        transposes = [l + r[1] + r[0] + r[2:] for l, r in splits if len(r) > 1]
+        replaces = [l + c + r[1:] for l, r in splits if r for c in letters]
+        inserts = [l + c + r for l, r in splits for c in letters]
         return set(deletes + transposes + replaces + inserts)
 
-    def edits2(word):
+    def edits2(word: str):
         "All edits that are two edits away from `word`."
         return (e2 for e1 in edits1(word) for e2 in edits1(e1))
 
@@ -222,9 +231,16 @@ def get_dep_path(recipe, dep):
     return dep.path
 
 
-def get_deps_dict(recipe, sections=None, outputs=True):
-    if not sections:
-        sections = ("build", "run", "host")
+def get_deps_dict(recipe: Recipe, sections: Optional[list[str]] = None, outputs: bool = True) -> dict[str : list[str]]:
+    """
+    Returns a dictionary containing lists of recipe dependencies.
+    TODO Future: Look into removing the `outputs` flag and query `recipe` if it has an outputs section.
+    :param recipe:      Target recipe instance
+    :param sections:    (Optional)  List of strings
+    :param outputs:     (Optional) Set to True for recipes that have an `outputs` section
+    """
+    if sections is None:
+        sections = ["build", "run", "host"]
     else:
         sections = ensure_list(sections)
     check_paths = []
@@ -234,7 +250,7 @@ def get_deps_dict(recipe, sections=None, outputs=True):
         for section in sections:
             for n in range(len(recipe.get("outputs", []))):
                 check_paths.append(f"outputs/{n}/requirements/{section}")
-    deps = {}
+    deps: dict[str : list[str]] = {}
     for path in check_paths:
         for n, spec in enumerate(recipe.get(path, [])):
             if spec is None:  # Fixme: lint this

@@ -1,3 +1,9 @@
+"""
+File:           test_syntax.py
+Description:    Tests syntax-based rules
+"""
+from __future__ import annotations
+
 from conftest import check
 
 
