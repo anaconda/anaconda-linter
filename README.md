@@ -136,9 +136,9 @@ Here is a rough outline of how to conduct a release of this project:
 1. Update the version number in `recipe/meta.yaml`
 1. Ensure `environment.yaml` aligns with `recipe/meta.yaml`
 1. Create a new release on GitHub with a version tag.
-1. The Anaconda packaging team will need to update and publish
+1. The Anaconda packaging team will need to update
 [the feedstock](https://github.com/AnacondaRecipes/anaconda-linter-feedstock)
-to [aggregate](https://github.com/AnacondaRecipes/aggregate).
+and [aggregate](https://github.com/AnacondaRecipes/aggregate) and publish to `distro-tooling`
 
 ## Contributions
 This package is inspired by bioconda's [linter](https://github.com/bioconda/bioconda-utils/blob/master/bioconda_utils/lint/__init__.py).
