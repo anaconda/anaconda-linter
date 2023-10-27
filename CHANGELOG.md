@@ -1,6 +1,16 @@
 # Changelog
 Note: version releases in the 0.x.y range may introduce breaking changes.
 
+## 0.1.2
+- Enforces Python code auto formatting across the project
+- Enforces Python code linting across the project
+- Significant changes the `Makefile` and `pre-commit` configurations
+- Adds fix support for `no_git_on_windows`
+- Adds support and unit tests for some auto-fixable rules
+- README changes
+- `pytest` now runs tests in parallel
+- Various bug fixes
+
 ## 0.1.1
 - Add knowledge of Python build backends to the missing_wheel rule
 - Relax host_section_needs_exact_pinnings

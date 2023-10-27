@@ -8,7 +8,7 @@ dependencies:
   - setuptools
   - pip
   # run
-  - percy >=0.1.0,<0.2.0
+  - distro-tooling::percy >=0.1.1,<0.2.0
   - ruamel.yaml
   - license-expression
   - jinja2

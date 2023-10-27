@@ -129,6 +129,17 @@ Running `make help` will show all of the available commands. Here are some that 
 1. `make analyze`: Runs the static analyzer, `mypy`.
 1. `make pre-commit`: Runs all the `pre-commit` checks
 
+## Release process
+Here is a rough outline of how to conduct a release of this project:
+1. Update `CHANGELOG.md`
+1. Update the version number in `anaconda_linter/__init__.py`
+1. Update the version number in `recipe/meta.yaml`
+1. Ensure `environment.yaml` aligns with `recipe/meta.yaml`
+1. Create a new release on GitHub with a version tag.
+1. The Anaconda packaging team will need to update
+[the feedstock](https://github.com/AnacondaRecipes/anaconda-linter-feedstock)
+and [aggregate](https://github.com/AnacondaRecipes/aggregate) and publish to `distro-tooling`
+
 ## Contributions
 This package is inspired by bioconda's [linter](https://github.com/bioconda/bioconda-utils/blob/master/bioconda_utils/lint/__init__.py).
 
