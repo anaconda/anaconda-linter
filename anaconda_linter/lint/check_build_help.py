@@ -39,6 +39,7 @@ PYTHON_BUILD_TOOLS = (
     "flit-core",
     "hatch",
     "hatchling",
+    "maturin",
     "meson",
     "meson-python",
     "pdm",
@@ -64,6 +65,7 @@ PYTHON_BUILD_BACKENDS = (
     "flit-core",  # Backend of flit.
     "hatch",  # Same as flit, we should not depend on it. We should instead depend on hatchling, which is the backend.
     "hatchling",  # Backend of hatch.
+    "maturin",    # Backend for bindings written in rust.
     "meson-python",  # Backend that uses meson.
     "pdm-backend",  # Backend of pdm (new). Not yet in our repo, but if it ever does, we'll be able to handle it.
     "pdm-pep517",  # Deprecated backend of pdm but we still need to support it, see https://pypi.org/project/pdm-pep517
