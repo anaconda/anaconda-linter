@@ -160,7 +160,18 @@ class license_file_overspecified(LintCheck):
 
     def check_recipe(self, recipe):
         if recipe.get("about/license_file", "") and recipe.get("about/license_url", ""):
-            self.message(section="about", severity=WARNING)
+            self.message(section="about", severity=WARNING, data=recipe)
+
+    def fix(self, _message, _data):
+        print("Removing license_url....")
+        recipe = _data
+        op = [
+            {
+                "op": "remove",
+                "path": f"about/license_url",
+            }
+        ]
+        return recipe.patch(op)
 
 
 class missing_license_family(LintCheck):
