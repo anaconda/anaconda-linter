@@ -30,4 +30,3 @@ runs:
         conda init bash
         conda env create -f environment.yaml --name anaconda-linter --force
         conda run --name anaconda-linter pip install .
-        conda activate anaconda-linter

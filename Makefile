@@ -2,11 +2,11 @@
 # `conda activate`
 .ONESHELL:
 SHELL := /bin/bash
-.SHELLFLAGS := -o pipefail -o errexit
+# For GNU Make v4 and above, you must include the `-c` in order for `make` to find symbols from `PATH`
+.SHELLFLAGS := -c -o pipefail -o errexit
 CONDA_ACTIVATE = source $$(conda info --base)/etc/profile.d/conda.sh ; conda activate ; conda activate
-# Resolve the path to `python3` and store it in a variable. Always invoke `python` using this variable. This prevents a
-# nasty scenario where the GitHub Actions container fails to find `python` or `python3`, when running `make` commands.
-PYTHON3 := $(shell which python3) #$(shell type python3 | awk '{ print $3 }')
+# Ensure that we are using the python interpreter provided by the conda environment.
+PYTHON3 := "$(CONDA_PREFIX)/bin/python3"
 
 .PHONY: clean clean-cov clean-build clean-env clean-pyc clean-test dist docs help install environment release dev test test-debug test-cov pre-commit lint format analyze
 .DEFAULT_GOAL := help
@@ -46,11 +46,11 @@ ALL_PY_FILES := anaconda_linter/*.py anaconda_linter/**/*.py scripts/*.py tests/
 clean: clean-cov clean-build clean-env clean-pyc clean-test ## remove all build, test, coverage and Python artifacts
 
 clean-cov:
-	@rm -rf .coverage
-	@rm -rf htmlcov
-	@rm -rf reports/{*.html,*.png,*.js,*.css,*.json}
-	@rm -rf pytest.xml
-	@rm -rf pytest-coverage.txt
+	rm -rf .coverage
+	rm -rf htmlcov
+	rm -rf reports/{*.html,*.png,*.js,*.css,*.json}
+	rm -rf pytest.xml
+	rm -rf pytest-coverage.txt
 
 clean-build: ## remove build artifacts
 	rm -fr build/
