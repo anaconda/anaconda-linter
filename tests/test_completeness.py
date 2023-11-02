@@ -5,7 +5,7 @@ Description:    Tests completeness rules (i.e. `missing_*`)
 from __future__ import annotations
 
 import pytest
-from conftest import check, check_dir
+from conftest import assert_on_auto_fix, check, check_dir
 
 
 def test_missing_section_good(base_yaml):
@@ -225,6 +225,8 @@ def test_license_file_overspecified_bad(base_yaml):
         base_yaml
         + """
         about:
+          license: MIT
+          license_family: MIT
           license_file: LICENSE
           license_url: https://url.com/LICENSE
         """
@@ -232,6 +234,13 @@ def test_license_file_overspecified_bad(base_yaml):
     lint_check = "license_file_overspecified"
     messages = check(lint_check, yaml_str)
     assert len(messages) == 1 and "license_file and license_url is overspecified" in messages[0].title
+
+
+def test_license_file_overspecified_auto_fix() -> None:
+    """
+    Tests the auto-fix functionality of the `license_file_overspecified` rule.
+    """
+    assert_on_auto_fix("license_file_overspecified")
 
 
 def test_missing_license_family_good(base_yaml):
