@@ -5,7 +5,7 @@ Description:    Tests completeness rules (i.e. `missing_*`)
 from __future__ import annotations
 
 import pytest
-from conftest import check, check_dir
+from conftest import assert_on_auto_fix, check, check_dir
 
 
 def test_missing_section_good(base_yaml):
@@ -206,13 +206,14 @@ def test_missing_license_file_bad(base_yaml):
     assert len(messages) == 1 and "about/license_file" in messages[0].title
 
 
-@pytest.mark.parametrize("license_type", ("license_file", "license_url"))
-def test_license_file_overspecified_good(base_yaml, license_type):
+def test_license_file_overspecified_good(base_yaml):
     yaml_str = (
         base_yaml
-        + f"""
+        + """
         about:
-          {license_type}: LICENSE
+          license: MIT
+          license_family: MIT
+          license_file: LICENSE
         """
     )
     lint_check = "license_file_overspecified"
@@ -225,13 +226,22 @@ def test_license_file_overspecified_bad(base_yaml):
         base_yaml
         + """
         about:
+          license: MIT
+          license_family: MIT
           license_file: LICENSE
-          license_url: https://url.com/LICENSE
+          license_url: https://github.com
         """
     )
     lint_check = "license_file_overspecified"
     messages = check(lint_check, yaml_str)
     assert len(messages) == 1 and "license_file and license_url is overspecified" in messages[0].title
+
+
+def test_license_file_overspecified_auto_fix() -> None:
+    """
+    Tests the auto-fix functionality of the `license_file_overspecified` rule.
+    """
+    assert_on_auto_fix("license_file_overspecified")
 
 
 def test_missing_license_family_good(base_yaml):
@@ -680,23 +690,3 @@ def test_wrong_output_script_key_bad(base_yaml):
     lint_check = "wrong_output_script_key"
     messages = check(lint_check, yaml_str)
     assert len(messages) == 1
-
-
-def license_file_overspecified_good(base_yaml):
-    """
-    Validates that license_overspecifed auto-fix
-    successfully removes license_url.
-    """
-    yaml_str = (
-        base_yaml
-        + """
-        about:
-          license: MIT
-          license_family: MIT
-          license_file: LICENSE
-          license_url: https://github.com
-        """
-    )
-    lint_check = "license_file_overspecified"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0

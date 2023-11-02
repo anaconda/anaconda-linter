@@ -8,6 +8,7 @@ import os
 import re
 
 import conda_build.license_family
+from percy.render.recipe import OpMode
 
 from anaconda_linter.lint import WARNING, LintCheck
 
@@ -165,9 +166,8 @@ class license_file_overspecified(LintCheck):
     def fix(self, message, data):
         print("Removing license_url....")
         recipe = data
-        op = [{"op": "remove", "path": "about/license_url"}]
-
-        return recipe.patch(op)
+        op = [{"op": "remove", "path": "/about/license_url"}]
+        return recipe.patch(op, op_mode=OpMode.PARSE_TREE)
 
 
 class missing_license_family(LintCheck):
