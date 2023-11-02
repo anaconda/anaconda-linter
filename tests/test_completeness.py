@@ -206,14 +206,13 @@ def test_missing_license_file_bad(base_yaml):
     assert len(messages) == 1 and "about/license_file" in messages[0].title
 
 
-def test_license_file_overspecified_good(base_yaml):
+@pytest.mark.parametrize("license_type", ("license_file", "license_url"))
+def test_license_file_overspecified_good(base_yaml, license_type):
     yaml_str = (
         base_yaml
-        + """
+        + f"""
         about:
-          license: MIT
-          license_family: MIT
-          license_file: LICENSE
+          {license_type}: LICENSE
         """
     )
     lint_check = "license_file_overspecified"
