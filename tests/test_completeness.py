@@ -229,7 +229,7 @@ def test_license_file_overspecified_bad(base_yaml):
           license: MIT
           license_family: MIT
           license_file: LICENSE
-          license_url: https://github.com
+          license_url: https://url.com/LICENSE
         """
     )
     lint_check = "license_file_overspecified"
@@ -690,23 +690,3 @@ def test_wrong_output_script_key_bad(base_yaml):
     lint_check = "wrong_output_script_key"
     messages = check(lint_check, yaml_str)
     assert len(messages) == 1
-
-
-def license_file_overspecified_good(base_yaml):
-    """
-    Validates that license_overspecifed auto-fix
-    successfully removes license_url.
-    """
-    yaml_str = (
-        base_yaml
-        + """
-        about:
-          license: MIT
-          license_family: MIT
-          license_file: LICENSE
-          license_url: https://github.com
-        """
-    )
-    lint_check = "license_file_overspecified"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0

@@ -164,7 +164,6 @@ class license_file_overspecified(LintCheck):
             self.message(section="about", severity=WARNING, data=recipe)
 
     def fix(self, message, data):
-        print("Removing license_url....")
         recipe = data
         op = [{"op": "remove", "path": "/about/license_url"}]
         return recipe.patch(op, op_mode=OpMode.PARSE_TREE)
