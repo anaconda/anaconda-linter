@@ -5,7 +5,7 @@ from setuptools import find_packages, setup
 import anaconda_linter
 
 
-def main():
+def main() -> None:
     with open("CHANGELOG.md", encoding="utf-8") as changelog_file:
         changelog: str = changelog_file.read()
 

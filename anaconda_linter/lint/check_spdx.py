@@ -27,7 +27,7 @@ class incorrect_license(LintCheck):
 
     """
 
-    def check_recipe(self, recipe):
+    def check_recipe(self, recipe) -> None:
         licensing = license_expression.Licensing()
         license = recipe.get("about/license", "")  # pylint: disable=redefined-builtin
         parsed_exceptions = []

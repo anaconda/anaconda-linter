@@ -4,13 +4,15 @@ Description:    Tests build section rules
 """
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 from conftest import assert_on_auto_fix, check, check_dir
 
 from anaconda_linter.lint.check_build_help import BUILD_TOOLS, COMPILERS, PYTHON_BUILD_BACKENDS, PYTHON_BUILD_TOOLS
 
 
-def test_host_section_needs_exact_pinnings_good(base_yaml):
+def test_host_section_needs_exact_pinnings_good(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -24,7 +26,7 @@ def test_host_section_needs_exact_pinnings_good(base_yaml):
     assert len(messages) == 0
 
 
-def test_host_section_needs_exact_pinnings_good_multi(base_yaml):
+def test_host_section_needs_exact_pinnings_good_multi(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -45,7 +47,7 @@ def test_host_section_needs_exact_pinnings_good_multi(base_yaml):
 
 
 @pytest.mark.parametrize("package", ("python", "toml", "wheel", "packaging", "hatch-vcs", *PYTHON_BUILD_TOOLS))
-def test_host_section_needs_exact_pinnings_good_exception(base_yaml, package):
+def test_host_section_needs_exact_pinnings_good_exception(base_yaml: str, package: str) -> None:
     yaml_str = (
         base_yaml
         + f"""
@@ -60,7 +62,7 @@ def test_host_section_needs_exact_pinnings_good_exception(base_yaml, package):
 
 
 @pytest.mark.parametrize("package", ("python", "toml", "wheel", "packaging", *PYTHON_BUILD_TOOLS))
-def test_host_section_needs_exact_pinnings_good_exception_multi(base_yaml, package):
+def test_host_section_needs_exact_pinnings_good_exception_multi(base_yaml: str, package: str) -> None:
     yaml_str = (
         base_yaml
         + f"""
@@ -80,7 +82,7 @@ def test_host_section_needs_exact_pinnings_good_exception_multi(base_yaml, packa
     assert len(messages) == 0
 
 
-def test_host_section_needs_exact_pinnings_good_cbc(base_yaml, recipe_dir):
+def test_host_section_needs_exact_pinnings_good_cbc(base_yaml: str, recipe_dir: Path) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -100,7 +102,7 @@ def test_host_section_needs_exact_pinnings_good_cbc(base_yaml, recipe_dir):
     assert len(messages) == 0
 
 
-def test_host_section_needs_exact_pinnings_good_cbc_jinjavar(base_yaml, recipe_dir):
+def test_host_section_needs_exact_pinnings_good_cbc_jinjavar(base_yaml: str, recipe_dir: Path) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -120,7 +122,7 @@ def test_host_section_needs_exact_pinnings_good_cbc_jinjavar(base_yaml, recipe_d
     assert len(messages) == 0
 
 
-def test_host_section_needs_exact_pinnings_good_cbc_multi(base_yaml, recipe_dir):
+def test_host_section_needs_exact_pinnings_good_cbc_multi(base_yaml: str, recipe_dir: Path) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -147,7 +149,7 @@ def test_host_section_needs_exact_pinnings_good_cbc_multi(base_yaml, recipe_dir)
 
 
 @pytest.mark.parametrize("constraint", ("", ">=0.13", "<0.14", "!=0.13.7"))
-def test_host_section_needs_exact_pinnings_bad(base_yaml, constraint):
+def test_host_section_needs_exact_pinnings_bad(base_yaml: str, constraint: str) -> None:
     yaml_str = (
         base_yaml
         + f"""
@@ -162,7 +164,7 @@ def test_host_section_needs_exact_pinnings_bad(base_yaml, constraint):
 
 
 @pytest.mark.parametrize("constraint", ("", ">=0.13", "<0.14", "!=0.13.7"))
-def test_host_section_needs_exact_pinnings_bad_multi(base_yaml, constraint):
+def test_host_section_needs_exact_pinnings_bad_multi(base_yaml: str, constraint: str) -> None:
     yaml_str = (
         base_yaml
         + f"""
@@ -185,7 +187,7 @@ def test_host_section_needs_exact_pinnings_bad_multi(base_yaml, constraint):
 
 
 @pytest.mark.parametrize("compiler", COMPILERS)
-def test_should_use_compilers_good(base_yaml, compiler):
+def test_should_use_compilers_good(base_yaml: str, compiler: str) -> None:
     lint_check = "should_use_compilers"
     yaml_str = (
         base_yaml
@@ -200,7 +202,7 @@ def test_should_use_compilers_good(base_yaml, compiler):
 
 
 @pytest.mark.parametrize("compiler", COMPILERS)
-def test_should_use_compilers_bad(base_yaml, compiler):
+def test_should_use_compilers_bad(base_yaml: str, compiler: str) -> None:
     lint_check = "should_use_compilers"
     yaml_str = (
         base_yaml
@@ -214,7 +216,7 @@ def test_should_use_compilers_bad(base_yaml, compiler):
     assert len(messages) == 1 and "compiler directly" in messages[0].title
 
 
-def test_should_use_compilers_bad_multi(base_yaml):
+def test_should_use_compilers_bad_multi(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -234,7 +236,7 @@ def test_should_use_compilers_bad_multi(base_yaml):
     assert len(messages) == 2 and all("compiler directly" in msg.title for msg in messages)
 
 
-def test_compilers_must_be_in_build_good(base_yaml):
+def test_compilers_must_be_in_build_good(base_yaml: str) -> None:
     lint_check = "compilers_must_be_in_build"
     yaml_str = (
         base_yaml
@@ -248,7 +250,7 @@ def test_compilers_must_be_in_build_good(base_yaml):
     assert len(messages) == 0
 
 
-def test_compilers_must_be_in_build_good_multi(base_yaml):
+def test_compilers_must_be_in_build_good_multi(base_yaml: str) -> None:
     lint_check = "compilers_must_be_in_build"
     yaml_str = (
         base_yaml
@@ -269,7 +271,7 @@ def test_compilers_must_be_in_build_good_multi(base_yaml):
 
 
 @pytest.mark.parametrize("section", ["host", "run"])
-def test_compilers_must_be_in_build_bad(base_yaml, section):
+def test_compilers_must_be_in_build_bad(base_yaml: str, section: str) -> None:
     lint_check = "compilers_must_be_in_build"
     yaml_str = (
         base_yaml
@@ -284,7 +286,7 @@ def test_compilers_must_be_in_build_bad(base_yaml, section):
 
 
 @pytest.mark.parametrize("section", ["host", "run"])
-def test_compilers_must_be_in_build_bad_multi(base_yaml, section):
+def test_compilers_must_be_in_build_bad_multi(base_yaml: str, section: str) -> None:
     lint_check = "compilers_must_be_in_build"
     yaml_str = (
         base_yaml
@@ -305,7 +307,7 @@ def test_compilers_must_be_in_build_bad_multi(base_yaml, section):
 
 
 @pytest.mark.parametrize("tool", BUILD_TOOLS)
-def test_build_tools_must_be_in_build_good(base_yaml, tool):
+def test_build_tools_must_be_in_build_good(base_yaml: str, tool: str) -> None:
     yaml_str = (
         base_yaml
         + f"""
@@ -320,7 +322,7 @@ def test_build_tools_must_be_in_build_good(base_yaml, tool):
 
 
 @pytest.mark.parametrize("tool", BUILD_TOOLS)
-def test_build_tools_must_be_in_build_good_multi(base_yaml, tool):
+def test_build_tools_must_be_in_build_good_multi(base_yaml: str, tool: str) -> None:
     yaml_str = (
         base_yaml
         + f"""
@@ -342,7 +344,7 @@ def test_build_tools_must_be_in_build_good_multi(base_yaml, tool):
 
 @pytest.mark.parametrize("section", ("host", "run"))
 @pytest.mark.parametrize("tool", BUILD_TOOLS)
-def test_build_tools_must_be_in_build_bad(base_yaml, section, tool):
+def test_build_tools_must_be_in_build_bad(base_yaml: str, section: str, tool: str) -> None:
     yaml_str = (
         base_yaml
         + f"""
@@ -358,7 +360,7 @@ def test_build_tools_must_be_in_build_bad(base_yaml, section, tool):
 
 @pytest.mark.parametrize("section", ("host", "run"))
 @pytest.mark.parametrize("tool", BUILD_TOOLS)
-def test_build_tools_must_be_in_build_bad_multi(base_yaml, section, tool):
+def test_build_tools_must_be_in_build_bad_multi(base_yaml: str, section: str, tool: str) -> None:
     yaml_str = (
         base_yaml
         + f"""
@@ -379,7 +381,7 @@ def test_build_tools_must_be_in_build_bad_multi(base_yaml, section, tool):
 
 
 @pytest.mark.parametrize("tool", PYTHON_BUILD_TOOLS)
-def test_python_build_tool_in_run_good(base_yaml, tool):
+def test_python_build_tool_in_run_good(base_yaml: str, tool: str) -> None:
     yaml_str = (
         base_yaml
         + f"""
@@ -394,7 +396,7 @@ def test_python_build_tool_in_run_good(base_yaml, tool):
 
 
 @pytest.mark.parametrize("tool", PYTHON_BUILD_TOOLS)
-def test_python_build_tool_in_run_good_multi(base_yaml, tool):
+def test_python_build_tool_in_run_good_multi(base_yaml: str, tool: str) -> None:
     yaml_str = (
         base_yaml
         + f"""
@@ -415,7 +417,7 @@ def test_python_build_tool_in_run_good_multi(base_yaml, tool):
 
 
 @pytest.mark.parametrize("tool", PYTHON_BUILD_TOOLS)
-def test_python_build_tool_in_run_bad(base_yaml, tool):
+def test_python_build_tool_in_run_bad(base_yaml: str, tool: str) -> None:
     yaml_str = (
         base_yaml
         + f"""
@@ -430,7 +432,7 @@ def test_python_build_tool_in_run_bad(base_yaml, tool):
 
 
 @pytest.mark.parametrize("tool", PYTHON_BUILD_TOOLS)
-def test_python_build_tool_in_run_bad_multi(base_yaml, tool):
+def test_python_build_tool_in_run_bad_multi(base_yaml: str, tool: str) -> None:
     yaml_str = (
         base_yaml
         + f"""
@@ -451,7 +453,7 @@ def test_python_build_tool_in_run_bad_multi(base_yaml, tool):
 
 
 @pytest.mark.parametrize("tool", PYTHON_BUILD_TOOLS)
-def test_missing_python_build_tool_url_good(base_yaml, tool):
+def test_missing_python_build_tool_url_good(base_yaml: str, tool: str) -> None:
     yaml_str = (
         base_yaml
         + f"""
@@ -468,7 +470,7 @@ def test_missing_python_build_tool_url_good(base_yaml, tool):
 
 
 @pytest.mark.parametrize("tool", PYTHON_BUILD_TOOLS)
-def test_missing_python_build_tool_url_good_multi(base_yaml, tool):
+def test_missing_python_build_tool_url_good_multi(base_yaml: str, tool: str) -> None:
     yaml_str = (
         base_yaml
         + f"""
@@ -490,7 +492,7 @@ def test_missing_python_build_tool_url_good_multi(base_yaml, tool):
     assert len(messages) == 0
 
 
-def test_missing_python_build_tool_url_bad(base_yaml):
+def test_missing_python_build_tool_url_bad(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -505,7 +507,7 @@ def test_missing_python_build_tool_url_bad(base_yaml):
     assert len(messages) == 1 and "require a python build tool" in messages[0].title
 
 
-def test_missing_python_build_tool_url_bad_multi(base_yaml):
+def test_missing_python_build_tool_url_bad_multi(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -526,7 +528,7 @@ def test_missing_python_build_tool_url_bad_multi(base_yaml):
 
 
 @pytest.mark.parametrize("tool", PYTHON_BUILD_TOOLS)
-def test_missing_python_build_tool_pip_install_good(base_yaml, tool):
+def test_missing_python_build_tool_pip_install_good(base_yaml: str, tool: str) -> None:
     yaml_str = (
         base_yaml
         + f"""
@@ -545,7 +547,7 @@ def test_missing_python_build_tool_pip_install_good(base_yaml, tool):
 
 
 @pytest.mark.parametrize("tool", PYTHON_BUILD_TOOLS)
-def test_missing_python_build_tool_pip_install_good_list(base_yaml, tool):
+def test_missing_python_build_tool_pip_install_good_list(base_yaml: str, tool: str) -> None:
     yaml_str = (
         base_yaml
         + f"""
@@ -565,7 +567,7 @@ def test_missing_python_build_tool_pip_install_good_list(base_yaml, tool):
 
 
 @pytest.mark.parametrize("tool", PYTHON_BUILD_TOOLS)
-def test_missing_python_build_tool_pip_install_good_multi(base_yaml, tool):
+def test_missing_python_build_tool_pip_install_good_multi(base_yaml: str, tool: str) -> None:
     yaml_str = (
         base_yaml
         + f"""
@@ -588,7 +590,7 @@ def test_missing_python_build_tool_pip_install_good_multi(base_yaml, tool):
 
 
 @pytest.mark.parametrize("tool", PYTHON_BUILD_TOOLS)
-def test_missing_python_build_tool_pip_install_good_multi_list(base_yaml, tool):
+def test_missing_python_build_tool_pip_install_good_multi_list(base_yaml: str, tool: str) -> None:
     yaml_str = (
         base_yaml
         + f"""
@@ -611,7 +613,7 @@ def test_missing_python_build_tool_pip_install_good_multi_list(base_yaml, tool):
     assert len(messages) == 0
 
 
-def test_missing_python_build_tool_pip_install_bad(base_yaml):
+def test_missing_python_build_tool_pip_install_bad(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -628,7 +630,7 @@ def test_missing_python_build_tool_pip_install_bad(base_yaml):
     assert len(messages) == 1 and "require a python build tool" in messages[0].title
 
 
-def test_missing_python_build_tool_pip_install_bad_list(base_yaml):
+def test_missing_python_build_tool_pip_install_bad_list(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -646,7 +648,7 @@ def test_missing_python_build_tool_pip_install_bad_list(base_yaml):
     assert len(messages) == 1 and "require a python build tool" in messages[0].title
 
 
-def test_missing_python_build_tool_pip_install_bad_multi(base_yaml):
+def test_missing_python_build_tool_pip_install_bad_multi(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -666,7 +668,7 @@ def test_missing_python_build_tool_pip_install_bad_multi(base_yaml):
     assert len(messages) == 2 and all("require a python build tool" in msg.title for msg in messages)
 
 
-def test_missing_python_build_tool_pip_install_bad_multi_list(base_yaml):
+def test_missing_python_build_tool_pip_install_bad_multi_list(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -687,7 +689,7 @@ def test_missing_python_build_tool_pip_install_bad_multi_list(base_yaml):
     assert len(messages) == 2 and all("require a python build tool" in msg.title for msg in messages)
 
 
-def test_missing_wheel_url_good(base_yaml):
+def test_missing_wheel_url_good(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -704,7 +706,7 @@ def test_missing_wheel_url_good(base_yaml):
 
 
 @pytest.mark.parametrize("build_backend", PYTHON_BUILD_BACKENDS)
-def test_missing_wheel_url_good_alt_backend(base_yaml, build_backend):
+def test_missing_wheel_url_good_alt_backend(base_yaml: str, build_backend: str) -> None:
     yaml_str = (
         base_yaml
         + f"""
@@ -720,7 +722,7 @@ def test_missing_wheel_url_good_alt_backend(base_yaml, build_backend):
     assert len(messages) == 0
 
 
-def test_missing_wheel_url_bad(base_yaml):
+def test_missing_wheel_url_bad(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -733,7 +735,7 @@ def test_missing_wheel_url_bad(base_yaml):
     assert len(messages) == 1 and "wheel should be present" in messages[0].title
 
 
-def test_missing_wheel_pip_install_good(base_yaml):
+def test_missing_wheel_pip_install_good(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -751,7 +753,7 @@ def test_missing_wheel_pip_install_good(base_yaml):
     assert len(messages) == 0
 
 
-def test_missing_wheel_pip_install_good_list(base_yaml):
+def test_missing_wheel_pip_install_good_list(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -770,7 +772,7 @@ def test_missing_wheel_pip_install_good_list(base_yaml):
     assert len(messages) == 0
 
 
-def test_missing_wheel_pip_install_good_multi(base_yaml):
+def test_missing_wheel_pip_install_good_multi(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -793,7 +795,7 @@ def test_missing_wheel_pip_install_good_multi(base_yaml):
 
 
 @pytest.mark.parametrize("build_backend", PYTHON_BUILD_BACKENDS)
-def test_missing_wheel_pip_install_good_multi_alt_backend(base_yaml, build_backend):
+def test_missing_wheel_pip_install_good_multi_alt_backend(base_yaml: str, build_backend: str) -> None:
     yaml_str = (
         base_yaml
         + f"""
@@ -815,7 +817,7 @@ def test_missing_wheel_pip_install_good_multi_alt_backend(base_yaml, build_backe
     assert len(messages) == 0
 
 
-def test_missing_wheel_pip_install_good_multi_list(base_yaml):
+def test_missing_wheel_pip_install_good_multi_list(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -838,7 +840,7 @@ def test_missing_wheel_pip_install_good_multi_list(base_yaml):
     assert len(messages) == 0
 
 
-def test_missing_wheel_pip_install_bad(base_yaml):
+def test_missing_wheel_pip_install_bad(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -853,7 +855,7 @@ def test_missing_wheel_pip_install_bad(base_yaml):
     assert len(messages) == 1 and "wheel should be present" in messages[0].title
 
 
-def test_missing_wheel_pip_install_bad_list(base_yaml):
+def test_missing_wheel_pip_install_bad_list(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -869,7 +871,7 @@ def test_missing_wheel_pip_install_bad_list(base_yaml):
     assert len(messages) == 1 and "wheel should be present" in messages[0].title
 
 
-def test_missing_wheel_pip_install_bad_multi(base_yaml):
+def test_missing_wheel_pip_install_bad_multi(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -889,7 +891,7 @@ def test_missing_wheel_pip_install_bad_multi(base_yaml):
     assert len(messages) == 2 and all("wheel should be present" in msg.title for msg in messages)
 
 
-def test_missing_wheel_pip_install_bad_multi_list(base_yaml):
+def test_missing_wheel_pip_install_bad_multi_list(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -910,13 +912,13 @@ def test_missing_wheel_pip_install_bad_multi_list(base_yaml):
     assert len(messages) == 2 and all("wheel should be present" in msg.title for msg in messages)
 
 
-def test_uses_setup_py_good_missing(base_yaml):
+def test_uses_setup_py_good_missing(base_yaml: str) -> None:
     lint_check = "uses_setup_py"
     messages = check(lint_check, base_yaml)
     assert len(messages) == 0
 
 
-def test_uses_setup_py_good_missing_file(base_yaml, recipe_dir):
+def test_uses_setup_py_good_missing_file(base_yaml: str, recipe_dir: Path) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -930,7 +932,7 @@ def test_uses_setup_py_good_missing_file(base_yaml, recipe_dir):
     assert len(messages) == 0
 
 
-def test_uses_setup_py_good_cmd(base_yaml):
+def test_uses_setup_py_good_cmd(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -946,7 +948,7 @@ def test_uses_setup_py_good_cmd(base_yaml):
     assert len(messages) == 0
 
 
-def test_uses_setup_py_good_script(base_yaml, recipe_dir):
+def test_uses_setup_py_good_script(base_yaml: str, recipe_dir: Path) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -963,7 +965,7 @@ def test_uses_setup_py_good_script(base_yaml, recipe_dir):
 
 
 @pytest.mark.parametrize("arg_test", ["", "--no-deps", "--no-build-isolation"])
-def test_uses_setup_py_bad_cmd(base_yaml, arg_test):
+def test_uses_setup_py_bad_cmd(base_yaml: str, arg_test: str) -> None:
     yaml_str = (
         base_yaml
         + f"""
@@ -980,7 +982,7 @@ def test_uses_setup_py_bad_cmd(base_yaml, arg_test):
 
 
 @pytest.mark.parametrize("arg_test", ["", "--no-deps", "--no-build-isolation"])
-def test_uses_setup_py_bad_cmd_list(base_yaml, arg_test):
+def test_uses_setup_py_bad_cmd_list(base_yaml: str, arg_test: str) -> None:
     yaml_str = (
         base_yaml
         + f"""
@@ -998,7 +1000,7 @@ def test_uses_setup_py_bad_cmd_list(base_yaml, arg_test):
 
 
 @pytest.mark.parametrize("arg_test", ["", "--no-deps", "--no-build-isolation"])
-def test_uses_setup_py_bad_cmd_multi(base_yaml, arg_test):
+def test_uses_setup_py_bad_cmd_multi(base_yaml: str, arg_test: str) -> None:
     yaml_str = (
         base_yaml
         + f"""
@@ -1021,7 +1023,7 @@ def test_uses_setup_py_bad_cmd_multi(base_yaml, arg_test):
 
 
 @pytest.mark.parametrize("arg_test", ["", "--no-deps", "--no-build-isolation"])
-def test_uses_setup_py_bad_cmd_multi_list(base_yaml, arg_test):
+def test_uses_setup_py_bad_cmd_multi_list(base_yaml: str, arg_test: str) -> None:
     yaml_str = (
         base_yaml
         + f"""
@@ -1045,7 +1047,7 @@ def test_uses_setup_py_bad_cmd_multi_list(base_yaml, arg_test):
 
 
 @pytest.mark.parametrize("arg_test", ["", "--no-deps", "--no-build-isolation"])
-def test_uses_setup_py_bad_script(base_yaml, recipe_dir, arg_test):
+def test_uses_setup_py_bad_script(base_yaml: str, recipe_dir: Path, arg_test: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -1062,7 +1064,7 @@ def test_uses_setup_py_bad_script(base_yaml, recipe_dir, arg_test):
 
 
 @pytest.mark.parametrize("arg_test", ["", "--no-deps", "--no-build-isolation"])
-def test_uses_setup_py_bad_script_multi(base_yaml, recipe_dir, arg_test):
+def test_uses_setup_py_bad_script_multi(base_yaml: str, recipe_dir: Path, arg_test: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -1087,7 +1089,7 @@ def test_uses_setup_py_bad_script_multi(base_yaml, recipe_dir, arg_test):
 
 
 @pytest.mark.parametrize("arg_test", ["", "--no-deps", "--no-build-isolation"])
-def test_uses_setup_py_multi_script_missing(base_yaml, recipe_dir, arg_test):
+def test_uses_setup_py_multi_script_missing(base_yaml: str, recipe_dir: Path, arg_test: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -1110,13 +1112,13 @@ def test_uses_setup_py_multi_script_missing(base_yaml, recipe_dir, arg_test):
     assert len(messages) == 1 and "python setup.py install" in messages[0].title
 
 
-def test_pip_install_args_good_missing(base_yaml):
+def test_pip_install_args_good_missing(base_yaml: str) -> None:
     lint_check = "pip_install_args"
     messages = check(lint_check, base_yaml)
     assert len(messages) == 0
 
 
-def test_pip_install_args_good_missing_file(base_yaml, recipe_dir):
+def test_pip_install_args_good_missing_file(base_yaml: str, recipe_dir: Path) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -1130,7 +1132,7 @@ def test_pip_install_args_good_missing_file(base_yaml, recipe_dir):
     assert len(messages) == 0
 
 
-def test_pip_install_args_good_cmd(base_yaml):
+def test_pip_install_args_good_cmd(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -1146,7 +1148,7 @@ def test_pip_install_args_good_cmd(base_yaml):
     assert len(messages) == 0
 
 
-def test_pip_install_args_good_script(base_yaml, recipe_dir):
+def test_pip_install_args_good_script(base_yaml: str, recipe_dir: Path) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -1162,7 +1164,7 @@ def test_pip_install_args_good_script(base_yaml, recipe_dir):
     assert len(messages) == 0
 
 
-def test_pip_install_args_bad_cmd(base_yaml):
+def test_pip_install_args_bad_cmd(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -1178,7 +1180,7 @@ def test_pip_install_args_bad_cmd(base_yaml):
     assert len(messages) == 1 and "should be run with --no-deps and --no-build-isolation" in messages[0].title
 
 
-def test_pip_install_args_bad_cmd_list(base_yaml):
+def test_pip_install_args_bad_cmd_list(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -1195,7 +1197,7 @@ def test_pip_install_args_bad_cmd_list(base_yaml):
     assert len(messages) == 1 and "should be run with --no-deps and --no-build-isolation" in messages[0].title
 
 
-def test_pip_install_args_bad_cmd_multi(base_yaml):
+def test_pip_install_args_bad_cmd_multi(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -1219,7 +1221,7 @@ def test_pip_install_args_bad_cmd_multi(base_yaml):
     )
 
 
-def test_pip_install_args_bad_cmd_multi_list(base_yaml):
+def test_pip_install_args_bad_cmd_multi_list(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -1244,7 +1246,7 @@ def test_pip_install_args_bad_cmd_multi_list(base_yaml):
     )
 
 
-def test_pip_install_args_bad_script(base_yaml, recipe_dir):
+def test_pip_install_args_bad_script(base_yaml: str, recipe_dir: Path) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -1260,7 +1262,7 @@ def test_pip_install_args_bad_script(base_yaml, recipe_dir):
     assert len(messages) == 1 and "should be run with --no-deps and --no-build-isolation" in messages[0].title
 
 
-def test_pip_install_args_bad_script_multi(base_yaml, recipe_dir):
+def test_pip_install_args_bad_script_multi(base_yaml: str, recipe_dir: Path) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -1286,7 +1288,7 @@ def test_pip_install_args_bad_script_multi(base_yaml, recipe_dir):
     )
 
 
-def test_pip_install_args_multi_script_missing(base_yaml, recipe_dir):
+def test_pip_install_args_multi_script_missing(base_yaml: str, recipe_dir: Path) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -1309,7 +1311,7 @@ def test_pip_install_args_multi_script_missing(base_yaml, recipe_dir):
     assert len(messages) == 1 and "should be run with --no-deps and --no-build-isolation" in messages[0].title
 
 
-def test_cython_must_be_in_host_good(base_yaml):
+def test_cython_must_be_in_host_good(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -1323,7 +1325,7 @@ def test_cython_must_be_in_host_good(base_yaml):
     assert len(messages) == 0
 
 
-def test_cython_must_be_in_host_good_multi(base_yaml):
+def test_cython_must_be_in_host_good_multi(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -1344,7 +1346,7 @@ def test_cython_must_be_in_host_good_multi(base_yaml):
 
 
 @pytest.mark.parametrize("section", ["build", "run"])
-def test_cython_must_be_in_host_bad(base_yaml, section):
+def test_cython_must_be_in_host_bad(base_yaml: str, section: str) -> None:
     lint_check = "cython_must_be_in_host"
     yaml_str = (
         base_yaml
@@ -1359,7 +1361,7 @@ def test_cython_must_be_in_host_bad(base_yaml, section):
 
 
 @pytest.mark.parametrize("section", ["build", "run"])
-def test_cython_must_be_in_host_bad_multi(base_yaml, section):
+def test_cython_must_be_in_host_bad_multi(base_yaml: str, section: str) -> None:
     lint_check = "cython_must_be_in_host"
     yaml_str = (
         base_yaml
@@ -1379,7 +1381,7 @@ def test_cython_must_be_in_host_bad_multi(base_yaml, section):
     assert len(messages) == 2 and all("Cython should be" in msg.title for msg in messages)
 
 
-def test_cython_needs_compiler_good(base_yaml):
+def test_cython_needs_compiler_good(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -1395,7 +1397,7 @@ def test_cython_needs_compiler_good(base_yaml):
     assert len(messages) == 0
 
 
-def test_cython_needs_compiler_good_multi(base_yaml):
+def test_cython_needs_compiler_good_multi(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -1419,7 +1421,7 @@ def test_cython_needs_compiler_good_multi(base_yaml):
     assert len(messages) == 0
 
 
-def test_cython_needs_compiler_bad(base_yaml):
+def test_cython_needs_compiler_bad(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -1435,7 +1437,7 @@ def test_cython_needs_compiler_bad(base_yaml):
     assert len(messages) == 1 and "Cython generates C code" in messages[0].title
 
 
-def test_cython_needs_compiler_bad_multi(base_yaml):
+def test_cython_needs_compiler_bad_multi(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -1459,7 +1461,7 @@ def test_cython_needs_compiler_bad_multi(base_yaml):
     assert len(messages) == 2 and all("Cython generates C code" in msg.title for msg in messages)
 
 
-def test_avoid_noarch_good(base_yaml):
+def test_avoid_noarch_good(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -1472,7 +1474,7 @@ def test_avoid_noarch_good(base_yaml):
     assert len(messages) == 0
 
 
-def test_avoid_noarch_good_build_number(base_yaml):
+def test_avoid_noarch_good_build_number(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -1486,7 +1488,7 @@ def test_avoid_noarch_good_build_number(base_yaml):
     assert len(messages) == 0
 
 
-def test_avoid_noarch_good_osx_app(base_yaml):
+def test_avoid_noarch_good_osx_app(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -1500,7 +1502,7 @@ def test_avoid_noarch_good_osx_app(base_yaml):
     assert len(messages) == 0
 
 
-def test_avoid_noarch_good_app(base_yaml):
+def test_avoid_noarch_good_app(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -1515,7 +1517,7 @@ def test_avoid_noarch_good_app(base_yaml):
     assert len(messages) == 0
 
 
-def test_avoid_noarch_bad(base_yaml):
+def test_avoid_noarch_bad(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -1528,7 +1530,7 @@ def test_avoid_noarch_bad(base_yaml):
     assert len(messages) == 1 and "noarch: python" in messages[0].title
 
 
-def test_patch_unnecessary_good(base_yaml):
+def test_patch_unnecessary_good(base_yaml: str) -> None:
     lint_check = "patch_unnecessary"
     yaml_str = (
         base_yaml
@@ -1542,7 +1544,7 @@ def test_patch_unnecessary_good(base_yaml):
 
 
 @pytest.mark.parametrize("patch", ["patch", "m2-patch"])
-def test_patch_unnecessary_bad(base_yaml, patch):
+def test_patch_unnecessary_bad(base_yaml: str, patch: str) -> None:
     lint_check = "patch_unnecessary"
     yaml_str = (
         base_yaml
@@ -1559,7 +1561,7 @@ def test_patch_unnecessary_bad(base_yaml, patch):
 
 
 @pytest.mark.parametrize("patch", ["patch", "m2-patch"])
-def test_patch_must_be_in_build_good(base_yaml, patch):
+def test_patch_must_be_in_build_good(base_yaml: str, patch: str) -> None:
     lint_check = "patch_must_be_in_build"
     yaml_str = (
         base_yaml
@@ -1577,7 +1579,7 @@ def test_patch_must_be_in_build_good(base_yaml, patch):
     assert len(messages) == 0
 
 
-def test_patch_must_be_in_build_bad(base_yaml):
+def test_patch_must_be_in_build_bad(base_yaml: str) -> None:
     lint_check = "patch_must_be_in_build"
     for patch in ["patch", "m2-patch"]:
         for section in ["host", "run"]:
@@ -1601,7 +1603,7 @@ def test_patch_must_be_in_build_bad(base_yaml):
 
 @pytest.mark.parametrize("patch", ["patch", "m2-patch"])
 @pytest.mark.parametrize("section", ["host", "run"])
-def test_patch_must_be_in_build_list_bad(base_yaml, patch, section):
+def test_patch_must_be_in_build_list_bad(base_yaml: str, patch: str, section: str) -> None:
     lint_check = "patch_must_be_in_build"
     yaml_str = (
         base_yaml
@@ -1620,7 +1622,7 @@ def test_patch_must_be_in_build_list_bad(base_yaml, patch, section):
     assert len(messages) == 1 and "patch must be in build" in messages[0].title
 
 
-def test_patch_must_be_in_build_missing(base_yaml):
+def test_patch_must_be_in_build_missing(base_yaml: str) -> None:
     lint_check = "patch_must_be_in_build"
     yaml_str = (
         base_yaml
@@ -1635,7 +1637,7 @@ def test_patch_must_be_in_build_missing(base_yaml):
     assert len(messages) == 1 and "patch must be in build" in messages[0].title
 
 
-def test_has_run_test_and_commands_good_cmd(base_yaml, tmpdir):
+def test_has_run_test_and_commands_good_cmd(base_yaml: str, tmpdir: Path) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -1649,7 +1651,7 @@ def test_has_run_test_and_commands_good_cmd(base_yaml, tmpdir):
     assert len(messages) == 0
 
 
-def test_has_run_test_and_commands_good_script(base_yaml, recipe_dir):
+def test_has_run_test_and_commands_good_script(base_yaml: str, recipe_dir: Path) -> None:
     lint_check = "has_run_test_and_commands"
     for script in ["run_test.sh", "run_test.bat"]:
         test_file = recipe_dir / script
@@ -1658,7 +1660,7 @@ def test_has_run_test_and_commands_good_script(base_yaml, recipe_dir):
     assert len(messages) == 0
 
 
-def test_has_run_test_and_commands_good_cmd_multi(base_yaml, tmpdir):
+def test_has_run_test_and_commands_good_cmd_multi(base_yaml: str, tmpdir: Path) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -1678,7 +1680,7 @@ def test_has_run_test_and_commands_good_cmd_multi(base_yaml, tmpdir):
     assert len(messages) == 0
 
 
-def test_has_run_test_and_commands_good_script_multi(base_yaml, tmpdir):
+def test_has_run_test_and_commands_good_script_multi(base_yaml: str, tmpdir: Path) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -1696,7 +1698,7 @@ def test_has_run_test_and_commands_good_script_multi(base_yaml, tmpdir):
     assert len(messages) == 0
 
 
-def test_has_run_test_and_commands_bad(base_yaml, recipe_dir):
+def test_has_run_test_and_commands_bad(base_yaml: str, recipe_dir: Path) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -1713,7 +1715,7 @@ def test_has_run_test_and_commands_bad(base_yaml, recipe_dir):
     assert len(messages) == 1 and "Test commands are not executed" in messages[0].title
 
 
-def test_has_run_test_and_commands_bad_multi(base_yaml, tmpdir):
+def test_has_run_test_and_commands_bad_multi(base_yaml: str, tmpdir: Path) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -1735,7 +1737,7 @@ def test_has_run_test_and_commands_bad_multi(base_yaml, tmpdir):
     assert len(messages) == 2 and all("Test commands are not executed" in msg.title for msg in messages)
 
 
-def test_missing_imports_or_run_test_py_good_imports(base_yaml):
+def test_missing_imports_or_run_test_py_good_imports(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -1752,7 +1754,7 @@ def test_missing_imports_or_run_test_py_good_imports(base_yaml):
     assert len(messages) == 0
 
 
-def test_missing_imports_or_run_test_py_good_pypi(base_yaml):
+def test_missing_imports_or_run_test_py_good_pypi(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -1768,7 +1770,7 @@ def test_missing_imports_or_run_test_py_good_pypi(base_yaml):
     assert len(messages) == 0
 
 
-def test_missing_imports_or_run_test_py_good_script(base_yaml, recipe_dir):
+def test_missing_imports_or_run_test_py_good_script(base_yaml: str, recipe_dir: Path) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -1784,7 +1786,7 @@ def test_missing_imports_or_run_test_py_good_script(base_yaml, recipe_dir):
     assert len(messages) == 0
 
 
-def test_missing_imports_or_run_test_py_good_multi(base_yaml):
+def test_missing_imports_or_run_test_py_good_multi(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -1809,7 +1811,7 @@ def test_missing_imports_or_run_test_py_good_multi(base_yaml):
     assert len(messages) == 0
 
 
-def test_missing_imports_or_run_test_py_good_multi_pypi(base_yaml):
+def test_missing_imports_or_run_test_py_good_multi_pypi(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -1830,7 +1832,7 @@ def test_missing_imports_or_run_test_py_good_multi_pypi(base_yaml):
     assert len(messages) == 0
 
 
-def test_missing_imports_or_run_test_py_bad(base_yaml):
+def test_missing_imports_or_run_test_py_bad(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -1844,7 +1846,7 @@ def test_missing_imports_or_run_test_py_bad(base_yaml):
     assert len(messages) == 1 and "Python packages require imports" in messages[0].title
 
 
-def test_missing_imports_or_run_test_py_bad_pypi(base_yaml):
+def test_missing_imports_or_run_test_py_bad_pypi(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -1858,7 +1860,7 @@ def test_missing_imports_or_run_test_py_bad_pypi(base_yaml):
     assert len(messages) == 1 and "Python packages require imports" in messages[0].title
 
 
-def test_missing_imports_or_run_test_py_bad_multi(base_yaml):
+def test_missing_imports_or_run_test_py_bad_multi(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -1878,7 +1880,7 @@ def test_missing_imports_or_run_test_py_bad_multi(base_yaml):
     assert len(messages) == 2 and all("Python packages require imports" in msg.title for msg in messages)
 
 
-def test_missing_imports_or_run_test_py_bad_multi_pypi(base_yaml):
+def test_missing_imports_or_run_test_py_bad_multi_pypi(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -1896,7 +1898,7 @@ def test_missing_imports_or_run_test_py_bad_multi_pypi(base_yaml):
     assert len(messages) == 2 and all("Python packages require imports" in msg.title for msg in messages)
 
 
-def test_missing_pip_check_url_good(base_yaml):
+def test_missing_pip_check_url_good(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -1912,7 +1914,7 @@ def test_missing_pip_check_url_good(base_yaml):
     assert len(messages) == 0
 
 
-def test_missing_pip_check_url_bad(base_yaml):
+def test_missing_pip_check_url_bad(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -1926,7 +1928,7 @@ def test_missing_pip_check_url_bad(base_yaml):
 
 
 # This test covers part of the is_pypi_source function
-def test_missing_pip_check_url_list_bad(base_yaml):
+def test_missing_pip_check_url_list_bad(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -1940,7 +1942,7 @@ def test_missing_pip_check_url_list_bad(base_yaml):
     assert len(messages) == 1 and "pip check should be present" in messages[0].title
 
 
-def test_missing_pip_check_pip_install_cmd_good(base_yaml):
+def test_missing_pip_check_pip_install_cmd_good(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -1958,7 +1960,7 @@ def test_missing_pip_check_pip_install_cmd_good(base_yaml):
     assert len(messages) == 0
 
 
-def test_missing_pip_check_pip_install_cmd_good_list(base_yaml):
+def test_missing_pip_check_pip_install_cmd_good_list(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -1977,7 +1979,7 @@ def test_missing_pip_check_pip_install_cmd_good_list(base_yaml):
     assert len(messages) == 0
 
 
-def test_missing_pip_check_pip_install_cmd_good_multi(base_yaml):
+def test_missing_pip_check_pip_install_cmd_good_multi(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -1997,7 +1999,7 @@ def test_missing_pip_check_pip_install_cmd_good_multi(base_yaml):
     assert len(messages) == 0
 
 
-def test_missing_pip_check_pip_install_cmd_good_multi_list(base_yaml):
+def test_missing_pip_check_pip_install_cmd_good_multi_list(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -2018,7 +2020,7 @@ def test_missing_pip_check_pip_install_cmd_good_multi_list(base_yaml):
     assert len(messages) == 0
 
 
-def test_missing_pip_check_pip_install_script_good(base_yaml, recipe_dir):
+def test_missing_pip_check_pip_install_script_good(base_yaml: str, recipe_dir: Path) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -2035,7 +2037,7 @@ def test_missing_pip_check_pip_install_script_good(base_yaml, recipe_dir):
     assert len(messages) == 0
 
 
-def test_missing_pip_check_pip_install_script_good_list(base_yaml, recipe_dir):
+def test_missing_pip_check_pip_install_script_good_list(base_yaml: str, recipe_dir: Path) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -2053,7 +2055,7 @@ def test_missing_pip_check_pip_install_script_good_list(base_yaml, recipe_dir):
     assert len(messages) == 0
 
 
-def test_missing_pip_check_pip_install_script_good_multi(base_yaml, recipe_dir):
+def test_missing_pip_check_pip_install_script_good_multi(base_yaml: str, recipe_dir: Path) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -2074,7 +2076,7 @@ def test_missing_pip_check_pip_install_script_good_multi(base_yaml, recipe_dir):
     assert len(messages) == 0
 
 
-def test_missing_pip_check_pip_install_script_good_multi_list(base_yaml, recipe_dir):
+def test_missing_pip_check_pip_install_script_good_multi_list(base_yaml: str, recipe_dir: Path) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -2096,7 +2098,7 @@ def test_missing_pip_check_pip_install_script_good_multi_list(base_yaml, recipe_
     assert len(messages) == 0
 
 
-def test_missing_pip_check_pip_install_missing_bad(base_yaml):
+def test_missing_pip_check_pip_install_missing_bad(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -2111,7 +2113,7 @@ def test_missing_pip_check_pip_install_missing_bad(base_yaml):
     assert len(messages) == 1 and "pip check should be present" in messages[0].title
 
 
-def test_missing_pip_check_pip_install_missing_bad_list(base_yaml):
+def test_missing_pip_check_pip_install_missing_bad_list(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -2127,7 +2129,7 @@ def test_missing_pip_check_pip_install_missing_bad_list(base_yaml):
     assert len(messages) == 1 and "pip check should be present" in messages[0].title
 
 
-def test_missing_pip_check_pip_install_missing_bad_multi(base_yaml):
+def test_missing_pip_check_pip_install_missing_bad_multi(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -2145,7 +2147,7 @@ def test_missing_pip_check_pip_install_missing_bad_multi(base_yaml):
     assert len(messages) == 2 and all("pip check should be present" in msg.title for msg in messages)
 
 
-def test_missing_pip_check_pip_install_missing_bad_multi_list(base_yaml):
+def test_missing_pip_check_pip_install_missing_bad_multi_list(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -2164,7 +2166,7 @@ def test_missing_pip_check_pip_install_missing_bad_multi_list(base_yaml):
     assert len(messages) == 2 and all("pip check should be present" in msg.title for msg in messages)
 
 
-def test_missing_pip_check_pip_install_cmd_bad(base_yaml):
+def test_missing_pip_check_pip_install_cmd_bad(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -2182,7 +2184,7 @@ def test_missing_pip_check_pip_install_cmd_bad(base_yaml):
     assert len(messages) == 1 and "pip check should be present" in messages[0].title
 
 
-def test_missing_pip_check_pip_install_cmd_bad_list(base_yaml):
+def test_missing_pip_check_pip_install_cmd_bad_list(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -2201,7 +2203,7 @@ def test_missing_pip_check_pip_install_cmd_bad_list(base_yaml):
     assert len(messages) == 1 and "pip check should be present" in messages[0].title
 
 
-def test_missing_pip_check_pip_install_cmd_bad_multi(base_yaml):
+def test_missing_pip_check_pip_install_cmd_bad_multi(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -2225,7 +2227,7 @@ def test_missing_pip_check_pip_install_cmd_bad_multi(base_yaml):
     assert len(messages) == 2 and all("pip check should be present" in msg.title for msg in messages)
 
 
-def test_missing_pip_check_pip_install_cmd_bad_multi_list(base_yaml):
+def test_missing_pip_check_pip_install_cmd_bad_multi_list(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -2250,7 +2252,7 @@ def test_missing_pip_check_pip_install_cmd_bad_multi_list(base_yaml):
     assert len(messages) == 2 and all("pip check should be present" in msg.title for msg in messages)
 
 
-def test_missing_pip_check_pip_install_script_bad(base_yaml, recipe_dir):
+def test_missing_pip_check_pip_install_script_bad(base_yaml: str, recipe_dir: Path) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -2267,7 +2269,7 @@ def test_missing_pip_check_pip_install_script_bad(base_yaml, recipe_dir):
     assert len(messages) == 1 and "pip check should be present" in messages[0].title
 
 
-def test_missing_pip_check_pip_install_script_bad_list(base_yaml, recipe_dir):
+def test_missing_pip_check_pip_install_script_bad_list(base_yaml: str, recipe_dir: Path) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -2285,7 +2287,7 @@ def test_missing_pip_check_pip_install_script_bad_list(base_yaml, recipe_dir):
     assert len(messages) == 1 and "pip check should be present" in messages[0].title
 
 
-def test_missing_pip_check_pip_install_script_bad_multi(base_yaml, recipe_dir):
+def test_missing_pip_check_pip_install_script_bad_multi(base_yaml: str, recipe_dir: Path) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -2309,7 +2311,7 @@ def test_missing_pip_check_pip_install_script_bad_multi(base_yaml, recipe_dir):
     assert len(messages) == 2 and all("pip check should be present" in msg.title for msg in messages)
 
 
-def test_missing_pip_check_pip_install_script_bad_multi_list(base_yaml, recipe_dir):
+def test_missing_pip_check_pip_install_script_bad_multi_list(base_yaml: str, recipe_dir: Path) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -2334,7 +2336,7 @@ def test_missing_pip_check_pip_install_script_bad_multi_list(base_yaml, recipe_d
     assert len(messages) == 2 and all("pip check should be present" in msg.title for msg in messages)
 
 
-def test_missing_test_requirement_pip_missing(base_yaml):
+def test_missing_test_requirement_pip_missing(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -2347,7 +2349,7 @@ def test_missing_test_requirement_pip_missing(base_yaml):
     assert len(messages) == 0
 
 
-def test_missing_test_requirement_pip_missing_multi(base_yaml):
+def test_missing_test_requirement_pip_missing_multi(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -2363,7 +2365,7 @@ def test_missing_test_requirement_pip_missing_multi(base_yaml):
     assert len(messages) == 0
 
 
-def test_missing_test_requirement_pip_script_missing(base_yaml, recipe_dir):
+def test_missing_test_requirement_pip_script_missing(base_yaml: str, recipe_dir: Path) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -2378,7 +2380,7 @@ def test_missing_test_requirement_pip_script_missing(base_yaml, recipe_dir):
     assert len(messages) == 0
 
 
-def test_missing_test_requirement_pip_script_missing_multi(base_yaml, recipe_dir):
+def test_missing_test_requirement_pip_script_missing_multi(base_yaml: str, recipe_dir: Path) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -2398,7 +2400,7 @@ def test_missing_test_requirement_pip_script_missing_multi(base_yaml, recipe_dir
     assert len(messages) == 0
 
 
-def test_missing_test_requirement_pip_cmd_good(base_yaml):
+def test_missing_test_requirement_pip_cmd_good(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -2416,7 +2418,7 @@ def test_missing_test_requirement_pip_cmd_good(base_yaml):
     assert len(messages) == 0
 
 
-def test_missing_test_requirement_pip_cmd_good_multi(base_yaml):
+def test_missing_test_requirement_pip_cmd_good_multi(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -2442,7 +2444,7 @@ def test_missing_test_requirement_pip_cmd_good_multi(base_yaml):
     assert len(messages) == 0
 
 
-def test_missing_test_requirement_pip_script_good(base_yaml, recipe_dir):
+def test_missing_test_requirement_pip_script_good(base_yaml: str, recipe_dir: Path) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -2460,7 +2462,7 @@ def test_missing_test_requirement_pip_script_good(base_yaml, recipe_dir):
     assert len(messages) == 0
 
 
-def test_missing_test_requirement_pip_script_good_multi(base_yaml, recipe_dir):
+def test_missing_test_requirement_pip_script_good_multi(base_yaml: str, recipe_dir: Path) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -2482,7 +2484,7 @@ def test_missing_test_requirement_pip_script_good_multi(base_yaml, recipe_dir):
     assert len(messages) == 0
 
 
-def test_missing_test_requirement_pip_cmd_bad(base_yaml):
+def test_missing_test_requirement_pip_cmd_bad(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -2498,7 +2500,7 @@ def test_missing_test_requirement_pip_cmd_bad(base_yaml):
     assert len(messages) == 1 and "pip is required" in messages[0].title
 
 
-def test_missing_test_requirement_pip_cmd_bad_multi(base_yaml):
+def test_missing_test_requirement_pip_cmd_bad_multi(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -2520,7 +2522,7 @@ def test_missing_test_requirement_pip_cmd_bad_multi(base_yaml):
     assert len(messages) == 2 and all("pip is required" in msg.title for msg in messages)
 
 
-def test_missing_test_requirement_pip_script_bad(base_yaml, recipe_dir):
+def test_missing_test_requirement_pip_script_bad(base_yaml: str, recipe_dir: Path) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -2535,7 +2537,7 @@ def test_missing_test_requirement_pip_script_bad(base_yaml, recipe_dir):
     assert len(messages) == 1 and "pip is required" in messages[0].title
 
 
-def test_missing_test_requirement_pip_script_bad_multi(base_yaml, recipe_dir):
+def test_missing_test_requirement_pip_script_bad_multi(base_yaml: str, recipe_dir: Path) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -2557,7 +2559,7 @@ def test_missing_test_requirement_pip_script_bad_multi(base_yaml, recipe_dir):
     assert len(messages) == 2 and all("pip is required" in msg.title for msg in messages)
 
 
-def test_missing_python_url_good(base_yaml):
+def test_missing_python_url_good(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -2575,7 +2577,7 @@ def test_missing_python_url_good(base_yaml):
     assert len(messages) == 0
 
 
-def test_missing_python_url_bad(base_yaml):
+def test_missing_python_url_bad(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -2588,7 +2590,7 @@ def test_missing_python_url_bad(base_yaml):
     assert len(messages) == 2 and all("python should be present" in m.title for m in messages)
 
 
-def test_missing_python_pip_install_good(base_yaml):
+def test_missing_python_pip_install_good(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -2608,7 +2610,7 @@ def test_missing_python_pip_install_good(base_yaml):
     assert len(messages) == 0
 
 
-def test_missing_python_pip_install_good_list(base_yaml):
+def test_missing_python_pip_install_good_list(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -2629,7 +2631,7 @@ def test_missing_python_pip_install_good_list(base_yaml):
     assert len(messages) == 0
 
 
-def test_missing_python_pip_install_good_multi(base_yaml):
+def test_missing_python_pip_install_good_multi(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -2657,7 +2659,7 @@ def test_missing_python_pip_install_good_multi(base_yaml):
     assert len(messages) == 0
 
 
-def test_missing_python_pip_install_good_multi_list(base_yaml):
+def test_missing_python_pip_install_good_multi_list(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -2686,7 +2688,7 @@ def test_missing_python_pip_install_good_multi_list(base_yaml):
     assert len(messages) == 0
 
 
-def test_missing_python_pip_install_bad(base_yaml):
+def test_missing_python_pip_install_bad(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -2701,7 +2703,7 @@ def test_missing_python_pip_install_bad(base_yaml):
     assert len(messages) == 2 and all("python should be present" in m.title for m in messages)
 
 
-def test_missing_python_pip_install_bad_list(base_yaml):
+def test_missing_python_pip_install_bad_list(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -2717,7 +2719,7 @@ def test_missing_python_pip_install_bad_list(base_yaml):
     assert len(messages) == 2 and all("python should be present" in m.title for m in messages)
 
 
-def test_missing_python_pip_install_bad_multi(base_yaml):
+def test_missing_python_pip_install_bad_multi(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -2735,7 +2737,7 @@ def test_missing_python_pip_install_bad_multi(base_yaml):
     assert len(messages) == 4 and all("python should be present" in m.title for m in messages)
 
 
-def test_missing_python_pip_install_bad_multi_list(base_yaml):
+def test_missing_python_pip_install_bad_multi_list(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -2754,7 +2756,7 @@ def test_missing_python_pip_install_bad_multi_list(base_yaml):
     assert len(messages) == 4 and all("python should be present" in m.title for m in messages)
 
 
-def test_remove_python_pinning_good(base_yaml):
+def test_remove_python_pinning_good(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -2770,7 +2772,7 @@ def test_remove_python_pinning_good(base_yaml):
     assert len(messages) == 0
 
 
-def test_remove_python_pinning_good_multi(base_yaml):
+def test_remove_python_pinning_good_multi(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -2794,7 +2796,7 @@ def test_remove_python_pinning_good_multi(base_yaml):
     assert len(messages) == 0
 
 
-def test_remove_python_pinning_bad(base_yaml):
+def test_remove_python_pinning_bad(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -2810,7 +2812,7 @@ def test_remove_python_pinning_bad(base_yaml):
     assert len(messages) == 2 and all("python deps should not be constrained" in m.title for m in messages)
 
 
-def test_remove_python_pinning_bad_multi(base_yaml):
+def test_remove_python_pinning_bad_multi(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -2835,7 +2837,7 @@ def test_remove_python_pinning_bad_multi(base_yaml):
 
 
 @pytest.mark.parametrize("arch", ("linux-64", "win-64"))
-def test_no_git_on_windows_good(base_yaml, arch):  # pylint: disable=unused-argument
+def test_no_git_on_windows_good(base_yaml: str, arch: str) -> None:  # pylint: disable=unused-argument
     yaml_str = (
         base_yaml
         + """
@@ -2849,7 +2851,7 @@ def test_no_git_on_windows_good(base_yaml, arch):  # pylint: disable=unused-argu
     assert len(messages) == 0
 
 
-def test_no_git_on_windows_bad(base_yaml):
+def test_no_git_on_windows_bad(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -2864,7 +2866,7 @@ def test_no_git_on_windows_bad(base_yaml):
 
 
 @pytest.mark.parametrize("arch", ("linux-64", "win-64"))
-def test_no_git_on_windows_good_multi(base_yaml, arch):  # pylint: disable=unused-argument
+def test_no_git_on_windows_good_multi(base_yaml: str, arch: str) -> None:  # pylint: disable=unused-argument
     yaml_str = (
         base_yaml
         + """
@@ -2884,7 +2886,7 @@ def test_no_git_on_windows_good_multi(base_yaml, arch):  # pylint: disable=unuse
     assert len(messages) == 0
 
 
-def test_no_git_on_windows_bad_multi(base_yaml):
+def test_no_git_on_windows_bad_multi(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -2911,7 +2913,7 @@ def test_no_git_on_windows_auto_fix() -> None:
     assert_on_auto_fix("no_git_on_windows", "win-64")
 
 
-def test_gui_app_good(base_yaml):
+def test_gui_app_good(base_yaml: str) -> None:
     lint_check = "gui_app"
     messages = check(lint_check, base_yaml)
     assert len(messages) == 0
@@ -2934,7 +2936,7 @@ def test_gui_app_good(base_yaml):
         "wxpython",
     ),
 )
-def test_gui_app_bad(base_yaml, gui):
+def test_gui_app_bad(base_yaml: str, gui: str) -> None:
     lint_check = "gui_app"
     yaml_str = (
         base_yaml
@@ -2948,7 +2950,7 @@ def test_gui_app_bad(base_yaml, gui):
     assert len(messages) == 1 and "GUI application" in messages[0].title
 
 
-def test_cbc_dep_in_run_missing_from_host_good(base_yaml):
+def test_cbc_dep_in_run_missing_from_host_good(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -2966,7 +2968,7 @@ def test_cbc_dep_in_run_missing_from_host_good(base_yaml):
     assert len(messages) == 0
 
 
-def test_cbc_dep_in_run_missing_from_host_good_multi(base_yaml):
+def test_cbc_dep_in_run_missing_from_host_good_multi(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -2994,7 +2996,7 @@ def test_cbc_dep_in_run_missing_from_host_good_multi(base_yaml):
     assert len(messages) == 0
 
 
-def test_cbc_dep_in_run_missing_from_host_bad(base_yaml):
+def test_cbc_dep_in_run_missing_from_host_bad(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -3011,7 +3013,7 @@ def test_cbc_dep_in_run_missing_from_host_bad(base_yaml):
     assert len(messages) == 1
 
 
-def test_cbc_dep_in_run_missing_from_host_bad_multi(base_yaml):
+def test_cbc_dep_in_run_missing_from_host_bad_multi(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -3037,7 +3039,7 @@ def test_cbc_dep_in_run_missing_from_host_bad_multi(base_yaml):
     assert len(messages) == 2
 
 
-def test_potentially_bad_ignore_run_exports_good(base_yaml):
+def test_potentially_bad_ignore_run_exports_good(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -3055,7 +3057,7 @@ def test_potentially_bad_ignore_run_exports_good(base_yaml):
     assert len(messages) == 0
 
 
-def test_potentially_bad_ignore_run_exports_good_multi(base_yaml):
+def test_potentially_bad_ignore_run_exports_good_multi(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -3075,7 +3077,7 @@ def test_potentially_bad_ignore_run_exports_good_multi(base_yaml):
     assert len(messages) == 0
 
 
-def test_potentially_bad_ignore_run_exports_bad(base_yaml):
+def test_potentially_bad_ignore_run_exports_bad(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -3093,7 +3095,7 @@ def test_potentially_bad_ignore_run_exports_bad(base_yaml):
     assert len(messages) == 1
 
 
-def test_potentially_bad_ignore_run_exports_bad_multi(base_yaml):
+def test_potentially_bad_ignore_run_exports_bad_multi(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """

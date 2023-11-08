@@ -45,6 +45,14 @@ repos:
     hooks:
     - id: pylint
       args: ["--rcfile=.pylintrc"]
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.6.1
+    hooks:
+    - id: mypy
+      # `mypy` is run as a system script to ensure that it is checking against
+      # the libraries we have installed to the environment.
+      language: system
+      args: [--config-file=.mypy.ini]
   - repo: https://github.com/lovesegfault/beautysh
     rev: v6.2.1
     hooks:

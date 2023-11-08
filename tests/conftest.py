@@ -5,7 +5,7 @@ Description:    Provides utilities and test fixtures for test files.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Final, Optional, Union
+from typing import Final, Optional
 from unittest.mock import mock_open, patch
 
 import pytest
@@ -21,7 +21,7 @@ TEST_AUTO_FIX_FILES_PATH: Final[str] = f"{TEST_FILES_PATH}/auto_fix"
 
 
 @pytest.fixture()
-def linter():
+def linter() -> Linter:
     """Sets up linter for use in other tests"""
     config_file = Path(__file__).parent / "config.yaml"
     config = utils.load_config(config_file)
@@ -29,7 +29,7 @@ def linter():
 
 
 @pytest.fixture()
-def base_yaml():
+def base_yaml() -> str:
     """Adds the minimum keys needed for a meta.yaml file"""
     yaml_str = """\
         package:
@@ -40,7 +40,7 @@ def base_yaml():
 
 
 @pytest.fixture()
-def recipe_dir(tmpdir):
+def recipe_dir(tmpdir) -> Path:
     recipe_directory = Path(tmpdir) / "recipe"
     recipe_directory.mkdir(parents=True, exist_ok=True)
     return recipe_directory
@@ -100,9 +100,7 @@ def check(
     return messages
 
 
-def check_dir(
-    check_name: str, feedstock_dir: Union[str, Path], recipe_str: str, arch: str = "linux-64"
-) -> list[LintMessage]:
+def check_dir(check_name: str, feedstock_dir: str | Path, recipe_str: str, arch: str = "linux-64") -> list[LintMessage]:
     """
     Utility function that checks a linting rule against a feedstock directory.
     :param check_name:      Name of the linting rule. This corresponds with input and output files.

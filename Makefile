@@ -38,8 +38,6 @@ export PRINT_HELP_PYSCRIPT
 
 BROWSER := python -c "$$BROWSER_PYSCRIPT"
 
-# For now, most tools only run on new files, not the entire project.
-MYPY_FILES := anaconda_linter/lint/*.py tests/*.py
 # Tracks all python files. This will eventually be used by the auto formatter, linter, and static analyzer.
 ALL_PY_FILES := anaconda_linter/*.py anaconda_linter/**/*.py scripts/*.py tests/*.py
 
@@ -118,4 +116,4 @@ format:			## runs the code auto-formatter
 	black --line-length=120 $(ALL_PY_FILES)
 
 analyze:		## runs static analyzer on the project
-	mypy --config-file=.mypy.ini $(MYPY_FILES)
+	mypy --config-file=.mypy.ini $(ALL_PY_FILES)

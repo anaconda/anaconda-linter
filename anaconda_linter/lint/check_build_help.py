@@ -154,7 +154,7 @@ class host_section_needs_exact_pinnings(LintCheck):
         # this seemed lower maintenance
         return (package in exceptions) or any(package.startswith(f"{pkg}-") for pkg in PYTHON_BUILD_TOOLS)
 
-    def check_recipe(self, recipe):
+    def check_recipe(self, recipe: Recipe) -> None:
         deps = _utils.get_deps_dict(recipe, "host")
         for package, dep in deps.items():
             if not self.is_exception(package) and not (
@@ -170,7 +170,7 @@ class host_section_needs_exact_pinnings(LintCheck):
 class cbc_dep_in_run_missing_from_host(LintCheck):
     """Run dependencies listed in the cbc should also be present in the host section."""
 
-    def check_recipe(self, recipe):
+    def check_recipe(self, recipe: Recipe) -> None:
         for package in recipe.packages.values():
             for dep in package.run:
                 if dep.pkg in recipe.selector_dict and recipe.selector_dict[dep.pkg]:
@@ -182,14 +182,14 @@ class cbc_dep_in_run_missing_from_host(LintCheck):
                         )
 
     @staticmethod
-    def is_exception(package):
+    def is_exception(package) -> bool:
         exceptions = (
             "python",
             "numpy",
         )
         return package in exceptions
 
-    def fix(self, message, data):
+    def fix(self, message, data) -> bool:
         (recipe, path, dep) = data
         op = [
             {
@@ -208,7 +208,7 @@ class potentially_bad_ignore_run_exports(LintCheck):
     flag of conda-build.
     """
 
-    def check_recipe(self, recipe):
+    def check_recipe(self, recipe: Recipe) -> None:
         for package in recipe.packages.values():
             for dep in package.host:
                 if dep.pkg in package.ignore_run_exports:
@@ -252,7 +252,7 @@ class should_use_compilers(LintCheck):
         "toolchain",
     )
 
-    def check_deps(self, deps):
+    def check_deps(self, deps) -> None:
         for compiler in self.compilers:
             for location in deps.get(compiler, {}).get("paths", []):
                 self.message(section=location)
@@ -266,7 +266,7 @@ class compilers_must_be_in_build(LintCheck):
 
     """
 
-    def check_deps(self, deps):
+    def check_deps(self, deps) -> None:
         for dep in deps:
             if dep.startswith("compiler_"):
                 for location in deps[dep]["paths"]:
@@ -283,7 +283,7 @@ class build_tools_must_be_in_build(LintCheck):
             - {}
     """
 
-    def check_recipe(self, recipe):
+    def check_recipe(self, recipe: Recipe) -> None:
         deps = _utils.get_deps_dict(recipe, ["host", "run"])
         for tool, dep in deps.items():
             if tool.startswith("m2-") or tool in BUILD_TOOLS:
@@ -301,7 +301,7 @@ class python_build_tool_in_run(LintCheck):
 
     """
 
-    def check_recipe(self, recipe):
+    def check_recipe(self, recipe: Recipe) -> None:
         deps = _utils.get_deps_dict(recipe, "run")
         for tool in PYTHON_BUILD_TOOLS:
             if tool in deps:
@@ -316,7 +316,7 @@ class missing_python_build_tool(LintCheck):
     Please add the build tool specified by the upstream package to the host section.
     """
 
-    def check_recipe(self, recipe):
+    def check_recipe(self, recipe: Recipe) -> None:
         is_pypi = is_pypi_source(recipe)
         if outputs := recipe.get("outputs", None):
             deps = _utils.get_deps_dict(recipe, "host")
@@ -344,7 +344,7 @@ class missing_wheel(LintCheck):
           - wheel
     """
 
-    def check_recipe(self, recipe):
+    def check_recipe(self, recipe: Recipe) -> None:
         is_pypi = is_pypi_source(recipe)
 
         for package in recipe.packages.values():
@@ -370,7 +370,7 @@ class missing_wheel(LintCheck):
                         data=(recipe, package),
                     )
 
-    def fix(self, message, data):
+    def fix(self, message, data) -> bool:
         (recipe, package) = data
         op = [
             {
@@ -405,7 +405,7 @@ class uses_setup_py(LintCheck):
                 return False
         return True
 
-    def check_recipe(self, recipe):
+    def check_recipe(self, recipe: Recipe) -> None:
         for package in recipe.packages.values():
             if not self._check_line(recipe.get(f"{package.path_prefix}build/script", None)):
                 self.message(
@@ -435,7 +435,7 @@ class uses_setup_py(LintCheck):
                 except (FileNotFoundError, TypeError):
                     pass
 
-    def fix(self, message, data):
+    def fix(self, message, data) -> bool:
         (recipe, path) = data
         op = [
             {
@@ -476,7 +476,7 @@ class pip_install_args(LintCheck):
 
         return True
 
-    def check_recipe(self, recipe):
+    def check_recipe(self, recipe: Recipe) -> None:
         for package in recipe.packages.values():
             if not self._check_line(recipe.get(f"{package.path_prefix}build/script", None)):
                 self.message(
@@ -506,7 +506,7 @@ class pip_install_args(LintCheck):
                 except (FileNotFoundError, TypeError):
                     pass
 
-    def fix(self, message, data):
+    def fix(self, message, data) -> bool:
         (recipe, path) = data
         op = [
             {
@@ -532,7 +532,7 @@ class cython_must_be_in_host(LintCheck):
           - cython
     """
 
-    def check_deps(self, deps):
+    def check_deps(self, deps) -> None:
         if "cython" in deps:
             for location in deps["cython"]["paths"]:
                 if "/host" not in location:
@@ -550,7 +550,7 @@ class cython_needs_compiler(LintCheck):
 
     """
 
-    def check_deps(self, deps):
+    def check_deps(self, deps) -> None:
         if "cython" in deps:
             for location in deps["cython"]["paths"]:
                 if location.startswith("outputs"):
@@ -590,7 +590,7 @@ class avoid_noarch(LintCheck):
 
     """
 
-    def check_recipe(self, recipe):
+    def check_recipe(self, recipe: Recipe) -> None:
         for package in recipe.packages.values():
             noarch = recipe.get(f"{package.path_prefix}build/noarch", "")
             if (
@@ -601,7 +601,7 @@ class avoid_noarch(LintCheck):
             ):
                 self.message(section=f"{package.path_prefix}build", severity=WARNING, data=(recipe, package))
 
-    def fix(self, message, data):
+    def fix(self, message, data) -> bool:
         (recipe, package) = data
         skip_selector = None
         sep_map = {
@@ -659,7 +659,7 @@ class patch_unnecessary(LintCheck):
     Remove patch/m2-patch from ``build``
     """
 
-    def check_recipe(self, recipe):
+    def check_recipe(self, recipe: Recipe) -> None:
         if not recipe_has_patches(recipe):
             deps = _utils.get_deps_dict(
                 recipe,
@@ -679,7 +679,7 @@ class patch_must_be_in_build(LintCheck):
           - m2-patch    # [win]
     """
 
-    def check_recipe(self, recipe):
+    def check_recipe(self, recipe: Recipe) -> None:
         if recipe_has_patches(recipe):
             deps = _utils.get_deps_dict(
                 recipe,
@@ -700,7 +700,7 @@ class has_run_test_and_commands(LintCheck):
     Add the test commands to run_test.sh/.bat/.pl
     """
 
-    def check_recipe(self, recipe):
+    def check_recipe(self, recipe: Recipe) -> None:
         if outputs := recipe.get("outputs", None):
             for o in range(len(outputs)):
                 test_section = f"outputs/{o}/test"
@@ -732,7 +732,7 @@ class missing_imports_or_run_test_py(LintCheck):
           script: <test file>
     """
 
-    def check_recipe(self, recipe):
+    def check_recipe(self, recipe: Recipe) -> None:
         is_pypi = is_pypi_source(recipe)
         deps = _utils.get_deps_dict(recipe, "host")
         if not is_pypi and "python" not in deps:
@@ -783,7 +783,7 @@ class missing_pip_check(LintCheck):
                         return
         self.message(fname=file, data=(recipe, package))
 
-    def check_recipe(self, recipe):
+    def check_recipe(self, recipe: Recipe) -> None:
         is_pypi = is_pypi_source(recipe)
 
         single_output = True
@@ -822,7 +822,7 @@ class missing_pip_check(LintCheck):
                 else:
                     self.message(section=f"{package.path_prefix}test")
 
-    def fix(self, message, data):
+    def fix(self, message, data) -> bool:
         (recipe, package) = data
         op = [
             {
@@ -886,14 +886,14 @@ class missing_test_requirement_pip(LintCheck):
                         return True
         return False
 
-    def check_recipe(self, recipe):
+    def check_recipe(self, recipe: Recipe) -> None:
         for package in recipe.packages.values():
             if self._has_pip_check(recipe, output=package.path_prefix) and "pip" not in recipe.get(
                 f"{package.path_prefix}test/requires", []
             ):
                 self.message(section=f"{package.path_prefix}test/requires", data=(recipe, package))
 
-    def fix(self, message, data):
+    def fix(self, message, data) -> bool:
         (recipe, package) = data
         op = [
             {
@@ -918,7 +918,7 @@ class missing_python(LintCheck):
           - python
     """
 
-    def check_recipe(self, recipe):
+    def check_recipe(self, recipe: Recipe) -> None:
         is_pypi = is_pypi_source(recipe)
         for package in recipe.packages.values():
             if (
@@ -933,7 +933,7 @@ class missing_python(LintCheck):
                             data=(recipe, package),
                         )
 
-    def fix(self, message, data):
+    def fix(self, message, data) -> bool:
         (recipe, package) = data
         op = [
             {
@@ -967,7 +967,7 @@ class remove_python_pinning(LintCheck):
           - python
     """
 
-    def check_recipe(self, recipe):
+    def check_recipe(self, recipe: Recipe) -> None:
         for package in recipe.packages.values():
             if recipe.get(f"{package.path_prefix}build/noarch", "") == "":
                 for section in ["host", "run"]:
@@ -975,7 +975,7 @@ class remove_python_pinning(LintCheck):
                         if dep.pkg == "python" and dep.constraint != "":
                             self.message(section=dep.path, data=(recipe, package, dep))
 
-    def fix(self, message, data):
+    def fix(self, message, data) -> bool:
         (recipe, package, dep) = data
         s = dep.split(">=")
         if len(s) > 1:
@@ -997,7 +997,7 @@ class no_git_on_windows(LintCheck):
     git is supplied by the cygwin environment. Installing it may break the build.
     """
 
-    def check_deps(self, deps):
+    def check_deps(self, deps) -> None:
         if self.recipe.selector_dict.get("win", 0) == 1 and "git" in deps:
             for path in deps["git"]["paths"]:
                 output = -1 if not path.startswith("outputs") else int(path.split("/")[1])
@@ -1036,6 +1036,6 @@ class gui_app(LintCheck):
         "wxpython",
     )
 
-    def check_recipe(self, recipe):
+    def check_recipe(self, recipe: Recipe) -> None:
         if set(self.guis).intersection(set(_utils.get_deps(recipe, "run"))):
             self.message(severity=INFO)

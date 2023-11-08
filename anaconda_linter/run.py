@@ -17,7 +17,7 @@ def lint_parser() -> argparse.ArgumentParser:
     :return: An `argparser` instance to parse command line arguments
     """
 
-    def check_path(value):
+    def check_path(value) -> str:
         if not os.path.isdir(value):
             raise argparse.ArgumentTypeError(f"The specified directory {value} does not exist")
         return os.path.abspath(value)
@@ -103,7 +103,7 @@ def lint_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main():
+def main() -> None:
     """
     Primary execution point of the linter's CLI
     """

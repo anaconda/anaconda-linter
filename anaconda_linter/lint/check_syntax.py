@@ -19,7 +19,7 @@ class version_constraints_missing_whitespace(LintCheck):
 
     """
 
-    def check_recipe(self, recipe):
+    def check_recipe(self, recipe) -> None:
         check_paths = []
         for section in ("build", "run", "host"):
             check_paths.append(f"requirements/{section}")
@@ -40,7 +40,7 @@ class version_constraints_missing_whitespace(LintCheck):
                     if not space_separated:
                         self.message(section=f"{path}/{n}", data=True, output=output)
 
-    def fix(self, message, data):
+    def fix(self, message, data) -> bool:
         check_paths = []
         for section in ("build", "run", "host"):
             check_paths.append(f"requirements/{section}")

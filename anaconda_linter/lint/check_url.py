@@ -15,16 +15,16 @@ class invalid_url(LintCheck):
 
     """
 
-    def check_source(self, source, section):
-        url = source.get("url", "")
+    def check_source(self, source, section) -> None:
+        url: str = source.get("url", "")
         if url:
             response_data = utils.check_url(url)
             if response_data["code"] < 0 or response_data["code"] >= 400:
                 if "domain_redirect" not in response_data:
                     self.message(url, response_data["message"], section=section)
 
-    def check_recipe(self, recipe):
-        url_fields = [
+    def check_recipe(self, recipe) -> None:
+        url_fields: list[str] = [
             "about/home",
             "about/doc_url",
             "about/doc_source_url",
@@ -47,19 +47,19 @@ class http_url(LintCheck):
 
     """
 
-    def _check_url(self, url, section):
+    def _check_url(self, url, section) -> None:
         if url.lower().startswith("http://"):
             # Check if the https source even exists
             https_response = utils.check_url(url.lower().replace("http://", "http://"))
             if https_response["code"] < 400:
                 self.message(url, section=section)
 
-    def check_source(self, source, section):
+    def check_source(self, source, section) -> None:
         url = source.get("url", "")
         if url != "":
             self._check_url(url, section)
 
-    def check_recipe(self, recipe):
+    def check_recipe(self, recipe) -> None:
         url_fields = [
             "about/home",
             "about/doc_url",

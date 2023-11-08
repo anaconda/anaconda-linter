@@ -12,16 +12,12 @@ import re
 from collections import Counter
 from copy import deepcopy
 from pathlib import Path
-from typing import Final, Optional, Sequence
+from typing import Any, Final, Optional, Sequence
 
 import requests
 from jsonschema import validate
 from percy.render.recipe import Recipe
-
-try:
-    from ruamel.yaml import YAML
-except ModuleNotFoundError:
-    from ruamel_yaml import YAML
+from ruamel.yaml import YAML
 
 HTTP_TIMEOUT: Final[int] = 120
 
@@ -30,52 +26,43 @@ logger = logging.getLogger(__name__)
 
 yaml = YAML(typ="safe")  # pylint: disable=invalid-name
 
+# Shared URL Cache
+URLData = dict[str, str | int]
+URLCache = dict[str, URLData]
+check_url_cache: URLCache = {}
 
-def validate_config(config):
+
+def validate_config(path: str) -> None:
     """
     Validate config against schema
-
-    Parameters
-    ----------
-    config : str or dict
-        If str, assume it's a path to YAML file and load it. If dict, use it
-        directly.
+    :param path: Path to the configuration file to validate
+    :raises ValidationError: If the configuration file does not match the expected schema.
     """
-    if not isinstance(config, dict):
-        with open(config, encoding="utf-8") as conf:
-            config = yaml.load(conf.read())
-    fn = os.path.abspath(os.path.dirname(__file__)) + "/config.schema.yaml"
-    with open(fn, encoding="utf-8") as f:
-        schema = yaml.load(f.read())
-    validate(config, schema)
+    with open(path, encoding="utf-8") as conf:
+        config = yaml.load(conf.read())
+        fn = os.path.abspath(os.path.dirname(__file__)) + "/config.schema.yaml"
+        with open(fn, encoding="utf-8") as f:
+            schema = yaml.load(f.read())
+            validate(config, schema)
 
 
-def load_config(path):
+def load_config(path: str):
     """
-    Parses config file, building paths to relevant blocklists
-
-    Parameters
-    ----------
-    path : str
-        Path to YAML config file
+    Parses config file, building paths to relevant block-lists.
+    TODO Future: determine if this config file is necessary and if we can just get away with constants in this file
+    instead.
+    :param path: Path to the configuration file to validate
+    :raises ValidationError: If the configuration file does not match the expected schema.
     """
     validate_config(path)
 
-    if isinstance(path, dict):
+    def relpath(p: str) -> str:
+        return os.path.join(os.path.dirname(path), p)
 
-        def relpath(p):
-            return p
+    with open(path, encoding="utf-8") as conf:
+        config = yaml.load(conf.read())
 
-        config = path
-    else:
-
-        def relpath(p):
-            return os.path.join(os.path.dirname(path), p)
-
-        with open(path, encoding="utf-8") as conf:
-            config = yaml.load(conf.read())
-
-    def get_list(key):
+    def get_list(key: str) -> list:
         # always return empty list, also if NoneType is defined in yaml
         value = config.get(key)
         if value is None:
@@ -104,10 +91,7 @@ def load_config(path):
     return default_config
 
 
-check_url_cache = {}
-
-
-def check_url(url):
+def check_url(url: str) -> URLData:
     """
     Validate a URL to see if a response is available
 
@@ -123,7 +107,7 @@ def check_url(url):
     """
 
     if url not in check_url_cache:
-        response_data = {"url": url}
+        response_data: dict[str, str | int] = {"url": url}
         try:
             response = requests.head(url, allow_redirects=False, timeout=HTTP_TIMEOUT)
             if response.status_code >= 200 and response.status_code < 400:
@@ -167,24 +151,34 @@ def generate_correction(pkg_license: str, compfile: Path = Path(__file__).parent
     words: list[str] = [w.strip("\n") for w in words]
     words_cntr: Final[Counter] = Counter(words)
 
-    def probability(word: str, n=sum(words_cntr.values())):
-        "Probability of `word`."
+    def probability(word: str, n: int = sum(words_cntr.values())) -> float:
+        """
+        Probability of `word`.
+        """
         return words_cntr[word] / n
 
     def correction(word: str) -> str:
-        "Most probable spelling correction for word."
+        """
+        Most probable spelling correction for word.
+        """
         return max(candidates(word), key=probability)
 
-    def candidates(word: str):
-        "Generate possible spelling corrections for word."
-        return known([word]) or known(edits1(word)) or known(edits2(word)) or [word]
+    def candidates(word: str) -> set[str]:
+        """
+        Generate possible spelling corrections for word.
+        """
+        return known([word]) or known(edits1(word)) or known(edits2(word)) or {word}
 
-    def known(words: list[str]):
-        "The subset of `words` that appear in the dictionary of `words_cntr`."
+    def known(words: list[str]) -> set[str]:
+        """
+        The subset of `words` that appear in the dictionary of `words_cntr`.
+        """
         return {w for w in words if w in words_cntr}
 
-    def edits1(word: str):
-        "All edits that are one edit away from `word`."
+    def edits1(word: str) -> set[str]:
+        """
+        All edits that are one edit away from `word`.
+        """
         letters = "abcdefghijklmnopqrstuvwxyz"
         symbols = "-.0123456789"
         letters += letters.upper() + symbols
@@ -195,21 +189,23 @@ def generate_correction(pkg_license: str, compfile: Path = Path(__file__).parent
         inserts = [l + c + r for l, r in splits for c in letters]
         return set(deletes + transposes + replaces + inserts)
 
-    def edits2(word: str):
-        "All edits that are two edits away from `word`."
-        return (e2 for e1 in edits1(word) for e2 in edits1(e1))
+    def edits2(word: str) -> set[str]:
+        """
+        All edits that are two edits away from `word`.
+        """
+        return {e2 for e1 in edits1(word) for e2 in edits1(e1)}
 
     return correction(pkg_license)
 
 
-def find_closest_match(string: str) -> str:
+def find_closest_match(string: str) -> Optional[str]:
     closest_match = generate_correction(string)
     if closest_match == string:
         return None
     return closest_match
 
 
-def ensure_list(obj):
+def ensure_list(obj: Any) -> list:
     """Wraps **obj** in a list if necessary
 
     >>> ensure_list("one")
@@ -222,7 +218,7 @@ def ensure_list(obj):
     return [obj]
 
 
-def get_dep_path(recipe, dep):
+def get_dep_path(recipe: Recipe, dep):
     for n, spec in enumerate(recipe.get(dep.path, [])):
         if spec is None:  # Fixme: lint this
             continue
@@ -231,7 +227,7 @@ def get_dep_path(recipe, dep):
     return dep.path
 
 
-def get_deps_dict(recipe: Recipe, sections: Optional[list[str]] = None, outputs: bool = True) -> dict[str : list[str]]:
+def get_deps_dict(recipe: Recipe, sections: Optional[list[str]] = None, outputs: bool = True) -> dict[str, list[str]]:
     """
     Returns a dictionary containing lists of recipe dependencies.
     TODO Future: Look into removing the `outputs` flag and query `recipe` if it has an outputs section.
@@ -265,5 +261,11 @@ def get_deps_dict(recipe: Recipe, sections: Optional[list[str]] = None, outputs:
     return deps
 
 
-def get_deps(recipe, sections=None, output=True):
-    return list(get_deps_dict(recipe, sections, output).keys())
+def get_deps(recipe: Recipe, sections: Optional[list[str]] = None, outputs: bool = True) -> list[str]:
+    """
+    Returns a list of dependencies of a recipe
+    :param recipe:      Target recipe instance
+    :param sections:    (Optional)  List of strings
+    :param outputs:     (Optional) Set to True for recipes that have an `outputs` section
+    """
+    return list(get_deps_dict(recipe, sections, outputs).keys())

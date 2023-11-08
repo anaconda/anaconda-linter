@@ -16,7 +16,7 @@ class output_missing_name(LintCheck):
       - name: <output name>
     """
 
-    def check_recipe(self, recipe):
+    def check_recipe(self, recipe) -> None:
         if outputs := recipe.get("outputs", None):
             output_names = [recipe.get(f"outputs/{n}/name", None) for n in range(len(outputs))]
             for n, name in enumerate(output_names):
@@ -31,7 +31,7 @@ class outputs_not_unique(LintCheck):
     and are not the same as the package name.
     """
 
-    def check_recipe(self, recipe):
+    def check_recipe(self, recipe) -> None:
         if outputs := recipe.get("outputs", None):
             unique_names = [recipe.get("package/name")]
             output_names = [recipe.get(f"outputs/{n}/name", "") for n in range(len(outputs))]
@@ -48,7 +48,7 @@ class no_global_test(LintCheck):
     Tests must be added to each individual output.
     """
 
-    def check_recipe(self, recipe):
+    def check_recipe(self, recipe) -> None:
         if recipe.get("outputs", None) and recipe.get("test", None):
             self.message(severity=WARNING)
 
@@ -59,7 +59,7 @@ class output_missing_script(LintCheck):
     Every output must have either a filename or a command in the script field.
     """
 
-    def check_recipe(self, recipe):
+    def check_recipe(self, recipe) -> None:
         # May not need scripts if pin_subpackage is used.
         # Pinned subpackages are expanded to their names.
         outputs = recipe.get("outputs", [])
@@ -77,7 +77,7 @@ class output_missing_script(LintCheck):
 class output_script_name_default(LintCheck):
     """Output should not use default script names build.sh/bld.bat."""
 
-    def check_recipe(self, recipe):
+    def check_recipe(self, recipe) -> None:
         default_scripts = ("build.sh", "bld.bat")
         for o in range(len(recipe.get("outputs", []))):
             if recipe.get(f"outputs/{o}/script", "") in default_scripts:
