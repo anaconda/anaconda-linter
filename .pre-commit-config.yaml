@@ -52,7 +52,7 @@ repos:
       # `mypy` is run as a system script to ensure that it is checking against
       # the libraries we have installed to the environment.
       language: system
-      args: [--config-file=.mypy.ini]
+      args: [--config-file=.mypy.ini, "--cache-dir=/dev/null"]
   - repo: https://github.com/lovesegfault/beautysh
     rev: v6.2.1
     hooks:
