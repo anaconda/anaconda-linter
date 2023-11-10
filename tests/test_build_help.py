@@ -16,7 +16,7 @@ def test_host_section_needs_exact_pinnings_good(base_yaml):
         + """
         requirements:
             host:
-              - maturin 0.13.7
+              - example 0.13.7
         """
     )
     lint_check = "host_section_needs_exact_pinnings"
@@ -32,11 +32,11 @@ def test_host_section_needs_exact_pinnings_good_multi(base_yaml):
           - name: output1
             requirements:
                 host:
-                  - maturin 0.13.7
+                  - example 0.13.7
           - name: output2
             requirements:
                 host:
-                  - maturin 0.13.7
+                  - example 0.13.7
         """
     )
     lint_check = "host_section_needs_exact_pinnings"
@@ -86,11 +86,11 @@ def test_host_section_needs_exact_pinnings_good_cbc(base_yaml, recipe_dir):
         + """
         requirements:
             host:
-              - maturin
+              - example
         """
     )
     cbc = """
-    maturin:
+    example:
       - 0.13.7
     """
     cbc_file = recipe_dir / "conda_build_config.yaml"
@@ -128,15 +128,15 @@ def test_host_section_needs_exact_pinnings_good_cbc_multi(base_yaml, recipe_dir)
           - name: output1
             requirements:
                 host:
-                  - maturin
+                  - example
           - name: output2
             requirements:
                 host:
-                  - maturin
+                  - example
         """
     )
     cbc = """
-    maturin:
+    example:
       - 0.13.7
     """
     cbc_file = recipe_dir / "conda_build_config.yaml"
@@ -153,7 +153,7 @@ def test_host_section_needs_exact_pinnings_bad(base_yaml, constraint):
         + f"""
         requirements:
             host:
-              - maturin {constraint}
+              - example {constraint}
         """
     )
     lint_check = "host_section_needs_exact_pinnings"
@@ -170,11 +170,11 @@ def test_host_section_needs_exact_pinnings_bad_multi(base_yaml, constraint):
           - name: output1
             requirements:
                 host:
-                  - maturin {constraint}
+                  - example {constraint}
           - name: output2
             requirements:
                 host:
-                  - maturin {constraint}
+                  - example {constraint}
         """
     )
     lint_check = "host_section_needs_exact_pinnings"
