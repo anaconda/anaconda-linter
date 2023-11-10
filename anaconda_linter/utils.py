@@ -142,8 +142,8 @@ def generate_correction(pkg_license: str, compfile: Path = Path(__file__).parent
     Uses a probabilistic model to generate corrections on a license file
     TODO: Evaluate if this is the best method to use
     :param pkg_license: Contents of the license file to correct, as a string.
-    :param compfile:    Path to a license file to compare/diff against.
-    :return: Modified version of the original license file string.
+    :param compfile: Path to a license file to compare/diff against.
+    :returns: Modified version of the original license file string.
     """
     with open(compfile, encoding="utf-8") as f:
         words = f.readlines()
@@ -206,7 +206,8 @@ def find_closest_match(string: str) -> Optional[str]:
 
 
 def ensure_list(obj: Any) -> list:
-    """Wraps **obj** in a list if necessary
+    """
+    Wraps **obj** in a list if necessary
 
     >>> ensure_list("one")
     ["one"]
@@ -231,9 +232,9 @@ def get_deps_dict(recipe: Recipe, sections: Optional[list[str]] = None, outputs:
     """
     Returns a dictionary containing lists of recipe dependencies.
     TODO Future: Look into removing the `outputs` flag and query `recipe` if it has an outputs section.
-    :param recipe:      Target recipe instance
-    :param sections:    (Optional)  List of strings
-    :param outputs:     (Optional) Set to True for recipes that have an `outputs` section
+    :param recipe: Target recipe instance
+    :param sections: (Optional)  List of strings
+    :param outputs: (Optional) Set to True for recipes that have an `outputs` section
     """
     if sections is None:
         sections = ["build", "run", "host"]
@@ -264,8 +265,8 @@ def get_deps_dict(recipe: Recipe, sections: Optional[list[str]] = None, outputs:
 def get_deps(recipe: Recipe, sections: Optional[list[str]] = None, outputs: bool = True) -> list[str]:
     """
     Returns a list of dependencies of a recipe
-    :param recipe:      Target recipe instance
-    :param sections:    (Optional)  List of strings
-    :param outputs:     (Optional) Set to True for recipes that have an `outputs` section
+    :param recipe: Target recipe instance
+    :param sections: (Optional)  List of strings
+    :param outputs: (Optional) Set to True for recipes that have an `outputs` section
     """
     return list(get_deps_dict(recipe, sections, outputs).keys())

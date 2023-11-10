@@ -116,7 +116,7 @@ format:			## runs the code auto-formatter
 	black --line-length=120 $(ALL_PY_FILES)
 
 format-docs:	## runs the docstring auto-formatter. Note this requires manually installing `docconvert`
-	docconvert --in-place --config .docconvert.json percy
+	docconvert --in-place --config .docconvert.json anaconda_linter
 
 analyze:		## runs static analyzer on the project
 	mypy --config-file=.mypy.ini --cache-dir=/dev/null $(ALL_PY_FILES)

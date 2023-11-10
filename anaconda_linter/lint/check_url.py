@@ -9,7 +9,8 @@ from anaconda_linter.lint import ERROR, INFO, LintCheck
 
 
 class invalid_url(LintCheck):
-    """{} : {}
+    """
+    {} : {}
 
     Please add a valid URL.
 
@@ -41,7 +42,8 @@ class invalid_url(LintCheck):
 
 
 class http_url(LintCheck):
-    """{} is not https
+    """
+    {} is not https
 
     Please replace with https.
 

@@ -9,7 +9,8 @@ from anaconda_linter.lint import INFO, WARNING, LintCheck
 
 
 class output_missing_name(LintCheck):
-    """Output has no name.
+    """
+    Output has no name.
 
     Each output must have a unique name. Please add:
     outputs:
@@ -25,7 +26,8 @@ class output_missing_name(LintCheck):
 
 
 class outputs_not_unique(LintCheck):
-    """Output name is not unique
+    """
+    Output name is not unique
 
     Please make sure all output names are unique
     and are not the same as the package name.
@@ -43,7 +45,8 @@ class outputs_not_unique(LintCheck):
 
 
 class no_global_test(LintCheck):
-    """Global tests are ignored in multi-output recipes.
+    """
+    Global tests are ignored in multi-output recipes.
 
     Tests must be added to each individual output.
     """
@@ -54,7 +57,8 @@ class no_global_test(LintCheck):
 
 
 class output_missing_script(LintCheck):
-    """Output is missing script.
+    """
+    Output is missing script.
 
     Every output must have either a filename or a command in the script field.
     """
@@ -75,7 +79,9 @@ class output_missing_script(LintCheck):
 
 
 class output_script_name_default(LintCheck):
-    """Output should not use default script names build.sh/bld.bat."""
+    """
+    Output should not use default script names build.sh/bld.bat.
+    """
 
     def check_recipe(self, recipe) -> None:
         default_scripts = ("build.sh", "bld.bat")

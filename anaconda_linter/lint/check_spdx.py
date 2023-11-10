@@ -18,7 +18,8 @@ EXCEPTIONS_PATH = Path("..", "data", "license_exceptions.txt")
 
 
 class incorrect_license(LintCheck):
-    """{}
+    """
+    {}
 
     Please review::
 

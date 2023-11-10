@@ -14,7 +14,8 @@ from anaconda_linter.lint import WARNING, LintCheck
 
 
 class missing_section(LintCheck):
-    """The {} section is missing.
+    """
+    The {} section is missing.
 
     Please add this section to the recipe or output
     """
@@ -41,7 +42,8 @@ class missing_section(LintCheck):
 
 
 class missing_build_number(LintCheck):
-    """The recipe is missing a build number
+    """
+    The recipe is missing a build number
 
     Please add::
 
@@ -55,7 +57,8 @@ class missing_build_number(LintCheck):
 
 
 class missing_package_name(LintCheck):
-    """The recipe is missing a package name
+    """
+    The recipe is missing a package name
 
     Please add::
 
@@ -69,7 +72,8 @@ class missing_package_name(LintCheck):
 
 
 class missing_package_version(LintCheck):
-    """The recipe is missing a package version
+    """
+    The recipe is missing a package version
 
     Please add::
 
@@ -83,7 +87,8 @@ class missing_package_version(LintCheck):
 
 
 class missing_home(LintCheck):
-    """The recipe is missing a homepage URL
+    """
+    The recipe is missing a homepage URL
 
     Please add::
 
@@ -98,7 +103,8 @@ class missing_home(LintCheck):
 
 
 class missing_summary(LintCheck):
-    """The recipe is missing a summary
+    """
+    The recipe is missing a summary
 
     Please add::
 
@@ -113,7 +119,8 @@ class missing_summary(LintCheck):
 
 
 class missing_license(LintCheck):
-    """The recipe is missing the ``about/license`` key.
+    """
+    The recipe is missing the ``about/license`` key.
 
     Please add::
 
@@ -128,7 +135,8 @@ class missing_license(LintCheck):
 
 
 class missing_license_file(LintCheck):
-    """The recipe is missing the ``about/license_file`` or ``about/license_url`` key.
+    """
+    The recipe is missing the ``about/license_file`` or ``about/license_url`` key.
 
     Please add::
 
@@ -154,7 +162,8 @@ class missing_license_file(LintCheck):
 
 
 class license_file_overspecified(LintCheck):
-    """Using license_file and license_url is overspecified.
+    """
+    Using license_file and license_url is overspecified.
 
     Please remove license_url.
     """
@@ -170,7 +179,8 @@ class license_file_overspecified(LintCheck):
 
 
 class missing_license_family(LintCheck):
-    """The recipe is missing the ``about/license_family`` key.
+    """
+    The recipe is missing the ``about/license_family`` key.
 
     Please add::
 
@@ -185,7 +195,8 @@ class missing_license_family(LintCheck):
 
 
 class invalid_license_family(LintCheck):
-    """The recipe has an incorrect ``about/license_family`` value.{}
+    """
+    The recipe has an incorrect ``about/license_family`` value.{}
 
     Please change::
 
@@ -205,7 +216,8 @@ class invalid_license_family(LintCheck):
 
 
 class missing_tests(LintCheck):
-    """No tests were found.
+    """
+    No tests were found.
 
     Please add::
 
@@ -218,7 +230,6 @@ class missing_tests(LintCheck):
         test:
             imports:
                - some_module
-
 
     and/or any file named ``run_test.py`, ``run_test.sh`` or
     ``run_test.pl`` executing tests.
@@ -255,7 +266,8 @@ class missing_tests(LintCheck):
 
 
 class missing_hash(LintCheck):
-    """The recipe is missing a sha256 checksum for a source file
+    """
+    The recipe is missing a sha256 checksum for a source file
 
     Please add::
 
@@ -278,7 +290,8 @@ class missing_hash(LintCheck):
 
 
 class missing_source(LintCheck):
-    """The recipe is missing a URL for the source
+    """
+    The recipe is missing a URL for the source
 
     Please add::
 
@@ -299,7 +312,8 @@ class missing_source(LintCheck):
 
 
 class non_url_source(LintCheck):
-    """A source of the recipe is not a valid type. Allowed types are url, git_url, and path.
+    """
+    A source of the recipe is not a valid type. Allowed types are url, git_url, and path.
 
     Please change to::
 
@@ -316,7 +330,8 @@ class non_url_source(LintCheck):
 
 
 class missing_documentation(LintCheck):
-    """The recipe is missing a doc_url or doc_source_url
+    """
+    The recipe is missing a doc_url or doc_source_url
 
     Please add::
 
@@ -336,7 +351,8 @@ class missing_documentation(LintCheck):
 
 
 class documentation_overspecified(LintCheck):
-    """Using doc_url and doc_source_url is overspecified
+    """
+    Using doc_url and doc_source_url is overspecified
 
     Please remove doc_source_url.
 
@@ -348,7 +364,8 @@ class documentation_overspecified(LintCheck):
 
 
 class documentation_specifies_language(LintCheck):
-    """Use the generic link, not a language specific one
+    """
+    Use the generic link, not a language specific one
 
     Please use PACKAGE.readthedocs.io not PACKAGE.readthedocs.io/en/latest
 
@@ -361,7 +378,8 @@ class documentation_specifies_language(LintCheck):
 
 
 class missing_dev_url(LintCheck):
-    """The recipe is missing a dev_url
+    """
+    The recipe is missing a dev_url
 
     Please add::
 
@@ -376,7 +394,8 @@ class missing_dev_url(LintCheck):
 
 
 class missing_description(LintCheck):
-    """The recipe is missing a description
+    """
+    The recipe is missing a description
 
     Please add::
 
@@ -391,7 +410,8 @@ class missing_description(LintCheck):
 
 
 class wrong_output_script_key(LintCheck):
-    """It should be `outputs/x/script`, not `outputs/x/build/script`
+    """
+    It should be `outputs/x/script`, not `outputs/x/build/script`
 
     Please change from::
         outputs:

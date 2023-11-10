@@ -10,7 +10,8 @@ from anaconda_linter.lint import LintCheck
 
 
 class version_constraints_missing_whitespace(LintCheck):
-    """Packages and their version constraints must be space separated
+    """
+    Packages and their version constraints must be space separated
 
     Example::
 
