@@ -608,7 +608,7 @@ class Linter:
     def get_report(
         cls,
         messages: list[LintMessage],
-        verbose: bool = False,
+        verbose: bool = False,  # pylint: disable=unused-argument
     ) -> str:
         """
         Returns a report of all the linting messages.
@@ -632,17 +632,20 @@ class Linter:
                 report_sections.append(
                     f"===== {severity.name.upper()}S ===== \n"
                     + "\n".join(
-                        f"- {msg.fname}:{msg.end_line}: {msg.check}: {msg.title}"
-                        for msg in messages_sorted[severity]
+                        f"- {msg.fname}:{msg.end_line}: {msg.check}: {msg.title}" for msg in messages_sorted[severity]
                     )
                     + "\n"
                 )
         if report_sections:
-            report += "\n\n".join(report_sections)
+            report += "\n".join(report_sections)
 
-        report += '\n'f"==== Ending Report: =====\n{num_errors[Severity.ERROR]} Error{'s' if num_errors[Severity.ERROR] != 1 else ''} and {num_errors[Severity.WARNING]} Warning{'s' if num_errors[Severity.WARNING] != 1 else ''} were found"
+        report += (
+            "\n"
+            f"==== Ending Report: =====\n"
+            f"{num_errors[Severity.ERROR]} Error{'s' if num_errors[Severity.ERROR] != 1 else ''} "
+            f"and {num_errors[Severity.WARNING]} Warning{'s' if num_errors[Severity.WARNING] != 1 else ''} were found"
+        )
         return report
-
 
     def lint(
         self,
@@ -864,4 +867,3 @@ class Linter:
             logger.debug("Found: %s", message)
 
         return messages
-def get_report(cls, messages: List[LintMessage], verbose: bool = False) -> str:

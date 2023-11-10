@@ -276,25 +276,43 @@ def test_message_path(base_yaml: str, tmpdir: Path) -> None:
     assert len(messages) == 1 and Path(messages[0].fname) == (recipe_directory_short / "meta.yaml")
 
 
-def test_get_report(base_yaml):
-    messages = [LintMessage(severity=ERROR, recipe= “meta.yaml" )
-        (ERROR, "fake_feedstock/recipe/meta.yaml", 1, "dummy_error", "Error message 1"),
-        (WARNING, "fake_feedstock/recipe/meta.yaml", 10, "dummy_warning", "Warning message 1"),
-        (ERROR, "fake_feedstock/recipe/meta.yaml", 1, "dummy_error", "Error message 2"),
+def test_get_report():
+    messages = [
+        LintMessage(
+            severity=WARNING,
+            recipe=None,
+            fname="fake_feedstock/recipe/meta.yaml",
+            start_line=1,
+            check="dummy_warning",
+            title="Warning message 1",
+        ),
+        LintMessage(
+            severity=ERROR,
+            recipe=None,
+            fname="fake_feedstock/recipe/meta.yaml",
+            start_line=1,
+            check="dummy_error",
+            title="Error message 1",
+        ),
+        LintMessage(
+            severity=ERROR,
+            recipe=None,
+            fname="fake_feedstock/recipe/meta.yaml",
+            start_line=1,
+            check="dummy_error",
+            title="Error message 2",
+        ),
     ]
 
     report = Linter.get_report(messages)
 
-    lint_check = """The following problems have been found:
-
-===== WARNINGS: =====
-- fake_feedstock/recipe/meta.yaml:10: dummy_warning: Warning message 1
-
-===== ERRORS: =====
-- fake_feedstock/recipe/meta.yaml:1: dummy_error: Error message 1
-- fake_feedstock/recipe/meta.yaml:1: dummy_error: Error message 2
-
-==== Ending Report: =====
-2 Errors and 1 Warning were found"""
-
+    lint_check = (
+        "===== WARNINGS ===== \n"
+        "- fake_feedstock/recipe/meta.yaml:0: dummy_warning: Warning message 1\n"
+        "\n===== ERRORS ===== "
+        "\n- fake_feedstock/recipe/meta.yaml:0: dummy_error: Error message 1\n"
+        "- fake_feedstock/recipe/meta.yaml:0: dummy_error: Error message 2\n"
+        "\n==== Ending Report: =====\n"
+        "2 Errors and 1 Warning were found"
+    )
     assert report == lint_check

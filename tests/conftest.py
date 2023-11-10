@@ -152,3 +152,10 @@ def assert_on_auto_fix(check_name: str, arch: str = "linux-64") -> None:
     # Fixed issues emit no messages
     assert len(messages) == 0
     assert recipe.dump() == load_file(fixed_file)
+
+
+# def check_output( ):
+#     """
+
+#     """
+#     print("ball")
