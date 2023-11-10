@@ -14,7 +14,11 @@ jobs:
       steps:
         - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         - uses: ./.github/actions/setup-env
-        - uses: pre-commit/action@646c83fcd040023954eafda54b4db0192ce70507 # v3.0.0
+        # Executes `pre-commit` with the `make` directive to ensure all dependencies are found
+        - run: |
+            source $CONDA/bin/activate
+            conda activate anaconda-linter
+            make pre-commit
   build-recipe:
       runs-on: ubuntu-latest
       steps:

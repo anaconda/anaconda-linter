@@ -93,6 +93,7 @@ def check(
     :param recipe_str:      Recipe file, as a single string.
     :param arch:            (Optional) Target architecture to render recipe as
     :param expand_variant:  (Optional) Dictionary of variant information to augment the recipe with.
+    :return: A list containing errors or warnings for the target rule.
     """
     linter_obj, recipe = load_linter_and_recipe(recipe_str, arch, expand_variant)
     messages = linter_obj.check_instances[check_name].run(recipe=recipe)
