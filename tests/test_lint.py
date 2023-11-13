@@ -16,30 +16,38 @@ from anaconda_linter.lint import ERROR, INFO, WARNING, Linter, LintMessage, Seve
 
 
 class DummyInfo(lint.LintCheck):
-    """Info message"""
+    """
+    Info message
+    """
 
     def check_recipe(self, _) -> None:
         self.message(severity=INFO)
 
 
 class DummyWarning(lint.LintCheck):
-    """Warning message"""
+    """
+    Warning message
+    """
 
     def check_recipe(self, _) -> None:
         self.message(severity=WARNING)
 
 
 class DummyError(lint.LintCheck):
-    """Error message"""
+    """
+    Error message
+    """
 
     def check_recipe(self, _) -> None:
         self.message(severity=ERROR)
 
 
 class DummyErrorFormat(lint.LintCheck):
-    """{} message of severity {}"""
+    """
+    {} message of severity {}
+    """
 
-    def check_recipe(self, recipe) -> None:
+    def check_recipe(self, _) -> None:
         self.message("Dummy", "ERROR")
 
 
