@@ -8,18 +8,19 @@ import os
 import re
 
 import conda_build.license_family
-from percy.render.recipe import OpMode
+from percy.render.recipe import OpMode, Recipe
 
 from anaconda_linter.lint import WARNING, LintCheck
 
 
 class missing_section(LintCheck):
-    """The {} section is missing.
+    """
+    The {} section is missing.
 
     Please add this section to the recipe or output
     """
 
-    def check_recipe(self, recipe):
+    def check_recipe(self, recipe: Recipe) -> None:
         global_sections = (
             "package",
             "build",
@@ -41,7 +42,8 @@ class missing_section(LintCheck):
 
 
 class missing_build_number(LintCheck):
-    """The recipe is missing a build number
+    """
+    The recipe is missing a build number
 
     Please add::
 
@@ -49,13 +51,14 @@ class missing_build_number(LintCheck):
             number: 0
     """
 
-    def check_recipe(self, recipe):
+    def check_recipe(self, recipe: Recipe) -> None:
         if not recipe.get("build/number", ""):
             self.message(section="build")
 
 
 class missing_package_name(LintCheck):
-    """The recipe is missing a package name
+    """
+    The recipe is missing a package name
 
     Please add::
 
@@ -63,13 +66,14 @@ class missing_package_name(LintCheck):
             name: <package name>
     """
 
-    def check_recipe(self, recipe):
+    def check_recipe(self, recipe: Recipe) -> None:
         if not recipe.get("package/name", ""):
             self.message(section="package")
 
 
 class missing_package_version(LintCheck):
-    """The recipe is missing a package version
+    """
+    The recipe is missing a package version
 
     Please add::
 
@@ -77,13 +81,14 @@ class missing_package_version(LintCheck):
             version: <package version>
     """
 
-    def check_recipe(self, recipe):
+    def check_recipe(self, recipe: Recipe) -> None:
         if not recipe.get("package/version", ""):
             self.message(section="package")
 
 
 class missing_home(LintCheck):
-    """The recipe is missing a homepage URL
+    """
+    The recipe is missing a homepage URL
 
     Please add::
 
@@ -92,13 +97,14 @@ class missing_home(LintCheck):
 
     """
 
-    def check_recipe(self, recipe):
+    def check_recipe(self, recipe: Recipe) -> None:
         if not recipe.get("about/home", ""):
             self.message(section="about")
 
 
 class missing_summary(LintCheck):
-    """The recipe is missing a summary
+    """
+    The recipe is missing a summary
 
     Please add::
 
@@ -107,13 +113,14 @@ class missing_summary(LintCheck):
 
     """
 
-    def check_recipe(self, recipe):
+    def check_recipe(self, recipe: Recipe) -> None:
         if not recipe.get("about/summary", ""):
             self.message(section="about")
 
 
 class missing_license(LintCheck):
-    """The recipe is missing the ``about/license`` key.
+    """
+    The recipe is missing the ``about/license`` key.
 
     Please add::
 
@@ -122,13 +129,14 @@ class missing_license(LintCheck):
 
     """
 
-    def check_recipe(self, recipe):
+    def check_recipe(self, recipe: Recipe) -> None:
         if not recipe.get("about/license", ""):
             self.message(section="about")
 
 
 class missing_license_file(LintCheck):
-    """The recipe is missing the ``about/license_file`` or ``about/license_url`` key.
+    """
+    The recipe is missing the ``about/license_file`` or ``about/license_url`` key.
 
     Please add::
 
@@ -148,29 +156,31 @@ class missing_license_file(LintCheck):
 
     """
 
-    def check_recipe(self, recipe):
+    def check_recipe(self, recipe: Recipe) -> None:
         if not recipe.get("about/license_file", "") and not recipe.get("about/license_url", ""):
             self.message(section="about", severity=WARNING)
 
 
 class license_file_overspecified(LintCheck):
-    """Using license_file and license_url is overspecified.
+    """
+    Using license_file and license_url is overspecified.
 
     Please remove license_url.
     """
 
-    def check_recipe(self, recipe):
+    def check_recipe(self, recipe: Recipe) -> None:
         if recipe.get("about/license_file", "") and recipe.get("about/license_url", ""):
             self.message(section="about", severity=WARNING, data=recipe)
 
-    def fix(self, message, data):
+    def fix(self, message, data) -> bool:
         recipe = data
         op = [{"op": "remove", "path": "/about/license_url"}]
         return recipe.patch(op, op_mode=OpMode.PARSE_TREE)
 
 
 class missing_license_family(LintCheck):
-    """The recipe is missing the ``about/license_family`` key.
+    """
+    The recipe is missing the ``about/license_family`` key.
 
     Please add::
 
@@ -179,13 +189,14 @@ class missing_license_family(LintCheck):
 
     """
 
-    def check_recipe(self, recipe):
+    def check_recipe(self, recipe: Recipe) -> None:
         if not recipe.get("about/license_family", ""):
             self.message(section="about")
 
 
 class invalid_license_family(LintCheck):
-    """The recipe has an incorrect ``about/license_family`` value.{}
+    """
+    The recipe has an incorrect ``about/license_family`` value.{}
 
     Please change::
 
@@ -194,7 +205,7 @@ class invalid_license_family(LintCheck):
 
     """
 
-    def check_recipe(self, recipe):
+    def check_recipe(self, recipe: Recipe) -> None:
         license_family = recipe.get("about/license_family", "").lower()
         if license_family:
             if license_family == "none":
@@ -205,7 +216,8 @@ class invalid_license_family(LintCheck):
 
 
 class missing_tests(LintCheck):
-    """No tests were found.
+    """
+    No tests were found.
 
     Please add::
 
@@ -218,7 +230,6 @@ class missing_tests(LintCheck):
         test:
             imports:
                - some_module
-
 
     and/or any file named ``run_test.py`, ``run_test.sh`` or
     ``run_test.pl`` executing tests.
@@ -234,7 +245,7 @@ class missing_tests(LintCheck):
 
     test_files = ["run_test.py", "run_test.sh", "run_test.pl"]
 
-    def check_output(self, recipe, output=""):
+    def check_output(self, recipe: Recipe, output: str = "") -> None:
         test_section = f"{output}test"
         if recipe.get(f"{test_section}/commands", "") or recipe.get(f"{test_section}/imports", ""):
             return
@@ -244,7 +255,7 @@ class missing_tests(LintCheck):
         else:
             self.message(section=output, output=o)
 
-    def check_recipe(self, recipe):
+    def check_recipe(self, recipe: Recipe) -> None:
         if outputs := recipe.get("outputs", None):
             for o in range(len(outputs)):
                 if not recipe.get(f"outputs/{o}/test/script", ""):
@@ -255,7 +266,8 @@ class missing_tests(LintCheck):
 
 
 class missing_hash(LintCheck):
-    """The recipe is missing a sha256 checksum for a source file
+    """
+    The recipe is missing a sha256 checksum for a source file
 
     Please add::
 
@@ -270,7 +282,7 @@ class missing_hash(LintCheck):
 
     exempt_types = ["git_url", "path"]
 
-    def check_source(self, source, section):
+    def check_source(self, source, section) -> None:
         if not any(source.get(typ, None) for typ in self.exempt_types) and not any(
             source.get(chk, None) for chk in self.checksum_names
         ):
@@ -278,7 +290,8 @@ class missing_hash(LintCheck):
 
 
 class missing_source(LintCheck):
-    """The recipe is missing a URL for the source
+    """
+    The recipe is missing a URL for the source
 
     Please add::
 
@@ -293,13 +306,14 @@ class missing_source(LintCheck):
 
     source_types = ["url", "git_url", "hg_url", "svn_url", "path"]
 
-    def check_source(self, source, section):
+    def check_source(self, source, section) -> None:
         if not any(source.get(chk, None) for chk in self.source_types):
             self.message(section=section)
 
 
 class non_url_source(LintCheck):
-    """A source of the recipe is not a valid type. Allowed types are url, git_url, and path.
+    """
+    A source of the recipe is not a valid type. Allowed types are url, git_url, and path.
 
     Please change to::
 
@@ -310,13 +324,14 @@ class non_url_source(LintCheck):
 
     source_types = ["hg_url", "svn_url"]
 
-    def check_source(self, source, section):
+    def check_source(self, source, section) -> None:
         if any(source.get(chk, None) for chk in self.source_types):
             self.message(section=section, severity=WARNING)
 
 
 class missing_documentation(LintCheck):
-    """The recipe is missing a doc_url or doc_source_url
+    """
+    The recipe is missing a doc_url or doc_source_url
 
     Please add::
 
@@ -330,38 +345,41 @@ class missing_documentation(LintCheck):
 
     """
 
-    def check_recipe(self, recipe):
+    def check_recipe(self, recipe: Recipe) -> None:
         if not recipe.get("about/doc_url", "") and not recipe.get("about/doc_source_url", ""):
             self.message(section="about")
 
 
 class documentation_overspecified(LintCheck):
-    """Using doc_url and doc_source_url is overspecified
+    """
+    Using doc_url and doc_source_url is overspecified
 
     Please remove doc_source_url.
 
     """
 
-    def check_recipe(self, recipe):
+    def check_recipe(self, recipe: Recipe) -> None:
         if recipe.get("about/doc_url", "") and recipe.get("about/doc_source_url", ""):
             self.message(section="about", severity=WARNING)
 
 
 class documentation_specifies_language(LintCheck):
-    """Use the generic link, not a language specific one
+    """
+    Use the generic link, not a language specific one
 
     Please use PACKAGE.readthedocs.io not PACKAGE.readthedocs.io/en/latest
 
     """
 
-    def check_recipe(self, recipe):
+    def check_recipe(self, recipe: Recipe) -> None:
         lang_url = re.compile(r"readthedocs.io\/[a-z]{2,3}/latest")  # assume ISO639-1 or similar language code
         if recipe.get("about/doc_url", "") and lang_url.search(recipe.get("about/doc_url", "")):
             self.message(section="about/doc_url", severity=WARNING)
 
 
 class missing_dev_url(LintCheck):
-    """The recipe is missing a dev_url
+    """
+    The recipe is missing a dev_url
 
     Please add::
 
@@ -370,13 +388,14 @@ class missing_dev_url(LintCheck):
 
     """
 
-    def check_recipe(self, recipe):
+    def check_recipe(self, recipe: Recipe) -> None:
         if not recipe.get("about/dev_url", ""):
             self.message(section="about")
 
 
 class missing_description(LintCheck):
-    """The recipe is missing a description
+    """
+    The recipe is missing a description
 
     Please add::
 
@@ -385,13 +404,14 @@ class missing_description(LintCheck):
 
     """
 
-    def check_recipe(self, recipe):
+    def check_recipe(self, recipe: Recipe) -> None:
         if not recipe.get("about/description", ""):
             self.message(section="about", severity=WARNING)
 
 
 class wrong_output_script_key(LintCheck):
-    """It should be `outputs/x/script`, not `outputs/x/build/script`
+    """
+    It should be `outputs/x/script`, not `outputs/x/build/script`
 
     Please change from::
         outputs:
@@ -406,7 +426,7 @@ class wrong_output_script_key(LintCheck):
             script: build_script.sh
     """
 
-    def check_recipe(self, recipe):
+    def check_recipe(self, recipe: Recipe) -> None:
         for package in recipe.packages.values():
             if package.path_prefix.startswith("outputs"):
                 if recipe.get(f"{package.path_prefix}build/script", None):

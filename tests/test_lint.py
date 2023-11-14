@@ -12,38 +12,46 @@ from percy.render.exceptions import RecipeError
 from percy.render.recipe import Recipe, RendererType
 
 from anaconda_linter import lint, utils
-from anaconda_linter.lint import ERROR, INFO, WARNING
+from anaconda_linter.lint import ERROR, INFO, WARNING, Linter, LintMessage, Severity
 
 
 class DummyInfo(lint.LintCheck):
-    """Info message"""
+    """
+    Info message
+    """
 
-    def check_recipe(self, _):
+    def check_recipe(self, _) -> None:
         self.message(severity=INFO)
 
 
 class DummyWarning(lint.LintCheck):
-    """Warning message"""
+    """
+    Warning message
+    """
 
-    def check_recipe(self, _):
+    def check_recipe(self, _) -> None:
         self.message(severity=WARNING)
 
 
 class DummyError(lint.LintCheck):
-    """Error message"""
+    """
+    Error message
+    """
 
-    def check_recipe(self, _):
+    def check_recipe(self, _) -> None:
         self.message(severity=ERROR)
 
 
 class DummyErrorFormat(lint.LintCheck):
-    """{} message of severity {}"""
+    """
+    {} message of severity {}
+    """
 
-    def check_recipe(self, recipe):
+    def check_recipe(self, _) -> None:
         self.message("Dummy", "ERROR")
 
 
-def test_only_lint(base_yaml, linter):
+def test_only_lint(base_yaml: str, linter: Linter) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -59,7 +67,7 @@ def test_only_lint(base_yaml, linter):
     assert len(linter.get_messages()) == 3
 
 
-def test_skip_lints(base_yaml, linter):
+def test_skip_lints(base_yaml: str, linter: Linter) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -81,13 +89,13 @@ def test_skip_lints(base_yaml, linter):
     assert len(messages_base) == len(messages_skip) + 3
 
 
-def test_lint_none(base_yaml, linter):  # pylint: disable=unused-argument
+def test_lint_none(base_yaml: str, linter: Linter) -> None:  # pylint: disable=unused-argument
     recipes = []
     return_code = linter.lint(recipes)
     assert return_code == 0 and len(linter.get_messages()) == 0
 
 
-def test_lint_file(base_yaml, linter, recipe_dir):
+def test_lint_file(base_yaml: str, linter, recipe_dir: Path) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -112,22 +120,23 @@ def test_lint_file(base_yaml, linter, recipe_dir):
         (ERROR, "failure", "DummyError"),
     ),
 )
-def test_severity_level(base_yaml, level, string, lint_check):
+def test_severity_level(base_yaml: str, level: Severity, string: str, lint_check: str) -> None:
     messages = check(lint_check, base_yaml)
     assert len(messages) == 1
     assert messages[0].severity == level
     assert messages[0].get_level() == string
 
 
-def test_severity_bad(base_yaml):  # pylint: disable=unused-argument
+def test_severity_bad(base_yaml: str) -> None:  # pylint: disable=unused-argument
     with pytest.raises(ValueError):
         config_file = Path(__file__).parent / "config.yaml"
         config = utils.load_config(config_file)
         lint.Linter(config=config, severity_min="BADSEVERITY")
 
 
+# TODO rm: de-risk this. Enforce `Severity` over `str` universally
 @pytest.mark.parametrize("level,expected", (("INFO", 3), ("WARNING", 2), ("ERROR", 1)))
-def test_severity_min_string(base_yaml, level, expected):
+def test_severity_min_string(base_yaml: str, level: str, expected: int) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -147,7 +156,7 @@ def test_severity_min_string(base_yaml, level, expected):
 
 
 @pytest.mark.parametrize("level,expected", ((INFO, 3), ("WARNING", 2), ("ERROR", 1)))
-def test_severity_min_enum(base_yaml, level, expected):
+def test_severity_min_enum(base_yaml: str, level: Severity | str, expected: int) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -166,7 +175,7 @@ def test_severity_min_enum(base_yaml, level, expected):
     assert len(linter.get_messages()) == expected
 
 
-def test_lint_list():
+def test_lint_list() -> None:
     checks_file = Path(__file__).parent / "../anaconda_linter/lint_names.md"
     with open(checks_file.resolve(), encoding="utf-8") as f:
         lint_checks_file = [line.strip() for line in f.readlines() if line.strip()]
@@ -191,12 +200,14 @@ def test_lint_list():
         ("pin_subpackage('dotnet-runtime', exact=True, badParam=False)", True),
     ],
 )
-def test_jinja_functions(base_yaml, jinja_func, expected):
-    def run_lint(yaml_str):
+def test_jinja_functions(base_yaml: str, jinja_func: str, expected: bool) -> None:
+    def run_lint(yaml_str: str) -> list[LintMessage]:
         config_file = Path(__file__).parent / "config.yaml"
         config = utils.load_config(config_file)
         linter = lint.Linter(config=config)
 
+        # TODO figure out: 1 test fails if we remove this retry mechanism. Can we write the test differently so that
+        # we don't have conditional logic in our tests?
         try:
             recipe = Recipe.from_string(recipe_text=yaml_str, renderer=RendererType.RUAMEL)
             linter.lint([recipe])
@@ -229,7 +240,7 @@ def test_jinja_functions(base_yaml, jinja_func, expected):
     assert any(str(msg.check) == lint_check for msg in messages) == expected
 
 
-def test_error_report_line(base_yaml):
+def test_error_report_line(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -245,19 +256,19 @@ def test_error_report_line(base_yaml):
     assert len(messages) == 1 and messages[0].start_line == 5
 
 
-def test_message_title(base_yaml):
+def test_message_title(base_yaml: str) -> None:
     lint_check = "DummyError"
     messages = check(lint_check, base_yaml)
     assert len(messages) == 1 and messages[0].title == "Error message"
 
 
-def test_message_title_format(base_yaml):
+def test_message_title_format(base_yaml: str) -> None:
     lint_check = "DummyErrorFormat"
     messages = check(lint_check, base_yaml)
     assert len(messages) == 1 and messages[0].title == "Dummy message of severity ERROR"
 
 
-def test_message_path(base_yaml, tmpdir):
+def test_message_path(base_yaml: str, tmpdir: Path) -> None:
     recipe_directory_short = Path("fake_feedstock/recipe")
     recipe_directory = Path(tmpdir) / recipe_directory_short
     lint_check = "DummyError"

@@ -8,7 +8,7 @@ import pytest
 from conftest import check
 
 
-def test_invalid_url_good(base_yaml):
+def test_invalid_url_good(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -21,7 +21,7 @@ def test_invalid_url_good(base_yaml):
     assert len(messages) == 0
 
 
-def test_invalid_url_bad(base_yaml):
+def test_invalid_url_bad(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -34,7 +34,7 @@ def test_invalid_url_bad(base_yaml):
     assert len(messages) == 1
 
 
-def test_invalid_url_good_redirect(base_yaml):
+def test_invalid_url_good_redirect(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -57,7 +57,7 @@ def test_invalid_url_good_redirect(base_yaml):
         "dev_url",
     ),
 )
-def test_invalid_url_about_good(base_yaml, url_field):
+def test_invalid_url_about_good(base_yaml: str, url_field: str) -> None:
     lint_check = "invalid_url"
     yaml_str = (
         base_yaml
@@ -80,7 +80,7 @@ def test_invalid_url_about_good(base_yaml, url_field):
         "dev_url",
     ),
 )
-def test_invalid_url_about_bad(base_yaml, url_field):
+def test_invalid_url_about_bad(base_yaml: str, url_field: str) -> None:
     lint_check = "invalid_url"
     yaml_str = (
         base_yaml
@@ -93,7 +93,7 @@ def test_invalid_url_about_bad(base_yaml, url_field):
     assert len(messages) == 1
 
 
-def test_http_url_source_good(base_yaml):
+def test_http_url_source_good(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -106,7 +106,7 @@ def test_http_url_source_good(base_yaml):
     assert len(messages) == 0
 
 
-def test_http_url_source_bad(base_yaml):
+def test_http_url_source_bad(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -129,7 +129,7 @@ def test_http_url_source_bad(base_yaml):
         "dev_url",
     ),
 )
-def test_http_url_about_good(base_yaml, url_field):
+def test_http_url_about_good(base_yaml: str, url_field: str) -> None:
     lint_check = "http_url"
     yaml_str = (
         base_yaml
@@ -152,7 +152,7 @@ def test_http_url_about_good(base_yaml, url_field):
         "dev_url",
     ),
 )
-def test_http_url_about_bad(base_yaml, url_field):
+def test_http_url_about_bad(base_yaml: str, url_field: str) -> None:
     lint_check = "http_url"
     yaml_str = (
         base_yaml

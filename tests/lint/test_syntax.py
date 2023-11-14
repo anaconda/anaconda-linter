@@ -7,7 +7,7 @@ from __future__ import annotations
 from conftest import check
 
 
-def test_version_constraints_missing_whitespace_good(base_yaml):
+def test_version_constraints_missing_whitespace_good(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -26,7 +26,7 @@ def test_version_constraints_missing_whitespace_good(base_yaml):
     assert len(messages) == 0
 
 
-def test_version_constraints_missing_whitespace_bad(base_yaml):
+def test_version_constraints_missing_whitespace_bad(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -40,7 +40,7 @@ def test_version_constraints_missing_whitespace_bad(base_yaml):
     assert len(messages) == 1 and "version constraints" in messages[0].title
 
 
-def test_version_constraints_missing_whitespace_multi(base_yaml):
+def test_version_constraints_missing_whitespace_multi(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """

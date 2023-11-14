@@ -17,7 +17,7 @@ LICENSES: Final[str] = "https://raw.githubusercontent.com/spdx/license-list-data
 EXCEPTIONS: Final[str] = "https://raw.githubusercontent.com/spdx/license-list-data/main/json/exceptions.json"
 
 
-def write_to_file(dest_file: Path or str, data: List[str]):
+def write_to_file(dest_file: Path or str, data: List[str]) -> bool:
     with open(dest_file, "w+", encoding="utf-8") as f:
         f.write("\n".join(data))
         f.write("\n")

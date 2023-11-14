@@ -4,11 +4,13 @@ Description:    Tests completeness rules (i.e. `missing_*`)
 """
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 from conftest import assert_on_auto_fix, check, check_dir
 
 
-def test_missing_section_good(base_yaml):
+def test_missing_section_good(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -26,7 +28,7 @@ def test_missing_section_good(base_yaml):
     assert len(messages) == 0
 
 
-def test_missing_section_good_multi(base_yaml):
+def test_missing_section_good_multi(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -50,13 +52,13 @@ def test_missing_section_good_multi(base_yaml):
     assert len(messages) == 0
 
 
-def test_missing_section_bad(base_yaml):
+def test_missing_section_bad(base_yaml: str) -> None:
     lint_check = "missing_section"
     messages = check(lint_check, base_yaml)
     assert len(messages) == 3 and all("section is missing" in msg.title for msg in messages)
 
 
-def test_missing_section_bad_multi(base_yaml):
+def test_missing_section_bad_multi(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -70,7 +72,7 @@ def test_missing_section_bad_multi(base_yaml):
     assert len(messages) == 4 and all("section is missing" in msg.title for msg in messages)
 
 
-def test_missing_build_number_good(base_yaml):
+def test_missing_build_number_good(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -83,13 +85,13 @@ def test_missing_build_number_good(base_yaml):
     assert len(messages) == 0
 
 
-def test_missing_build_number_bad(base_yaml):
+def test_missing_build_number_bad(base_yaml: str) -> None:
     lint_check = "missing_build_number"
     messages = check(lint_check, base_yaml)
     assert len(messages) == 1 and "missing a build number" in messages[0].title
 
 
-def test_missing_package_name_good(base_yaml):  # pylint: disable=unused-argument
+def test_missing_package_name_good(base_yaml: str) -> None:  # pylint: disable=unused-argument
     yaml_str = """
         package:
           name: plop
@@ -99,7 +101,7 @@ def test_missing_package_name_good(base_yaml):  # pylint: disable=unused-argumen
     assert len(messages) == 0
 
 
-def test_missing_package_name_bad(base_yaml):  # pylint: disable=unused-argument
+def test_missing_package_name_bad(base_yaml: str) -> None:  # pylint: disable=unused-argument
     yaml_str = """
         build:
           number: 0
@@ -109,7 +111,7 @@ def test_missing_package_name_bad(base_yaml):  # pylint: disable=unused-argument
     assert len(messages) == 1 and "missing a package name" in messages[0].title
 
 
-def test_missing_package_version_good(base_yaml):  # pylint: disable=unused-argument
+def test_missing_package_version_good(base_yaml: str) -> None:  # pylint: disable=unused-argument
     yaml_str = """
         package:
           version: 1.2.3
@@ -119,7 +121,7 @@ def test_missing_package_version_good(base_yaml):  # pylint: disable=unused-argu
     assert len(messages) == 0
 
 
-def test_missing_package_version_bad(base_yaml):  # pylint: disable=unused-argument
+def test_missing_package_version_bad(base_yaml: str) -> None:  # pylint: disable=unused-argument
     yaml_str = """
         build:
           number: 0
@@ -129,7 +131,7 @@ def test_missing_package_version_bad(base_yaml):  # pylint: disable=unused-argum
     assert len(messages) == 1 and "missing a package version" in messages[0].title
 
 
-def test_missing_home_good(base_yaml):
+def test_missing_home_good(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -142,13 +144,13 @@ def test_missing_home_good(base_yaml):
     assert len(messages) == 0
 
 
-def test_missing_home_bad(base_yaml):
+def test_missing_home_bad(base_yaml: str) -> None:
     lint_check = "missing_home"
     messages = check(lint_check, base_yaml)
     assert len(messages) == 1 and "missing a homepage" in messages[0].title
 
 
-def test_missing_summary_good(base_yaml):
+def test_missing_summary_good(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -161,13 +163,13 @@ def test_missing_summary_good(base_yaml):
     assert len(messages) == 0
 
 
-def test_missing_summary_bad(base_yaml):
+def test_missing_summary_bad(base_yaml: str) -> None:
     lint_check = "missing_summary"
     messages = check(lint_check, base_yaml)
     assert len(messages) == 1 and "missing a summary" in messages[0].title
 
 
-def test_missing_license_good(base_yaml):
+def test_missing_license_good(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -180,14 +182,14 @@ def test_missing_license_good(base_yaml):
     assert len(messages) == 0
 
 
-def test_missing_license_bad(base_yaml):
+def test_missing_license_bad(base_yaml: str) -> None:
     lint_check = "missing_license"
     messages = check(lint_check, base_yaml)
     assert len(messages) == 1 and "about/license" in messages[0].title
 
 
 @pytest.mark.parametrize("license_type", ("license_file", "license_url"))
-def test_missing_license_file_good(base_yaml, license_type):
+def test_missing_license_file_good(base_yaml: str, license_type: str) -> None:
     yaml_str = (
         base_yaml
         + f"""
@@ -200,14 +202,14 @@ def test_missing_license_file_good(base_yaml, license_type):
     assert len(messages) == 0
 
 
-def test_missing_license_file_bad(base_yaml):
+def test_missing_license_file_bad(base_yaml: str) -> None:
     lint_check = "missing_license_file"
     messages = check(lint_check, base_yaml)
     assert len(messages) == 1 and "about/license_file" in messages[0].title
 
 
 @pytest.mark.parametrize("license_type", ("license_file", "license_url"))
-def test_license_file_overspecified_good(base_yaml, license_type):
+def test_license_file_overspecified_good(base_yaml: str, license_type: str) -> None:
     yaml_str = (
         base_yaml
         + f"""
@@ -220,7 +222,7 @@ def test_license_file_overspecified_good(base_yaml, license_type):
     assert len(messages) == 0
 
 
-def test_license_file_overspecified_bad(base_yaml):
+def test_license_file_overspecified_bad(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -243,7 +245,7 @@ def test_license_file_overspecified_auto_fix() -> None:
     assert_on_auto_fix("license_file_overspecified")
 
 
-def test_missing_license_family_good(base_yaml):
+def test_missing_license_family_good(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -256,13 +258,13 @@ def test_missing_license_family_good(base_yaml):
     assert len(messages) == 0
 
 
-def test_missing_license_family_bad(base_yaml):
+def test_missing_license_family_bad(base_yaml: str) -> None:
     lint_check = "missing_license_family"
     messages = check(lint_check, base_yaml)
     assert len(messages) == 1 and "about/license_family` key" in messages[0].title
 
 
-def test_invalid_license_family(base_yaml):
+def test_invalid_license_family(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -275,7 +277,7 @@ def test_invalid_license_family(base_yaml):
     assert len(messages) == 1 and "about/license_family` value" in messages[0].title
 
 
-def test_invalid_license_family_none(base_yaml):
+def test_invalid_license_family_none(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -292,7 +294,7 @@ def test_invalid_license_family_none(base_yaml):
     )
 
 
-def test_missing_tests_good_import(base_yaml):
+def test_missing_tests_good_import(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -306,7 +308,7 @@ def test_missing_tests_good_import(base_yaml):
     assert len(messages) == 0
 
 
-def test_missing_tests_good_command(base_yaml):
+def test_missing_tests_good_command(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -320,7 +322,7 @@ def test_missing_tests_good_command(base_yaml):
     assert len(messages) == 0
 
 
-def test_missing_tests_good_multi(base_yaml):
+def test_missing_tests_good_multi(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -343,7 +345,7 @@ def test_missing_tests_good_multi(base_yaml):
 
 
 @pytest.mark.parametrize("test_file_name", ["run_test.py", "run_test.sh", "run_test.pl"])
-def test_missing_tests_good_scripts(base_yaml, test_file_name, recipe_dir):
+def test_missing_tests_good_scripts(base_yaml: str, test_file_name: str, recipe_dir: Path) -> None:
     lint_check = "missing_tests"
     test_file = recipe_dir / test_file_name
     test_file.write_text("\n")
@@ -351,7 +353,7 @@ def test_missing_tests_good_scripts(base_yaml, test_file_name, recipe_dir):
     assert len(messages) == 0
 
 
-def test_missing_tests_bad_missing(base_yaml):
+def test_missing_tests_bad_missing(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -365,13 +367,13 @@ def test_missing_tests_bad_missing(base_yaml):
     assert len(messages) == 1 and "No tests were found" in messages[0].title
 
 
-def test_missing_tests_bad_missing_section(base_yaml):
+def test_missing_tests_bad_missing_section(base_yaml: str) -> None:
     lint_check = "missing_tests"
     messages = check(lint_check, base_yaml)
     assert len(messages) == 1 and "No tests were found" in messages[0].title
 
 
-def test_missing_tests_bad_missing_multi(base_yaml):
+def test_missing_tests_bad_missing_multi(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -391,7 +393,7 @@ def test_missing_tests_bad_missing_multi(base_yaml):
     assert len(messages) == 2 and all("No tests were found" in msg.title for msg in messages)
 
 
-def test_missing_tests_bad_missing_section_multi(base_yaml):
+def test_missing_tests_bad_missing_section_multi(base_yaml: str) -> None:
     lint_check = "missing_tests"
     yaml_str = (
         base_yaml
@@ -405,7 +407,7 @@ def test_missing_tests_bad_missing_section_multi(base_yaml):
     assert len(messages) == 2 and all("No tests were found" in msg.title for msg in messages)
 
 
-def test_missing_hash_good(base_yaml):
+def test_missing_hash_good(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -420,7 +422,7 @@ def test_missing_hash_good(base_yaml):
 
 
 @pytest.mark.parametrize("exempt_type", ("git_url", "path"))
-def test_missing_hash_good_exceptions(base_yaml, exempt_type):
+def test_missing_hash_good_exceptions(base_yaml: str, exempt_type: str) -> None:
     yaml_str = (
         base_yaml
         + f"""
@@ -433,7 +435,7 @@ def test_missing_hash_good_exceptions(base_yaml, exempt_type):
     assert len(messages) == 0
 
 
-def test_missing_hash_bad(base_yaml):
+def test_missing_hash_bad(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -446,7 +448,7 @@ def test_missing_hash_bad(base_yaml):
     assert len(messages) == 1 and "missing a sha256" in messages[0].title
 
 
-def test_missing_hash_bad_algorithm(base_yaml):
+def test_missing_hash_bad_algorithm(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -461,7 +463,7 @@ def test_missing_hash_bad_algorithm(base_yaml):
 
 
 @pytest.mark.parametrize("src_type", ["url", "git_url", "hg_url", "svn_url"])
-def test_missing_source_good(base_yaml, src_type):
+def test_missing_source_good(base_yaml: str, src_type: str) -> None:
     lint_check = "missing_source"
     yaml_str = (
         base_yaml
@@ -475,7 +477,7 @@ def test_missing_source_good(base_yaml, src_type):
     assert len(messages) == 0
 
 
-def test_missing_source_bad(base_yaml):
+def test_missing_source_bad(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -488,7 +490,7 @@ def test_missing_source_bad(base_yaml):
     assert len(messages) == 1 and "missing a URL for the source" in messages[0].title
 
 
-def test_missing_source_bad_type(base_yaml):
+def test_missing_source_bad_type(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -503,7 +505,7 @@ def test_missing_source_bad_type(base_yaml):
 
 
 @pytest.mark.parametrize("src_type", ("url", "git_url", "path"))
-def test_non_url_source_good(base_yaml, src_type):  # pylint: disable=unused-argument
+def test_non_url_source_good(base_yaml: str, src_type: str) -> None:  # pylint: disable=unused-argument
     yaml_str = (
         base_yaml
         + """
@@ -518,7 +520,7 @@ def test_non_url_source_good(base_yaml, src_type):  # pylint: disable=unused-arg
 
 
 @pytest.mark.parametrize("src_type", ("hg_url", "svn_url"))
-def test_non_url_source_bad(base_yaml, src_type):
+def test_non_url_source_bad(base_yaml: str, src_type: str) -> None:
     lint_check = "non_url_source"
     yaml_str = (
         base_yaml
@@ -533,7 +535,7 @@ def test_non_url_source_bad(base_yaml, src_type):
 
 
 @pytest.mark.parametrize("doc_type", ("doc_url", "doc_source_url"))
-def test_missing_documentation_good(base_yaml, doc_type):
+def test_missing_documentation_good(base_yaml: str, doc_type: str) -> None:
     yaml_str = (
         base_yaml
         + f"""
@@ -546,7 +548,7 @@ def test_missing_documentation_good(base_yaml, doc_type):
     assert len(messages) == 0
 
 
-def test_missing_documentation_bad(base_yaml):
+def test_missing_documentation_bad(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -558,7 +560,7 @@ def test_missing_documentation_bad(base_yaml):
     assert len(messages) == 1 and "doc_url or doc_source_url" in messages[0].title
 
 
-def test_documentation_specifies_language(base_yaml):
+def test_documentation_specifies_language(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -571,7 +573,7 @@ def test_documentation_specifies_language(base_yaml):
     assert len(messages) == 1 and "Use the generic link, not a language specific one" in messages[0].title
 
 
-def test_documentation_does_not_specify_language(base_yaml):
+def test_documentation_does_not_specify_language(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -585,7 +587,7 @@ def test_documentation_does_not_specify_language(base_yaml):
 
 
 @pytest.mark.parametrize("doc_type", ("doc_url", "doc_source_url"))
-def test_documentation_overspecified_good(base_yaml, doc_type):
+def test_documentation_overspecified_good(base_yaml: str, doc_type: str) -> None:
     yaml_str = (
         base_yaml
         + f"""
@@ -598,7 +600,7 @@ def test_documentation_overspecified_good(base_yaml, doc_type):
     assert len(messages) == 0
 
 
-def test_documentation_overspecified_bad(base_yaml):
+def test_documentation_overspecified_bad(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -612,7 +614,7 @@ def test_documentation_overspecified_bad(base_yaml):
     assert len(messages) == 1 and "doc_url and doc_source_url is overspecified" in messages[0].title
 
 
-def test_missing_dev_url_good(base_yaml):
+def test_missing_dev_url_good(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -625,7 +627,7 @@ def test_missing_dev_url_good(base_yaml):
     assert len(messages) == 0
 
 
-def test_missing_dev_url_bad(base_yaml):
+def test_missing_dev_url_bad(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -637,7 +639,7 @@ def test_missing_dev_url_bad(base_yaml):
     assert len(messages) == 1 and "dev_url" in messages[0].title
 
 
-def test_missing_description_good(base_yaml):
+def test_missing_description_good(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -650,7 +652,7 @@ def test_missing_description_good(base_yaml):
     assert len(messages) == 0
 
 
-def test_missing_description_bad(base_yaml):
+def test_missing_description_bad(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -662,7 +664,7 @@ def test_missing_description_bad(base_yaml):
     assert len(messages) == 1 and "missing a description" in messages[0].title
 
 
-def test_wrong_output_script_key_good(base_yaml):
+def test_wrong_output_script_key_good(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -676,7 +678,7 @@ def test_wrong_output_script_key_good(base_yaml):
     assert len(messages) == 0
 
 
-def test_wrong_output_script_key_bad(base_yaml):
+def test_wrong_output_script_key_bad(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
