@@ -616,7 +616,7 @@ class Linter:
         :param verbose: (Optional) Enables additional reporting.
         :returns: String, containing information about all the linting messages, as a report.
         """
-        messages_grouped: dict[Severity, List[LintMessage]] = {sev: [] for sev in Severity}
+        messages_grouped: dict[Severity, list[LintMessage]] = {sev: [] for sev in Severity}
         num_errors: dict[Severity, int] = {sev: 0 for sev in [Severity.ERROR, Severity.WARNING]}
 
         for msg in messages:
@@ -625,7 +625,7 @@ class Linter:
                 num_errors[msg.severity] += 1
 
         report: str = ""
-        report_sections: List[str] = []
+        report_sections: list[str] = []
 
         for severity in [Severity.WARNING, Severity.ERROR]:
             if messages_grouped[severity]:
