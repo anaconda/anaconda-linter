@@ -633,7 +633,7 @@ class Linter:
                     f"===== {severity.name.upper()}S ===== \n"
                     + "\n".join(
                         f"- {msg.fname}:{msg.end_line}: {msg.check}: {msg.title}" for msg in messages_grouped[severity]
-                    )
+                    )  # if verbose add msg.body
                     + "\n"
                 )
         if report_sections:
@@ -641,7 +641,7 @@ class Linter:
 
         report += (
             "\n"
-            f"==== Final Report: =====\n"
+            f"===== Final Report: =====\n"
             f"{num_errors[Severity.ERROR]} Error{'s' if num_errors[Severity.ERROR] != 1 else ''} "
             f"and {num_errors[Severity.WARNING]} Warning{'s' if num_errors[Severity.WARNING] != 1 else ''} were found"
         )
