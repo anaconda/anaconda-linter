@@ -641,7 +641,7 @@ class Linter:
 
         report += (
             "\n"
-            f"==== Ending Report: =====\n"
+            f"==== Final Report: =====\n"
             f"{num_errors[Severity.ERROR]} Error{'s' if num_errors[Severity.ERROR] != 1 else ''} "
             f"and {num_errors[Severity.WARNING]} Warning{'s' if num_errors[Severity.WARNING] != 1 else ''} were found"
         )

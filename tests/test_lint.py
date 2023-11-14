@@ -313,7 +313,7 @@ def test_get_report():
         "\n===== ERRORS ===== "
         "\n- fake_feedstock/recipe/meta.yaml:0: dummy_error: Error message 1\n"
         "- fake_feedstock/recipe/meta.yaml:0: dummy_error: Error message 2\n"
-        "\n==== Ending Report: =====\n"
+        "\n==== Final Report: =====\n"
         "2 Errors and 1 Warning were found"
     )
     assert report == lint_check
