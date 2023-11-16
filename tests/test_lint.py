@@ -5,7 +5,7 @@ Description:    Tests linting infrastructure
 from __future__ import annotations
 
 from pathlib import Path
-from typing import List
+from typing import Final, List
 
 import pytest
 from conftest import check, check_dir
@@ -278,7 +278,7 @@ def test_message_path(base_yaml: str, tmpdir: Path) -> None:
 
 
 def test_get_report():
-    messages: List[LintMessage] = [
+    messages: Final[List[LintMessage]] = [
         LintMessage(
             severity=WARNING,
             recipe=None,
@@ -305,15 +305,14 @@ def test_get_report():
         ),
     ]
 
-    report: str = Linter.get_report(messages)
+    report: Final[str] = Linter.get_report(messages)
 
-    lint_check: str = (
-        "===== WARNINGS ===== \n"
+    assert report == (
+        "\n===== WARNINGS ===== \n"
         "- fake_feedstock/recipe/meta.yaml:0: dummy_warning: Warning message 1\n"
         "\n===== ERRORS ===== "
         "\n- fake_feedstock/recipe/meta.yaml:0: dummy_error: Error message 1\n"
         "- fake_feedstock/recipe/meta.yaml:0: dummy_error: Error message 2\n"
-        "\n===== Final Report: =====\n"
+        "===== Final Report: =====\n"
         "2 Errors and 1 Warning were found"
     )
-    assert report == lint_check
