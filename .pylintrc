@@ -317,7 +317,9 @@ check-quote-consistency=yes
 [VARIABLES]
 
 # Tells whether we should check for unused import in __init__ files.
-init-import=no
+# Anaconda-Delta: `lint/__init__.py` should be lint-checked as it contains critical
+# class information.
+init-import=yes
 
 # A regular expression matching the name of dummy variables (i.e. expectedly
 # not used).
