@@ -92,7 +92,6 @@ from typing import Any, Final, NamedTuple, Optional, Tuple, Union
 
 import networkx as nx
 import percy.render.recipe as _recipe
-from percy.parser.types import JsonType
 from percy.render.exceptions import EmptyRecipe, JinjaRenderFailure, MissingMetaYaml, RecipeError, YAMLRenderFailure
 from percy.render.recipe import RendererType
 from percy.render.variants import read_conda_build_config
