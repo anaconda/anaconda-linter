@@ -86,8 +86,6 @@ import importlib
 import inspect
 import logging
 import pkgutil
-from collections import defaultdict
-from dataclasses import dataclass, field
 from enum import IntEnum
 from pathlib import Path
 from typing import Any, Final, List, NamedTuple, Optional, Tuple, Union
@@ -528,11 +526,6 @@ recipe_error_to_lint_check: dict[RecipeError, LintCheck] = {
 }
 
 
-class SeverityInfo(NamedTuple):
-    messages: List[LintMessage] = []
-    count: int = 0
-
-
 class Linter:
     """
     Lint executor class
@@ -623,13 +616,13 @@ class Linter:
         :param verbose: (Optional) Enables additional reporting.
         :returns: String, containing information about all the linting messages, as a report.
         """
-        severity_data: dict[Severity, list[LintMessage]] = {sev: [] for sev in Severity}
+        severity_data: dict[Severity, List[LintMessage]] = {sev: [] for sev in Severity}
 
         for msg in messages:
             severity_data[msg.severity].append(msg)
 
         report: str = ""
-        report_sections: list[str] = []
+        report_sections: List[str] = []
 
         for sev in Severity:
             info = severity_data[sev]
