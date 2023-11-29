@@ -648,50 +648,6 @@ class Linter:
 
         return report
 
-    # def get_report(
-    #     cls,
-    #     messages: list[LintMessage],
-    #     verbose: bool = False,
-    # ) -> str:
-    #     """
-    #     Returns a report of all the linting messages.
-    #     :param messages: list of messages to process.
-    #     :param verbose: (Optional) Enables additional reporting.
-    #     :returns: String, containing information about all the linting messages, as a report.
-    #     """
-    #     severity_data: dict[Severity, list[LintMessage]] = {}
-
-    #     for msg in messages:
-    #         if msg.severity not in severity_data:
-    #             severity_data[msg.severity] = []
-    #     severity_data[msg.severity].append(msg)
-
-    #     report: str = ""
-    #     report_sections: list[str] = []
-
-    #     for sev in Severity:
-    #         if sev in severity_data:
-    #             info = severity_data[sev]
-    #             if info:
-    #                 severity_section = f"\n===== {sev.name.upper()}S ===== \n"
-    #                 severity_section += "\n".join(
-    #                     f"- {msg.fname}:{msg.end_line}: {msg.check}: {msg.title}"
-    #                     + (f"\n Additional Details: {msg.body}" if verbose else "")
-    #                     for msg in info
-    #                 )
-    #                 report_sections.append(severity_section)
-
-    #     if report_sections:
-    #         report += "\n".join(report_sections) + "\n"
-
-    #     report += "===== Final Report: =====\n"
-    #     error_count = len(severity_data[Severity.ERROR])
-    #     warning_count = len(severity_data[Severity.WARNING])
-    #     report += f"{error_count} Error{'s' if error_count != 1 else ''} "
-    #     report += f"and {warning_count} Warning{'s' if warning_count != 1 else ''} were found"
-
-    #     return report
-
     def lint(
         self,
         recipes: list[Union[str, _recipe.Recipe]],
