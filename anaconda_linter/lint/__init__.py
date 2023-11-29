@@ -88,7 +88,7 @@ import logging
 import pkgutil
 from enum import IntEnum
 from pathlib import Path
-from typing import Any, Final, List, NamedTuple, Optional, Tuple, Union
+from typing import Any, Final, NamedTuple, Optional, Union
 
 import networkx as nx
 import percy.render.recipe as _recipe
@@ -198,7 +198,7 @@ class LintCheckMeta(abc.ABCMeta):
 
     registry: list["LintCheck"] = []
 
-    def __new__(mcs, name: str, bases: Tuple[type, ...], namespace: dict[str, Any], **kwargs) -> type:
+    def __new__(mcs, name: str, bases: tuple[type, ...], namespace: dict[str, Any], **kwargs) -> type:
         """
         Creates LintCheck classes
         """
@@ -616,16 +616,18 @@ class Linter:
         :param verbose: (Optional) Enables additional reporting.
         :returns: String, containing information about all the linting messages, as a report.
         """
-        severity_data: dict[Severity, List[LintMessage]] = {sev: [] for sev in Severity}
+        severity_data: dict[Severity, list[LintMessage]] = {}
 
         for msg in messages:
+            if msg.severity not in severity_data:
+                severity_data[msg.severity] = []
             severity_data[msg.severity].append(msg)
 
         report: str = ""
-        report_sections: List[str] = []
+        report_sections: list[str] = []
 
-        for sev in Severity:
-            info = severity_data[sev]
+        for sev in [Severity.WARNING, Severity.ERROR]:
+            info = severity_data.get(sev, [])
             if info:
                 severity_section = f"\n===== {sev.name.upper()}S ===== \n"
                 severity_section += "\n".join(
@@ -639,12 +641,56 @@ class Linter:
             report += "\n".join(report_sections) + "\n"
 
         report += "===== Final Report: =====\n"
-        error_count = len(severity_data[Severity.ERROR])
-        warning_count = len(severity_data[Severity.WARNING])
+        error_count = len(severity_data.get(Severity.ERROR, []))
+        warning_count = len(severity_data.get(Severity.WARNING, []))
         report += f"{error_count} Error{'s' if error_count != 1 else ''} "
         report += f"and {warning_count} Warning{'s' if warning_count != 1 else ''} were found"
 
         return report
+
+    # def get_report(
+    #     cls,
+    #     messages: list[LintMessage],
+    #     verbose: bool = False,
+    # ) -> str:
+    #     """
+    #     Returns a report of all the linting messages.
+    #     :param messages: list of messages to process.
+    #     :param verbose: (Optional) Enables additional reporting.
+    #     :returns: String, containing information about all the linting messages, as a report.
+    #     """
+    #     severity_data: dict[Severity, list[LintMessage]] = {}
+
+    #     for msg in messages:
+    #         if msg.severity not in severity_data:
+    #             severity_data[msg.severity] = []
+    #     severity_data[msg.severity].append(msg)
+
+    #     report: str = ""
+    #     report_sections: list[str] = []
+
+    #     for sev in Severity:
+    #         if sev in severity_data:
+    #             info = severity_data[sev]
+    #             if info:
+    #                 severity_section = f"\n===== {sev.name.upper()}S ===== \n"
+    #                 severity_section += "\n".join(
+    #                     f"- {msg.fname}:{msg.end_line}: {msg.check}: {msg.title}"
+    #                     + (f"\n Additional Details: {msg.body}" if verbose else "")
+    #                     for msg in info
+    #                 )
+    #                 report_sections.append(severity_section)
+
+    #     if report_sections:
+    #         report += "\n".join(report_sections) + "\n"
+
+    #     report += "===== Final Report: =====\n"
+    #     error_count = len(severity_data[Severity.ERROR])
+    #     warning_count = len(severity_data[Severity.WARNING])
+    #     report += f"{error_count} Error{'s' if error_count != 1 else ''} "
+    #     report += f"and {warning_count} Warning{'s' if warning_count != 1 else ''} were found"
+
+    #     return report
 
     def lint(
         self,
