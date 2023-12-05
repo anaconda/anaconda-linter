@@ -10,7 +10,6 @@ import sys
 import textwrap
 import traceback
 from enum import IntEnum
-from typing import Final
 
 from anaconda_linter import __version__, lint, utils
 
@@ -143,11 +142,12 @@ def prime() -> ReturnCode:
 
     # print report
     print(lint.Linter.get_report(messages, args.verbose))
+
+    # Return appropriate error code.
     if overall_result == lint.WARNING:
         return ReturnCode.EXIT_LINTING_WARNINGS
     elif overall_result >= lint.ERROR:
         return ReturnCode.EXIT_LINTING_ERRORS
-
     return ReturnCode.EXIT_SUCCESS
 
 
@@ -157,7 +157,7 @@ def main() -> None:
     """
     try:
         sys.exit(prime())
-    except:  # pylint: disable=bare-except
+    except Exception:  # pylint: disable=broad-exception-caught
         traceback.print_exc()
         sys.exit(ReturnCode.EXIT_UNCAUGHT_EXCEPTION)
 
