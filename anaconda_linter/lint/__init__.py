@@ -605,11 +605,7 @@ class Linter:
         self._messages = []
 
     @classmethod
-    def get_report(
-        cls,
-        messages: list[LintMessage],
-        verbose: bool = False,
-    ) -> str:
+    def get_report(cls, messages: list[LintMessage], verbose: bool = False) -> str:
         """
         Returns a report of all the linting messages.
         :param messages: list of messages to process.
@@ -623,23 +619,25 @@ class Linter:
                 severity_data[msg.severity] = []
             severity_data[msg.severity].append(msg)
 
-        report: str = ""
+        report: str = "The following problems have been found:\n"
         report_sections: list[str] = []
 
         for sev in [Severity.WARNING, Severity.ERROR]:
-            info = severity_data.get(sev, [])
-            if info:
-                severity_section = f"\n===== {sev.name.upper()}S ===== \n"
-                severity_section += "\n".join(
-                    f"- {msg.fname}:{msg.end_line}: {msg.check}: {msg.title}"
-                    + (f"\n Additional Details: {msg.body}" if verbose else "")
-                    for msg in info
-                )
-                report_sections.append(severity_section)
+            if sev not in severity_data:
+                continue
+            info = severity_data[sev]
+            severity_section = f"\n===== {sev.name.upper()}S =====\n"
+            severity_section += "\n".join(
+                f"- {msg.fname}:{msg.end_line}: {msg.check}: {msg.title}"
+                + (f"\n Additional Details: {msg.body}" if verbose else "")
+                for msg in info
+            )
+            report_sections.append(severity_section)
 
-        if report_sections:
-            report += "\n".join(report_sections) + "\n"
+        if not report_sections:
+            return "All checks OK"
 
+        report += "\n".join(report_sections) + "\n"
         report += "===== Final Report: =====\n"
         error_count = len(severity_data.get(Severity.ERROR, []))
         warning_count = len(severity_data.get(Severity.WARNING, []))

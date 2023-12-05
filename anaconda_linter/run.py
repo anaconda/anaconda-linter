@@ -129,15 +129,7 @@ def main() -> None:
         messages = messages | set(linter.get_messages())
 
     # print report
-    if messages:
-        print("The following problems have been found:\n")
-        print(lint.Linter.get_report(messages, args.verbose))
-    if not overall_result:
-        print("All checks OK")
-    elif overall_result == lint.WARNING:
-        print("Warnings were found")
-    else:
-        print("Errors were found")
+    print(lint.Linter.get_report(messages, args.verbose))
 
 
 if __name__ == "__main__":
