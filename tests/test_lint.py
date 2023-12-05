@@ -5,6 +5,7 @@ Description:    Tests linting infrastructure
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Final
 
 import pytest
 from conftest import check, check_dir
@@ -274,3 +275,76 @@ def test_message_path(base_yaml: str, tmpdir: Path) -> None:
     lint_check = "DummyError"
     messages = check_dir(lint_check, recipe_directory.parent, base_yaml)
     assert len(messages) == 1 and Path(messages[0].fname) == (recipe_directory_short / "meta.yaml")
+
+
+def test_get_report_error() -> None:
+    """
+    Tests `get_report` for its ability to correctly
+    format and return a report containing errors and warnings.
+    :param messages: A list of LintMessage instances with varying
+    severity levels (including ERROR and WARNING).
+    :returns: A string report, formatted to include separate sections
+    for errors and warnings, along with a summary of their counts.
+    """
+    messages: Final[list[LintMessage]] = [
+        LintMessage(
+            severity=WARNING,
+            recipe=None,
+            fname="fake_feedstock/recipe/meta.yaml",
+            start_line=1,
+            check="dummy_warning",
+            title="Warning message 1",
+        ),
+        LintMessage(
+            severity=ERROR,
+            recipe=None,
+            fname="fake_feedstock/recipe/meta.yaml",
+            start_line=1,
+            check="dummy_error",
+            title="Error message 1",
+        ),
+        LintMessage(
+            severity=ERROR,
+            recipe=None,
+            fname="fake_feedstock/recipe/meta.yaml",
+            start_line=1,
+            check="dummy_error",
+            title="Error message 2",
+        ),
+    ]
+
+    report: Final[str] = Linter.get_report(messages)
+
+    assert report == (
+        "The following problems have been found:\n"
+        "\n===== WARNINGS =====\n"
+        "- fake_feedstock/recipe/meta.yaml:0: dummy_warning: Warning message 1\n"
+        "\n===== ERRORS ====="
+        "\n- fake_feedstock/recipe/meta.yaml:0: dummy_error: Error message 1\n"
+        "- fake_feedstock/recipe/meta.yaml:0: dummy_error: Error message 2\n"
+        "===== Final Report: =====\n"
+        "2 Errors and 1 Warning were found"
+    )
+
+
+def test_get_report_no_error() -> None:
+    """
+    Tests the `get_report` for handling a scenario with no errors or warnings.
+    :param messages: A list of LintMessage instances with severity levels lower
+    than WARNING or ERROR (e.g., INFO).
+    :returns: A string report that is expected to indicate the absence of any
+    reportable issues, typically with a message like "All checks OK".
+    """
+    messages: Final[list[LintMessage]] = [
+        LintMessage(
+            severity=INFO,
+            recipe=None,
+            fname="fake_feedstock/recipe/meta.yaml",
+            start_line=1,
+            check="dummy_info",
+            title="Info message",
+        )
+    ]
+    print(messages)
+    report: Final[str] = Linter.get_report(messages)
+    assert report == ("All checks OK")

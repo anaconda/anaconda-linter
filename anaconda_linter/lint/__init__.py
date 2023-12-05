@@ -88,7 +88,7 @@ import logging
 import pkgutil
 from enum import IntEnum
 from pathlib import Path
-from typing import Any, Final, NamedTuple, Optional, Tuple, Union
+from typing import Any, Final, NamedTuple, Optional, Union
 
 import networkx as nx
 import percy.render.recipe as _recipe
@@ -198,7 +198,7 @@ class LintCheckMeta(abc.ABCMeta):
 
     registry: list["LintCheck"] = []
 
-    def __new__(mcs, name: str, bases: Tuple[type, ...], namespace: dict[str, Any], **kwargs) -> type:
+    def __new__(mcs, name: str, bases: tuple[type, ...], namespace: dict[str, Any], **kwargs) -> type:
         """
         Creates LintCheck classes
         """
@@ -605,28 +605,46 @@ class Linter:
         self._messages = []
 
     @classmethod
-    def get_report(
-        cls,
-        messages: list[LintMessage],
-        verbose: bool = False,
-    ) -> str:
+    def get_report(cls, messages: list[LintMessage], verbose: bool = False) -> str:
         """
         Returns a report of all the linting messages.
         :param messages: list of messages to process.
         :param verbose: (Optional) Enables additional reporting.
         :returns: String, containing information about all the linting messages, as a report.
         """
-        messages = sorted(messages, key=lambda d: (d.fname, d.end_line))
-        if verbose:
-            return "\n".join(
-                f"{msg.severity.name}: {msg.fname}:{msg.end_line}: {msg.check}: {msg.title}\
-                    \n\t{msg.body}"
-                for msg in messages
+        severity_data: dict[Severity, list[LintMessage]] = {}
+
+        for msg in messages:
+            if msg.severity not in severity_data:
+                severity_data[msg.severity] = []
+            severity_data[msg.severity].append(msg)
+
+        report: str = "The following problems have been found:\n"
+        report_sections: list[str] = []
+
+        for sev in [Severity.WARNING, Severity.ERROR]:
+            if sev not in severity_data:
+                continue
+            info = severity_data[sev]
+            severity_section = f"\n===== {sev.name.upper()}S =====\n"
+            severity_section += "\n".join(
+                f"- {msg.fname}:{msg.end_line}: {msg.check}: {msg.title}"
+                + (f"\n Additional Details: {msg.body}" if verbose else "")
+                for msg in info
             )
-        else:
-            return "\n".join(
-                f"{msg.severity.name}: {msg.fname}:{msg.end_line}: {msg.check}: {msg.title}" for msg in messages
-            )
+            report_sections.append(severity_section)
+
+        if not report_sections:
+            return "All checks OK"
+
+        report += "\n".join(report_sections) + "\n"
+        report += "===== Final Report: =====\n"
+        error_count = len(severity_data.get(Severity.ERROR, []))
+        warning_count = len(severity_data.get(Severity.WARNING, []))
+        report += f"{error_count} Error{'s' if error_count != 1 else ''} "
+        report += f"and {warning_count} Warning{'s' if warning_count != 1 else ''} were found"
+
+        return report
 
     def lint(
         self,
