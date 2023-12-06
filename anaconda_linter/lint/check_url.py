@@ -5,7 +5,7 @@ Description:    Contains linter checks for URL validation.
 from __future__ import annotations
 
 from anaconda_linter import utils
-from anaconda_linter.lint import ERROR, INFO, LintCheck
+from anaconda_linter.lint import LintCheck, Severity
 
 
 class invalid_url(LintCheck):
@@ -37,7 +37,7 @@ class invalid_url(LintCheck):
             if url:
                 response_data = utils.check_url(url)
                 if response_data["code"] < 0 or response_data["code"] >= 400:
-                    severity = INFO if "domain_redirect" in response_data else ERROR
+                    severity = Severity.INFO if "domain_redirect" in response_data else Severity.ERROR
                     self.message(url, response_data["message"], section=url_field, severity=severity)
 
 

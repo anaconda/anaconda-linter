@@ -144,9 +144,9 @@ def prime() -> ReturnCode:
     print(lint.Linter.get_report(messages, args.verbose))
 
     # Return appropriate error code.
-    if overall_result == lint.WARNING:
+    if overall_result == lint.Severity.WARNING:
         return ReturnCode.EXIT_LINTING_WARNINGS
-    elif overall_result >= lint.ERROR:
+    elif overall_result >= lint.Severity.ERROR:
         return ReturnCode.EXIT_LINTING_ERRORS
     return ReturnCode.EXIT_SUCCESS
 

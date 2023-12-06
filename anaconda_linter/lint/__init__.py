@@ -114,12 +114,8 @@ class Severity(IntEnum):
     ERROR = 30
 
 
-INFO: Final[Severity] = Severity.INFO
-WARNING: Final[Severity] = Severity.WARNING
-ERROR: Final[Severity] = Severity.ERROR
-
-SEVERITY_DEFAULT: Final[Severity] = ERROR
-SEVERITY_MIN_DEFAULT: Final[Severity] = INFO
+SEVERITY_DEFAULT: Final[Severity] = Severity.ERROR
+SEVERITY_MIN_DEFAULT: Final[Severity] = Severity.INFO
 
 
 class LintMessage(NamedTuple):
@@ -158,9 +154,9 @@ class LintMessage(NamedTuple):
         """
         Return level string as required by github
         """
-        if self.severity < WARNING:
+        if self.severity < Severity.WARNING:
             return "notice"
-        if self.severity < ERROR:
+        if self.severity < Severity.ERROR:
             return "warning"
         return "failure"
 
@@ -707,11 +703,11 @@ class Linter:
 
         result = 0
         for message in self._messages:
-            if message.severity == ERROR:
-                result = ERROR
+            if message.severity == Severity.ERROR:
+                result = Severity.ERROR
                 break
-            elif message.severity == WARNING:
-                result = WARNING
+            elif message.severity == Severity.WARNING:
+                result = Severity.WARNING
 
         return result
 
@@ -853,7 +849,7 @@ class Linter:
                     LintMessage(
                         recipe=recipe,
                         check=check,
-                        severity=ERROR,
+                        severity=Severity.ERROR,
                         title="Check raised an unexpected exception",
                     )
                 ]

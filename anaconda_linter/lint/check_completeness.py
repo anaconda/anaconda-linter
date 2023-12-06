@@ -10,7 +10,7 @@ import re
 import conda_build.license_family
 from percy.render.recipe import OpMode, Recipe
 
-from anaconda_linter.lint import WARNING, LintCheck
+from anaconda_linter.lint import LintCheck, Severity
 
 
 class missing_section(LintCheck):
@@ -158,7 +158,7 @@ class missing_license_file(LintCheck):
 
     def check_recipe(self, recipe: Recipe) -> None:
         if not recipe.get("about/license_file", "") and not recipe.get("about/license_url", ""):
-            self.message(section="about", severity=WARNING)
+            self.message(section="about", severity=Severity.WARNING)
 
 
 class license_file_overspecified(LintCheck):
@@ -170,7 +170,7 @@ class license_file_overspecified(LintCheck):
 
     def check_recipe(self, recipe: Recipe) -> None:
         if recipe.get("about/license_file", "") and recipe.get("about/license_url", ""):
-            self.message(section="about", severity=WARNING, data=recipe)
+            self.message(section="about", severity=Severity.WARNING, data=recipe)
 
     def fix(self, message, data) -> bool:
         recipe = data
@@ -326,7 +326,7 @@ class non_url_source(LintCheck):
 
     def check_source(self, source, section) -> None:
         if any(source.get(chk, None) for chk in self.source_types):
-            self.message(section=section, severity=WARNING)
+            self.message(section=section, severity=Severity.WARNING)
 
 
 class missing_documentation(LintCheck):
@@ -360,7 +360,7 @@ class documentation_overspecified(LintCheck):
 
     def check_recipe(self, recipe: Recipe) -> None:
         if recipe.get("about/doc_url", "") and recipe.get("about/doc_source_url", ""):
-            self.message(section="about", severity=WARNING)
+            self.message(section="about", severity=Severity.WARNING)
 
 
 class documentation_specifies_language(LintCheck):
@@ -374,7 +374,7 @@ class documentation_specifies_language(LintCheck):
     def check_recipe(self, recipe: Recipe) -> None:
         lang_url = re.compile(r"readthedocs.io\/[a-z]{2,3}/latest")  # assume ISO639-1 or similar language code
         if recipe.get("about/doc_url", "") and lang_url.search(recipe.get("about/doc_url", "")):
-            self.message(section="about/doc_url", severity=WARNING)
+            self.message(section="about/doc_url", severity=Severity.WARNING)
 
 
 class missing_dev_url(LintCheck):
@@ -406,7 +406,7 @@ class missing_description(LintCheck):
 
     def check_recipe(self, recipe: Recipe) -> None:
         if not recipe.get("about/description", ""):
-            self.message(section="about", severity=WARNING)
+            self.message(section="about", severity=Severity.WARNING)
 
 
 class wrong_output_script_key(LintCheck):

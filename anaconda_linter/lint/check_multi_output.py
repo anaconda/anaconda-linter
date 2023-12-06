@@ -5,7 +5,7 @@ Description:    Contains linter checks for multi-output based rules.
 from __future__ import annotations
 
 from anaconda_linter import utils as _utils
-from anaconda_linter.lint import INFO, WARNING, LintCheck
+from anaconda_linter.lint import LintCheck, Severity
 
 
 class output_missing_name(LintCheck):
@@ -53,7 +53,7 @@ class no_global_test(LintCheck):
 
     def check_recipe(self, recipe) -> None:
         if recipe.get("outputs", None) and recipe.get("test", None):
-            self.message(severity=WARNING)
+            self.message(severity=Severity.WARNING)
 
 
 class output_missing_script(LintCheck):
@@ -75,7 +75,7 @@ class output_missing_script(LintCheck):
             if any(path.startswith(f"outputs/{o}/") for name in subpackages for path in deps[name]["paths"]):
                 continue
             if recipe.get(f"outputs/{o}/script", "") == "":
-                self.message(output=o, severity=INFO)
+                self.message(output=o, severity=Severity.INFO)
 
 
 class output_script_name_default(LintCheck):
