@@ -49,9 +49,14 @@ jobs:
       runs-on: ubuntu-latest
       steps:
         - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+          with:
+            repository: AnacondaRecipes/anaconda-linter-feedstock
+            path: ./feedstock
         - uses: ./.github/actions/setup-env
         - name: Run lint
           run: |
+            cp -r ./feedstock/abs.yaml ./feedstock/recipe .
             source $CONDA/bin/activate
             conda activate anaconda-linter
             conda-lint .
