@@ -13,7 +13,7 @@ from percy.render.exceptions import RecipeError
 from percy.render.recipe import Recipe, RendererType
 
 from anaconda_linter import lint, utils
-from anaconda_linter.lint import ERROR, INFO, WARNING, Linter, LintMessage, Severity
+from anaconda_linter.lint import Linter, LintMessage, Severity
 
 
 class DummyInfo(lint.LintCheck):
@@ -22,7 +22,7 @@ class DummyInfo(lint.LintCheck):
     """
 
     def check_recipe(self, _) -> None:
-        self.message(severity=INFO)
+        self.message(severity=Severity.INFO)
 
 
 class DummyWarning(lint.LintCheck):
@@ -31,7 +31,7 @@ class DummyWarning(lint.LintCheck):
     """
 
     def check_recipe(self, _) -> None:
-        self.message(severity=WARNING)
+        self.message(severity=Severity.WARNING)
 
 
 class DummyError(lint.LintCheck):
@@ -40,7 +40,7 @@ class DummyError(lint.LintCheck):
     """
 
     def check_recipe(self, _) -> None:
-        self.message(severity=ERROR)
+        self.message(severity=Severity.ERROR)
 
 
 class DummyErrorFormat(lint.LintCheck):
@@ -116,9 +116,9 @@ def test_lint_file(base_yaml: str, linter, recipe_dir: Path) -> None:
 @pytest.mark.parametrize(
     "level,string,lint_check",
     (
-        (INFO, "notice", "DummyInfo"),
-        (WARNING, "warning", "DummyWarning"),
-        (ERROR, "failure", "DummyError"),
+        (Severity.INFO, "notice", "DummyInfo"),
+        (Severity.WARNING, "warning", "DummyWarning"),
+        (Severity.ERROR, "failure", "DummyError"),
     ),
 )
 def test_severity_level(base_yaml: str, level: Severity, string: str, lint_check: str) -> None:
@@ -156,7 +156,7 @@ def test_severity_min_string(base_yaml: str, level: str, expected: int) -> None:
     assert len(linter.get_messages()) == expected
 
 
-@pytest.mark.parametrize("level,expected", ((INFO, 3), ("WARNING", 2), ("ERROR", 1)))
+@pytest.mark.parametrize("level,expected", ((Severity.INFO, 3), ("WARNING", 2), ("ERROR", 1)))
 def test_severity_min_enum(base_yaml: str, level: Severity | str, expected: int) -> None:
     yaml_str = (
         base_yaml
@@ -288,7 +288,7 @@ def test_get_report_error() -> None:
     """
     messages: Final[list[LintMessage]] = [
         LintMessage(
-            severity=WARNING,
+            severity=Severity.WARNING,
             recipe=None,
             fname="fake_feedstock/recipe/meta.yaml",
             start_line=1,
@@ -296,7 +296,7 @@ def test_get_report_error() -> None:
             title="Warning message 1",
         ),
         LintMessage(
-            severity=ERROR,
+            severity=Severity.ERROR,
             recipe=None,
             fname="fake_feedstock/recipe/meta.yaml",
             start_line=1,
@@ -304,7 +304,7 @@ def test_get_report_error() -> None:
             title="Error message 1",
         ),
         LintMessage(
-            severity=ERROR,
+            severity=Severity.ERROR,
             recipe=None,
             fname="fake_feedstock/recipe/meta.yaml",
             start_line=1,
@@ -337,7 +337,7 @@ def test_get_report_no_error() -> None:
     """
     messages: Final[list[LintMessage]] = [
         LintMessage(
-            severity=INFO,
+            severity=Severity.INFO,
             recipe=None,
             fname="fake_feedstock/recipe/meta.yaml",
             start_line=1,

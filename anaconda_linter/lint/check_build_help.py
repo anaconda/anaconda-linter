@@ -13,7 +13,7 @@ from percy.parser.recipe_parser import RecipeParser, SelectorConflictMode
 from percy.render.recipe import Recipe
 
 from anaconda_linter import utils as _utils
-from anaconda_linter.lint import INFO, WARNING, LintCheck
+from anaconda_linter.lint import LintCheck, Severity
 
 # Does not include m2-tools, which should be checked using wild cards.
 BUILD_TOOLS = (
@@ -165,7 +165,7 @@ class host_section_needs_exact_pinnings(LintCheck):
                     if constraint == "" or re.search("^[<>!]", constraint) is not None:
                         path = dep["paths"][c]
                         output = -1 if not path.startswith("outputs") else int(path.split("/")[1])
-                        self.message(section=path, severity=WARNING, output=output)
+                        self.message(section=path, severity=Severity.WARNING, output=output)
 
 
 class cbc_dep_in_run_missing_from_host(LintCheck):
@@ -215,7 +215,7 @@ class potentially_bad_ignore_run_exports(LintCheck):
         for package in recipe.packages.values():
             for dep in package.host:
                 if dep.pkg in package.ignore_run_exports:
-                    self.message(section=_utils.get_dep_path(recipe, dep), severity=INFO)
+                    self.message(section=_utils.get_dep_path(recipe, dep), severity=Severity.INFO)
 
 
 class should_use_compilers(LintCheck):
@@ -295,7 +295,7 @@ class build_tools_must_be_in_build(LintCheck):
             if tool.startswith("m2-") or tool in BUILD_TOOLS:
                 for path in dep["paths"]:
                     o = -1 if not path.startswith("outputs") else int(path.split("/")[1])
-                    self.message(tool, severity=WARNING, section=path, output=o)
+                    self.message(tool, severity=Severity.WARNING, section=path, output=o)
 
 
 class python_build_tool_in_run(LintCheck):
@@ -314,7 +314,7 @@ class python_build_tool_in_run(LintCheck):
             if tool in deps:
                 for path in deps[tool]["paths"]:
                     o = -1 if not path.startswith("outputs") else int(path.split("/")[1])
-                    self.message(tool, severity=WARNING, section=path, output=o)
+                    self.message(tool, severity=Severity.WARNING, section=path, output=o)
 
 
 class missing_python_build_tool(LintCheck):
@@ -617,7 +617,7 @@ class avoid_noarch(LintCheck):
                 and not recipe.get(f"{package.path_prefix}build/osx_is_app", False)
                 and not recipe.get(f"{package.path_prefix}app", None)
             ):
-                self.message(section=f"{package.path_prefix}build", severity=WARNING, data=(recipe, package))
+                self.message(section=f"{package.path_prefix}build", severity=Severity.WARNING, data=(recipe, package))
 
     def fix(self, message, data) -> bool:
         (recipe, package) = data
@@ -1067,4 +1067,4 @@ class gui_app(LintCheck):
 
     def check_recipe(self, recipe: Recipe) -> None:
         if set(self.guis).intersection(set(_utils.get_deps(recipe, "run"))):
-            self.message(severity=INFO)
+            self.message(severity=Severity.INFO)

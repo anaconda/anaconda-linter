@@ -6,9 +6,20 @@ from __future__ import annotations
 
 import argparse
 import os
+import sys
 import textwrap
+import traceback
+from enum import IntEnum
 
 from anaconda_linter import __version__, lint, utils
+
+
+# POSIX style return codes
+class ReturnCode(IntEnum):
+    EXIT_SUCCESS = 0
+    EXIT_UNCAUGHT_EXCEPTION = 42
+    EXIT_LINTING_WARNINGS = 100
+    EXIT_LINTING_ERRORS = 101
 
 
 def lint_parser() -> argparse.ArgumentParser:
@@ -103,9 +114,10 @@ def lint_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main() -> None:
+def prime() -> ReturnCode:
     """
-    Primary execution point of the linter's CLI
+    Contains the primary execution code that would be in `main()`. This allows us to easily wrap and control return
+    codes in unexpected failure cases.
     """
     # parse arguments
     parser = lint_parser()
@@ -130,6 +142,24 @@ def main() -> None:
 
     # print report
     print(lint.Linter.get_report(messages, args.verbose))
+
+    # Return appropriate error code.
+    if overall_result == lint.Severity.WARNING:
+        return ReturnCode.EXIT_LINTING_WARNINGS
+    elif overall_result >= lint.Severity.ERROR:
+        return ReturnCode.EXIT_LINTING_ERRORS
+    return ReturnCode.EXIT_SUCCESS
+
+
+def main() -> None:
+    """
+    Primary execution point of the linter's CLI
+    """
+    try:
+        sys.exit(prime())
+    except Exception:  # pylint: disable=broad-exception-caught
+        traceback.print_exc()
+        sys.exit(ReturnCode.EXIT_UNCAUGHT_EXCEPTION)
 
 
 if __name__ == "__main__":
