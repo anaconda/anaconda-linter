@@ -13,7 +13,7 @@ from percy.render.exceptions import RecipeError
 from percy.render.recipe import Recipe, RendererType
 
 from anaconda_linter import lint, utils
-from anaconda_linter.lint import Linter, LintMessage, Severity
+from anaconda_linter.lint import AutoFixState, Linter, LintMessage, Severity
 
 
 class DummyInfo(lint.LintCheck):
@@ -97,6 +97,9 @@ def test_lint_none(base_yaml: str, linter: Linter) -> None:  # pylint: disable=u
 
 
 def test_lint_file(base_yaml: str, linter, recipe_dir: Path) -> None:
+    """
+    Attempts to lint a fake recipe that should generate a known number of linting messages.
+    """
     yaml_str = (
         base_yaml
         + """
@@ -111,6 +114,25 @@ def test_lint_file(base_yaml: str, linter, recipe_dir: Path) -> None:
     meta_yaml.write_text(yaml_str)
     linter.lint([str(recipe_dir)])
     assert len(linter.get_messages()) == 3
+
+
+def test_can_auto_fix(linter: lint.Linter):
+    """
+    Checks to see if the `can_auto_fix()` function is working as expected
+    :param linter: Linter test fixture
+    """
+
+    # This class is auto-fixable as the function has been defined on the child class
+    class auto_fixable_dummy_rule(lint.LintCheck):
+        def fix(self) -> bool:
+            return False
+
+    # This class is not auto-fixable as it is using the default implementation of `fix()` in the parent class.
+    class non_auto_fixable_dummy_rule(lint.LintCheck):
+        pass
+
+    assert auto_fixable_dummy_rule(linter).can_auto_fix()
+    assert not non_auto_fixable_dummy_rule(linter).can_auto_fix()
 
 
 @pytest.mark.parametrize(
@@ -279,12 +301,7 @@ def test_message_path(base_yaml: str, tmpdir: Path) -> None:
 
 def test_get_report_error() -> None:
     """
-    Tests `get_report` for its ability to correctly
-    format and return a report containing errors and warnings.
-    :param messages: A list of LintMessage instances with varying
-    severity levels (including ERROR and WARNING).
-    :returns: A string report, formatted to include separate sections
-    for errors and warnings, along with a summary of their counts.
+    Tests `get_report` for its ability to correctly format and return a report containing errors and warnings.
     """
     messages: Final[list[LintMessage]] = [
         LintMessage(
@@ -327,13 +344,86 @@ def test_get_report_error() -> None:
     )
 
 
+def test_get_report_auto_fixes() -> None:
+    """
+    Ensures `get_report()` can report rules that have been automatically fixed successfully.
+    """
+    messages: Final[list[LintMessage]] = [
+        LintMessage(
+            severity=Severity.WARNING,
+            recipe=None,
+            fname="fake_feedstock/recipe/meta.yaml",
+            start_line=1,
+            check="dummy_warning",
+            title="Warning message 1",
+        ),
+        LintMessage(
+            severity=Severity.ERROR,
+            recipe=None,
+            fname="fake_feedstock/recipe/meta.yaml",
+            start_line=1,
+            check="dummy_error",
+            title="Error message 1",
+        ),
+        LintMessage(
+            severity=Severity.ERROR,
+            recipe=None,
+            fname="fake_feedstock/recipe/meta.yaml",
+            start_line=1,
+            check="auto_fix_1",
+            title="Auto message 1",
+            auto_fix_state=AutoFixState.FIX_PASSED,
+        ),
+        LintMessage(
+            severity=Severity.ERROR,
+            recipe=None,
+            fname="fake_feedstock/recipe/meta.yaml",
+            start_line=80,
+            check="dummy_error",
+            title="Error message 2",
+        ),
+        LintMessage(
+            severity=Severity.WARNING,
+            recipe=None,
+            fname="fake_feedstock/recipe/meta.yaml",
+            start_line=37,
+            check="auto_fix_2",
+            title="Auto message 2",
+            auto_fix_state=AutoFixState.FIX_PASSED,
+        ),
+        LintMessage(
+            severity=Severity.ERROR,
+            recipe=None,
+            fname="fake_feedstock/recipe/meta.yaml",
+            start_line=42,
+            check="auto_fix_3",
+            title="Auto message 3",
+            auto_fix_state=AutoFixState.FIX_FAILED,
+        ),
+    ]
+
+    report: Final[str] = Linter.get_report(messages)
+
+    assert report == (
+        "The following problems have been found:\n"
+        "\n===== Automatically Fixed =====\n"
+        "- auto_fix_1\n"
+        "- auto_fix_2\n"
+        "\n===== WARNINGS =====\n"
+        "- fake_feedstock/recipe/meta.yaml:0: dummy_warning: Warning message 1\n"
+        "\n===== ERRORS ====="
+        "\n- fake_feedstock/recipe/meta.yaml:0: dummy_error: Error message 1\n"
+        "- fake_feedstock/recipe/meta.yaml:0: dummy_error: Error message 2\n"
+        "- fake_feedstock/recipe/meta.yaml:0: auto_fix_3: Auto message 3\n"
+        "===== Final Report: =====\n"
+        "Automatically fixed 2 issues.\n"
+        "3 Errors and 1 Warning were found"
+    )
+
+
 def test_get_report_no_error() -> None:
     """
     Tests the `get_report` for handling a scenario with no errors or warnings.
-    :param messages: A list of LintMessage instances with severity levels lower
-    than WARNING or ERROR (e.g., INFO).
-    :returns: A string report that is expected to indicate the absence of any
-    reportable issues, typically with a message like "All checks OK".
     """
     messages: Final[list[LintMessage]] = [
         LintMessage(

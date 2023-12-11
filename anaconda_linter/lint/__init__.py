@@ -86,9 +86,10 @@ import importlib
 import inspect
 import logging
 import pkgutil
-from enum import IntEnum
+from dataclasses import dataclass
+from enum import IntEnum, auto
 from pathlib import Path
-from typing import Any, Final, NamedTuple, Optional, Union
+from typing import Any, Final, Optional, Union
 
 import networkx as nx
 import percy.render.recipe as _recipe
@@ -104,21 +105,38 @@ logger = logging.getLogger(__name__)
 class Severity(IntEnum):
     """Severities for lint checks"""
 
-    #: Checks of this severity are purely informational
+    # Indicates a "null" severity (no messages were produced)
+    NONE = 0
+
+    # Checks of this severity are purely informational
     INFO = 10
 
-    #: Checks of this severity indicate possible problems
+    # Checks of this severity indicate possible problems
     WARNING = 20
 
-    #: Checks of this severity must be fixed and will fail a recipe.
+    # Checks of this severity must be fixed and will fail a recipe.
     ERROR = 30
+
+
+class AutoFixState(IntEnum):
+    """
+    Indicates the auto-fix state of a rule.
+    """
+
+    # Fix was not attempted
+    NOT_FIXED = auto()
+    # Fix attempted and succeeded
+    FIX_PASSED = auto()
+    # Fix attempted but failed
+    FIX_FAILED = auto()
 
 
 SEVERITY_DEFAULT: Final[Severity] = Severity.ERROR
 SEVERITY_MIN_DEFAULT: Final[Severity] = Severity.INFO
 
 
-class LintMessage(NamedTuple):
+@dataclass()
+class LintMessage:
     """
     Message issued by LintChecks
     """
@@ -150,17 +168,18 @@ class LintMessage(NamedTuple):
     #: Whether the problem can be auto fixed
     canfix: bool = False
 
-    def get_level(self) -> str:
-        """
-        Return level string as required by github
-        """
-        if self.severity < Severity.WARNING:
-            return "notice"
-        if self.severity < Severity.ERROR:
-            return "warning"
-        return "failure"
+    #: Indicates the state of the auto-fix attempt
+    auto_fix_state: AutoFixState = AutoFixState.NOT_FIXED
 
-    def __eq__(self, other: LintMessage) -> bool:
+    def __eq__(self, other: object) -> bool:
+        """
+        Equivalency operator. `LintMessage`s must be hashable so they can be de-duped in a `set()`
+        TODO Future: Use the default `dataclass` implementation when `recipe` instances are hashable.
+        :param other: Other LintMessage instance to compare against.
+        :returns: True if two `LintMessage` instances are equivalent.
+        """
+        if not isinstance(other, LintMessage):
+            return False
         return (
             self.check == other.check
             and self.severity == other.severity
@@ -169,9 +188,16 @@ class LintMessage(NamedTuple):
             and self.start_line == other.start_line
             and self.end_line == other.end_line
             and self.fname == other.fname
+            and self.canfix == other.canfix
+            and self.auto_fix_state == other.auto_fix_state
         )
 
     def __hash__(self) -> int:
+        """
+        Hash operator. `LintMessage`s must be hashable so they can be de-duped in a `set()`
+        TODO Future: Use the default `dataclass` implementation when `recipe` instances are hashable.
+        :returns: Unique hash code for this `LintMessage` instance.
+        """
         return hash(
             (
                 self.check,
@@ -181,8 +207,19 @@ class LintMessage(NamedTuple):
                 self.start_line,
                 self.end_line,
                 self.fname,
+                self.auto_fix_state,
             )
         )
+
+    def get_level(self) -> str:
+        """
+        Return level string as required by github
+        """
+        if self.severity < Severity.WARNING:
+            return "notice"
+        if self.severity < Severity.ERROR:
+            return "warning"
+        return "failure"
 
 
 class LintCheckMeta(abc.ABCMeta):
@@ -305,6 +342,16 @@ class LintCheck(metaclass=LintCheckMeta):
         :param deps: dictionary mapping requirements occurring in the recipe to their locations within the recipe.
         """
 
+    def can_auto_fix(self) -> bool:
+        """
+        Indicates if a rule can be auto-fixed (which is a LintCheck child class that has the `fix()` function
+        implemented)
+        :returns: True if this rule supports auto-fixing. False otherwise.
+        """
+        # Adapted from:
+        #   https://stackoverflow.com/questions/61052764/how-do-i-check-if-a-method-was-overwritten-by-a-child-class
+        return type(self).fix is not LintCheck.fix
+
     def fix(self, message: LintMessage, data: Any) -> bool:  # pylint: disable=unused-argument
         """
         Attempt to automatically fix the linting error.
@@ -345,11 +392,12 @@ class LintCheck(metaclass=LintCheckMeta):
             severity=severity,
             fname=fname,
             line=line,
-            canfix=data is not None,
+            canfix=self.can_auto_fix(),
             output=output,
         )
-        if data is not None and self.try_fix and self.fix(message, data):
-            return
+        # If able, attempt to autofix the rule and mark the message object accordingly
+        if self.try_fix and self.can_auto_fix():
+            message.auto_fix_state = AutoFixState.FIX_PASSED if self.fix(message, data) else AutoFixState.FIX_FAILED
         self.messages.append(message)
 
     @classmethod
@@ -556,7 +604,7 @@ class Linter:
         self.exclude = exclude or []
         self.nocatch = nocatch
         self.verbose = verbose
-        self._messages = []
+        self._messages: list[LintMessage] = []
         # TODO rm: de-risk this. Enforce `Severity` over `str` universally
         if isinstance(severity_min, Severity):
             self.severity_min = severity_min
@@ -598,7 +646,7 @@ class Linter:
         """
         Clears the lint messages stored in linter
         """
-        self._messages = []
+        self._messages: list[LintMessage] = []
 
     @classmethod
     def get_report(cls, messages: list[LintMessage], verbose: bool = False) -> str:
@@ -609,14 +657,22 @@ class Linter:
         :returns: String, containing information about all the linting messages, as a report.
         """
         severity_data: dict[Severity, list[LintMessage]] = {}
+        successful_auto_fixes: list[str] = []
 
         for msg in messages:
+            if msg.auto_fix_state == AutoFixState.FIX_PASSED:
+                successful_auto_fixes.append(str(msg.check))
+                continue
+
             if msg.severity not in severity_data:
                 severity_data[msg.severity] = []
             severity_data[msg.severity].append(msg)
 
         report: str = "The following problems have been found:\n"
         report_sections: list[str] = []
+
+        if successful_auto_fixes:
+            report_sections.append("\n===== Automatically Fixed =====\n- " + "\n- ".join(successful_auto_fixes))
 
         for sev in [Severity.WARNING, Severity.ERROR]:
             if sev not in severity_data:
@@ -635,8 +691,11 @@ class Linter:
 
         report += "\n".join(report_sections) + "\n"
         report += "===== Final Report: =====\n"
+        auto_fix_count = len(successful_auto_fixes)
         error_count = len(severity_data.get(Severity.ERROR, []))
         warning_count = len(severity_data.get(Severity.WARNING, []))
+        if auto_fix_count > 0:
+            report += f"Automatically fixed {auto_fix_count} issue{'s' if auto_fix_count != 1 else ''}.\n"
         report += f"{error_count} Error{'s' if error_count != 1 else ''} "
         report += f"and {warning_count} Warning{'s' if warning_count != 1 else ''} were found"
 
@@ -649,7 +708,7 @@ class Linter:
         variant_config_files: Optional[list[str]] = None,
         exclusive_config_files: Optional[list[str]] = None,
         fix: bool = False,
-    ) -> bool:
+    ) -> Severity:
         """
         Run linter on multiple recipes
 
@@ -669,7 +728,7 @@ class Linter:
         if exclusive_config_files is None:
             exclusive_config_files = []
         if len(recipes) == 0:
-            return 0
+            return Severity.NONE
         if isinstance(recipes[0], str):
             for recipe_name in sorted(recipes):
                 try:
@@ -701,7 +760,7 @@ class Linter:
                     msgs = [linter_failure.make_message(recipe=recipe)]
                 self._messages.extend(msgs)
 
-        result = 0
+        result: Severity = Severity.NONE
         for message in self._messages:
             if message.severity == Severity.ERROR:
                 result = Severity.ERROR
