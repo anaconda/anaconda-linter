@@ -12,6 +12,7 @@
     - [Testing the Anaconda Linter](#testing-the-anaconda-linter)
 - [Contributing](#contributing)
     - [Development setup](#development-setup)
+    - [Release process](#release-process)
     - [Contributions](#contributions)
 - [License](#license)
 
@@ -133,8 +134,7 @@ Running `make help` will show all of the available commands. Here are some that 
 Here is a rough outline of how to conduct a release of this project:
 1. Update `CHANGELOG.md`
 1. Update the version number in `anaconda_linter/__init__.py`
-1. Update the version number in `recipe/meta.yaml`
-1. Ensure `environment.yaml` aligns with `recipe/meta.yaml`
+1. Ensure `environment.yaml` aligns with `recipe/meta.yaml` found in the feedstock
 1. Create a new release on GitHub with a version tag.
 1. The Anaconda packaging team will need to update
 [the feedstock](https://github.com/AnacondaRecipes/anaconda-linter-feedstock)

@@ -14,7 +14,7 @@ dependencies:
   - ruamel.yaml
   - license-expression
   - jinja2
-  - conda-build <3.28.0  # Pinned to resolve bug in conda-build 3.28.0
+  - conda-build
   - jsonschema
   - networkx
   - requests

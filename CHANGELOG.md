@@ -1,6 +1,13 @@
 # Changelog
 Note: version releases in the 0.x.y range may introduce breaking changes.
 
+## 0.1.3
+- Improves error and warnings output, loosely following what C compilers tend to with a "report" section
+- When the `--fix` option is used, we return the list of rules that have been successfully auto-fixed
+- The executable now returns pre-defined POSIX-style return codes
+- Adds more unit tests
+- Bug fixes
+
 ## 0.1.2
 - Enforces Python code auto formatting across the project
 - Enforces Python code linting across the project
