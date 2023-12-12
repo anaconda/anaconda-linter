@@ -24,10 +24,14 @@ runs:
     - name: Create Environment
       shell: bash
       if: ${{ steps.cache-conda.outputs.cache-hit == false }}
+      # We override the version of Python specified in our `environment.yaml` file to simulate using older versions
+      # of Python, if the project is used as a dependency elsewhere. To simulate this, we uninstall and re-install the
+      # targeted version manually.
       run: |
         conda update -n base -c defaults conda
         source $CONDA/etc/profile.d/conda.sh
         conda init bash
         conda env create -f environment.yaml --name anaconda-linter --force
         conda run --name anaconda-linter pip install .
+        conda remove --name anaconda-linter python
         conda install --name anaconda-linter python=${{ inputs.python-version }}
