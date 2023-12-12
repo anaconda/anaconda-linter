@@ -13,7 +13,7 @@ from percy.render.recipe import Recipe, RendererType
 from percy.render.variants import Variant, read_conda_build_config
 
 from anaconda_linter import utils
-from anaconda_linter.lint import Linter, LintMessage
+from anaconda_linter.lint import AutoFixState, Linter, LintMessage
 
 # Locations of test files
 TEST_FILES_PATH: Final[str] = "tests/test_aux_files"
@@ -149,6 +149,6 @@ def assert_on_auto_fix(check_name: str, arch: str = "linux-64") -> None:
     with patch("builtins.open", mock_open()):
         messages = linter_obj.check_instances[check_name].run(recipe=recipe, fix=True)
 
-    # Fixed issues emit no messages
-    assert len(messages) == 0
+    assert len(messages) == 1
+    assert messages[0].auto_fix_state == AutoFixState.FIX_PASSED
     assert recipe.dump() == load_file(fixed_file)
