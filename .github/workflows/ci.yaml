@@ -32,7 +32,7 @@ jobs:
             python-version: ${{ matrix.python-version }}
         - run: |
             source $CONDA/bin/activate
-            conda activate anaconda-packaging-utils
+            conda activate anaconda-linter
             make test
   build-recipe:
       runs-on: ubuntu-latest
