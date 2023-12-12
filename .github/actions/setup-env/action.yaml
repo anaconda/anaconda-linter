@@ -30,3 +30,4 @@ runs:
         conda init bash
         conda env create -f environment.yaml --name anaconda-linter --force
         conda run --name anaconda-linter pip install .
+        conda install --name anaconda-linter python=${{ inputs.python-version }}
