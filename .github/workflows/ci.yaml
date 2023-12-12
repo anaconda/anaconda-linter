@@ -19,6 +19,21 @@ jobs:
             source $CONDA/bin/activate
             conda activate anaconda-linter
             make pre-commit
+  test:
+      runs-on: ubuntu-latest
+      name: Test on ${{ matrix.python-version }}
+      strategy:
+        matrix:
+          python-version: ["3.8", "3.9", "3.10"]
+      steps:
+        - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        - uses: ./.github/actions/setup-env
+          with:
+            python-version: ${{ matrix.python-version }}
+        - run: |
+            source $CONDA/bin/activate
+            conda activate anaconda-packaging-utils
+            make test
   build-recipe:
       runs-on: ubuntu-latest
       steps:
