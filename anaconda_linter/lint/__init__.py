@@ -93,8 +93,8 @@ from typing import Any, Final, Optional, Union
 
 import networkx as nx
 import percy.render.recipe as _recipe
+from percy.render._renderer import RendererType
 from percy.render.exceptions import EmptyRecipe, JinjaRenderFailure, MissingMetaYaml, RecipeError, YAMLRenderFailure
-from percy.render.recipe import RendererType
 from percy.render.variants import read_conda_build_config
 
 from anaconda_linter import utils as _utils

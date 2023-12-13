@@ -9,8 +9,9 @@ from typing import Final
 
 import pytest
 from conftest import check, check_dir
+from percy.render._renderer import RendererType
 from percy.render.exceptions import RecipeError
-from percy.render.recipe import Recipe, RendererType
+from percy.render.recipe import Recipe
 
 from anaconda_linter import lint, utils
 from anaconda_linter.lint import AutoFixState, Linter, LintMessage, Severity
@@ -123,16 +124,16 @@ def test_can_auto_fix(linter: lint.Linter):
     """
 
     # This class is auto-fixable as the function has been defined on the child class
-    class auto_fixable_dummy_rule(lint.LintCheck):
+    class DummyAutoFixableRule(lint.LintCheck):
         def fix(self) -> bool:
             return False
 
     # This class is not auto-fixable as it is using the default implementation of `fix()` in the parent class.
-    class non_auto_fixable_dummy_rule(lint.LintCheck):
+    class DummyNonAutoFixableRule(lint.LintCheck):
         pass
 
-    assert auto_fixable_dummy_rule(linter).can_auto_fix()
-    assert not non_auto_fixable_dummy_rule(linter).can_auto_fix()
+    assert DummyAutoFixableRule(linter).can_auto_fix()
+    assert not DummyNonAutoFixableRule(linter).can_auto_fix()
 
 
 @pytest.mark.parametrize(
