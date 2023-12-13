@@ -9,8 +9,9 @@ from typing import Final
 
 import pytest
 from conftest import check, check_dir
+from percy.render._renderer import RendererType
 from percy.render.exceptions import RecipeError
-from percy.render.recipe import Recipe, RendererType
+from percy.render.recipe import Recipe
 
 from anaconda_linter import lint, utils
 from anaconda_linter.lint import AutoFixState, Linter, LintMessage, Severity

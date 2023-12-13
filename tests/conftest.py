@@ -9,7 +9,8 @@ from typing import Final, Optional
 from unittest.mock import mock_open, patch
 
 import pytest
-from percy.render.recipe import Recipe, RendererType
+from percy.render._renderer import RendererType
+from percy.render.recipe import Recipe
 from percy.render.variants import Variant, read_conda_build_config
 
 from anaconda_linter import utils

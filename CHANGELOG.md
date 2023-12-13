@@ -2,6 +2,7 @@
 Note: version releases in the 0.x.y range may introduce breaking changes.
 
 ## 0.1.3
+- Python 3.11+ will only be supported for now for ease of maintenance
 - Improves error and warnings output, loosely following what C compilers tend to with a "report" section
 - When the `--fix` option is used, we return the list of rules that have been successfully auto-fixed
 - The executable now returns pre-defined POSIX-style return codes
