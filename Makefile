@@ -95,7 +95,7 @@ dist: clean ## builds source and wheel package
 dev: clean  ## install the package's development version
 	conda env create -f environment.yaml --name $(CONDA_ENV_NAME) --force
 	conda run --name $(CONDA_ENV_NAME) pip install -e .
-	$(CONDA_ACTIVATE) percy && pre-commit install
+	$(CONDA_ACTIVATE) $(CONDA_ENV_NAME) && pre-commit install
 
 pre-commit:     ## runs pre-commit against files. NOTE: older files are disabled in the pre-commit config.
 	pre-commit run --all-files
