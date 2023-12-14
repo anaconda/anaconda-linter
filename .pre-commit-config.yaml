@@ -2,6 +2,9 @@
 #   pre-commit run --all-files
 # Update this file:
 #   pre-commit autoupdate
+# This prevents `pre-commit` from using a newer version of Python, which may cause `pylint` to emit extra errors.
+default_language_version:
+    python: python3.11
 exclude: |
   (?x)^(
     tests/test_aux_files/.*|
