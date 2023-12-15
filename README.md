@@ -5,8 +5,10 @@
 
 - [Anaconda Linter](#anaconda-linter)
     - [Table of Contents](#table-of-contents)
-    - [Overview](#overview)
 - [Installation](#installation)
+    - [From conda into your current environment](#from-conda-into-your-current-environment)
+    - [From the repository](#from-the-repository)
+    - [For developers](#for-developers)
 - [Usage](#usage)
     - [Skipping Lints](#skipping-lints)
     - [Testing the Anaconda Linter](#testing-the-anaconda-linter)
@@ -17,18 +19,30 @@
 - [License](#license)
 
 <!-- /TOC -->
-
-## Overview
 Anaconda Linter is a utility to validate that a recipe for a conda package
 will render correctly.
 
 The package is currently a very rough draft of a pure Python linter specifically to make sure
 that packages' meta.yaml files adhere to certain Anaconda standards.
 
-
 # Installation
+
+## From `conda` (into your current environment)
 ```sh
+$ conda install -c distro-tooling anaconda-linter
+```
+
+## From the repository
+```sh
+$ cd anaconda-linter
 $ make environment
+$ conda activate anaconda-linter
+```
+
+## For developers
+```sh
+$ cd anaconda-linter
+$ make dev
 $ conda activate anaconda-linter
 ```
 
@@ -60,14 +74,14 @@ options:
 
 The usage is similar to conda-build.
 
-1. navigate into the folder of your main `conda_build_config.yaml` file:
-`cd <path/to/aggregate/>`
-
-2. run `conda-lint` with:  `conda-lint <path_to_feedstock>`
+1. Navigate into the folder of your main `conda_build_config.yaml` file: `cd <path/to/aggregate/>`
+1. Run `conda-lint` with:  `conda-lint <path_to_feedstock>`
 
 Concrete example:
-`cd ~/work/recipes/aggregate/`
-`conda-lint -v ../wip/airflow-feedstock`
+```sh
+cd ~/work/recipes/aggregate/
+conda-lint -v ../wip/airflow-feedstock
+```
 
 Full usage details can be found under the help menu (`conda-lint -h`). New users may find it easier to run the script with the verbose flag, `-v` which will provide additional context for linting errors.
 
@@ -92,10 +106,9 @@ Note: if you have both `skip-lints` and `only-lint`, any lints in `skip-lint` wi
 ## Testing the Anaconda Linter
 
 Make sure that your `anaconda-linter` environment is activated, then:
-
-`pytest tests` OR `make test` (if you would like to see test reports)
-
-It's that easy!
+```sh
+make test
+```
 
 # Contributing
 
@@ -103,10 +116,8 @@ We welcome contributions for bug fixes, enhancements, or new tests.
 For a list of projects, please see the [Issues page](https://github.com/anaconda-distribution/anaconda-linter/issues)
 
 Before submitting a PR, please make sure to:
-
-  * run `make pre-commit` to format your code using `flake8` and `black`.
-  * run `make test` to make sure our unit tests pass.
-  * add unit tests for new functionality. To print a coverage report, run `make coverage`.
+1. Add unit tests for new functionality. To print a coverage report, run `make test-cov`.
+1. Run `make pre-commit` to format your code using `isort` and `black` and validate your code with our automated checks.
 
 If you would like to develop in a hosted linux environment, a [gitpod instance](https://gitpod.io/#https://github.com/anaconda-distribution/anaconda-linter/tree/gitpod-poc) is available to test linter changes with real life packages, without having to download them to your own machine.
 
