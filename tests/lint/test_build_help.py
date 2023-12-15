@@ -2910,7 +2910,7 @@ def test_no_git_on_windows_auto_fix() -> None:
     """
     Tests the auto-fix functionality of the `no_git_on_windows` rule.
     """
-    assert_on_auto_fix("no_git_on_windows", "win-64")
+    assert_on_auto_fix("no_git_on_windows", arch="win-64")
 
 
 def test_gui_app_good(base_yaml: str) -> None:

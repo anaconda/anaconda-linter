@@ -133,15 +133,19 @@ def check_dir(check_name: str, feedstock_dir: str | Path, recipe_str: str, arch:
     return messages
 
 
-def assert_on_auto_fix(check_name: str, arch: str = "linux-64") -> None:
+def assert_on_auto_fix(check_name: str, suffix: str = "", arch: str = "linux-64") -> None:
     """
     Utility function executes a fix function against an offending recipe file. Then asserts the resulting file against
     a known fixed equivalent of the offending recipe file.
     :param check_name:      Name of the linting rule. This corresponds with input and output files.
+    :param suffix:          (Optional) Standardized suffix used in the file format. This allows us to test multiple
+                            variants of input-to-expected-output files. if specified, the files should be named:
+                            `<check_name>_<suffix>.yaml` and `<check_name>_<suffix>_fixed.yaml`, respectively.
     :param arch:            (Optional) Target architecture to render recipe as
     """
-    broken_file: Final[str] = f"{TEST_AUTO_FIX_FILES_PATH}/{check_name}.yaml"
-    fixed_file: Final[str] = f"{TEST_AUTO_FIX_FILES_PATH}/{check_name}_fixed.yaml"
+    suffix_adjusted: Final[str] = f"_{suffix}" if suffix else ""
+    broken_file: Final[str] = f"{TEST_AUTO_FIX_FILES_PATH}/{check_name}{suffix_adjusted}.yaml"
+    fixed_file: Final[str] = f"{TEST_AUTO_FIX_FILES_PATH}/{check_name}{suffix_adjusted}_fixed.yaml"
 
     linter_obj, recipe = load_linter_and_recipe(load_file(broken_file), arch)
 
