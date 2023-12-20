@@ -133,15 +133,21 @@ def check_dir(check_name: str, feedstock_dir: str | Path, recipe_str: str, arch:
     return messages
 
 
-def assert_on_auto_fix(check_name: str, arch: str = "linux-64") -> None:
+def assert_on_auto_fix(check_name: str, suffix: str, arch: str, num_occurrences: int) -> None:
     """
     Utility function executes a fix function against an offending recipe file. Then asserts the resulting file against
     a known fixed equivalent of the offending recipe file.
     :param check_name:      Name of the linting rule. This corresponds with input and output files.
-    :param arch:            (Optional) Target architecture to render recipe as
+    :param suffix:          Standardized suffix used in the file format. This allows us to test multiple
+                            variants of input-to-expected-output files. If non-empty, the files should be named:
+                            `<check_name>_<suffix>.yaml` and `<check_name>_<suffix>_fixed.yaml`, respectively.
+    :param arch:            Target architecture to render recipe as
+    :param num_occurrences: How many times a rule should be expected to be found in the file. This allows for 1 set of
+                            test files to validate multiple variations of a rule.
     """
-    broken_file: Final[str] = f"{TEST_AUTO_FIX_FILES_PATH}/{check_name}.yaml"
-    fixed_file: Final[str] = f"{TEST_AUTO_FIX_FILES_PATH}/{check_name}_fixed.yaml"
+    suffix_adjusted: Final[str] = f"_{suffix}" if suffix else ""
+    broken_file: Final[str] = f"{TEST_AUTO_FIX_FILES_PATH}/{check_name}{suffix_adjusted}.yaml"
+    fixed_file: Final[str] = f"{TEST_AUTO_FIX_FILES_PATH}/{check_name}{suffix_adjusted}_fixed.yaml"
 
     linter_obj, recipe = load_linter_and_recipe(load_file(broken_file), arch)
 
@@ -150,6 +156,14 @@ def assert_on_auto_fix(check_name: str, arch: str = "linux-64") -> None:
     with patch("builtins.open", mock_open()):
         messages = linter_obj.check_instances[check_name].run(recipe=recipe, fix=True)
 
-    assert len(messages) == 1
-    assert messages[0].auto_fix_state == AutoFixState.FIX_PASSED
+    # Ensure that:
+    #   - The rule triggered the expected number of times
+    #   - That the correct rule triggered
+    #   - And that the rule was actually fixed
+    # This supports
+    assert len(messages) == num_occurrences
+    for i in range(num_occurrences):
+        assert messages[i].auto_fix_state == AutoFixState.FIX_PASSED
+        assert str(messages[i].check) == check_name
+    # Ensure that the output matches the expected output
     assert recipe.dump() == load_file(fixed_file)
