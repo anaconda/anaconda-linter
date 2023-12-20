@@ -16,16 +16,16 @@ build:
 
 requirements:
   host:
-    - pip
+    - pip <=1.4
     - python
     - setuptools
-    - wheel
+    - wheel==1.2.3
   run:
     - python
     - folium>=0.13
-    - streamlit>=1.13
+    - streamlit<=1.13  # [unix]
     - branca
-    - jinja2
+    - jinja2!=1.3.5.2
 
 test:
   imports:

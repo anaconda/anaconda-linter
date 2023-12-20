@@ -25,9 +25,9 @@ from conftest import assert_on_auto_fix
         # TODO add multi-output-test
         ("no_git_on_windows", "", "win-64", 1),
         # TODO add multi-output-test
-        ("version_constraints_missing_whitespace", "", "linux-64", 2),
-        ("version_constraints_missing_whitespace", "", "osx-arm64", 2),
-        ("version_constraints_missing_whitespace", "", "win-64", 2),
+        ("version_constraints_missing_whitespace", "", "linux-64", 4),
+        ("version_constraints_missing_whitespace", "", "osx-arm64", 4),
+        ("version_constraints_missing_whitespace", "", "win-64", 4),
     ],
 )
 def test_auto_fix_rule(check: str, suffix: str, arch: str, num_occurrences: int):
