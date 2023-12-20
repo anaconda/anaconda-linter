@@ -23,6 +23,20 @@ class version_constraints_missing_whitespace(LintCheck):
 
     """
 
+    def fix(self, message, data) -> bool:
+        path = cast(str, data["path"])
+        new_dependency = cast(str, data["new_dependency"])
+
+        def _add_whitespace(parser: RecipeParser):
+            selector: Final[str] = (
+                "" if not parser.contains_selector_at_path(path) else parser.get_selector_at_path(path)
+            )
+            parser.patch({"op": "replace", "path": path, "value": new_dependency})
+            if selector:
+                parser.add_selector(path, selector)
+
+        return self.recipe.patch_with_parser(_add_whitespace)
+
     # TODO Future: percy should eventually have support for constraints. This regex may not be sufficient enough to
     # to catch all accepted formats. The spec can be found at:
     #   https://docs.conda.io/projects/conda-build/en/stable/resources/package-spec.html#build-version-spec
@@ -55,16 +69,4 @@ class version_constraints_missing_whitespace(LintCheck):
                 output=output,
             )
 
-    def fix(self, message, data) -> bool:
-        path = cast(str, data["path"])
-        new_dependency = cast(str, data["new_dependency"])
 
-        def _add_whitespace(parser: RecipeParser):
-            selector: Final[str] = (
-                "" if not parser.contains_selector_at_path(path) else parser.get_selector_at_path(path)
-            )
-            parser.patch({"op": "replace", "path": path, "value": new_dependency})
-            if selector:
-                parser.add_selector(path, selector)
-
-        return self.recipe.patch_with_parser(_add_whitespace)
