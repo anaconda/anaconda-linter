@@ -37,7 +37,6 @@ class version_constraints_missing_whitespace(LintCheck):
         # Search all dependencies for missing whitespace
         for path in check_paths:
             output: Final[int] = -1 if not path.startswith("/outputs") else int(path.split("/")[2])
-            n = int(path.split("/")[-1])
             spec = cast(str, ro_parser.get_value(path))
             has_constraints = version_constraints_missing_whitespace._CONSTRAINTS_RE.search(spec)
             if not has_constraints:
@@ -50,7 +49,7 @@ class version_constraints_missing_whitespace(LintCheck):
             dependency, version = has_constraints.groups()
             new_dependency: Final[str] = f"{dependency} {version}"
             self.message(
-                section=f"{path}/{n}",
+                section=path,
                 data={"path": path, "new_dependency": new_dependency},
                 output=output,
             )
@@ -59,7 +58,7 @@ class version_constraints_missing_whitespace(LintCheck):
         path = cast(str, data["path"])
         new_dependency = cast(str, data["new_dependency"])
 
-        def _rm_whitespace(parser: RecipeParser):
+        def _add_whitespace(parser: RecipeParser):
             selector: Final[str] = (
                 "" if not parser.contains_selector_at_path(path) else parser.get_selector_at_path(path)
             )
@@ -67,4 +66,4 @@ class version_constraints_missing_whitespace(LintCheck):
             if selector:
                 parser.add_selector(path, selector)
 
-        return self.recipe.patch_with_parser(_rm_whitespace)
+        return self.recipe.patch_with_parser(_add_whitespace)
