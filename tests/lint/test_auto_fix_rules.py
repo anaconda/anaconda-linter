@@ -16,19 +16,27 @@ from conftest import assert_on_auto_fix
 
 # Format: (Check Name, File Suffix, Architecture)
 @pytest.mark.parametrize(
-    "check,suffix,arch",
+    "check,suffix,arch,num_occurrences",
     [
-        ("license_file_overspecified", "", "linux-64"),
-        ("license_file_overspecified", "", "win-64"),
-        ("no_git_on_windows", "", "win-64"),
+        # TODO add multi-output-test
+        ("license_file_overspecified", "", "linux-64", 1),
+        ("license_file_overspecified", "", "osx-arm64", 1),
+        ("license_file_overspecified", "", "win-64", 1),
+        # TODO add multi-output-test
+        ("no_git_on_windows", "", "win-64", 1),
+        # TODO add multi-output-test
+        ("version_constraints_missing_whitespace", "", "linux-64", 2),
+        ("version_constraints_missing_whitespace", "", "osx-arm64", 2),
+        ("version_constraints_missing_whitespace", "", "win-64", 2),
     ],
 )
-def test_auto_fix_rule(check: str, suffix: str, arch: str):
+def test_auto_fix_rule(check: str, suffix: str, arch: str, num_occurrences: int):
     """
     Tests auto-fixable rules by passing in a file with the issue and checking the output with an expected file.
     Files must be stored in the `test_aux_files/auto_fix/` directory, following our naming conventions.
     :param check: Name of the linter check
     :param suffix: File suffix, allowing developers to create multiple test files against a linter check.
     :param arch: Architecture to run the test against.
+    :param num_occurrences: Number of times this rule should be triggered in the test file.
     """
-    assert_on_auto_fix(check, suffix, arch)
+    assert_on_auto_fix(check, suffix, arch, num_occurrences)
