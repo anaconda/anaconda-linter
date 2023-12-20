@@ -23,8 +23,9 @@ class version_constraints_missing_whitespace(LintCheck):
 
     """
 
-    # TODO Future: percy should eventually have support for constraints. This regex may not be
-    # sufficient enough to catch all accepted formats
+    # TODO Future: percy should eventually have support for constraints. This regex may not be sufficient enough to
+    # to catch all accepted formats. The spec can be found at:
+    #   https://docs.conda.io/projects/conda-build/en/stable/resources/package-spec.html#build-version-spec
     _CONSTRAINTS_RE: Final[re.Pattern[str]] = re.compile("(.*?)([!<=>].*)")
 
     def check_recipe(self, recipe) -> None:
