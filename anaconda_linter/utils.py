@@ -32,6 +32,11 @@ URLCache = dict[str, URLData]
 check_url_cache: URLCache = {}
 
 
+# TODO: Confirm this is correct
+# Represents a recipe's "config" or "cbc.yaml" file
+RecipeConfigType = dict[str, str | list[str]]
+
+
 def validate_config(path: str) -> None:
     """
     Validate config against schema
@@ -46,7 +51,8 @@ def validate_config(path: str) -> None:
             validate(config, schema)
 
 
-def load_config(path: str):
+# TODO determine type of "value"
+def load_config(path: str) -> RecipeConfigType:
     """
     Parses config file, building paths to relevant block-lists.
     TODO Future: determine if this config file is necessary and if we can just get away with constants in this file

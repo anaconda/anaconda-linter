@@ -134,32 +134,39 @@ def _lint_parser() -> argparse.ArgumentParser:
 
 def execute_linter(
     recipe: str,
+    config: Optional[utils.RecipeConfigType] = None,
     variant_config_files: Optional[list[str]] = None,
     exclusive_config_files: Optional[list[str]] = None,
     subdirs: Optional[list[str]] = None,
     severity: lint.Severity = lint.SEVERITY_MIN_DEFAULT,
     fix_flag: bool = False,
     verbose_flag: bool = False,
-) -> ReturnCode:
+) -> tuple[ReturnCode, str]:
     """
     Contains the primary execution code that would be in `main()`. This gives us a few benefits:
       - Allows us to easily wrap and control return codes in unexpected failure cases.
       - Allows us to execute the linter work as a library call in another Python project.
     :param recipe: Path to the target feedstock (where `recipe/meta.yaml` can be found)
-    :param variant_config_files: (Optional)
-    :param exclusive_config_files: (Optional)
-    :param subdirs: (Optional)
-    :param severity: (Optional)
-    :param fix_flag: (Optional)
-    :param verbose_flag: (Optional)
-    :return: One of
+    :param config: (Optional) Defaults to the contents of the default config file provided in `config.yaml`.
+    :param variant_config_files: (Optional) Configuration files for recipe variants
+    :param exclusive_config_files: (Optional) Configuration files for exclusive recipe variants
+    :param subdirs: (Optional) Target recipe architectures/platforms
+    :param severity: (Optional) Minimum severity level of linting messages to report
+    :param fix_flag: (Optional) If set to true, the linter will automatically attempt to make changes to the target
+                     recipe file.
+    :param verbose_flag: (Optional) Enables verbose debugging output.
+    :returns: The appropriate error code and the final text report containing linter results.
     """
+    # We want to remove our reliance on external files when the project is run as a library.
+    if config is None:
+        config = {
+            "requirements": "requirements.txt",
+            "blocklists": ["build-fail-blocklist"],
+            "channels": ["defaults"],
+        }
+
     if subdirs is None:
         subdirs = DEFAULT_SUBDIRS
-
-    # load global configuration
-    config_file = os.path.abspath(os.path.dirname(__file__) + "/config.yaml")
-    config = utils.load_config(config_file)
 
     # set up linter
     linter = lint.Linter(config=config, verbose=verbose_flag, exclude=None, nocatch=True, severity_min=severity)
@@ -175,15 +182,15 @@ def execute_linter(
             overall_result = result
         messages = messages | set(linter.get_messages())
 
-    # print report
-    print(lint.Linter.get_report(messages, verbose_flag))
+    # Calculate the final report
+    report: Final[str] = lint.Linter.get_report(messages, verbose_flag)
 
     # Return appropriate error code.
     if overall_result == lint.Severity.WARNING:
-        return ReturnCode.EXIT_LINTING_WARNINGS
+        return ReturnCode.EXIT_LINTING_WARNINGS, report
     elif overall_result >= lint.Severity.ERROR:
-        return ReturnCode.EXIT_LINTING_ERRORS
-    return ReturnCode.EXIT_SUCCESS
+        return ReturnCode.EXIT_LINTING_ERRORS, report
+    return ReturnCode.EXIT_SUCCESS, report
 
 
 def main() -> None:
@@ -193,18 +200,23 @@ def main() -> None:
     args, _ = _lint_parser().parse_known_args()
     severity: Final[lint.Severity] = _convert_severity(args.severity)
 
+    # load global configuration
+    config_file: Final[str] = os.path.abspath(os.path.dirname(__file__) + "/config.yaml")
+    config: Final[utils.RecipeConfigType] = utils.load_config(config_file)
+
     try:
-        sys.exit(
-            execute_linter(
-                recipe=args.recipe,
-                variant_config_files=args.variant_config_files,
-                exclusive_config_files=args.exclusive_config_files,
-                subdirs=args.subdirs,
-                severity=severity,
-                fix_flag=args.fix,
-                verbose_flag=args.verbose,
-            )
+        return_code, report = execute_linter(
+            recipe=args.recipe,
+            config=config,
+            variant_config_files=args.variant_config_files,
+            exclusive_config_files=args.exclusive_config_files,
+            subdirs=args.subdirs,
+            severity=severity,
+            fix_flag=args.fix,
+            verbose_flag=args.verbose,
         )
+        print(report)
+        sys.exit(return_code)
     except Exception:  # pylint: disable=broad-exception-caught
         traceback.print_exc()
         sys.exit(ReturnCode.EXIT_UNCAUGHT_EXCEPTION)
