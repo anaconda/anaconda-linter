@@ -584,7 +584,7 @@ class Linter:
         verbose: bool = False,
         exclude: list[str] = None,
         nocatch: bool = False,
-        severity_min: Optional[Severity | str] = None,
+        severity_min: Optional[Severity] = None,
     ) -> None:
         """
         Constructs a linter instance
@@ -608,17 +608,7 @@ class Linter:
         self.nocatch = nocatch
         self.verbose = verbose
         self._messages: list[LintMessage] = []
-        # TODO rm: de-risk this. Enforce `Severity` over `str` universally
-        if isinstance(severity_min, Severity):
-            self.severity_min = severity_min
-        elif isinstance(severity_min, str):
-            try:
-                self.severity_min = Severity[severity_min]
-            except KeyError as e:
-                raise ValueError(f"Unrecognized severity level {severity_min}") from e
-        else:
-            self.severity_min = SEVERITY_MIN_DEFAULT
-
+        self.severity_min = SEVERITY_MIN_DEFAULT if severity_min is None else severity_min
         self.reload_checks()
 
     def reload_checks(self) -> None:
@@ -766,9 +756,8 @@ class Linter:
         result: Severity = Severity.NONE
         for message in self._messages:
             if message.severity == Severity.ERROR:
-                result = Severity.ERROR
-                break
-            elif message.severity == Severity.WARNING:
+                return Severity.ERROR
+            if message.severity == Severity.WARNING:
                 result = Severity.WARNING
 
         return result

@@ -10,8 +10,19 @@ import sys
 import textwrap
 import traceback
 from enum import IntEnum
+from typing import Final, Optional
 
 from anaconda_linter import __version__, lint, utils
+
+DEFAULT_SUBDIRS: Final[list[str]] = [
+    "linux-64",
+    "linux-aarch64",
+    "linux-ppc64le",
+    "linux-s390x",
+    "osx-64",
+    "osx-arm64",
+    "win-64",
+]
 
 
 # POSIX style return codes
@@ -22,7 +33,20 @@ class ReturnCode(IntEnum):
     EXIT_LINTING_ERRORS = 101
 
 
-def lint_parser() -> argparse.ArgumentParser:
+def _convert_severity(s: str) -> lint.Severity:
+    """
+    Converts the string provided by the argument parser to a Severity Enum.
+    :param s: Sanitized, upper-cased Severity that is not `Severity.NONE`.
+    :returns: Equivalent severity enumeration
+    """
+    s = s.upper()
+    if s in lint.Severity.__members__:
+        return lint.Severity.__members__[s]
+    # It should not be possible to be here, but I'd rather default to a severity level than crash or throw.
+    return lint.SEVERITY_DEFAULT
+
+
+def _lint_parser() -> argparse.ArgumentParser:
     """
     Configures the `argparser` instance used for the linter's CLI
     :returns: An `argparser` instance to parse command line arguments
@@ -72,22 +96,16 @@ def lint_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "-s",
         "--subdirs",
-        default=[
-            "linux-64",
-            "linux-aarch64",
-            "linux-ppc64le",
-            "linux-s390x",
-            "osx-64",
-            "osx-arm64",
-            "win-64",
-        ],
+        default=DEFAULT_SUBDIRS,
         action="append",
         help="""List subdir to lint. Example: linux-64, win-64...""",
     )
     parser.add_argument(
         "--severity",
-        choices=["INFO", "WARNING", "ERROR"],
-        type=str.upper,
+        choices=[lint.Severity.INFO.name, lint.Severity.WARNING.name, lint.Severity.ERROR.name],
+        default=lint.SEVERITY_MIN_DEFAULT.name,
+        # Handles case-insensitive versions of the names
+        type=lambda s: s.upper(),
         help="""The minimum severity level displayed in the output.""",
     )
     # we do this one separately because we only allow one entry to conda render
@@ -114,34 +132,51 @@ def lint_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def prime() -> ReturnCode:
+def execute_linter(
+    recipe: str,
+    variant_config_files: Optional[list[str]] = None,
+    exclusive_config_files: Optional[list[str]] = None,
+    subdirs: Optional[list[str]] = None,
+    severity: lint.Severity = lint.SEVERITY_MIN_DEFAULT,
+    fix_flag: bool = False,
+    verbose_flag: bool = False,
+) -> ReturnCode:
     """
-    Contains the primary execution code that would be in `main()`. This allows us to easily wrap and control return
-    codes in unexpected failure cases.
+    Contains the primary execution code that would be in `main()`. This gives us a few benefits:
+      - Allows us to easily wrap and control return codes in unexpected failure cases.
+      - Allows us to execute the linter work as a library call in another Python project.
+    :param recipe: Path to the target feedstock (where `recipe/meta.yaml` can be found)
+    :param variant_config_files: (Optional)
+    :param exclusive_config_files: (Optional)
+    :param subdirs: (Optional)
+    :param severity: (Optional)
+    :param fix_flag: (Optional)
+    :param verbose_flag: (Optional)
+    :return: One of
     """
-    # parse arguments
-    parser = lint_parser()
-    args, _ = parser.parse_known_args()
+    if subdirs is None:
+        subdirs = DEFAULT_SUBDIRS
 
     # load global configuration
     config_file = os.path.abspath(os.path.dirname(__file__) + "/config.yaml")
     config = utils.load_config(config_file)
 
     # set up linter
-    linter = lint.Linter(config=config, verbose=args.verbose, exclude=None, nocatch=True, severity_min=args.severity)
+    linter = lint.Linter(config=config, verbose=verbose_flag, exclude=None, nocatch=True, severity_min=severity)
 
     # run linter
-    recipes = [f"{args.recipe}/recipe/"]
+    recipes = [f"{recipe}/recipe/"]
     messages = set()
     overall_result = 0
-    for subdir in args.subdirs:
-        result = linter.lint(recipes, subdir, args.variant_config_files, args.exclusive_config_files, args.fix)
+    # TODO evaluate this: Not all of our rules require checking against variants now that we have the parser in percy.
+    for subdir in subdirs:
+        result = linter.lint(recipes, subdir, variant_config_files, exclusive_config_files, fix_flag)
         if result > overall_result:
             overall_result = result
         messages = messages | set(linter.get_messages())
 
     # print report
-    print(lint.Linter.get_report(messages, args.verbose))
+    print(lint.Linter.get_report(messages, verbose_flag))
 
     # Return appropriate error code.
     if overall_result == lint.Severity.WARNING:
@@ -155,8 +190,21 @@ def main() -> None:
     """
     Primary execution point of the linter's CLI
     """
+    args, _ = _lint_parser().parse_known_args()
+    severity: Final[lint.Severity] = _convert_severity(args.severity)
+
     try:
-        sys.exit(prime())
+        sys.exit(
+            execute_linter(
+                recipe=args.recipe,
+                variant_config_files=args.variant_config_files,
+                exclusive_config_files=args.exclusive_config_files,
+                subdirs=args.subdirs,
+                severity=severity,
+                fix_flag=args.fix,
+                verbose_flag=args.verbose,
+            )
+        )
     except Exception:  # pylint: disable=broad-exception-caught
         traceback.print_exc()
         sys.exit(ReturnCode.EXIT_UNCAUGHT_EXCEPTION)
