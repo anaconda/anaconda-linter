@@ -151,35 +151,7 @@ def test_severity_level(base_yaml: str, level: Severity, string: str, lint_check
     assert messages[0].get_level() == string
 
 
-def test_severity_bad(base_yaml: str) -> None:  # pylint: disable=unused-argument
-    with pytest.raises(ValueError):
-        config_file = Path(__file__).parent / "config.yaml"
-        config = utils.load_config(config_file)
-        lint.Linter(config=config, severity_min="BADSEVERITY")
-
-
-# TODO rm: de-risk this. Enforce `Severity` over `str` universally
-@pytest.mark.parametrize("level,expected", (("INFO", 3), ("WARNING", 2), ("ERROR", 1)))
-def test_severity_min_string(base_yaml: str, level: str, expected: int) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        extra:
-          only-lint:
-            - DummyInfo
-            - DummyError
-            - DummyWarning
-        """
-    )
-    recipes = [Recipe.from_string(recipe_text=yaml_str, renderer=RendererType.RUAMEL)]
-    config_file = Path(__file__).parent / "config.yaml"
-    config = utils.load_config(config_file)
-    linter = lint.Linter(config=config, severity_min=level)
-    linter.lint(recipes)
-    assert len(linter.get_messages()) == expected
-
-
-@pytest.mark.parametrize("level,expected", ((Severity.INFO, 3), ("WARNING", 2), ("ERROR", 1)))
+@pytest.mark.parametrize("level,expected", ((Severity.INFO, 3), (Severity.WARNING, 2), (Severity.ERROR, 1)))
 def test_severity_min_enum(base_yaml: str, level: Severity | str, expected: int) -> None:
     yaml_str = (
         base_yaml
