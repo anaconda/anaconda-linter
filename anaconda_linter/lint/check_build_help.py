@@ -7,7 +7,7 @@ from __future__ import annotations
 import os
 import re
 from pathlib import Path
-from typing import Any
+from typing import Any, Final
 
 from percy.parser.recipe_parser import RecipeParser, SelectorConflictMode
 from percy.render.recipe import Recipe
@@ -944,8 +944,15 @@ class missing_python(LintCheck):
     """
 
     def check_recipe(self, recipe: Recipe) -> None:
+        ro_parser: Final[RecipeParser] = recipe.get_read_only_parser()
         is_pypi = is_pypi_source(recipe)
+        # TODO: Refactor and test this with the new parser work. PAT-273 tracks adding a comparable feature
+        #       to `recipe.packages` in the RecipeParser.
         for package in recipe.packages.values():
+            # PAT-270: Do not add `python` if the package is `noarch: generic`
+            if ro_parser.get_value(f"/{package.path_prefix}build/noarch", "") == "generic":
+                continue
+
             if (
                 is_pypi
                 or recipe.contains(f"{package.path_prefix}build/script", "pip install", "")
@@ -959,6 +966,7 @@ class missing_python(LintCheck):
                         )
 
     def fix(self, message, data) -> bool:
+        # TODO: Refactor and test this with the new parser work
         (recipe, package) = data
         op = [
             {

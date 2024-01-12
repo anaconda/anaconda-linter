@@ -2559,6 +2559,73 @@ def test_missing_test_requirement_pip_script_bad_multi(base_yaml: str, recipe_di
     assert len(messages) == 2 and all("pip is required" in msg.title for msg in messages)
 
 
+def test_missing_python_does_not_trigger_on_noarch_generic(base_yaml: str) -> None:
+    """
+    Regression from PAT-270: Packages with `noarch: generic` should not fail this lint check.
+    """
+    yaml_str = (
+        base_yaml
+        + """
+        build:
+          noarch: generic
+        source:
+          url: https://pypi.io/packages/source/D/Django/Django-4.1.tar.gz
+        requirements:
+          host:
+            - foo
+          run:
+            - bar
+        """
+    )
+    lint_check = "missing_python"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_missing_python_does_not_trigger_on_noarch_generic_multi_output(base_yaml: str) -> None:
+    """
+    Regression from PAT-270: Packages with `noarch: generic` should not fail this lint check. This checks for
+    multi-output recipes.
+    """
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: test0
+            source:
+              url: https://github.com/foo/bar/bar-1.2.3.tar.gz
+            requirements:
+              host:
+                - foo
+              run:
+                - bar
+          - name: test1
+            build:
+              noarch: generic
+            source:
+              url: https://pypi.io/packages/source/D/Django/Django-4.1.tar.gz
+            requirements:
+              host:
+                - foo
+              run:
+                - bar
+          - name: test2
+            build:
+              noarch: python
+            source:
+              url: https://pypi.io/packages/source/D/Django/Django-4.1.tar.gz
+            requirements:
+              host:
+                - python
+              run:
+                - python
+        """
+    )
+    lint_check = "missing_python"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
 def test_missing_python_url_good(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
