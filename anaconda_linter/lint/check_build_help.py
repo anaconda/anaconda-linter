@@ -843,7 +843,9 @@ class missing_pip_check(LintCheck):
                     for file in test_files:
                         self._check_file(os.path.join(recipe.dir, file), recipe, package)
                 else:
-                    self.message(section=f"{package.path_prefix}test")
+                    # In PAT-249, data was not being passed. Take this into consideration if/when this gets reworked to
+                    # use the recipe parser.
+                    self.message(section=f"{package.path_prefix}test", data=(recipe, package))
 
     def fix(self, message, data) -> bool:
         (recipe, package) = data
@@ -858,7 +860,7 @@ class missing_pip_check(LintCheck):
         return recipe.patch(op)
 
 
-class missing_test_requirement_pip(LintCheck):
+class missing_test_requirement_pip(LintCheck):  #
     """
     pip is required in the test requirements.
 
