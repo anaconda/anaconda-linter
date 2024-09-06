@@ -1,6 +1,11 @@
 # Changelog
 Note: version releases in the 0.x.y range may introduce breaking changes.
 
+## 0.1.4
+- Make check_url 403 results a warning
+- Add python build tools
+- Refresh SPDX list
+
 ## 0.1.3
 - Python 3.11+ will only be supported for now for ease of maintenance
 - Improves error and warnings output, loosely following what C compilers tend to with a "report" section

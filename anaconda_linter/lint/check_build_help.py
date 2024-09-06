@@ -2,6 +2,7 @@
 File:           check_build_help.py
 Description:    Contains linter checks for build section based rules.
 """
+
 from __future__ import annotations
 
 import os
@@ -51,6 +52,11 @@ PYTHON_BUILD_TOOLS = (
     "setuptools-rust",
     "setuptools_scm",
     "whey",
+    "scikit-build-core",
+    "scikit-build",
+    "maturin",
+    "python-build",
+    "build",
 )
 
 # List of known PEP-517 backends (https://peps.python.org/pep-0517/) that are not setuptools
@@ -70,6 +76,7 @@ PYTHON_BUILD_BACKENDS = (
     "poetry-core",  # Backend of poetry.
     "scikit-build-core",  # Backend that uses cmake.
     "whey",
+    "maturin",
 )
 
 COMPILERS = (
