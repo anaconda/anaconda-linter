@@ -20,6 +20,7 @@ from conftest import assert_on_auto_fix
 @pytest.mark.parametrize(
     "check,suffix,arch,num_occurrences",
     [
+        ## avoid_noarch
         ## license_file_overspecified ##
         # TODO add multi-output-test
         ("license_file_overspecified", "", "linux-64", 1),
