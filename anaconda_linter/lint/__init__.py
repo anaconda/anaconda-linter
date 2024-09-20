@@ -356,10 +356,7 @@ class LintCheck(metaclass=LintCheckMeta):
         """
         Attempt to automatically fix the linting error.
         :param message: Linting message emitted by the rule
-        :param data: Information vector for the rule to communicate to the fix.
-                     TODO: All callers should fill out a custom `dict[str, Any]` and then cast the types to a variable
-                           inside of their overridden `fix()` function. Then the data structure is easily expandable but
-                           still custom to each function call.
+        :param data: Information vector for the rule to communicate to the fix. TODO: standardize typing for all callers
         :returns: True if the fix succeeded. False otherwise
         """
         return False

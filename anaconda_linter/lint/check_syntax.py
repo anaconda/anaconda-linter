@@ -5,9 +5,6 @@ Description:    Contains linter checks for syntax rules.
 from __future__ import annotations
 
 import re
-from typing import Final, cast
-
-from percy.parser.recipe_parser import RecipeParser
 
 from anaconda_linter.lint import LintCheck
 
@@ -23,48 +20,45 @@ class version_constraints_missing_whitespace(LintCheck):
 
     """
 
-    # TODO Future: percy should eventually have support for constraints. This regex may not be sufficient enough to
-    # to catch all accepted formats. The spec can be found at:
-    #   https://docs.conda.io/projects/conda-build/en/stable/resources/package-spec.html#build-version-spec
-    _CONSTRAINTS_RE: Final[re.Pattern[str]] = re.compile("(.*?)([!<=>].*)")
-
     def check_recipe(self, recipe) -> None:
-        # Whitespace will be the same in all rendered forums of the recipe, so we use the RecipeParser infrastructure.
-        # TODO future: in these instances, recipes should not be rendered in all formats AND only look at the
-        # raw recipe file.
-        ro_parser: Final[RecipeParser] = recipe.get_read_only_parser()
-        check_paths: Final[list[str]] = ro_parser.get_dependency_paths()
+        check_paths = []
+        for section in ("build", "run", "host"):
+            check_paths.append(f"requirements/{section}")
+        if outputs := recipe.get("outputs", None):
+            for n in range(len(outputs)):
+                for section in ("build", "run", "host"):
+                    check_paths.append(f"outputs/{n}/requirements/{section}")
 
-        # Search all dependencies for missing whitespace
+        constraints = re.compile("(.*?)([!<=>].*)")
         for path in check_paths:
-            output: Final[int] = -1 if not path.startswith("/outputs") else int(path.split("/")[2])
-            spec = cast(str, ro_parser.get_value(path))
-            has_constraints = version_constraints_missing_whitespace._CONSTRAINTS_RE.search(spec)
-            if not has_constraints:
-                continue
-            # The second condition is a fallback.
-            # See: https://github.com/anaconda-distribution/anaconda-linter/issues/113
-            space_separated = has_constraints[1].endswith(" ") or " " in has_constraints[0]
-            if space_separated:
-                continue
-            dependency, version = has_constraints.groups()
-            new_dependency: Final[str] = f"{dependency} {version}"
-            self.message(
-                section=path,
-                data={"path": path, "new_dependency": new_dependency},
-                output=output,
-            )
+            output = -1 if not path.startswith("outputs") else int(path.split("/")[1])
+            for n, spec in enumerate(recipe.get(path, [])):
+                has_constraints = constraints.search(spec)
+                if has_constraints:
+                    # The second condition is a fallback.
+                    # See: https://github.com/anaconda-distribution/anaconda-linter/issues/113
+                    space_separated = has_constraints[1].endswith(" ") or " " in has_constraints[0]
+                    if not space_separated:
+                        self.message(section=f"{path}/{n}", data=True, output=output)
 
     def fix(self, message, data) -> bool:
-        path = cast(str, data["path"])
-        new_dependency = cast(str, data["new_dependency"])
+        check_paths = []
+        for section in ("build", "run", "host"):
+            check_paths.append(f"requirements/{section}")
+        if outputs := self.recipe.get("outputs", None):
+            for n in range(len(outputs)):
+                for section in ("build", "run", "host"):
+                    check_paths.append(f"outputs/{n}/requirements/{section}")
 
-        def _add_whitespace(parser: RecipeParser):
-            selector: Final[str] = (
-                "" if not parser.contains_selector_at_path(path) else parser.get_selector_at_path(path)
-            )
-            parser.patch({"op": "replace", "path": path, "value": new_dependency})
-            if selector:
-                parser.add_selector(path, selector)
-
-        return self.recipe.patch_with_parser(_add_whitespace)
+        constraints = re.compile("(.*?)([!<=>].*)")
+        for path in check_paths:
+            for spec in self.recipe.get(path, []):
+                has_constraints = constraints.search(spec)
+                if has_constraints:
+                    # The second condition is a fallback.
+                    # See: https://github.com/anaconda-distribution/anaconda-linter/issues/113
+                    space_separated = has_constraints[1].endswith(" ") or " " in has_constraints[0]
+                    if not space_separated:
+                        dep, ver = has_constraints.groups()
+                        self.recipe.replace(spec, f"{dep} {ver}", within="requirements")
+        return True

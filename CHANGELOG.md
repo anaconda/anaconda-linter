@@ -1,6 +1,9 @@
 # Changelog
 Note: version releases in the 0.x.y range may introduce breaking changes.
 
+## 0.1.5
+- Bug fix: calls to get_read_only_parser result in unhandled errors on some recipes
+
 ## 0.1.4
 - Make check_url 403 results a warning
 - Add python build tools
