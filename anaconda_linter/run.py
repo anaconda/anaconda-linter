@@ -2,6 +2,7 @@
 File:           run.py
 Description:    Primary execution point of the linter's CLI
 """
+
 from __future__ import annotations
 
 import argparse

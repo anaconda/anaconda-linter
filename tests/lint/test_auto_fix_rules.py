@@ -8,6 +8,7 @@ Description:    Tests the `fix()` function on linter rules, that allows us to "a
                   - An input test file that triggers the target linting rule
                   - An output test file that matches an expected, automatically corrected, resulting file
 """
+
 from __future__ import annotations
 
 import pytest

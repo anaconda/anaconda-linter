@@ -2,6 +2,7 @@
 File:           check_syntax.py
 Description:    Contains linter checks for syntax rules.
 """
+
 from __future__ import annotations
 
 import re

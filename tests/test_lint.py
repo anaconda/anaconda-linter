@@ -2,6 +2,7 @@
 File:           test_.py
 Description:    Tests linting infrastructure
 """
+
 from __future__ import annotations
 
 from pathlib import Path

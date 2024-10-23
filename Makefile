@@ -82,7 +82,7 @@ install: clean ## install the package to the active Python's site-packages
 	pip install .
 
 environment:       ## Handles environment creation
-	conda env create -f environment.yaml --name $(CONDA_ENV_NAME) --force
+	conda env create -f environment.yaml --name $(CONDA_ENV_NAME) --yes
 	conda run --name $(CONDA_ENV_NAME) pip install -e .
 
 release: dist ## package and upload a release
@@ -93,7 +93,7 @@ dist: clean ## builds source and wheel package
 	ls -l dist
 
 dev: clean  ## install the package's development version
-	conda env create -f environment.yaml --name $(CONDA_ENV_NAME) --force
+	conda env create -f environment.yaml --name $(CONDA_ENV_NAME) --yes
 	conda run --name $(CONDA_ENV_NAME) pip install -e .
 	$(CONDA_ACTIVATE) $(CONDA_ENV_NAME) && pre-commit install
 

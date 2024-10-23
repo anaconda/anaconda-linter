@@ -2,6 +2,7 @@
 File:           check_multi_output.py
 Description:    Contains linter checks for multi-output based rules.
 """
+
 from __future__ import annotations
 
 from anaconda_linter import utils as _utils

@@ -79,6 +79,7 @@ Module Autodocs
    check_url
 
 """
+
 from __future__ import annotations
 
 import abc

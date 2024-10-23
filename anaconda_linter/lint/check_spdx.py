@@ -2,6 +2,7 @@
 File:           check_spdx.py
 Description:    Contains linter checks for SPDX licensing database based rules.
 """
+
 from __future__ import annotations
 
 import os

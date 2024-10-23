@@ -2,6 +2,7 @@
 File:           update_licenses.py
 Description:    Stand-alone script
 """
+
 from __future__ import annotations
 
 import os

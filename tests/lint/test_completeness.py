@@ -2,6 +2,7 @@
 File:           test_completeness.py
 Description:    Tests completeness rules (i.e. `missing_*`)
 """
+
 from __future__ import annotations
 
 from pathlib import Path

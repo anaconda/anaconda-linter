@@ -2,6 +2,7 @@
 File:           test_multi_output.py
 Description:    Tests multi-output-based rules
 """
+
 from __future__ import annotations
 
 import pytest

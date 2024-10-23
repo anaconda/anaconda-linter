@@ -2,6 +2,7 @@
 File:           check_completeness.py
 Description:    Contains linter checks for missing essential information.
 """
+
 from __future__ import annotations
 
 import os

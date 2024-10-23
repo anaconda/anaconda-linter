@@ -4,6 +4,7 @@ Description:    Utility Functions and Classes
                 This module collects small pieces of code used throughout
                 :py:mod:`anaconda_linter`.
 """
+
 from __future__ import annotations
 
 import logging
