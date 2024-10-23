@@ -2,6 +2,7 @@
 File:           test_spdx.py
 Description:    Tests licensing rules using the SPDX database
 """
+
 from __future__ import annotations
 
 from conftest import check

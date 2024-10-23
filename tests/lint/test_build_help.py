@@ -2,6 +2,7 @@
 File:           test_build_help.py
 Description:    Tests build section rules
 """
+
 from __future__ import annotations
 
 from pathlib import Path
