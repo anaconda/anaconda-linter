@@ -133,7 +133,7 @@ def _lint_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def execute_linter(
+def execute_linter(  # pylint: disable=too-many-positional-arguments
     recipe: str,
     config: Optional[utils.RecipeConfigType] = None,
     variant_config_files: Optional[list[str]] = None,
@@ -179,7 +179,7 @@ def execute_linter(
     # TODO evaluate this: Not all of our rules require checking against variants now that we have the parser in percy.
     for subdir in subdirs:
         result = linter.lint(recipes, subdir, variant_config_files, exclusive_config_files, fix_flag)
-        if result > overall_result:
+        if result > overall_result:  # pylint: disable=consider-using-max-builtin
             overall_result = result
         messages = messages | set(linter.get_messages())
 

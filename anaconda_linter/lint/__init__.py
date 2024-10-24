@@ -576,7 +576,7 @@ class Linter:
     Lint executor class
     """
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-positional-arguments
         self,
         config: dict,
         verbose: bool = False,
@@ -692,7 +692,7 @@ class Linter:
 
         return report
 
-    def lint(
+    def lint(  # pylint: disable=too-many-positional-arguments
         self,
         recipes: list[Union[str, _recipe.Recipe]],
         arch_name: str = "linux-64",
@@ -760,7 +760,7 @@ class Linter:
 
         return result
 
-    def lint_file(
+    def lint_file(  # pylint: disable=too-many-positional-arguments
         self,
         recipe_name: str,
         arch_name: str = "linux-64",
