@@ -61,5 +61,5 @@ jobs:
             cp -r ./feedstock/abs.yaml ./feedstock/recipe .
             source $CONDA/bin/activate
             conda install conda-build
-            conda remove conda-anaconda-telemetry -y 
+            conda remove conda-anaconda-telemetry -y
             conda-build -c distro-tooling .
