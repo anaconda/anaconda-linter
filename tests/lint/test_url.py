@@ -22,6 +22,21 @@ def test_invalid_url_good(base_yaml: str) -> None:
     assert len(messages) == 0
 
 
+def test_invalid_url_good_sequence(base_yaml: str) -> None:
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url:
+           - https://sqlite.com/2022/sqlite-autoconf-3380500.tar.gz
+           - https://sqlite.com/2022/sqlite-autoconf-3380500.tar.gz
+        """
+    )
+    lint_check = "invalid_url"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
 def test_invalid_url_bad(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
@@ -118,6 +133,21 @@ def test_http_url_source_bad(base_yaml: str) -> None:
     lint_check = "http_url"
     messages = check(lint_check, yaml_str)
     assert len(messages) == 1 and "is not https" in messages[0].title
+
+
+def test_http_url_source_good_sequence(base_yaml: str) -> None:
+    yaml_str = (
+        base_yaml
+        + """
+        source:
+          url:
+          - https://sqlite.com/2022/sqlite-autoconf-3380500.tar.gz
+          - https://sqlite.com/2022/sqlite-autoconf-3380500.tar.gz
+        """
+    )
+    lint_check = "http_url"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
 
 
 @pytest.mark.parametrize(

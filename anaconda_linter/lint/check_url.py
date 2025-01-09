@@ -18,12 +18,22 @@ class invalid_url(LintCheck):
     """
 
     def check_source(self, source, section) -> None:
+
+        def _verify_url(url: str) -> None:
+            if url:
+                response_data = utils.check_url(url)
+                if response_data["code"] < 0 or response_data["code"] >= 400:
+                    if "domain_redirect" not in response_data:
+                        self.message(url, response_data["message"], section=section)
+
         url: str = source.get("url", "")
-        if url:
-            response_data = utils.check_url(url)
-            if response_data["code"] < 0 or response_data["code"] >= 400:
-                if "domain_redirect" not in response_data:
-                    self.message(url, response_data["message"], section=section)
+
+        # urls can be a sequence of urls (CommentedSeq/list)
+        if isinstance(url, list):
+            for u in url:
+                _verify_url(u)
+        else:
+            _verify_url(url)
 
     def check_recipe(self, recipe) -> None:
         url_fields: list[str] = [
@@ -64,7 +74,13 @@ class http_url(LintCheck):
 
     def check_source(self, source, section) -> None:
         url = source.get("url", "")
-        if url != "":
+
+        # urls can be a sequence of urls (CommentedSeq/list)
+        if isinstance(url, list):
+            for u in url:
+                if u != "":
+                    self._check_url(u, section)
+        else:
             self._check_url(url, section)
 
     def check_recipe(self, recipe) -> None:
