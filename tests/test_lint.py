@@ -205,16 +205,26 @@ def test_jinja_functions(base_yaml: str, jinja_func: str, expected: bool) -> Non
 
         # TODO figure out: 1 test fails if we remove this retry mechanism. Can we write the test differently so that
         # we don't have conditional logic in our tests?
-        try:
-            recipe = Recipe.from_string(recipe_text=yaml_str, renderer=RendererType.RUAMEL)
+        if not jinja_func == "pin_subpackage('dotnet-runtime', exact=True, badParam=False)":
+            print(jinja_func)
+            recipe = Recipe.from_string(
+                recipe_text=yaml_str, renderer=RendererType.RUAMEL, variant={"target_platform": "dummy-platform"}
+            )
             linter.lint([recipe])
             messages = linter.get_messages()
+            return messages
+
+        # Only this test needs the weird exception handling
+        try:
+            recipe = Recipe.from_string(recipe_text=yaml_str, renderer=RendererType.RUAMEL)
         except RecipeError as exc:
             recipe = Recipe("")
             check_cls = lint.recipe_error_to_lint_check.get(exc.__class__, lint.linter_failure)
             messages = [check_cls.make_message(recipe=recipe, line=getattr(exc, "line"))]
+            return messages
 
-        return messages
+        # Should not reach here
+        assert 0
 
     yaml_str = (
         base_yaml
