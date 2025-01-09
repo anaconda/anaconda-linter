@@ -22,7 +22,7 @@ def test_invalid_url_good(base_yaml: str) -> None:
     assert len(messages) == 0
 
 
-def test_invalid_url_good_sequence(base_yaml: str) -> None:
+def test_invalid_url_verify_multiple_urls_work(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -135,7 +135,7 @@ def test_http_url_source_bad(base_yaml: str) -> None:
     assert len(messages) == 1 and "is not https" in messages[0].title
 
 
-def test_http_url_source_good_sequence(base_yaml: str) -> None:
+def test_http_url_source_very_multiple_urls_work(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
