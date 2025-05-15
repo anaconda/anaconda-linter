@@ -91,6 +91,9 @@ COMPILERS = (
     "m2w64_c",
     "m2w64_cxx",
     "m2w64_fortran",
+    "ucrt64_c",
+    "ucrt64_cxx",
+    "ucrt64_fortran",
     "rust-gnu",
     "rust",
     "toolchain",
@@ -246,22 +249,7 @@ class should_use_compilers(LintCheck):
 
     """
 
-    compilers = (
-        "cgo",
-        "cuda",
-        "dpcpp",
-        "gcc",
-        "go",
-        "libgcc",
-        "libgfortran",
-        "llvm",
-        "m2w64_c",
-        "m2w64_cxx",
-        "m2w64_fortran",
-        "rust-gnu",
-        "rust",
-        "toolchain",
-    )
+    compilers = COMPILERS
 
     def check_deps(self, deps) -> None:
         for compiler in self.compilers:
@@ -299,7 +287,7 @@ class build_tools_must_be_in_build(LintCheck):
     def check_recipe(self, recipe: Recipe) -> None:
         deps = _utils.get_deps_dict(recipe, ["host", "run"])
         for tool, dep in deps.items():
-            if tool.startswith("m2-") or tool in BUILD_TOOLS:
+            if tool.startswith("msys2-") or tool.startswith("m2-") or tool in BUILD_TOOLS:
                 for path in dep["paths"]:
                     o = -1 if not path.startswith("outputs") else int(path.split("/")[1])
                     self.message(tool, severity=Severity.WARNING, section=path, output=o)
@@ -682,7 +670,7 @@ class patch_unnecessary(LintCheck):
     """
     patch should not be in build when source/patches is not set
 
-    Remove patch/m2-patch from ``build``
+    Remove patch/msys2-patch/m2-patch from ``build``
     """
 
     def check_recipe(self, recipe: Recipe) -> None:
@@ -690,20 +678,20 @@ class patch_unnecessary(LintCheck):
             deps = _utils.get_deps_dict(
                 recipe,
             )
-            if "patch" in deps or "m2-patch" in deps:
+            if "patch" in deps or "msys2-patch" in deps or "m2-patch" in deps:
                 self.message(section="build")
 
 
 class patch_must_be_in_build(LintCheck):
     """
-    patch must be in build when source/patches is set.
+    patch/msys2-patch must be in build when source/patches is set.
 
     Add patch to ``build``::
 
       requirements:
         build:
-          - patch       # [not win]
-          - m2-patch    # [win]
+          - patch        # [not win]
+          - msys2-patch  # [win]
     """
 
     def check_recipe(self, recipe: Recipe) -> None:
@@ -713,10 +701,15 @@ class patch_must_be_in_build(LintCheck):
             )
             if "patch" in deps:
                 if any("build" not in location for location in deps["patch"]["paths"]):
-                    self.message(section="requirements/build")
+                    self.message("patch", section="requirements/build")
+            elif "msys2-patch" in deps:
+                if any("build" not in location for location in deps["msys2-patch"]["paths"]):
+                    self.message("msys2-patch", section="requirements/build")
             elif "m2-patch" in deps:
                 if any("build" not in location for location in deps["m2-patch"]["paths"]):
-                    self.message(section="requirements/build")
+                    self.message("msys2-patch", section="requirements/build")
+                else:
+                    self.message("prefer msys2-patch", severity=Severity.WARNING, section="requirements/build")
             else:
                 self.message(section="requirements/build")
 
