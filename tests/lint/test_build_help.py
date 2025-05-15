@@ -11,6 +11,7 @@ import pytest
 from conftest import check, check_dir
 
 from anaconda_linter.lint.check_build_help import BUILD_TOOLS, COMPILERS, PYTHON_BUILD_BACKENDS, PYTHON_BUILD_TOOLS
+from anaconda_linter.lint import Severity
 
 
 def test_host_section_needs_exact_pinnings_good(base_yaml: str) -> None:
@@ -1544,7 +1545,7 @@ def test_patch_unnecessary_good(base_yaml: str) -> None:
     assert len(messages) == 0
 
 
-@pytest.mark.parametrize("patch", ["patch", "m2-patch"])
+@pytest.mark.parametrize("patch", ["patch", "msys2-patch", "m2-patch"])
 def test_patch_unnecessary_bad(base_yaml: str, patch: str) -> None:
     lint_check = "patch_unnecessary"
     yaml_str = (
@@ -1561,7 +1562,7 @@ def test_patch_unnecessary_bad(base_yaml: str, patch: str) -> None:
     assert len(messages) == 1 and "patch should not be" in messages[0].title
 
 
-@pytest.mark.parametrize("patch", ["patch", "m2-patch"])
+@pytest.mark.parametrize("patch", ["patch", "msys2-patch"])
 def test_patch_must_be_in_build_good(base_yaml: str, patch: str) -> None:
     lint_check = "patch_must_be_in_build"
     yaml_str = (
@@ -1580,9 +1581,29 @@ def test_patch_must_be_in_build_good(base_yaml: str, patch: str) -> None:
     assert len(messages) == 0
 
 
+@pytest.mark.parametrize("patch", ["m2-patch"])
+def test_patch_must_be_in_build_acceptable(base_yaml: str, patch: str) -> None:
+    lint_check = "patch_must_be_in_build"
+    yaml_str = (
+        base_yaml
+        + f"""
+        source:
+          url: https://sqlite.com/2022/sqlite-autoconf-3380500.tar.gz
+          patches:
+            - some-patch.patch
+        requirements:
+          build:
+            - {patch}
+        """
+    )
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 1
+    assert messages[0].severity == Severity.WARNING
+
+
 def test_patch_must_be_in_build_bad(base_yaml: str) -> None:
     lint_check = "patch_must_be_in_build"
-    for patch in ["patch", "m2-patch"]:
+    for patch in ["patch", "msys2-patch", "m2-patch"]:
         for section in ["host", "run"]:
             yaml_str = (
                 base_yaml
@@ -1602,7 +1623,7 @@ def test_patch_must_be_in_build_bad(base_yaml: str) -> None:
             ), f"Check failed for {patch} in {section}"
 
 
-@pytest.mark.parametrize("patch", ["patch", "m2-patch"])
+@pytest.mark.parametrize("patch", ["patch", "msys2-patch", "m2-patch"])
 @pytest.mark.parametrize("section", ["host", "run"])
 def test_patch_must_be_in_build_list_bad(base_yaml: str, patch: str, section: str) -> None:
     lint_check = "patch_must_be_in_build"
