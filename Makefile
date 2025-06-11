@@ -60,7 +60,10 @@ clean-build: ## remove build artifacts
 	find . -name '*.egg' -exec rm -f {} +
 
 clean-env:					## remove conda environment
-	conda remove -y -n $(CONDA_ENV_NAME) --all
+	# In `conda@v25.5.0`, deletion of a non-existent conda environment returns an error code.
+	if conda env list | grep -q "^$(CONDA_ENV_NAME) "; then \
+		conda remove -y -n $(CONDA_ENV_NAME) --all; \
+	fi
 
 clean-pyc: ## remove Python file artifacts
 	find . -name '*.pyc' -exec rm -f {} +
