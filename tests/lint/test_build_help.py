@@ -1315,6 +1315,9 @@ def test_patch_unnecessary_good(base_yaml: str) -> None:
         + """
         source:
           url: https://sqlite.com/2022/sqlite-autoconf-3380500.tar.gz
+          patches:
+            - some-patch.patch
+            - some-other-patch.patch
         """
     )
     messages = check(lint_check, yaml_str)
@@ -1322,7 +1325,26 @@ def test_patch_unnecessary_good(base_yaml: str) -> None:
 
 
 @pytest.mark.parametrize("patch", ["patch", "m2-patch"])
-def test_patch_unnecessary_bad(base_yaml: str, patch: str) -> None:
+def test_patch_unnecessary_with_patches_bad(base_yaml: str, patch: str) -> None:
+    lint_check = "patch_unnecessary"
+    yaml_str = (
+        base_yaml
+        + f"""
+        source:
+          url: https://sqlite.com/2022/sqlite-autoconf-3380500.tar.gz
+          patches:
+            - some-patch.patch
+        requirements:
+          build:
+            - {patch}
+        """
+    )
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 1 and "patch should not be" in messages[0].title
+
+
+@pytest.mark.parametrize("patch", ["patch", "m2-patch"])
+def test_patch_unnecessary_without_patches_bad(base_yaml: str, patch: str) -> None:
     lint_check = "patch_unnecessary"
     yaml_str = (
         base_yaml
