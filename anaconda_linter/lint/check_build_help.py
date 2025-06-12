@@ -630,9 +630,13 @@ class avoid_noarch(LintCheck):
 
 class patch_unnecessary(LintCheck):
     """
-    patch should not be in build, it is not needed anymore.
+    patch should not be in the requirements section, it is not needed anymore.
 
-    Remove patch/m2-patch from ``build``
+    Remove patch/m2-patch from the requirements section. For example, if you have:
+      requirements:
+        build:
+          - patch
+          - m2-patch
     """
 
     def check_recipe(self, recipe: Recipe) -> None:
