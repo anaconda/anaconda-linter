@@ -80,8 +80,6 @@ missing_tests
 
 missing_version_or_name
 
-missing_wheel
-
 no_git_on_windows
 
 no_global_test
@@ -95,8 +93,6 @@ output_missing_script
 output_script_name_default
 
 outputs_not_unique
-
-patch_must_be_in_build
 
 patch_unnecessary
 
