@@ -1325,7 +1325,8 @@ def test_patch_unnecessary_good(base_yaml: str) -> None:
 
 
 @pytest.mark.parametrize("patch", ["patch", "m2-patch"])
-def test_patch_unnecessary_with_patches_bad(base_yaml: str, patch: str) -> None:
+@pytest.mark.parametrize("section", ["build", "host"])
+def test_patch_unnecessary_with_patches_bad(base_yaml: str, patch: str, section: str) -> None:
     lint_check = "patch_unnecessary"
     yaml_str = (
         base_yaml
@@ -1335,7 +1336,7 @@ def test_patch_unnecessary_with_patches_bad(base_yaml: str, patch: str) -> None:
           patches:
             - some-patch.patch
         requirements:
-          build:
+          {section}:
             - {patch}
         """
     )
@@ -1344,7 +1345,8 @@ def test_patch_unnecessary_with_patches_bad(base_yaml: str, patch: str) -> None:
 
 
 @pytest.mark.parametrize("patch", ["patch", "m2-patch"])
-def test_patch_unnecessary_without_patches_bad(base_yaml: str, patch: str) -> None:
+@pytest.mark.parametrize("section", ["build", "host"])
+def test_patch_unnecessary_without_patches_bad(base_yaml: str, patch: str, section: str) -> None:
     lint_check = "patch_unnecessary"
     yaml_str = (
         base_yaml
@@ -1352,7 +1354,7 @@ def test_patch_unnecessary_without_patches_bad(base_yaml: str, patch: str) -> No
         source:
           url: https://sqlite.com/2022/sqlite-autoconf-3380500.tar.gz
         requirements:
-          build:
+          {section}:
             - {patch}
         """
     )
