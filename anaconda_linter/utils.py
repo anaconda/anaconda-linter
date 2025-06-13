@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import Any, Final, Optional, Sequence
 
 import requests
+from conda_recipe_manager.parser.recipe_parser_deps import RecipeParserDeps
 from jsonschema import validate
 from percy.render.recipe import Recipe
 from ruamel.yaml import YAML
@@ -277,3 +278,44 @@ def get_deps(recipe: Recipe, sections: Optional[list[str]] = None, outputs: bool
     :param outputs: (Optional) Set to True for recipes that have an `outputs` section
     """
     return list(get_deps_dict(recipe, sections, outputs).keys())
+
+
+def remove_deps_by_name_crm(
+    recipe_parser: RecipeParserDeps,
+    deps_to_remove: set[str],
+) -> tuple[bool, RecipeParserDeps]:
+    """
+    Removes the dependencies specified by name
+
+    :param recipe_parser: The parser of the original recipe
+    :param deps_to_remove: Set of dependency names to remove
+    :returns: Whether the remove operation was successful, and the updated recipe parser.
+    """
+    completed = False
+    while not completed:
+        try:
+            completed, recipe_parser = _remove_single_dep_by_name_crm(recipe_parser, deps_to_remove)
+        except ValueError:
+            return False, recipe_parser
+    return True, recipe_parser
+
+
+def _remove_single_dep_by_name_crm(
+    recipe_parser: RecipeParserDeps,
+    deps_to_remove: set[str],
+) -> tuple[bool, RecipeParserDeps]:
+    """
+    Removes the dependencies specified by name
+
+    :param recipe_parser: The parser of the original recipe
+    :param deps_to_remove: Set of dependency names to remove
+    :returns: Whether the remove operation is complete, and the updated recipe parser.
+    """
+    all_deps = recipe_parser.get_all_dependencies()
+    for package_name in all_deps:
+        for dep in all_deps[package_name]:
+            if dep.data.name in deps_to_remove:
+                if not recipe_parser.remove_dependency(dep):
+                    raise ValueError(f"Failed to remove dependency {dep.data.name} from {package_name}")
+                return False, recipe_parser
+    return True, recipe_parser

@@ -10,6 +10,8 @@ import re
 from pathlib import Path
 from typing import Any
 
+from conda_recipe_manager.parser.recipe_parser_deps import RecipeParserDeps
+from conda_recipe_manager.parser.recipe_reader_deps import RecipeReaderDeps
 from percy.parser.recipe_parser import RecipeParser, SelectorConflictMode
 from percy.render.recipe import Recipe
 
@@ -640,20 +642,23 @@ class patch_unnecessary(LintCheck):
     """
 
     def check_recipe(self, recipe: Recipe) -> None:
-        deps = _utils.get_deps_dict(
-            recipe,
-        )
-        if "patch" in deps or "m2-patch" in deps:
-            self.message(section="build")
+        recipe_reader = RecipeReaderDeps(recipe.dump())
+        all_deps = recipe_reader.get_all_dependencies()
+        for package in all_deps:
+            for dep in all_deps[package]:
+                if dep.data.name in ["patch", "m2-patch"]:
+                    self.message(section=dep.path, data=recipe)
 
     def fix(self, message, data) -> bool:
-        # remove patch and m2-patch from build
-        recipe, _ = data
-        op = [
-            {"op": "remove", "path": "build/patch"},
-            {"op": "remove", "path": "build/m2-patch"},
-        ]
-        return recipe.patch(op)
+        # remove patch and m2-patch from the recipe
+        recipe = data
+        recipe_parser = RecipeParserDeps(recipe.dump())
+        success, recipe_parser = _utils.remove_deps_by_name_crm(recipe_parser, {"patch", "m2-patch"})
+        if success:
+            recipe.meta_yaml = recipe_parser.render()
+            recipe.save()
+            return True
+        return False
 
 
 class has_run_test_and_commands(LintCheck):
