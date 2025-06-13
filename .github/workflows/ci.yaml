@@ -43,4 +43,4 @@ jobs:
           source $CONDA/bin/activate
           conda create --name build-env -y python=3.11 conda-build
           conda activate build-env
-          conda build -c defaults recipe/meta.yaml
+          conda build -c distro-tooling recipe/meta.yaml
