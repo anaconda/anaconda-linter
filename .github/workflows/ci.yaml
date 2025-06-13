@@ -4,62 +4,43 @@ on:
       - main
   pull_request:
 
-
 name: Test
 
 jobs:
   # NOTE: Tests run via `pre-commit`
   pre-commit:
-      runs-on: ubuntu-latest
-      steps:
-        - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-        - uses: ./.github/actions/setup-env
-          with:
-            python-version: "3.11"
-        # Executes `pre-commit` with the `make` directive to ensure all dependencies are found
-        - run: |
-            source $CONDA/bin/activate
-            conda activate anaconda-linter
-            make pre-commit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: ./.github/actions/setup-env
+        with:
+          python-version: "3.11"
+      # Executes `pre-commit` with the `make` directive to ensure all dependencies are found
+      - run: |
+          source $CONDA/bin/activate
+          conda activate anaconda-linter
+          make pre-commit
   test:
-      runs-on: ubuntu-latest
-      name: Test on ${{ matrix.python-version }}
-      strategy:
-        matrix:
-          python-version: ["3.11"] # TODO: Bump this to 3.12 when supported and drop 3.11 (covered in pre-commit)
-      steps:
-        - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-        - uses: ./.github/actions/setup-env
-          with:
-            python-version: ${{ matrix.python-version }}
-        - run: |
-            source $CONDA/bin/activate
-            conda activate anaconda-linter
-            make test
+    runs-on: ubuntu-latest
+    name: Test on ${{ matrix.python-version }}
+    strategy:
+      matrix:
+        python-version: ["3.11"] # TODO: Bump this to 3.12 when supported and drop 3.11 (covered in pre-commit)
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: ./.github/actions/setup-env
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: |
+          source $CONDA/bin/activate
+          conda activate anaconda-linter
+          make test
   build-recipe:
-      runs-on: ubuntu-latest
-      steps:
-        - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-        - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-          with:
-            repository: AnacondaRecipes/anaconda-linter-feedstock
-            path: ./feedstock
-        - name: Cache conda env
-          id: cache-conda
-          uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
-          env:
-            cache-name: conda-env-cache
-          with:
-            path: '/usr/share/miniconda/envs'
-            key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/environment.yml') }}
-            restore-keys: |
-              ${{ runner.os }}-build-${{ env.cache-name }}-
-              ${{ runner.os }}-build-
-              ${{ runner.os }}-
-        - name: Build package
-          run: |
-            cp -r ./feedstock/abs.yaml ./feedstock/recipe .
-            source $CONDA/bin/activate
-            conda install conda-build
-            conda remove conda-anaconda-telemetry -y
-            conda-build -c distro-tooling .
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - run: |
+          source $CONDA/bin/activate
+          conda create --name build-env -y python=3.11 conda-build
+          conda activate build-env
+          conda build -c distro-tooling recipe/meta.yaml
