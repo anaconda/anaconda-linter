@@ -659,7 +659,7 @@ class patch_unnecessary(LintCheck):
             recipe.meta_yaml = recipe_parser.render().splitlines()
             recipe.save()
             recipe.render()
-            return True
+            return recipe.is_modified()
         return False
 
 
