@@ -24,7 +24,7 @@ from conftest import assert_on_auto_fix
         ("license_file_overspecified", "", "linux-64"),
         ("license_file_overspecified", "", "win-64"),
         ("no_git_on_windows", "", "win-64"),
-        # ("patch_unnecessary", "", "linux-64"),
+        ("patch_unnecessary", "", "linux-64"),
     ],
 )
 def test_auto_fix_rule(check: str, suffix: str, arch: str):

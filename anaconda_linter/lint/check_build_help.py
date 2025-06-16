@@ -648,6 +648,7 @@ class patch_unnecessary(LintCheck):
             for dep in all_deps[package]:
                 if dep.data.name in ["patch", "m2-patch"]:
                     self.message(section=dep.path, data=recipe)
+                    return
 
     def fix(self, message, data) -> bool:
         # remove patch and m2-patch from the recipe
@@ -655,8 +656,9 @@ class patch_unnecessary(LintCheck):
         recipe_parser = RecipeParserDeps(recipe.dump())
         success, recipe_parser = _utils.remove_deps_by_name_crm(recipe_parser, {"patch", "m2-patch"})
         if success:
-            recipe.meta_yaml = recipe_parser.render()
+            recipe.meta_yaml = recipe_parser.render().splitlines()
             recipe.save()
+            recipe.render()
             return True
         return False
 
