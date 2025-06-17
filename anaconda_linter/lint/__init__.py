@@ -292,7 +292,19 @@ class LintCheck(metaclass=LintCheckMeta):
         self.try_fix = fix
 
         # Run general checks
-        self.check_recipe(recipe)
+        try:
+            self.check_recipe(recipe)
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            logger.error(
+                """
+                An unexpected error occurred: %s.
+                Skipping check: %s.
+                Please report this issue to the pi-automation team through the #pi-automation channel.
+                """,
+                e,
+                self,
+            )
+            return []
 
         # Run per source checks
         source = recipe.get("source", None)
