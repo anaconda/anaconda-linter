@@ -10,7 +10,6 @@ import re
 from pathlib import Path
 from typing import Any
 
-from conda_recipe_manager.parser.recipe_parser_deps import RecipeParserDeps
 from conda_recipe_manager.parser.recipe_reader_deps import RecipeReaderDeps
 from percy.parser.recipe_parser import RecipeParser, SelectorConflictMode
 from percy.render.recipe import Recipe
@@ -652,15 +651,13 @@ class patch_unnecessary(LintCheck):
 
     def fix(self, message, data) -> bool:
         # remove patch and m2-patch from the recipe
-        recipe = data
-        recipe_parser = RecipeParserDeps(recipe.dump())
-        success, recipe_parser = _utils.remove_deps_by_name_crm(recipe_parser, {"patch", "m2-patch"})
-        if success:
-            recipe.meta_yaml = recipe_parser.render().splitlines()
-            recipe.save()
-            recipe.render()
-            return recipe.is_modified()
-        return False
+        recipe: Recipe = data
+        try:
+            return recipe.patch_with_parser(
+                lambda parser: _utils.remove_deps_by_name_crm(parser, {"patch", "m2-patch"}),
+            )
+        except ValueError:
+            return False
 
 
 class has_run_test_and_commands(LintCheck):
