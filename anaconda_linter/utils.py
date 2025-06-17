@@ -283,7 +283,7 @@ def get_deps(recipe: Recipe, sections: Optional[list[str]] = None, outputs: bool
 def _remove_single_dep_by_name_crm(
     recipe_parser: RecipeParserDeps,
     deps_to_remove: set[str],
-) -> None:
+) -> bool:
     """
     Removes the dependencies specified by name
 
@@ -295,10 +295,11 @@ def _remove_single_dep_by_name_crm(
     all_deps = recipe_parser.get_all_dependencies()
     for package_name in all_deps:
         for dep in all_deps[package_name]:
-            if dep.data.name in deps_to_remove:
-                if not recipe_parser.remove_dependency(dep):
-                    raise ValueError(f"Failed to remove dependency {dep.data.name} from {package_name}")
-                return False
+            if dep.data.name not in deps_to_remove:
+                continue
+            if not recipe_parser.remove_dependency(dep):
+                raise ValueError(f"Failed to remove dependency {dep.data.name} from {package_name}")
+            return False
     return True
 
 
