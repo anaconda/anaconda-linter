@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import Any, Final, Optional, Sequence
 
 import requests
+from conda_recipe_manager.parser.recipe_parser_deps import RecipeParserDeps
 from jsonschema import validate
 from percy.render.recipe import Recipe
 from ruamel.yaml import YAML
@@ -277,3 +278,41 @@ def get_deps(recipe: Recipe, sections: Optional[list[str]] = None, outputs: bool
     :param outputs: (Optional) Set to True for recipes that have an `outputs` section
     """
     return list(get_deps_dict(recipe, sections, outputs).keys())
+
+
+def _remove_single_dep_by_name_crm(
+    recipe_parser: RecipeParserDeps,
+    deps_to_remove: set[str],
+) -> bool:
+    """
+    Removes the dependencies specified by name
+
+    :param recipe_parser: The parser of the original recipe
+    :param deps_to_remove: Set of dependency names to remove
+    :raises ValueError: If the remove operation fails
+    :returns: Whether the remove operation is complete
+    """
+    all_deps = recipe_parser.get_all_dependencies()
+    for package_name in all_deps:
+        for dep in all_deps[package_name]:
+            if dep.data.name not in deps_to_remove:
+                continue
+            if not recipe_parser.remove_dependency(dep):
+                raise ValueError(f"Failed to remove dependency {dep.data.name} from {package_name}")
+            return False
+    return True
+
+
+def remove_deps_by_name_crm(
+    recipe_parser: RecipeParserDeps,
+    deps_to_remove: set[str],
+) -> None:
+    """
+    Removes the dependencies specified by name
+
+    :param recipe_parser: The parser of the original recipe
+    :param deps_to_remove: Set of dependency names to remove
+    :raises ValueError: If the remove operation fails
+    """
+    while not _remove_single_dep_by_name_crm(recipe_parser, deps_to_remove):
+        pass

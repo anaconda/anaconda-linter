@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 from conftest import check, check_dir
 
-from anaconda_linter.lint.check_build_help import BUILD_TOOLS, COMPILERS, PYTHON_BUILD_BACKENDS, PYTHON_BUILD_TOOLS
+from anaconda_linter.lint.check_build_help import BUILD_TOOLS, COMPILERS, PYTHON_BUILD_TOOLS
 
 
 def test_host_section_needs_exact_pinnings_good(base_yaml: str) -> None:
@@ -690,229 +690,6 @@ def test_missing_python_build_tool_pip_install_bad_multi_list(base_yaml: str) ->
     assert len(messages) == 2 and all("require a python build tool" in msg.title for msg in messages)
 
 
-def test_missing_wheel_url_good(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        source:
-          url: https://pypi.io/packages/source/D/Django/Django-4.1.tar.gz
-        requirements:
-          host:
-            - wheel
-        """
-    )
-    lint_check = "missing_wheel"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
-
-
-@pytest.mark.parametrize("build_backend", PYTHON_BUILD_BACKENDS)
-def test_missing_wheel_url_good_alt_backend(base_yaml: str, build_backend: str) -> None:
-    yaml_str = (
-        base_yaml
-        + f"""
-        source:
-          url: https://pypi.io/packages/source/D/Django/Django-4.1.tar.gz
-        requirements:
-          host:
-            - {build_backend}
-        """
-    )
-    lint_check = "missing_wheel"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
-
-
-def test_missing_wheel_url_bad(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        source:
-          url: https://pypi.io/packages/source/D/Django/Django-4.1.tar.gz
-        """
-    )
-    lint_check = "missing_wheel"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "wheel should be present" in messages[0].title
-
-
-def test_missing_wheel_pip_install_good(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        source:
-          url: https://github.com/joblib/joblib/archive/1.1.1.tar.gz
-        build:
-          script: {{ PYTHON }} -m pip install .
-        requirements:
-          host:
-            - wheel
-        """
-    )
-    lint_check = "missing_wheel"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
-
-
-def test_missing_wheel_pip_install_good_list(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        source:
-          url: https://github.com/joblib/joblib/archive/1.1.1.tar.gz
-        build:
-          script:
-            - {{ PYTHON }} -m pip install .
-        requirements:
-          host:
-            - wheel
-        """
-    )
-    lint_check = "missing_wheel"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
-
-
-def test_missing_wheel_pip_install_good_multi(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        outputs:
-          - name: output1
-            script: {{ PYTHON }} -m pip install .
-            requirements:
-              host:
-                - wheel
-          - name: output2
-            script: {{ PYTHON }} -m pip install .
-            requirements:
-              host:
-                - wheel
-        """
-    )
-    lint_check = "missing_wheel"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
-
-
-@pytest.mark.parametrize("build_backend", PYTHON_BUILD_BACKENDS)
-def test_missing_wheel_pip_install_good_multi_alt_backend(base_yaml: str, build_backend: str) -> None:
-    yaml_str = (
-        base_yaml
-        + f"""
-        outputs:
-          - name: output1
-            script: {{{{ PYTHON }}}} -m pip install .
-            requirements:
-              host:
-                - {build_backend}
-          - name: output2
-            script: {{{{ PYTHON }}}} -m pip install .
-            requirements:
-              host:
-                - {build_backend}
-        """
-    )
-    lint_check = "missing_wheel"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
-
-
-def test_missing_wheel_pip_install_good_multi_list(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        outputs:
-          - name: output1
-            script:
-              - {{ PYTHON }} -m pip install .
-            requirements:
-              host:
-                - wheel
-          - name: output2
-            script: {{ PYTHON }} -m pip install .
-            requirements:
-              host:
-                - wheel
-        """
-    )
-    lint_check = "missing_wheel"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
-
-
-def test_missing_wheel_pip_install_bad(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        source:
-          url: https://github.com/joblib/joblib/archive/1.1.1.tar.gz
-        build:
-          script: {{ PYTHON }} -m pip install .
-        """
-    )
-    lint_check = "missing_wheel"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "wheel should be present" in messages[0].title
-
-
-def test_missing_wheel_pip_install_bad_list(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        source:
-          url: https://github.com/joblib/joblib/archive/1.1.1.tar.gz
-        build:
-          script:
-            - {{ PYTHON }} -m pip install .
-        """
-    )
-    lint_check = "missing_wheel"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "wheel should be present" in messages[0].title
-
-
-def test_missing_wheel_pip_install_bad_multi(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        outputs:
-          - name: output1
-            script: {{ PYTHON }} -m pip install .
-            requirements:
-              host:
-          - name: output2
-            script: {{ PYTHON }} -m pip install .
-            requirements:
-              host:
-        """
-    )
-    lint_check = "missing_wheel"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 2 and all("wheel should be present" in msg.title for msg in messages)
-
-
-def test_missing_wheel_pip_install_bad_multi_list(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        outputs:
-          - name: output1
-            script:
-              - {{ PYTHON }} -m pip install .
-            requirements:
-              host:
-          - name: output2
-            script: {{ PYTHON }} -m pip install .
-            requirements:
-              host:
-        """
-    )
-    lint_check = "missing_wheel"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 2 and all("wheel should be present" in msg.title for msg in messages)
-
-
 def test_uses_setup_py_good_missing(base_yaml: str) -> None:
     lint_check = "uses_setup_py"
     messages = check(lint_check, base_yaml)
@@ -1538,6 +1315,9 @@ def test_patch_unnecessary_good(base_yaml: str) -> None:
         + """
         source:
           url: https://sqlite.com/2022/sqlite-autoconf-3380500.tar.gz
+          patches:
+            - some-patch.patch
+            - some-other-patch.patch
         """
     )
     messages = check(lint_check, yaml_str)
@@ -1545,15 +1325,18 @@ def test_patch_unnecessary_good(base_yaml: str) -> None:
 
 
 @pytest.mark.parametrize("patch", ["patch", "m2-patch"])
-def test_patch_unnecessary_bad(base_yaml: str, patch: str) -> None:
+@pytest.mark.parametrize("section", ["build", "host"])
+def test_patch_unnecessary_with_patches_bad(base_yaml: str, patch: str, section: str) -> None:
     lint_check = "patch_unnecessary"
     yaml_str = (
         base_yaml
         + f"""
         source:
           url: https://sqlite.com/2022/sqlite-autoconf-3380500.tar.gz
+          patches:
+            - some-patch.patch
         requirements:
-          build:
+          {section}:
             - {patch}
         """
     )
@@ -1562,80 +1345,21 @@ def test_patch_unnecessary_bad(base_yaml: str, patch: str) -> None:
 
 
 @pytest.mark.parametrize("patch", ["patch", "m2-patch"])
-def test_patch_must_be_in_build_good(base_yaml: str, patch: str) -> None:
-    lint_check = "patch_must_be_in_build"
+@pytest.mark.parametrize("section", ["build", "host"])
+def test_patch_unnecessary_without_patches_bad(base_yaml: str, patch: str, section: str) -> None:
+    lint_check = "patch_unnecessary"
     yaml_str = (
         base_yaml
         + f"""
         source:
           url: https://sqlite.com/2022/sqlite-autoconf-3380500.tar.gz
-          patches:
-            - some-patch.patch
-        requirements:
-          build:
-            - {patch}
-        """
-    )
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
-
-
-def test_patch_must_be_in_build_bad(base_yaml: str) -> None:
-    lint_check = "patch_must_be_in_build"
-    for patch in ["patch", "m2-patch"]:
-        for section in ["host", "run"]:
-            yaml_str = (
-                base_yaml
-                + f"""
-        source:
-          url: https://sqlite.com/2022/sqlite-autoconf-3380500.tar.gz
-          patches:
-            - some-patch.patch
-        requirements:
-          {section}:
-            - {patch}
-            """
-            )
-            messages = check(lint_check, yaml_str)
-            assert (
-                len(messages) == 1 and "patch must be in build" in messages[0].title
-            ), f"Check failed for {patch} in {section}"
-
-
-@pytest.mark.parametrize("patch", ["patch", "m2-patch"])
-@pytest.mark.parametrize("section", ["host", "run"])
-def test_patch_must_be_in_build_list_bad(base_yaml: str, patch: str, section: str) -> None:
-    lint_check = "patch_must_be_in_build"
-    yaml_str = (
-        base_yaml
-        + f"""
-        source:
-          - url: https://sqlite.com/2022/sqlite-autoconf-3380500.tar.gz
-          - url: https://sqlite.com/2022/sqlite-autoconf-3380500.tar.gz
-            patches:
-              - some-patch.patch
         requirements:
           {section}:
             - {patch}
         """
     )
     messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "patch must be in build" in messages[0].title
-
-
-def test_patch_must_be_in_build_missing(base_yaml: str) -> None:
-    lint_check = "patch_must_be_in_build"
-    yaml_str = (
-        base_yaml
-        + """
-        source:
-          url: https://sqlite.com/2022/sqlite-autoconf-3380500.tar.gz
-          patches:
-            - some-patch.patch
-        """
-    )
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "patch must be in build" in messages[0].title
+    assert len(messages) == 1 and "patch should not be" in messages[0].title
 
 
 def test_has_run_test_and_commands_good_cmd(base_yaml: str, tmpdir: Path) -> None:

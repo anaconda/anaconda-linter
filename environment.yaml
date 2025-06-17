@@ -15,6 +15,7 @@ dependencies:
   - license-expression
   - jinja2
   - conda-build
+  - conda-recipe-manager
   - jsonschema
   - networkx
   - requests

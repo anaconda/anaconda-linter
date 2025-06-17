@@ -10,6 +10,7 @@ import re
 from pathlib import Path
 from typing import Any
 
+from conda_recipe_manager.parser.recipe_reader_deps import RecipeReaderDeps
 from percy.parser.recipe_parser import RecipeParser, SelectorConflictMode
 from percy.render.recipe import Recipe
 
@@ -349,56 +350,6 @@ class missing_python_build_tool(LintCheck):
                 self.message(section="requirements/host")
 
 
-class missing_wheel(LintCheck):
-    """
-    For pypi packages, wheel should be present in the host section
-
-    Add wheel to requirements/host:
-
-      requirements:
-        host:
-          - wheel
-    """
-
-    def check_recipe(self, recipe: Recipe) -> None:
-        is_pypi = is_pypi_source(recipe)
-
-        for package in recipe.packages.values():
-            if (
-                is_pypi
-                or recipe.contains(f"{package.path_prefix}build/script", "pip install", "")
-                or recipe.contains(f"{package.path_prefix}script", "pip install", "")
-            ):
-                # Note that we do the assumption that if none of the backends defined in exceptions are present
-                # and that setuptools is also not present, that setuptools will be used via the good old
-                # setup.py file. This is because pip defaults to doing that for historical reasons.
-                # This means that if pip is used in the install script and there is no host dependencies,
-                # we want this check to raise a warning because wheel should be added there!
-                #
-                # In theory we would also need to warn if setuptools missing in the host
-                # section and none of the new build backends are used.
-                # TODO: add a missing_setuptools rule?
-                if not package.has_dep("host", "wheel") and not set(PYTHON_BUILD_BACKENDS).intersection(
-                    {dep.pkg.lower() for dep in package.get("host")}
-                ):
-                    self.message(
-                        section=f"{package.path_prefix}requirements/host",
-                        data=(recipe, package),
-                    )
-
-    def fix(self, message, data) -> bool:
-        (recipe, package) = data
-        op = [
-            {
-                "op": "add",
-                "path": f"{package.path_prefix}requirements/host",
-                "match": "wheel",
-                "value": ["wheel"],
-            },
-        ]
-        return recipe.patch(op)
-
-
 class uses_setup_py(LintCheck):
     """
     `python setup.py install` is deprecated.
@@ -680,45 +631,33 @@ class avoid_noarch(LintCheck):
 
 class patch_unnecessary(LintCheck):
     """
-    patch should not be in build when source/patches is not set
+    patch should not be in the requirements section, it is not needed anymore.
 
-    Remove patch/m2-patch from ``build``
-    """
-
-    def check_recipe(self, recipe: Recipe) -> None:
-        if not recipe_has_patches(recipe):
-            deps = _utils.get_deps_dict(
-                recipe,
-            )
-            if "patch" in deps or "m2-patch" in deps:
-                self.message(section="build")
-
-
-class patch_must_be_in_build(LintCheck):
-    """
-    patch must be in build when source/patches is set.
-
-    Add patch to ``build``::
-
+    Remove patch/m2-patch from the requirements section. For example, if you have:
       requirements:
         build:
-          - patch       # [not win]
-          - m2-patch    # [win]
+          - patch
+          - m2-patch
     """
 
     def check_recipe(self, recipe: Recipe) -> None:
-        if recipe_has_patches(recipe):
-            deps = _utils.get_deps_dict(
-                recipe,
+        recipe_reader = RecipeReaderDeps(recipe.dump())
+        all_deps = recipe_reader.get_all_dependencies()
+        for package in all_deps:
+            for dep in all_deps[package]:
+                if dep.data.name in ["patch", "m2-patch"]:
+                    self.message(section=dep.path, data=recipe)
+                    return
+
+    def fix(self, message, data) -> bool:
+        # remove patch and m2-patch from the recipe
+        recipe: Recipe = data
+        try:
+            return recipe.patch_with_parser(
+                lambda parser: _utils.remove_deps_by_name_crm(parser, {"patch", "m2-patch"}),
             )
-            if "patch" in deps:
-                if any("build" not in location for location in deps["patch"]["paths"]):
-                    self.message(section="requirements/build")
-            elif "m2-patch" in deps:
-                if any("build" not in location for location in deps["m2-patch"]["paths"]):
-                    self.message(section="requirements/build")
-            else:
-                self.message(section="requirements/build")
+        except ValueError:
+            return False
 
 
 class has_run_test_and_commands(LintCheck):
