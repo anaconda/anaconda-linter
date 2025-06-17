@@ -280,21 +280,6 @@ def get_deps(recipe: Recipe, sections: Optional[list[str]] = None, outputs: bool
     return list(get_deps_dict(recipe, sections, outputs).keys())
 
 
-def remove_deps_by_name_crm(
-    recipe_parser: RecipeParserDeps,
-    deps_to_remove: set[str],
-) -> None:
-    """
-    Removes the dependencies specified by name
-
-    :param recipe_parser: The parser of the original recipe
-    :param deps_to_remove: Set of dependency names to remove
-    :raises ValueError: If the remove operation fails
-    """
-    while not _remove_single_dep_by_name_crm(recipe_parser, deps_to_remove):
-        pass
-
-
 def _remove_single_dep_by_name_crm(
     recipe_parser: RecipeParserDeps,
     deps_to_remove: set[str],
@@ -315,3 +300,18 @@ def _remove_single_dep_by_name_crm(
                     raise ValueError(f"Failed to remove dependency {dep.data.name} from {package_name}")
                 return False
     return True
+
+
+def remove_deps_by_name_crm(
+    recipe_parser: RecipeParserDeps,
+    deps_to_remove: set[str],
+) -> None:
+    """
+    Removes the dependencies specified by name
+
+    :param recipe_parser: The parser of the original recipe
+    :param deps_to_remove: Set of dependency names to remove
+    :raises ValueError: If the remove operation fails
+    """
+    while not _remove_single_dep_by_name_crm(recipe_parser, deps_to_remove):
+        pass
