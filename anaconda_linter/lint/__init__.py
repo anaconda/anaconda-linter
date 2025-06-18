@@ -292,7 +292,17 @@ class LintCheck(metaclass=LintCheckMeta):
         self.try_fix = fix
 
         # Run general checks
-        self.check_recipe(recipe)
+        try:
+            self.check_recipe(recipe)
+        except Exception:  # pylint: disable=broad-exception-caught
+            message = self.make_message(
+                recipe=self.recipe,
+                severity=Severity.ERROR,
+                title_in="An unexpected error occurred. "
+                "Please report this issue to the pi-automation team through the #pi-automation channel.",
+                body_in="",
+            )
+            return [message]
 
         # Run per source checks
         source = recipe.get("source", None)
@@ -410,6 +420,8 @@ class LintCheck(metaclass=LintCheckMeta):
         severity: Severity = SEVERITY_DEFAULT,
         fname: str = None,
         line: int = None,
+        title_in: str = None,
+        body_in: str = None,
         canfix: bool = False,
         output: int = -1,
     ) -> LintMessage:
@@ -423,6 +435,8 @@ class LintCheck(metaclass=LintCheckMeta):
         :param severity: The severity level of the message.
         :param fname: If specified, the message will apply to this file, rather than the recipe meta.yaml
         :param line: If specified, sets the line number for the message directly
+        :param title_in: If specified, the title of the message will be set to this value
+        :param body_in: If specified, the body of the message will be set to this value
         :param canfix: If specified, indicates if the rule can/can't be auto-fixed
         :param output: The output the error occurred in (multi-output recipes only)
         """
@@ -450,6 +464,8 @@ class LintCheck(metaclass=LintCheckMeta):
         if not fname:
             fname = recipe.path
         fname = str(Path(*Path(fname).parts[-3:]))
+        title = title_in if title_in is not None else title
+        body = body_in if body_in is not None else body
         return LintMessage(
             recipe=recipe,
             check=cls,
