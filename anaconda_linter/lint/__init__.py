@@ -298,7 +298,7 @@ class LintCheck(metaclass=LintCheckMeta):
             message = self.make_message(
                 recipe=self.recipe,
                 severity=Severity.ERROR,
-                title_in="An unexpected error occurred"
+                title_in="An unexpected error occurred. "
                 "Please report this issue to the pi-automation team through the #pi-automation channel.",
                 body_in="",
             )
