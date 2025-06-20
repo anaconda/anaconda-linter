@@ -55,10 +55,14 @@ def download_recipe(feedstock_path: str, output_dir: Path, github_token: Optiona
     try:
         g = Github(github_token)
         repo = g.get_repo(f"AnacondaRecipes/{feedstock_path}")
+        if repo.visibility != "public":
+            print(f"Skipping {feedstock_path} because it is not public")
+            return False
         content = repo.get_contents("recipe/meta.yaml").decoded_content.decode("utf-8")
         output_file.write_text(content, encoding="utf-8")
         return True
-    except Exception:  # pylint: disable=broad-exception-caught
+    except Exception as e:  # pylint: disable=broad-exception-caught
+        print(f"Error downloading {feedstock_path}: {e}")
         return False
 
 
