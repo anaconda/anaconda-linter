@@ -5,13 +5,13 @@ Script to download all conda recipes from AnacondaRecipes/aggregate repository.
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from typing import List, Optional
+from typing import Final, Optional
 
 from dotenv import load_dotenv
 from github import Github
 
 
-def fetch_submodules(github_token: Optional[str] = None) -> List[str]:
+def fetch_submodules(github_token: Optional[str] = None) -> list[str]:
     """
     Fetch all feedstock submodule paths from AnacondaRecipes/aggregate repository.
 
@@ -23,18 +23,20 @@ def fetch_submodules(github_token: Optional[str] = None) -> List[str]:
     content = repo.get_contents(".gitmodules").decoded_content.decode("utf-8")
 
     # Extract feedstock paths from .gitmodules
-    submodules = []
+    submodules: list[str] = []
     lines = content.strip().split("\n")
     i = 0
     while i < len(lines):
         line = lines[i].strip()
-        if line.startswith('[submodule "') and line.endswith('-feedstock"]'):
-            # Find the corresponding path line
-            for j in range(i + 1, min(i + 3, len(lines))):
-                if lines[j].strip().startswith("path = "):
-                    path = lines[j].strip().split("= ", 1)[1]
-                    submodules.append(path)
-                    break
+        if not (line.startswith('[submodule "') and line.endswith('-feedstock"]')):
+            i += 1
+            continue
+        # Find the corresponding path line
+        for j in range(i + 1, min(i + 3, len(lines))):
+            if lines[j].strip().startswith("path = "):
+                path = lines[j].strip().split("= ", 1)[1]
+                submodules.append(path)
+                break
         i += 1
 
     print(f"Found {len(submodules)} feedstock submodules")
@@ -80,12 +82,11 @@ def load_github_token() -> Optional[str]:
     return os.getenv("CRM_FAIL_STATS_GITHUB_TOKEN")
 
 
-def main(output_dir_path: str = "~/conda-recipe-manager-aggregate-test-data"):
+def main():
     """
     Download all recipes from the aggregate repository.
-
-    :param output_dir_path: Path to output directory
     """
+    output_dir_path: Final[str] = "~/.conda-recipe-manager-aggregate-test-data"
     output_dir = Path(output_dir_path).expanduser()
     output_dir.mkdir(parents=True, exist_ok=True)
 
