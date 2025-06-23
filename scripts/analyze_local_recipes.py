@@ -12,6 +12,7 @@ from typing import Final, Tuple
 
 import matplotlib.pyplot as plt
 from conda_recipe_manager.parser.recipe_reader import RecipeReader
+from matplotlib.patches import Patch
 
 
 def capture_exception_details(exception: Exception, feedstock_name: str) -> dict[str, str]:
@@ -110,7 +111,7 @@ def analyze_local_recipes(
 
 def generate_histogram(exception_counter: Counter, success_count: int) -> None:
     """
-    Generate and display histogram of exceptions.
+    Generate and display colorblind-friendly histogram of exceptions.
 
     :param exception_counter: Counter of exception types and their frequencies
     :param success_count: Number of successful RecipeReader creations
@@ -119,22 +120,68 @@ def generate_histogram(exception_counter: Counter, success_count: int) -> None:
     labels = list(exception_counter.keys()) + ["Success"]
     counts = list(exception_counter.values()) + [success_count]
 
-    # Create histogram
+    # Create histogram with colorblind-friendly design
     plt.figure(figsize=(15, 8))
     bars = plt.bar(range(len(labels)), counts)
 
+    # Use colorblind-friendly colors (based on Paul Tol's palette)
+    # These colors are distinguishable for all types of colorblindness
+    colorblind_palette = [
+        "#1f77b4",  # Blue
+        "#ff7f0e",  # Orange
+        "#d62728",  # Red
+        "#9467bd",  # Purple
+        "#8c564b",  # Brown
+        "#e377c2",  # Pink
+        "#7f7f7f",  # Gray
+        "#bcbd22",  # Olive
+        "#17becf",  # Cyan
+        "#2ca02c",  # Green (reserved for success)
+    ]
+
+    # Apply colors to bars
+    for i, bar in enumerate(bars[:-1]):  # All except success bar
+        color_idx = i % (len(colorblind_palette) - 1)  # Reserve last color for success
+        bar.set_color(colorblind_palette[color_idx])
+        bar.set_edgecolor("black")
+        bar.set_linewidth(0.5)
+
+    # Success bar with distinctive styling
+    success_bar = bars[-1]
+    success_bar.set_color("#2ca02c")  # Green, but distinguishable
+    success_bar.set_edgecolor("black")
+    success_bar.set_linewidth(2)  # Thicker border for emphasis
+    success_bar.set_hatch("///")  # Add pattern for additional distinction
+
     # Customize the plot
-    plt.xlabel("Exception Types")
-    plt.ylabel("Frequency")
-    plt.title("RecipeReader Exceptions and Successes")
-    plt.xticks(range(len(labels)), labels, rotation=45, ha="right")
+    plt.xlabel("Exception Types", fontsize=12, fontweight="bold")
+    plt.ylabel("Frequency", fontsize=12, fontweight="bold")
+    plt.title("RecipeReader Exceptions and Successes", fontsize=14, fontweight="bold")
+    plt.xticks(range(len(labels)), labels, rotation=45, ha="right", fontsize=10)
+    plt.yticks(fontsize=10)
 
-    # Add value labels on bars
+    # Add value labels on bars with better positioning
     for bar, count in zip(bars, counts):
-        plt.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.1, str(count), ha="center", va="bottom")
+        height = bar.get_height()
+        plt.text(
+            bar.get_x() + bar.get_width() / 2,
+            height + (max(counts) * 0.01),  # Dynamic offset based on max value
+            str(count),
+            ha="center",
+            va="bottom",
+            fontweight="bold",
+            fontsize=9,
+        )
 
-    # Color successful bars differently
-    bars[-1].set_color("green")  # Success bar in green
+    # Add grid for better readability
+    plt.grid(axis="y", alpha=0.3, linestyle="--")
+
+    # Add legend to distinguish success from failures
+    legend_elements = [
+        Patch(facecolor="#2ca02c", edgecolor="black", linewidth=2, hatch="///", label="Success"),
+        Patch(facecolor="lightcoral", edgecolor="black", linewidth=0.5, label="Exceptions"),
+    ]
+    plt.legend(handles=legend_elements, loc="upper right", fontsize=10)
 
     plt.tight_layout()
 
