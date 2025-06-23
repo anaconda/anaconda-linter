@@ -104,17 +104,32 @@ def main():
 
     # Download concurrently
     results = []
+    failed_futures = []
     with ThreadPoolExecutor(max_workers=5) as executor:
         futures = {executor.submit(download_recipe, path, output_dir, github_token): path for path in submodules}
 
         for i, future in enumerate(as_completed(futures), 1):
-            results.append(future.result())
+            feedstock_path = futures[future]
+            try:
+                result = future.result()
+                results.append(result)
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                print(f"Future for {feedstock_path} threw exception: {e}")
+                results.append(False)  # Count as failure
+                failed_futures.append((feedstock_path, str(e)))
 
             if i % 100 == 0:
                 print(f"Processed {i}/{len(submodules)}")
 
     success_count = sum(results)
     print(f"\nComplete! Downloaded {success_count}/{len(submodules)} recipes to {output_dir}")
+
+    if failed_futures:
+        print(f"\nFutures that threw exceptions ({len(failed_futures)}):")
+        for feedstock_path, error in failed_futures[:10]:  # Show first 10
+            print(f"  {feedstock_path}: {error}")
+        if len(failed_futures) > 10:
+            print(f"  ... and {len(failed_futures) - 10} more")
 
 
 if __name__ == "__main__":
