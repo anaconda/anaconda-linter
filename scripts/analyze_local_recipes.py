@@ -72,8 +72,8 @@ def analyze_local_recipes(
         return Counter(), success_count, recipe_details
 
     # Find all .yaml files in the directory
-    recipe_files = list(input_dir.glob("*.yaml"))
-    total_count = len(recipe_files)
+    recipe_files: Final[list[Path]] = list(input_dir.glob("*.yaml"))
+    total_count: Final[int] = len(recipe_files)
 
     if total_count == 0:
         print(f"No .yaml files found in {input_dir}")
