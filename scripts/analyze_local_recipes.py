@@ -1,10 +1,10 @@
-# type: ignore
 """
 Script to analyze locally downloaded conda recipes and collect parsing failure statistics.
 
 This script reads meta.yaml files from a local directory (downloaded by download_aggregate_recipes.py)
 and generates reports and visualizations of RecipeReader success/failure statistics.
 """
+
 import os
 from collections import Counter, defaultdict
 from pathlib import Path

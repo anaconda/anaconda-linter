@@ -1,7 +1,7 @@
-# type: ignore
 """
 Script to download all conda recipes from AnacondaRecipes/aggregate repository.
 """
+
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
