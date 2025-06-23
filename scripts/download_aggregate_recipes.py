@@ -89,6 +89,7 @@ def main():
     output_dir_path: Final[str] = "~/.conda-recipe-manager-aggregate-test-data"
     output_dir = Path(output_dir_path).expanduser()
     output_dir.mkdir(parents=True, exist_ok=True)
+    print(f"Downloading recipes to: {output_dir}")
 
     github_token = load_github_token()
     rate_limit = "5000" if github_token else "60"
