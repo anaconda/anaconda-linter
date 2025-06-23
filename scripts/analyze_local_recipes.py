@@ -8,7 +8,7 @@ and generates reports and visualizations of RecipeReader success/failure statist
 import os
 from collections import Counter, defaultdict
 from pathlib import Path
-from typing import Tuple
+from typing import Final, Tuple
 
 import matplotlib.pyplot as plt
 from conda_recipe_manager.parser.recipe_reader import RecipeReader
@@ -64,7 +64,7 @@ def analyze_local_recipes(
     success_count = 0
 
     # Expand user path
-    input_dir = Path(input_dir_path).expanduser()
+    input_dir: Final = Path(input_dir_path).expanduser()
 
     if not input_dir.exists():
         print(f"Input directory does not exist: {input_dir}")
