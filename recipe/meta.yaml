@@ -22,7 +22,7 @@ requirements:
     - setuptools
     - wheel
   run:
-    - python >=3.11
+    - python >=3.11,<3.12
     - requests
     - ruamel.yaml
     - license-expression
