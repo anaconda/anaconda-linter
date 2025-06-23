@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 from conda_recipe_manager.parser.recipe_reader import RecipeReader
 
 
-def capture_exception_details(exception: Exception, feedstock_name: str) -> Dict[str, str]:
+def capture_exception_details(exception: Exception, feedstock_name: str) -> dict[str, str]:
     """
     Capture the root cause file and line number where an exception occurred.
 
