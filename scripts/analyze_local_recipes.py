@@ -117,8 +117,8 @@ def generate_histogram(exception_counter: Counter, success_count: int) -> None:
     :param success_count: Number of successful RecipeReader creations
     """
     # Prepare data for histogram
-    labels = list(exception_counter.keys()) + ["Success"]
-    counts = list(exception_counter.values()) + [success_count]
+    labels: Final[list[str]] = list(exception_counter.keys()) + ["Success"]
+    counts: Final[list[int]] = list(exception_counter.values()) + [success_count]
 
     # Create histogram with colorblind-friendly design
     plt.figure(figsize=(15, 8))
