@@ -80,7 +80,7 @@ def load_github_token() -> Optional[str]:
     return os.getenv("CRM_FAIL_STATS_GITHUB_TOKEN")
 
 
-def download_all_recipes(output_dir_path: str = "~/conda-recipe-manager-aggregate-test-data"):
+def main(output_dir_path: str = "~/conda-recipe-manager-aggregate-test-data"):
     """
     Download all recipes from the aggregate repository.
 
@@ -117,4 +117,4 @@ def download_all_recipes(output_dir_path: str = "~/conda-recipe-manager-aggregat
 
 
 if __name__ == "__main__":
-    download_all_recipes()
+    main()
