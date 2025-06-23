@@ -49,7 +49,7 @@ def capture_exception_details(exception: Exception, feedstock_name: str) -> dict
 
 
 def analyze_local_recipes(
-    input_dir_path: str = "~/conda-recipe-manager-aggregate-test-data",
+    input_dir_path: str,
 ) -> Tuple[Counter, int, defaultdict]:
     """
     Analyze all locally saved recipes and collect exception statistics.
@@ -210,7 +210,8 @@ def main():
     print("Starting analysis of locally downloaded recipes")
 
     # Analyze recipes
-    exception_counter, success_count, recipe_details = analyze_local_recipes()
+    input_dir_path: Final[str] = "~/.conda-recipe-manager-aggregate-test-data"
+    exception_counter, success_count, recipe_details = analyze_local_recipes(input_dir_path)
 
     if sum(exception_counter.values()) + success_count == 0:
         print("No recipes to analyze. Exiting.")
