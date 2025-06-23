@@ -8,7 +8,7 @@ and generates reports and visualizations of RecipeReader success/failure statist
 import os
 from collections import Counter, defaultdict
 from pathlib import Path
-from typing import Dict, Tuple
+from typing import Tuple
 
 import matplotlib.pyplot as plt
 from conda_recipe_manager.parser.recipe_reader import RecipeReader
