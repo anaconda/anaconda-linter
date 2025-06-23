@@ -10,6 +10,10 @@ from typing import Final, Optional
 from dotenv import load_dotenv
 from github import Github
 
+# 5 is fast enough and doesn't overwhelm the API
+# Furthermore, the main bottleneck is the API rate limit, not the number of workers
+MAX_WORKERS: Final[int] = 5
+
 
 def fetch_submodules(github_token: Optional[str] = None) -> list[str]:
     """
@@ -106,7 +110,7 @@ def main():
     # Download concurrently
     results = []
     failed_futures = []
-    with ThreadPoolExecutor(max_workers=5) as executor:
+    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
         futures = {executor.submit(download_recipe, path, output_dir, github_token): path for path in submodules}
 
         for i, future in enumerate(as_completed(futures), 1):
