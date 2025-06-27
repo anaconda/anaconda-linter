@@ -92,6 +92,9 @@ COMPILERS = (
     "m2w64_c",
     "m2w64_cxx",
     "m2w64_fortran",
+    "ucrt64_c",
+    "ucrt64_cxx",
+    "ucrt64_fortran",
     "rust-gnu",
     "rust",
     "toolchain",
@@ -247,22 +250,7 @@ class should_use_compilers(LintCheck):
 
     """
 
-    compilers = (
-        "cgo",
-        "cuda",
-        "dpcpp",
-        "gcc",
-        "go",
-        "libgcc",
-        "libgfortran",
-        "llvm",
-        "m2w64_c",
-        "m2w64_cxx",
-        "m2w64_fortran",
-        "rust-gnu",
-        "rust",
-        "toolchain",
-    )
+    compilers = COMPILERS
 
     def check_deps(self, deps) -> None:
         for compiler in self.compilers:
@@ -300,7 +288,7 @@ class build_tools_must_be_in_build(LintCheck):
     def check_recipe(self, recipe: Recipe) -> None:
         deps = _utils.get_deps_dict(recipe, ["host", "run"])
         for tool, dep in deps.items():
-            if tool.startswith("m2-") or tool in BUILD_TOOLS:
+            if tool.startswith("msys2-") or tool.startswith("m2-") or tool in BUILD_TOOLS:
                 for path in dep["paths"]:
                     o = -1 if not path.startswith("outputs") else int(path.split("/")[1])
                     self.message(tool, severity=Severity.WARNING, section=path, output=o)
@@ -633,11 +621,11 @@ class patch_unnecessary(LintCheck):
     """
     patch should not be in the requirements section, it is not needed anymore.
 
-    Remove patch/m2-patch from the requirements section. For example, if you have:
+    Remove patch/msys2-patch/m2-patch from the requirements section. For example, if you have:
       requirements:
         build:
           - patch
-          - m2-patch
+          - msys2-patch
     """
 
     def check_recipe(self, recipe: Recipe) -> None:
@@ -645,16 +633,16 @@ class patch_unnecessary(LintCheck):
         all_deps = recipe_reader.get_all_dependencies()
         for package in all_deps:
             for dep in all_deps[package]:
-                if dep.data.name in ["patch", "m2-patch"]:
+                if dep.data.name in ["patch", "msys2-patch", "m2-patch"]:
                     self.message(section=dep.path, data=recipe)
                     return
 
     def fix(self, message, data) -> bool:
-        # remove patch and m2-patch from the recipe
+        # remove patch/msys2-patch/m2-patch from the recipe
         recipe: Recipe = data
         try:
             return recipe.patch_with_parser(
-                lambda parser: _utils.remove_deps_by_name_crm(parser, {"patch", "m2-patch"}),
+                lambda parser: _utils.remove_deps_by_name_crm(parser, {"patch", "msys2-patch", "m2-patch"}),
             )
         except ValueError:
             return False
