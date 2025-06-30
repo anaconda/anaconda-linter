@@ -1324,7 +1324,7 @@ def test_patch_unnecessary_good(base_yaml: str) -> None:
     assert len(messages) == 0
 
 
-@pytest.mark.parametrize("patch", ["patch", "m2-patch"])
+@pytest.mark.parametrize("patch", ["patch", "msys2-patch", "m2-patch"])
 @pytest.mark.parametrize("section", ["build", "host"])
 def test_patch_unnecessary_with_patches_bad(base_yaml: str, patch: str, section: str) -> None:
     lint_check = "patch_unnecessary"
@@ -1344,7 +1344,7 @@ def test_patch_unnecessary_with_patches_bad(base_yaml: str, patch: str, section:
     assert len(messages) == 1 and "patch should not be" in messages[0].title
 
 
-@pytest.mark.parametrize("patch", ["patch", "m2-patch"])
+@pytest.mark.parametrize("patch", ["patch", "msys2-patch", "m2-patch"])
 @pytest.mark.parametrize("section", ["build", "host"])
 def test_patch_unnecessary_without_patches_bad(base_yaml: str, patch: str, section: str) -> None:
     lint_check = "patch_unnecessary"
