@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 from conftest import check, check_dir
 
-from anaconda_linter.lint.check_build_help import BUILD_TOOLS, COMPILERS, PYTHON_BUILD_TOOLS
+from anaconda_linter.lint.check_build_help import BUILD_TOOLS, COMPILERS, PYTHON_BUILD_TOOLS, STDLIBS
 
 
 def test_host_section_needs_exact_pinnings_good(base_yaml: str) -> None:
@@ -237,6 +237,73 @@ def test_should_use_compilers_bad_multi(base_yaml: str) -> None:
     assert len(messages) == 2 and all("compiler directly" in msg.title for msg in messages)
 
 
+def test_should_use_stdlib_good(base_yaml: str) -> None:
+    lint_check = "should_use_stdlib"
+    yaml_str = (
+        base_yaml
+        + """
+        requirements:
+          build:
+            - {{ stdlib('c') }}
+        """
+    )
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+@pytest.mark.parametrize("stdlib", STDLIBS)
+def test_should_use_stdlib_bad(base_yaml: str, stdlib: str) -> None:
+    lint_check = "should_use_stdlib"
+    yaml_str = (
+        base_yaml
+        + f"""
+        requirements:
+          build:
+            - {stdlib}
+        """
+    )
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 1 and "{{ stdlib('c') }} dependency" in messages[0].title
+
+
+def test_should_use_stdlib_bad_multi(base_yaml: str) -> None:
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+            requirements:
+              build:
+                - sysroot
+          - name: output2
+            requirements:
+              build:
+                - macosx_deployment_target
+          - name: output3
+            requirements:
+              build:
+                - vs
+        """
+    )
+    lint_check = "should_use_stdlib"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 3 and all("{{ stdlib('c') }} dependency" in msg.title for msg in messages)
+
+
+def test_should_use_stdlib_bad_missing(base_yaml: str) -> None:
+    yaml_str = (
+        base_yaml
+        + """
+        requirements:
+          build:
+            - {{ compiler('c') }}
+        """
+    )
+    lint_check = "should_use_stdlib"
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 1 and "{{ stdlib('c') }} dependency" in messages[0].title
+
+
 def test_compilers_must_be_in_build_good(base_yaml: str) -> None:
     lint_check = "compilers_must_be_in_build"
     yaml_str = (
@@ -305,6 +372,77 @@ def test_compilers_must_be_in_build_bad_multi(base_yaml: str, section: str) -> N
     )
     messages = check(lint_check, yaml_str)
     assert len(messages) == 2 and all("compiler in a section" in msg.title for msg in messages)
+
+
+def test_stdlib_must_be_in_build_good(base_yaml: str) -> None:
+    lint_check = "stdlib_must_be_in_build"
+    yaml_str = (
+        base_yaml
+        + """
+        requirements:
+          build:
+            - {{ stdlib('c') }}
+        """
+    )
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+def test_stdlib_must_be_in_build_good_multi(base_yaml: str) -> None:
+    lint_check = "stdlib_must_be_in_build"
+    yaml_str = (
+        base_yaml
+        + """
+        outputs:
+          - name: output1
+            requirements:
+              build:
+                - {{ stdlib('c') }}
+          - name: output2
+            requirements:
+              build:
+                - {{ stdlib('c') }}
+        """
+    )
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 0
+
+
+@pytest.mark.parametrize("section", ["host", "run"])
+def test_stdlib_must_be_in_build_bad(base_yaml: str, section: str) -> None:
+    lint_check = "stdlib_must_be_in_build"
+    yaml_str = (
+        base_yaml
+        + f"""
+        requirements:
+          {section}:
+            - {{{{ stdlib('c') }}}}
+            """
+    )
+    messages = check(lint_check, yaml_str)
+    print(messages)
+    assert len(messages) == 1 and "stdlib in a section" in messages[0].title
+
+
+@pytest.mark.parametrize("section", ["host", "run"])
+def test_stdlib_must_be_in_build_bad_multi(base_yaml: str, section: str) -> None:
+    lint_check = "stdlib_must_be_in_build"
+    yaml_str = (
+        base_yaml
+        + f"""
+        outputs:
+          - name: output1
+            requirements:
+              {section}:
+                - {{{{ stdlib('c') }}}}
+          - name: output2
+            requirements:
+              {section}:
+                - {{{{ stdlib('c') }}}}
+        """
+    )
+    messages = check(lint_check, yaml_str)
+    assert len(messages) == 2 and all("stdlib in a section" in msg.title for msg in messages)
 
 
 @pytest.mark.parametrize("tool", BUILD_TOOLS)

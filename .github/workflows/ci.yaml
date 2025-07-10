@@ -8,6 +8,7 @@ name: Test
 
 jobs:
   # NOTE: Tests run via `pre-commit`
+  # TODO: These are linting/code analysis checks. Do these before running a build so they get fixed early.
   pre-commit:
     runs-on: ubuntu-latest
     steps:
@@ -20,6 +21,20 @@ jobs:
           source $CONDA/bin/activate
           conda activate anaconda-linter
           make pre-commit
+
+  # Skip tests during build since they happen in their own stage.
+  build-recipe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - run: |
+          source $CONDA/bin/activate
+          conda create --name build-env -y python=3.11 conda-build
+          conda activate build-env
+          conda build -c distro-tooling --no-test recipe/meta.yaml
+
+  # TODO: This stage should be dependent on the build stage and test the same package that was just built instead of
+  #       independently running pytest.
   test:
     runs-on: ubuntu-latest
     name: Test on ${{ matrix.python-version }}
@@ -35,12 +50,3 @@ jobs:
           source $CONDA/bin/activate
           conda activate anaconda-linter
           make test
-  build-recipe:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-      - run: |
-          source $CONDA/bin/activate
-          conda create --name build-env -y python=3.11 conda-build
-          conda activate build-env
-          conda build -c distro-tooling recipe/meta.yaml

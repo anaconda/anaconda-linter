@@ -34,6 +34,9 @@ class version_constraints_missing_whitespace(LintCheck):
         for path in check_paths:
             output = -1 if not path.startswith("outputs") else int(path.split("/")[1])
             for n, spec in enumerate(recipe.get(path, [])):
+                if spec is None:
+                    continue
+
                 has_constraints = constraints.search(spec)
                 if has_constraints:
                     # The second condition is a fallback.

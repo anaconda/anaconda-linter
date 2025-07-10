@@ -1,5 +1,6 @@
 arch: 64       # ppc64le aarch64 ppc64 s390x win
 platform: linux  # linux os win
+c_stdlib: sysroot
 target_platform: linux-64
 build_platform: linux-64
 ccache_method: None

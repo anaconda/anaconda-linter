@@ -100,6 +100,8 @@ COMPILERS = (
     "toolchain",
 )
 
+STDLIBS = ("sysroot", "macosx_deployment_target", "vs")  # linux  # osx  # windows
+
 
 def is_pypi_source(recipe: Recipe) -> bool:
     """
@@ -273,6 +275,67 @@ class compilers_must_be_in_build(LintCheck):
                 for location in deps[dep]["paths"]:
                     if "run" in location or "host" in location:
                         self.message(section=location)
+
+
+class should_use_stdlib(LintCheck):
+    """
+    The recipe requires a {{ stdlib('c') }} dependency in requirements.build
+
+    Please use::
+
+        requirements:
+           build:
+             - {{ stdlib('c') }}
+
+    """
+
+    def check_recipe(self, recipe: Recipe) -> None:
+        """
+        Ensures a {{ stdlib('c') }} macro is used in any recipe using a compiler.
+        """
+        stdlib_name = (
+            f"{recipe.selector_dict.get('c_stdlib', 'unknown_stdlib')}_"
+            f"{recipe.selector_dict.get('target_platform', 'unknown_target_platform')}"
+        )
+        for output in recipe.packages.values():
+            compiler_dep = None
+            for dep in output.build:
+                if dep.pkg == stdlib_name:
+                    break  # Found a stdlib dependency, all good.
+                elif dep.pkg.startswith("compiler_"):
+                    compiler_dep = dep
+            else:
+                if compiler_dep:
+                    # Output has a compiler but is missing a stdlib dependency.
+                    self.message(section=compiler_dep.path)
+
+    def check_deps(self, deps) -> None:
+        """
+        Checks for manual use of the `sysroot`, `macosx_deployment_target` or `vs` packages in recipes.
+        """
+        for stdlib in STDLIBS:
+            for location in deps.get(stdlib, {}).get("paths", []):
+                self.message(section=location)
+
+
+class stdlib_must_be_in_build(LintCheck):
+    """
+    The recipe requests a stdlib in a section other than build
+
+    Please move the ``{{ stdlib('c') }}`` line into the
+    ``requirements: build:`` section.
+
+    """
+
+    def check_deps(self, deps) -> None:
+        for dep in deps:
+            for stdlib in STDLIBS:
+                if not dep.startswith(stdlib):
+                    continue
+
+                for section in deps[dep]["paths"]:
+                    if "run" in section or "host" in section:
+                        self.message(section=section)
 
 
 class build_tools_must_be_in_build(LintCheck):
