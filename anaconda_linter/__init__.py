@@ -4,7 +4,7 @@ Description:    Module configurations for the `anaconda-linter` project
 """
 
 __name__ = "anaconda_linter"  # pylint: disable=redefined-builtin
-__version__ = "0.1.5"
+__version__ = "0.1.6"
 __author__ = "Anaconda, Inc."
 __email__ = "distribution_team@anaconda.com"
 __license__ = "BSD-3-Clause"
