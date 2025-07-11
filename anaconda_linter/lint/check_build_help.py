@@ -333,10 +333,12 @@ class stdlib_must_be_in_build(LintCheck):
     def check_deps(self, deps) -> None:
         for dep in deps:
             for stdlib in STDLIBS:
-                if dep.startswith(stdlib):
-                    for section in deps[dep]["paths"]:
-                        if "run" in section or "host" in section:
-                            self.message(section=section)
+                if not dep.startswith(stdlib):
+                    continue
+
+                for section in deps[dep]["paths"]:
+                    if "run" in section or "host" in section:
+                        self.message(section=section)
 
 
 class build_tools_must_be_in_build(LintCheck):
