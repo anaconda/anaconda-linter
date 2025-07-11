@@ -16,6 +16,8 @@ runs:
         conda update -n base -c defaults conda
         source $CONDA/etc/profile.d/conda.sh
         conda init bash
+        if [[ -e  /usr/share/miniconda/envs/build-env ]]; then rm -rf /usr/share/miniconda/envs/build-env; fi
+        conda create --name build-env -y python=${{ inputs.python-version }} conda-build
         sed -i 's/- python >=3.*$/- python ${{ inputs.python-version }}.*/' environment.yaml
         if [[ -e  /usr/share/miniconda/envs/anaconda-linter ]]; then rm -rf /usr/share/miniconda/envs/anaconda-linter; fi
         conda env create -f environment.yaml --name anaconda-linter

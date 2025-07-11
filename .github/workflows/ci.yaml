@@ -22,11 +22,15 @@ jobs:
           make pre-commit
   build-recipe:
     runs-on: ubuntu-latest
+    outputs:
+      pkg-dir: /usr/share/miniconda/envs/build-env/conda-bld/noarch
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: ./.github/actions/setup-env
+        with:
+          python-version: "3.11"
       - run: |
           source $CONDA/bin/activate
-          conda create --name build-env -y python=3.11 conda-build
           conda activate build-env
           conda build -c distro-tooling --no-test recipe/meta.yaml
   test-package:
@@ -34,7 +38,10 @@ jobs:
     needs: build-recipe
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: ./.github/actions/setup-env
+        with:
+          python-version: "3.11"
       - run: |
           source $CONDA/bin/activate
           conda activate build-env
-          conda build -c distro-tooling --test /usr/share/miniconda/envs/build-env/conda-bld/noarch/anaconda-linter*.conda
+          conda build -c distro-tooling --test ${{ needs.build-recipe.outputs.pkg-dir }}/anaconda-linter*.conda
