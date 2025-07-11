@@ -1,7 +1,29 @@
 # Changelog
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
+
 Note: version releases in the 0.x.y range may introduce breaking changes.
 
-## 0.1.5
+
+## [Unreleased]
+### Added
+- Platform stdlib name enumeration `anaconda_linter.lint.check_build_help.STDLIBS` containing `sysroot`,
+`macosx_deployment_target`, `vs` values
+- `should_use_stdlib`
+  - Checks if `stdlib('c')` is included in recipes with compilers
+  - Checks if stdlib packages are used directly in recipes instead of the Jinja macro
+- `stdlib_must_be_in_build`
+  - Checks if `stdlib('c')` is used in `host:` or `run:` sections instead of `build:`
+- Tests for new `stdlib('c')` linter build checks
+### Changed
+- Updated embedded `conda_build_config.yaml` to reflect current config file in aggregate
+### Deprecated
+### Removed
+### Fixed
+- Bug where unknown Jinja macros in requirements sections would cause linter to crash
+### Security
+
+## [0.1.5]
 - Bug fix: calls to get_read_only_parser result in unhandled errors on some recipes
 
 ## 0.1.4
@@ -93,3 +115,7 @@ Note: version releases in the 0.x.y range may introduce breaking changes.
 
 Initial release:
 - To support downloading of tarballs like: https://github.com/anaconda-distribution/anaconda-linter/archive/{{ version }}.tar.gz
+
+
+[Unreleased]: https://github.com/anaconda/percy/compare/0.1.5...HEAD
+[0.1.5]: https://github.com/anaconda/percy/compare/0.1.4...0.1.5

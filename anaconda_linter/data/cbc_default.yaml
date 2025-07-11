@@ -5,6 +5,7 @@ linux: 0
 arch: None
 platform: None
 c_compiler: None
+c_stdlib: None
 vc: None
 target_platform: None
 build_platform: None

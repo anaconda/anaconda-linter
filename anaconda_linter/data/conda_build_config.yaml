@@ -21,11 +21,15 @@ cairo:
 c_compiler:
   - gcc                        # [linux]
   - clang                      # [osx]
-  - vs2017                     # [win]
+  - vs2019                     # [win]
+c_stdlib:
+  - sysroot                    # [linux]
+  - macosx_deployment_target   # [osx]
+  - vs                         # [win]
 cxx_compiler:
   - gxx                        # [linux]
   - clangxx                    # [osx]
-  - vs2017                     # [win]
+  - vs2019                     # [win]
 fortran_compiler:
   - gfortran                   # [linux or osx]
   - intel-fortran              # [win]
@@ -40,9 +44,6 @@ rust_compiler:
   - rust-gnu                   # [win]
 rust_compiler_version:
   - 1.64.0
-CONDA_BUILD_SYSROOT:
-  - /opt/MacOSX10.10.sdk        # [osx and x86_64]
-  - /Library/Developer/CommandLineTools/SDKs/MacOSX11.1.sdk  # [osx and arm64]
 VERBOSE_AT:
   - V=1
 VERBOSE_CM:
@@ -53,6 +54,13 @@ cran_mirror:
 c_compiler_version:        # [linux or osx]
   - 11.2.0                 # [linux]
   - 14                     # [osx]
+c_stdlib_version:
+  - 2.17                   # [linux and x86_64 and (not ANACONDA_ROCKET_GLIBC or ANACONDA_ROCKET_GLIBC == "2.17")]
+  - 2.26                   # [linux and aarch64 and (not ANACONDA_ROCKET_GLIBC or ANACONDA_ROCKET_GLIBC == "2.26")]
+  - 2.28                   # [linux and ANACONDA_ROCKET_GLIBC == "2.28"]
+  - 10.15                  # [osx and x86_64]
+  - 11.1                   # [osx and arm64]
+  - 2019.11                # [win]
 cxx_compiler_version:      # [linux or osx]
   - 11.2.0                 # [linux]
   - 14                     # [osx]
@@ -64,6 +72,33 @@ clang_variant:
 cyrus_sasl:
   - 2.1.26  # [not ((osx and arm64) or (linux and aarch64))]
   - 2.1.27  # [(osx and arm64) or (linux and aarch64)]
+
+cdt_name:          # [linux]
+  - amzn2          # [linux and aarch64 and (not ANACONDA_ROCKET_GLIBC or ANACONDA_ROCKET_GLIBC == "2.26")]
+  - el8            # [linux and ANACONDA_ROCKET_GLIBC == "2.28"]
+
+# https://github.com/conda/conda-build/issues/5733
+BUILD: x86_64-conda_el8-linux-gnu   # [linux and x86_64 and ANACONDA_ROCKET_GLIBC == "2.28"]
+BUILD: aarch64-conda_el8-linux-gnu  # [linux and aarch64 and ANACONDA_ROCKET_GLIBC == "2.28"]
+
+OSX_SDK_DIR:
+  - /opt                                      # [osx and x86_64]
+  - /Library/Developer/CommandLineTools/SDKs  # [osx and arm64]
+# TODO: These are only necessary as we transition to using the stdlib('c') macro. They should be
+#       removed once it is safe to do so.
+CONDA_BUILD_SYSROOT:
+  - /opt/MacOSX10.15.sdk        # [osx and x86_64]
+  - /Library/Developer/CommandLineTools/SDKs/MacOSX11.1.sdk  # [osx and arm64]
+macos_min_version:
+  - 10.15 # [osx and x86_64]
+  - 11.1  # [osx and arm64]
+macos_machine:
+  - x86_64-apple-darwin13.4.0  # [osx and x86_64]
+  - arm64-apple-darwin20.0.0   # [osx and arm64]
+MACOSX_DEPLOYMENT_TARGET:
+  - 10.15 # [osx and x86_64]
+  - 11.1  # [osx and arm64]
+
 dbus:
   - 1
 expat:
@@ -138,15 +173,6 @@ llvm_variant:
   - llvm
 lzo:
   - 2
-macos_min_version:
-  - 10.9  # [osx and x86_64]
-  - 11.1  # [osx and arm64]
-macos_machine:
-  - x86_64-apple-darwin13.4.0  # [osx and x86_64]
-  - arm64-apple-darwin20.0.0   # [osx and arm64]
-MACOSX_DEPLOYMENT_TARGET:
-  - 10.9  # [osx and x86_64]
-  - 11.1  # [osx and arm64]
 mkl:
   - 2023.*
 mpfr:
@@ -221,8 +247,6 @@ xz:
   - 5
 channel_targets:
   - defaults
-cdt_name:
-  - amzn2    # [linux and aarch64]
 zip_keys:
   -
     - python

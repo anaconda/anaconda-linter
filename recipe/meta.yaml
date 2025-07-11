@@ -30,7 +30,7 @@ requirements:
     - conda-build
     - jsonschema
     - networkx
-    - percy >=0.1.3
+    - percy >=0.2.5
     - conda-recipe-manager
 
 test:
