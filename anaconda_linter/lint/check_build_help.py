@@ -8,7 +8,7 @@ from __future__ import annotations
 import os
 import re
 from pathlib import Path
-from typing import Any
+from typing import Any, Final
 
 from conda_recipe_manager.parser.recipe_reader_deps import RecipeReaderDeps
 from percy.parser.recipe_parser import RecipeParser, SelectorConflictMode
@@ -18,7 +18,7 @@ from anaconda_linter import utils as _utils
 from anaconda_linter.lint import LintCheck, Severity
 
 # Does not include m2-tools, which should be checked using wild cards.
-BUILD_TOOLS = (
+BUILD_TOOLS: Final[tuple] = (
     "autoconf",
     "automake",
     "bison",
@@ -35,7 +35,7 @@ BUILD_TOOLS = (
     "posix",
 )
 
-PYTHON_BUILD_TOOLS = (
+PYTHON_BUILD_TOOLS: Final[tuple] = (
     "cython",
     "flit",
     "flit-core",
@@ -66,7 +66,7 @@ PYTHON_BUILD_TOOLS = (
 # Historical note: pyproject.toml file was introduced initially to specify the build system (backend).
 # Only later was the ability to specify all the project metadata (name, version, dependencies, etc)
 # into it added, via PEP-621.
-PYTHON_BUILD_BACKENDS = (
+PYTHON_BUILD_BACKENDS: Final[tuple] = (
     "flit",  # Our packages are not supposed to depend on flit, but apparently they do, so we need to support it here.
     "flit-core",  # Backend of flit.
     "hatch",  # Same as flit, we should not depend on it. We should instead depend on hatchling, which is the backend.
@@ -80,7 +80,7 @@ PYTHON_BUILD_BACKENDS = (
     "maturin",
 )
 
-COMPILERS = (
+COMPILERS: Final[tuple] = (
     "cgo",
     "cuda",
     "dpcpp",
@@ -100,7 +100,7 @@ COMPILERS = (
     "toolchain",
 )
 
-STDLIBS = ("sysroot", "macosx_deployment_target", "vs")  # linux  # osx  # windows
+STDLIBS: Final[tuple] = ("sysroot", "macosx_deployment_target", "vs")  # linux  # osx  # windows
 
 
 def is_pypi_source(recipe: Recipe) -> bool:
