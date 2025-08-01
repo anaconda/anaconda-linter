@@ -4,8 +4,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 Note: version releases in the 0.x.y range may introduce breaking changes.
 
-
 ## [Unreleased]
+### Added
+### Changed
+### Deprecated
+### Removed
+### Fixed
+### Security
+
+## [0.1.6]
 ### Added
 - Platform stdlib name enumeration `anaconda_linter.lint.check_build_help.STDLIBS` containing `sysroot`,
 `macosx_deployment_target`, `vs` values
@@ -19,6 +26,7 @@ Note: version releases in the 0.x.y range may introduce breaking changes.
 - Updated embedded `conda_build_config.yaml` to reflect current config file in aggregate
 ### Deprecated
 ### Removed
+- Removes deprecated rules, from feedback from the package builders
 ### Fixed
 - Bug where unknown Jinja macros in requirements sections would cause linter to crash
 ### Security
@@ -117,5 +125,6 @@ Initial release:
 - To support downloading of tarballs like: https://github.com/anaconda-distribution/anaconda-linter/archive/{{ version }}.tar.gz
 
 
-[Unreleased]: https://github.com/anaconda/percy/compare/0.1.5...HEAD
-[0.1.5]: https://github.com/anaconda/percy/compare/0.1.4...0.1.5
+[Unreleased]: https://github.com/anaconda/anaconda-linter/compare/0.1.6...HEAD
+[0.1.5]: https://github.com/anaconda/anaconda-linter/compare/0.1.4...0.1.5
+[0.1.6]: https://github.com/anaconda/anaconda-linter/compare/0.1.5...0.1.6
