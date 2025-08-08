@@ -94,6 +94,7 @@ from typing import Any, Final, Optional, Union
 
 import networkx as nx
 import percy.render.recipe as _recipe
+from conda_recipe_manager.parser.recipe_parser_deps import RecipeParserDeps
 from percy.render._renderer import RendererType
 from percy.render.exceptions import EmptyRecipe, JinjaRenderFailure, MissingMetaYaml, RecipeError, YAMLRenderFailure
 from percy.render.variants import read_conda_build_config
@@ -804,7 +805,10 @@ class Linter:
             print(f"Linting subdir:{arch_name} recipe:{recipe_name}")
 
         # Gather variants for specified subdir
-        variants = None
+        # As a compatibility stopgap, this process outputs a dict of variant_id -> recipe_dump
+        # TODO: replace with CRM variants generation
+        # TODO: track recipe variants (python version, arch, etc.) all the way to error reporting to ease fixing
+        recipe_variants: dict[int, str] = {}
         try:
             meta_yaml = Path(recipe_name) / "meta.yaml"
             if (Path(__file__) / "conda_build_config.yaml").is_file():
@@ -827,6 +831,14 @@ class Linter:
                     variant_config_files=var_config_files,
                     exclusive_config_files=exclusive_config_files,
                 )
+            for vid, variant in variants:
+                recipe = _recipe.Recipe.from_file(
+                    recipe_fname=str(meta_yaml),
+                    variant_id=vid,
+                    variant=variant,
+                    renderer=RendererType.RUAMEL,
+                ).dump()
+                recipe_variants[vid] = recipe
         except RecipeError as exc:
             recipe = _recipe.Recipe(recipe_name)
             check_cls = recipe_error_to_lint_check.get(exc.__class__, linter_failure)
@@ -835,34 +847,27 @@ class Linter:
         # lint variants
         messages = set()
         try:
-            for vid, variant in variants:
+            for vid, recipe_dump in recipe_variants.items():
                 logging.debug("Linting variant %s", vid)
-                recipe = _recipe.Recipe.from_file(
-                    recipe_fname=str(meta_yaml),
-                    variant_id=vid,
-                    variant=variant,
-                    renderer=RendererType.RUAMEL,
-                )
-                if not recipe.skip:
+                recipe = RecipeParserDeps(recipe_dump)
+                if not recipe.contains_value("build/skip"):
                     messages.update(
                         self.lint_recipe(
                             recipe,
                             fix=fix,
                         )
                     )
-                    if fix and recipe.is_modified():
-                        with open(recipe.path, "w", encoding="utf-8") as fdes:
-                            fdes.write(recipe.dump())
-        except RecipeError as exc:
+            # TODO: Implement auto-fixing without overwriting each variant
+            # TODO: Implement CRM exception handling, and adapt LintCheck, including message() and make_message()
+        except Exception as exc:
             recipe = _recipe.Recipe(recipe_name)
-            check_cls = recipe_error_to_lint_check.get(exc.__class__, linter_failure)
-            return [check_cls.make_message(recipe=recipe, line=getattr(exc, "line"))]
+            return [linter_failure.make_message(recipe=recipe)]
 
         return list(messages)
 
     def lint_recipe(
         self,
-        recipe: _recipe.Recipe,
+        recipe: RecipeParserDeps,
         fix: bool = False,
     ) -> list[LintMessage]:
         """
@@ -876,8 +881,8 @@ class Linter:
 
         # currently skip-lints will overwrite only-lint, we can check for the key
         # being in checks_to_skip, but I think letting the user do this is best?
-        checks_to_skip.update(recipe.get("extra/skip-lints", []))
-        if only_lint := recipe.get("extra/only-lint", []):
+        checks_to_skip.update(recipe.get_value("extra/skip-lints", []))
+        if only_lint := recipe.get_value("extra/only-lint", []):
             # getting the symmetric difference between all checks and only_lint
             all_other_checks = set(only_lint) ^ self.checks_dag.nodes
             checks_to_skip.update(all_other_checks)
@@ -910,6 +915,7 @@ class Linter:
                 if self.nocatch:
                     raise
                 logger.exception("Unexpected exception in lint_recipe")
+                # TODO: Adapt LintMessage to CRM recipes
                 res = [
                     LintMessage(
                         recipe=recipe,
