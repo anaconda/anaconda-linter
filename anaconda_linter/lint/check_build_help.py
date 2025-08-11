@@ -252,10 +252,10 @@ class should_use_compilers(LintCheck):
 
     compilers = COMPILERS
 
-    def check_deps(self, deps) -> None:
-        for compiler in self.compilers:
-            for location in deps.get(compiler, {}).get("paths", []):
-                self.message(section=location)
+    def check_recipe(self, recipe_name: str, recipe: RecipeReaderDeps) -> None:
+        for dependency_path in recipe.get_dependency_paths():
+            if recipe.get_value(dependency_path) in self.compilers:
+                self.message(fname=recipe_name, section=dependency_path)
 
 
 class compilers_must_be_in_build(LintCheck):
@@ -267,12 +267,11 @@ class compilers_must_be_in_build(LintCheck):
 
     """
 
-    def check_deps(self, deps) -> None:
-        for dep in deps:
-            if dep.startswith("compiler_"):
-                for location in deps[dep]["paths"]:
-                    if "run" in location or "host" in location:
-                        self.message(section=location)
+    def check_recipe(self, recipe_name: str, recipe: RecipeReaderDeps) -> None:
+        for dependency_path in recipe.get_dependency_paths():
+            if recipe.get_value(dependency_path).startswith("compiler_"):
+                if "run" in dependency_path or "host" in dependency_path:
+                    self.message(fname=recipe_name, section=dependency_path)
 
 
 class build_tools_must_be_in_build(LintCheck):
@@ -483,22 +482,22 @@ class pip_install_args(LintCheck):
         return recipe.patch(op)
 
 
-class cython_must_be_in_host(LintCheck):
+class python_build_tools_in_host(LintCheck):
     """
-    Cython should be in the host section
+    Python build tools should be in the host section
 
-    Move cython to ``host``::
+    Move python build tools to ``host``::
 
       requirements:
         host:
-          - cython
+          - setuptools
+          - pip
     """
 
-    def check_deps(self, deps) -> None:
-        if "cython" in deps:
-            for location in deps["cython"]["paths"]:
-                if "/host" not in location:
-                    self.message(section=location)
+    def check_recipe(self, recipe_name: str, recipe: RecipeReaderDeps) -> None:
+        for dependency_path in recipe.get_dependency_paths():
+            if recipe.get_value(dependency_path) in PYTHON_BUILD_TOOLS and "/host" not in dependency_path:
+                self.message(fname=recipe_name, section=dependency_path)
 
 
 class cython_needs_compiler(LintCheck):

@@ -5,14 +5,17 @@ Description:    Provides utilities and test fixtures for test files.
 
 from __future__ import annotations
 
+from io import StringIO
 from pathlib import Path
 from typing import Final, Optional
 from unittest.mock import mock_open, patch
 
 import pytest
+from conda_recipe_manager.parser.recipe_reader_deps import RecipeReaderDeps
 from percy.render._renderer import RendererType
 from percy.render.recipe import Recipe
 from percy.render.variants import Variant, read_conda_build_config
+from ruamel.yaml import YAML
 
 from anaconda_linter import utils
 from anaconda_linter.lint import AutoFixState, Linter, LintMessage
@@ -60,7 +63,7 @@ def load_file(file: Path | str) -> str:
 
 def load_linter_and_recipe(
     recipe_str: str, arch: str = "linux-64", expand_variant: Optional[Variant] = None
-) -> tuple[Linter, Recipe]:
+) -> tuple[Linter, RecipeReaderDeps]:
     """
     Convenience function that loads instantiates linter and recipe objects based on default configurations.
     :param recipe_str:      Recipe file, as a raw string
@@ -68,18 +71,25 @@ def load_linter_and_recipe(
     :param expand_variant:  (Optional) Dictionary of variant information to augment the recipe with.
     :return: `Linter` and `Recipe` instances, as a tuple
     """
+    # TODO: Replace with CRM variants generation
     config_file = Path(__file__).parent / "config.yaml"
     config = utils.load_config(str(config_file.resolve()))
     linter_obj = Linter(config=config)
     variant: Variant = config[arch]
     if expand_variant is not None:
         variant.update(expand_variant)
-    recipe = Recipe.from_string(
+    percy_recipe = Recipe.from_string(
         recipe_text=recipe_str,
         variant_id="dummy",
         variant=variant,
         renderer=RendererType.RUAMEL,
     )
+    buf = StringIO()
+    yaml = YAML()
+    yaml.indent(mapping=2, sequence=4, offset=2)
+    yaml.dump(percy_recipe.meta, buf)
+    recipe_content = buf.getvalue()
+    recipe = RecipeReaderDeps(recipe_content)
     return linter_obj, recipe
 
 
