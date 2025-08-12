@@ -108,7 +108,7 @@ def check(
     :return: A list containing errors or warnings for the target rule.
     """
     linter_obj, recipe = load_linter_and_recipe(recipe_str, arch, expand_variant)
-    messages = linter_obj.check_instances[check_name].run(recipe=recipe)
+    messages = linter_obj.check_instances[check_name].run(recipe=recipe, arch_name=arch)
     return messages
 
 
@@ -133,14 +133,32 @@ def check_dir(check_name: str, feedstock_dir: str | Path, recipe_str: str, arch:
     if variants:
         # for when a cbc is provided
         (vid, variant) = variants[0]
+        print(" --- variant --- ")
+        print(variant)
+        print(" --- variant --- ")
+        print(" --- vid --- ")
+        print(vid)
+        print(" --- vid --- ")
     else:
         # for when no cbc is provided
         vid = "dummy"
         variant = config[arch]
-    recipe = Recipe.from_file(
+    percy_recipe = Recipe.from_file(
         recipe_fname=str(meta_yaml), variant_id=vid, variant=variant, renderer=RendererType.RUAMEL
     )
-    messages = linter_obj.check_instances[check_name].run(recipe=recipe)
+    print(" --- percy_recipe --- ")
+    print(percy_recipe.get("requirements"))
+    print(" --- percy_recipe --- ")
+    buf = StringIO()
+    yaml = YAML()
+    yaml.indent(mapping=2, sequence=4, offset=2)
+    yaml.dump(percy_recipe.meta, buf)
+    recipe_content = buf.getvalue()
+    recipe = RecipeReaderDeps(recipe_content)
+    print(" --- recipe --- ")
+    print(recipe.render())
+    print(" --- recipe --- ")
+    messages = linter_obj.check_instances[check_name].run(recipe=recipe, arch_name=arch)
     return messages
 
 

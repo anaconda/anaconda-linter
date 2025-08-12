@@ -252,7 +252,7 @@ class should_use_compilers(LintCheck):
 
     compilers = COMPILERS
 
-    def check_recipe(self, recipe_name: str, recipe: RecipeReaderDeps) -> None:
+    def check_recipe_CRM(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
         for dependency_path in recipe.get_dependency_paths():
             if recipe.get_value(dependency_path) in self.compilers:
                 self.message(fname=recipe_name, section=dependency_path)
@@ -267,7 +267,7 @@ class compilers_must_be_in_build(LintCheck):
 
     """
 
-    def check_recipe(self, recipe_name: str, recipe: RecipeReaderDeps) -> None:
+    def check_recipe_CRM(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
         for dependency_path in recipe.get_dependency_paths():
             if recipe.get_value(dependency_path).startswith("compiler_"):
                 if "run" in dependency_path or "host" in dependency_path:
@@ -290,6 +290,7 @@ class build_tools_must_be_in_build(LintCheck):
             if tool.startswith("msys2-") or tool.startswith("m2-") or tool in BUILD_TOOLS:
                 for path in dep["paths"]:
                     o = -1 if not path.startswith("outputs") else int(path.split("/")[1])
+                    print("")
                     self.message(tool, severity=Severity.WARNING, section=path, output=o)
 
 
@@ -494,7 +495,7 @@ class python_build_tools_in_host(LintCheck):
           - pip
     """
 
-    def check_recipe(self, recipe_name: str, recipe: RecipeReaderDeps) -> None:
+    def check_recipe_CRM(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
         for dependency_path in recipe.get_dependency_paths():
             if recipe.get_value(dependency_path) in PYTHON_BUILD_TOOLS and "/host" not in dependency_path:
                 self.message(fname=recipe_name, section=dependency_path)
@@ -512,18 +513,16 @@ class cython_needs_compiler(LintCheck):
 
     """
 
-    def check_deps(self, deps) -> None:
-        if "cython" in deps:
-            for location in deps["cython"]["paths"]:
-                if location.startswith("outputs"):
-                    n = location.split("/")[1]
-                    section = f"outputs/{n}/requirements/build"
-                    output = int(n)
-                else:
-                    section = "requirements/build"
-                    output = -1
-                if "compiler_c" not in self.recipe.get(section, ""):
-                    self.message(section=section, output=output)
+    def check_recipe_CRM(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
+        for dependency_path in recipe.get_dependency_paths():
+            if recipe.get_value(dependency_path) == "cython":
+                requirements_path = "/".join(dependency_path.split("/")[:-2])
+                build_deps = recipe.get_value(f"{requirements_path}/build", None)
+                if not build_deps or not isinstance(build_deps, list):
+                    self.message(fname=recipe_name, section=dependency_path)
+                    continue
+                if "compiler_c" not in build_deps:
+                    self.message(fname=recipe_name, section=dependency_path)
 
 
 class avoid_noarch(LintCheck):
@@ -959,25 +958,31 @@ class no_git_on_windows(LintCheck):
     git is supplied by the cygwin environment. Installing it may break the build.
     """
 
-    def check_deps(self, deps) -> None:
-        if self.recipe.selector_dict.get("win", 0) == 1 and "git" in deps:
-            for path in deps["git"]["paths"]:
-                output = -1 if not path.startswith("outputs") else int(path.split("/")[1])
-                self.message(section=path, output=output, data=path)
+    def check_recipe_CRM(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
+        print(" --- check_recipe_CRM --- ")
+        print(recipe_name)
+        print(arch_name)
+        print(recipe.render())
+        print(" --- check_recipe_CRM --- ")
+        if not arch_name.startswith("win"):
+            return
+        for dependency_path in recipe.get_dependency_paths():
+            if recipe.get_value(dependency_path) == "git":
+                self.message(section=dependency_path)
 
-    def fix(self, message, data) -> bool:
-        # NOTE: The path found in `check_deps()` is a post-selector-rendering
-        # path to the dependency. So in order to change the recipe file, we need
-        # to relocate `git`, relative to the raw file.
-        def _add_git_selector(parser: RecipeParser) -> None:
-            paths = parser.find_value("git")
-            for path in paths:
-                # Attempt to filter-out false-positives
-                if "/requirements" not in path:
-                    continue
-                parser.add_selector(path, "[not win]", SelectorConflictMode.AND)
+    # def fix(self, message, data) -> bool:
+    #     # NOTE: The path found in `check_deps()` is a post-selector-rendering
+    #     # path to the dependency. So in order to change the recipe file, we need
+    #     # to relocate `git`, relative to the raw file.
+    #     def _add_git_selector(parser: RecipeParser) -> None:
+    #         paths = parser.find_value("git")
+    #         for path in paths:
+    #             # Attempt to filter-out false-positives
+    #             if "/requirements" not in path:
+    #                 continue
+    #             parser.add_selector(path, "[not win]", SelectorConflictMode.AND)
 
-        return self.recipe.patch_with_parser(_add_git_selector)
+    #     return self.recipe.patch_with_parser(_add_git_selector)
 
 
 class gui_app(LintCheck):

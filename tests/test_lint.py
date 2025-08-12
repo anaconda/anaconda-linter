@@ -5,6 +5,7 @@ Description:    Tests linting infrastructure
 
 from __future__ import annotations
 
+import tempfile
 from pathlib import Path
 from typing import Final
 
@@ -54,7 +55,7 @@ class DummyErrorFormat(lint.LintCheck):
         self.message("Dummy", "ERROR")
 
 
-def test_only_lint(base_yaml: str, linter: Linter) -> None:
+def test_only_lint(base_yaml: str, linter: Linter, recipe_dir: Path) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -65,12 +66,13 @@ def test_only_lint(base_yaml: str, linter: Linter) -> None:
             - DummyWarning
         """
     )
-    recipes = [Recipe.from_string(recipe_text=yaml_str, renderer=RendererType.RUAMEL)]
-    linter.lint(recipes)
+    meta_yaml = recipe_dir / "meta.yaml"
+    meta_yaml.write_text(yaml_str)
+    linter.lint([str(recipe_dir)])
     assert len(linter.get_messages()) == 3
 
 
-def test_skip_lints(base_yaml: str, linter: Linter) -> None:
+def test_skip_lints(base_yaml: str, linter: Linter, recipe_dir: Path) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -81,13 +83,14 @@ def test_skip_lints(base_yaml: str, linter: Linter) -> None:
             - DummyWarning
         """
     )
-    recipes_base = [Recipe.from_string(recipe_text=base_yaml, renderer=RendererType.RUAMEL)]
-    linter.lint(recipes_base)
+    meta_yaml = recipe_dir / "meta.yaml"
+    meta_yaml.write_text(base_yaml)
+    linter.lint([str(recipe_dir)])
     messages_base = linter.get_messages()
     linter.clear_messages()
     assert len(linter.get_messages()) == 0
-    recipes_skip = [Recipe.from_string(recipe_text=yaml_str, renderer=RendererType.RUAMEL)]
-    linter.lint(recipes_skip)
+    meta_yaml.write_text(yaml_str)
+    linter.lint([str(recipe_dir)])
     messages_skip = linter.get_messages()
     assert len(messages_base) == len(messages_skip) + 3
 
@@ -153,7 +156,7 @@ def test_severity_level(base_yaml: str, level: Severity, string: str, lint_check
 
 
 @pytest.mark.parametrize("level,expected", ((Severity.INFO, 3), (Severity.WARNING, 2), (Severity.ERROR, 1)))
-def test_severity_min_enum(base_yaml: str, level: Severity | str, expected: int) -> None:
+def test_severity_min_enum(base_yaml: str, level: Severity | str, expected: int, recipe_dir: Path) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -164,11 +167,12 @@ def test_severity_min_enum(base_yaml: str, level: Severity | str, expected: int)
             - DummyWarning
         """
     )
-    recipes = [Recipe.from_string(recipe_text=yaml_str, renderer=RendererType.RUAMEL)]
+    meta_yaml = recipe_dir / "meta.yaml"
+    meta_yaml.write_text(yaml_str)
     config_file = Path(__file__).parent / "config.yaml"
     config = utils.load_config(config_file)
     linter = lint.Linter(config=config, severity_min=level)
-    linter.lint(recipes)
+    linter.lint([str(recipe_dir)])
     assert len(linter.get_messages()) == expected
 
 
@@ -197,7 +201,7 @@ def test_lint_list() -> None:
         ("pin_subpackage('dotnet-runtime', exact=True, badParam=False)", True),
     ],
 )
-def test_jinja_functions(base_yaml: str, jinja_func: str, expected: bool) -> None:
+def test_jinja_functions(base_yaml: str, jinja_func: str, expected: bool, recipe_dir: Path) -> None:
     def run_lint(yaml_str: str) -> list[LintMessage]:
         config_file = Path(__file__).parent / "config.yaml"
         config = utils.load_config(config_file)
@@ -207,10 +211,9 @@ def test_jinja_functions(base_yaml: str, jinja_func: str, expected: bool) -> Non
         # we don't have conditional logic in our tests?
         if not jinja_func == "pin_subpackage('dotnet-runtime', exact=True, badParam=False)":
             print(jinja_func)
-            recipe = Recipe.from_string(
-                recipe_text=yaml_str, renderer=RendererType.RUAMEL, variant={"target_platform": "dummy-platform"}
-            )
-            linter.lint([recipe])
+            meta_yaml = recipe_dir / "meta.yaml"
+            meta_yaml.write_text(yaml_str)
+            linter.lint([str(recipe_dir)])
             messages = linter.get_messages()
             return messages
 
@@ -220,7 +223,7 @@ def test_jinja_functions(base_yaml: str, jinja_func: str, expected: bool) -> Non
         except RecipeError as exc:
             recipe = Recipe("")
             check_cls = lint.recipe_error_to_lint_check.get(exc.__class__, lint.linter_failure)
-            messages = [check_cls.make_message(recipe=recipe, line=getattr(exc, "line"))]
+            messages = [check_cls.make_message(recipe=recipe, fname="recipe", line=getattr(exc, "line"))]
             return messages
 
         # Should not reach here
