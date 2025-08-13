@@ -10,8 +10,9 @@ import re
 from pathlib import Path
 from typing import Any
 
+from conda.models.match_spec import MatchSpec
+from conda_recipe_manager.parser.dependency import Dependency, DependencySection
 from conda_recipe_manager.parser.recipe_reader_deps import RecipeReaderDeps
-from percy.parser.recipe_parser import RecipeParser, SelectorConflictMode
 from percy.render.recipe import Recipe
 
 from anaconda_linter import utils as _utils
@@ -147,8 +148,7 @@ class host_section_needs_exact_pinnings(LintCheck):
     specified in a conda_build_config.yaml file.
     """
 
-    @staticmethod
-    def is_exception(package: str) -> bool:
+    def _is_exception(self, package: str) -> bool:
         """
         Determines if a package is an exception to this pinning linter check.
         :param package: Package name to check
@@ -166,17 +166,22 @@ class host_section_needs_exact_pinnings(LintCheck):
         # this seemed lower maintenance
         return (package in exceptions) or any(package.startswith(f"{pkg}-") for pkg in PYTHON_BUILD_TOOLS)
 
-    def check_recipe(self, recipe: Recipe) -> None:
-        deps = _utils.get_deps_dict(recipe, "host")
-        for package, dep in deps.items():
-            if not self.is_exception(package) and not (
-                package in recipe.selector_dict and recipe.selector_dict[package]
-            ):
-                for c, constraint in enumerate(dep["constraints"]):
-                    if constraint == "" or re.search("^[<>!]", constraint) is not None:
-                        path = dep["paths"][c]
-                        output = -1 if not path.startswith("outputs") else int(path.split("/")[1])
-                        self.message(section=path, severity=Severity.WARNING, output=output)
+    def _check_dependency(self, dependency: Dependency) -> bool:
+        if not isinstance(dependency.data, MatchSpec):
+            return True
+        name = dependency.data.name
+        version = dependency.data.version
+        if dependency.type != DependencySection.HOST or self._is_exception(name):
+            return False
+        if not version or str(version) == "" or re.search("^[<>!]", str(version)) is not None:
+            return True
+        return False
+
+    def check_recipe_crm(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
+        for dependency_list in recipe.get_all_dependencies().values():
+            for dependency in dependency_list:
+                if self._check_dependency(dependency):
+                    self.message(section=dependency.path, severity=Severity.WARNING)
 
 
 class cbc_dep_in_run_missing_from_host(LintCheck):
@@ -252,7 +257,7 @@ class should_use_compilers(LintCheck):
 
     compilers = COMPILERS
 
-    def check_recipe_CRM(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
+    def check_recipe_crm(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
         for dependency_path in recipe.get_dependency_paths():
             if recipe.get_value(dependency_path) in self.compilers:
                 self.message(fname=recipe_name, section=dependency_path)
@@ -267,7 +272,7 @@ class compilers_must_be_in_build(LintCheck):
 
     """
 
-    def check_recipe_CRM(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
+    def check_recipe_crm(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
         for dependency_path in recipe.get_dependency_paths():
             if recipe.get_value(dependency_path).startswith("compiler_"):
                 if "run" in dependency_path or "host" in dependency_path:
@@ -375,12 +380,12 @@ class uses_setup_py(LintCheck):
                     section=f"{package.path_prefix}script",
                     data=(recipe, f"{package.path_prefix}script"),
                 )
-            elif self.recipe.dir:
+            elif self.percy_recipe.dir:
                 try:
-                    build_file = self.recipe.get(f"{package.path_prefix}script", "")
+                    build_file = self.percy_recipe.get(f"{package.path_prefix}script", "")
                     if not build_file:
-                        build_file = self.recipe.get(f"{package.path_prefix}build/script", "build.sh")
-                    build_file = self.recipe.dir / Path(build_file)
+                        build_file = self.percy_recipe.get(f"{package.path_prefix}build/script", "build.sh")
+                    build_file = self.percy_recipe.dir / Path(build_file)
                     if build_file.exists():
                         with open(str(build_file), encoding="utf-8") as buildsh:
                             for num, line in enumerate(buildsh):
@@ -449,12 +454,12 @@ class pip_install_args(LintCheck):
                     section=f"{package.path_prefix}script",
                     data=(recipe, f"{package.path_prefix}script"),
                 )
-            elif self.recipe.dir:
+            elif self.percy_recipe.dir:
                 try:
-                    build_file = self.recipe.get(f"{package.path_prefix}script", "")
+                    build_file = self.percy_recipe.get(f"{package.path_prefix}script", "")
                     if not build_file:
-                        build_file = self.recipe.get(f"{package.path_prefix}build/script", "build.sh")
-                    build_file = self.recipe.dir / Path(build_file)
+                        build_file = self.percy_recipe.get(f"{package.path_prefix}build/script", "build.sh")
+                    build_file = self.percy_recipe.dir / Path(build_file)
                     if build_file.exists():
                         with open(str(build_file), encoding="utf-8") as buildsh:
                             for num, line in enumerate(buildsh):
@@ -495,7 +500,7 @@ class python_build_tools_in_host(LintCheck):
           - pip
     """
 
-    def check_recipe_CRM(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
+    def check_recipe_crm(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
         for dependency_path in recipe.get_dependency_paths():
             if recipe.get_value(dependency_path) in PYTHON_BUILD_TOOLS and "/host" not in dependency_path:
                 self.message(fname=recipe_name, section=dependency_path)
@@ -513,7 +518,7 @@ class cython_needs_compiler(LintCheck):
 
     """
 
-    def check_recipe_CRM(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
+    def check_recipe_crm(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
         for dependency_path in recipe.get_dependency_paths():
             if recipe.get_value(dependency_path) == "cython":
                 requirements_path = "/".join(dependency_path.split("/")[:-2])
@@ -829,7 +834,7 @@ class missing_test_requirement_pip(LintCheck):  #
         if commands := recipe.get(f"{test_section}/commands", None):
             if any("pip check" in cmd for cmd in commands):
                 return True
-        elif self.recipe.dir:
+        elif self.percy_recipe.dir:
             if output.startswith("outputs"):
                 script = recipe.get(f"{test_section}/script", "")
                 return self._check_file(os.path.join(recipe.dir, script))
@@ -958,12 +963,7 @@ class no_git_on_windows(LintCheck):
     git is supplied by the cygwin environment. Installing it may break the build.
     """
 
-    def check_recipe_CRM(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
-        print(" --- check_recipe_CRM --- ")
-        print(recipe_name)
-        print(arch_name)
-        print(recipe.render())
-        print(" --- check_recipe_CRM --- ")
+    def check_recipe_crm(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
         if not arch_name.startswith("win"):
             return
         for dependency_path in recipe.get_dependency_paths():
@@ -982,7 +982,7 @@ class no_git_on_windows(LintCheck):
     #                 continue
     #             parser.add_selector(path, "[not win]", SelectorConflictMode.AND)
 
-    #     return self.recipe.patch_with_parser(_add_git_selector)
+    #     return self.percy_recipe.patch_with_parser(_add_git_selector)
 
 
 class gui_app(LintCheck):

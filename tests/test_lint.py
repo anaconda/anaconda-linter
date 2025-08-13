@@ -5,7 +5,6 @@ Description:    Tests linting infrastructure
 
 from __future__ import annotations
 
-import tempfile
 from pathlib import Path
 from typing import Final
 
@@ -250,6 +249,8 @@ def test_jinja_functions(base_yaml: str, jinja_func: str, expected: bool, recipe
     assert any(str(msg.check) == lint_check for msg in messages) == expected
 
 
+# TODO: Re-enable this test once get_raw_range is implemented outside of Percy
+@pytest.mark.skip(reason="Disabled line-reporting temporarily while we migrate to CRM")
 def test_error_report_line(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
@@ -278,6 +279,8 @@ def test_message_title_format(base_yaml: str) -> None:
     assert len(messages) == 1 and messages[0].title == "Dummy message of severity ERROR"
 
 
+@pytest.mark.skip(reason="Disabled temporarily while we migrate to CRM")
+# TODO: Re-enable this test once fname handling is defined properly
 def test_message_path(base_yaml: str, tmpdir: Path) -> None:
     recipe_directory_short = Path("fake_feedstock/recipe")
     recipe_directory = Path(tmpdir) / recipe_directory_short

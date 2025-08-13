@@ -90,7 +90,7 @@ def load_linter_and_recipe(
     yaml.dump(percy_recipe.meta, buf)
     recipe_content = buf.getvalue()
     recipe = RecipeReaderDeps(recipe_content)
-    return linter_obj, recipe
+    return linter_obj, recipe, variant
 
 
 def check(
@@ -107,8 +107,10 @@ def check(
     :param expand_variant:  (Optional) Dictionary of variant information to augment the recipe with.
     :return: A list containing errors or warnings for the target rule.
     """
-    linter_obj, recipe = load_linter_and_recipe(recipe_str, arch, expand_variant)
-    messages = linter_obj.check_instances[check_name].run(recipe=recipe, arch_name=arch)
+    linter_obj, recipe, variant = load_linter_and_recipe(recipe_str, arch, expand_variant)
+    messages = linter_obj.check_instances[check_name].run(
+        recipe=recipe, variant_tuple=("dummy", variant), arch_name=arch
+    )
     return messages
 
 
@@ -133,12 +135,6 @@ def check_dir(check_name: str, feedstock_dir: str | Path, recipe_str: str, arch:
     if variants:
         # for when a cbc is provided
         (vid, variant) = variants[0]
-        print(" --- variant --- ")
-        print(variant)
-        print(" --- variant --- ")
-        print(" --- vid --- ")
-        print(vid)
-        print(" --- vid --- ")
     else:
         # for when no cbc is provided
         vid = "dummy"
@@ -146,19 +142,15 @@ def check_dir(check_name: str, feedstock_dir: str | Path, recipe_str: str, arch:
     percy_recipe = Recipe.from_file(
         recipe_fname=str(meta_yaml), variant_id=vid, variant=variant, renderer=RendererType.RUAMEL
     )
-    print(" --- percy_recipe --- ")
-    print(percy_recipe.get("requirements"))
-    print(" --- percy_recipe --- ")
     buf = StringIO()
     yaml = YAML()
     yaml.indent(mapping=2, sequence=4, offset=2)
     yaml.dump(percy_recipe.meta, buf)
     recipe_content = buf.getvalue()
     recipe = RecipeReaderDeps(recipe_content)
-    print(" --- recipe --- ")
-    print(recipe.render())
-    print(" --- recipe --- ")
-    messages = linter_obj.check_instances[check_name].run(recipe=recipe, arch_name=arch)
+    messages = linter_obj.check_instances[check_name].run(
+        recipe=recipe, recipe_path=meta_yaml, variant_tuple=(vid, variant), arch_name=arch
+    )
     return messages
 
 
@@ -176,7 +168,7 @@ def assert_on_auto_fix(check_name: str, suffix: str, arch: str) -> None:
     broken_file: Final[str] = f"{TEST_AUTO_FIX_FILES_PATH}/{check_name}{suffix_adjusted}.yaml"
     fixed_file: Final[str] = f"{TEST_AUTO_FIX_FILES_PATH}/{check_name}{suffix_adjusted}_fixed.yaml"
 
-    linter_obj, recipe = load_linter_and_recipe(load_file(broken_file), arch)
+    linter_obj, recipe, _ = load_linter_and_recipe(load_file(broken_file), arch)
 
     messages: list[LintMessage]
     # Prevent writing to the test file. The `Recipe` instance will contain the file contents of interest in a string
