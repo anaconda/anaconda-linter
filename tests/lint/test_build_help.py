@@ -495,8 +495,6 @@ def test_missing_python_build_tool_url_good_multi(base_yaml: str, tool: str) -> 
     assert len(messages) == 0
 
 
-# TODO: Re-enable once CRM is fixed
-@pytest.mark.skip(reason="CRM Bug")
 def test_missing_python_build_tool_url_bad(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
@@ -620,8 +618,6 @@ def test_missing_python_build_tool_pip_install_good_multi_list(base_yaml: str, t
     assert len(messages) == 0
 
 
-# TODO: Re-enable this test once CRM is fixed
-@pytest.mark.skip(reason="CRM Bug")
 def test_missing_python_build_tool_pip_install_bad(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
@@ -639,8 +635,6 @@ def test_missing_python_build_tool_pip_install_bad(base_yaml: str) -> None:
     assert len(messages) == 1 and "require a python build tool" in messages[0].title
 
 
-# TODO: Re-enable this test once CRM is fixed
-@pytest.mark.skip(reason="CRM Bug")
 def test_missing_python_build_tool_pip_install_bad_list(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
@@ -2583,8 +2577,6 @@ def test_remove_python_pinning_bad_multi(base_yaml: str) -> None:
     assert len(messages) == 4 and all("python deps should not be constrained" in m.title for m in messages)
 
 
-# TODO: Re-enable once CRM is fixed
-@pytest.mark.skip(reason="CRM Bug")
 @pytest.mark.parametrize("arch", ("linux-64", "win-64"))
 def test_no_git_on_windows_good(base_yaml: str, arch: str) -> None:  # pylint: disable=unused-argument
     yaml_str = (

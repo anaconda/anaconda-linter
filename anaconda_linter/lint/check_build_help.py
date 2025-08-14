@@ -970,6 +970,7 @@ class no_git_on_windows(LintCheck):
             if recipe.get_value(dependency_path) == "git":
                 self.message(section=dependency_path)
 
+    # TODO: Re-enable this when we have a way to fix the recipe
     # def fix(self, message, data) -> bool:
     #     # NOTE: The path found in `check_deps()` is a post-selector-rendering
     #     # path to the dependency. So in order to change the recipe file, we need

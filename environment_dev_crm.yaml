@@ -1,0 +1,37 @@
+name: anaconda-linter
+channels:
+  - defaults
+
+dependencies:
+  - python >=3.11,<3.12
+  # build
+  - setuptools
+  - pip
+  - make
+  # run
+  - distro-tooling::percy >=0.1.5
+  - distro-tooling::anaconda-packaging-utils
+  - ruamel.yaml
+  - license-expression
+  - jinja2
+  - conda-build
+  - jsonschema
+  - networkx
+  - requests
+  # test
+  - pytest
+  - pre-commit
+  # developer tools
+  - black
+  - isort
+  - mypy
+  - pylint
+  - shellcheck
+  # plug ins
+  - pytest-cov
+  - pytest-html
+  - pytest-xdist
+  # scripts
+  - python-dotenv
+  - PyGithub
+  - matplotlib
