@@ -89,16 +89,17 @@ import logging
 import pkgutil
 from dataclasses import dataclass
 from enum import IntEnum, auto
+from io import StringIO
 from pathlib import Path
-from typing import Any, Final, Optional, Union
+from typing import Any, Final, Optional
 
 import networkx as nx
 import percy.render.recipe as _recipe
+from conda_recipe_manager.parser.recipe_reader_deps import RecipeReaderDeps
 from percy.render._renderer import RendererType
 from percy.render.exceptions import EmptyRecipe, JinjaRenderFailure, MissingMetaYaml, RecipeError, YAMLRenderFailure
 from percy.render.variants import read_conda_build_config
-
-from anaconda_linter import utils as _utils
+from ruamel.yaml import YAML
 
 logger = logging.getLogger(__name__)
 
@@ -143,7 +144,7 @@ class LintMessage:
     """
 
     #: The recipe this message refers to
-    recipe: _recipe.Recipe
+    recipe: RecipeReaderDeps
 
     #: The check issuing the message
     check: "LintCheck"
@@ -273,49 +274,112 @@ class LintCheck(metaclass=LintCheckMeta):
         #: Messages collected running tests
         self.messages: list[LintMessage] = []
         #: Recipe currently being checked
-        self.recipe: _recipe.Recipe = None
+        self.recipe: RecipeReaderDeps = None
+        # TODO: Remove this once we transition to CRM recipes
+        #: Percy recipe currently being checked
+        self.percy_recipe: _recipe.Recipe = None
         #: Whether we are supposed to fix
         self.try_fix: bool = False
 
     def __str__(self) -> str:
         return self.__class__.__name__
 
-    def run(self, recipe: _recipe.Recipe, fix: bool = False) -> list[LintMessage]:
+    # TODO: remove the Percy specific arguments once we transition to CRM recipes, and re-enable pylint
+    def run(  # pylint: disable=too-many-positional-arguments
+        self,
+        recipe: RecipeReaderDeps,
+        recipe_path: Optional[Path] = None,
+        variant_tuple: tuple = (None, None),
+        recipe_name: str = "recipe",
+        arch_name: Optional[str] = None,
+        fix: bool = False,
+    ) -> list[LintMessage]:
         """
         Run the check on a recipe. Called by Linter
 
         :param recipe: The recipe to be linted
+        :param recipe_path: The path to the recipe
+        :param variant_tuple: The variant tuple
+        :param recipe_name: The name of the recipe
+        :param arch_name: The architecture of the recipe
         :param fix: Whether to attempt to fix the recipe
         """
         self.messages: list[LintMessage] = []
-        self.recipe: _recipe.Recipe = recipe
-        self.try_fix = fix
-
-        # Run general checks
+        self.recipe: RecipeReaderDeps = recipe
+        self.recipe_path: Optional[Path] = recipe_path
+        # TODO: Remove this once we transition to CRM recipes
         try:
-            self.check_recipe(recipe)
+            if recipe_path:
+                self.percy_recipe: _recipe.Recipe = _recipe.Recipe.from_file(
+                    recipe_fname=recipe_path,
+                    variant_id=variant_tuple[0],
+                    variant=variant_tuple[1],
+                    renderer=RendererType.RUAMEL,
+                )
+            else:
+                self.percy_recipe: _recipe.Recipe = _recipe.Recipe.from_string(
+                    recipe_text=recipe.render(),
+                    variant_id=variant_tuple[0],
+                    variant=variant_tuple[1],
+                    renderer=RendererType.RUAMEL,
+                )
         except Exception:  # pylint: disable=broad-exception-caught
             message = self.make_message(
                 recipe=self.recipe,
+                fname=recipe_name,
                 severity=Severity.ERROR,
-                title_in="An unexpected error occurred. "
+                title_in="An unexpected error occurred in Percy. "
+                "Please report this issue to the pi-automation team through the #pi-automation channel.",
+                body_in="",
+            )
+            return [message]
+        self.try_fix = fix
+
+        # Run general checks with CRM
+        try:
+            self.check_recipe_crm(recipe_name, arch_name, self.recipe)
+        except Exception:  # pylint: disable=broad-exception-caught
+            message = self.make_message(
+                recipe=self.recipe,
+                fname=recipe_name,
+                severity=Severity.ERROR,
+                title_in="An unexpected error occurred in CRM. "
+                "Please report this issue to the pi-automation team through the #pi-automation channel.",
+                body_in="",
+            )
+            return [message]
+
+        # Run general checks with Percy
+        try:
+            self.check_recipe(self.percy_recipe)
+        except Exception:  # pylint: disable=broad-exception-caught
+            message = self.make_message(
+                recipe=self.percy_recipe,
+                fname=recipe_name,
+                severity=Severity.ERROR,
+                title_in="An unexpected error occurred in Percy. "
                 "Please report this issue to the pi-automation team through the #pi-automation channel.",
                 body_in="",
             )
             return [message]
 
         # Run per source checks
-        source = recipe.get("source", None)
+        source = recipe.get_value("/source", None)
         if isinstance(source, dict):
             self.check_source(source, "source")
         elif isinstance(source, list):
             for num, src in enumerate(source):
                 self.check_source(src, f"source/{num}")
 
-        # Run depends checks
-        self.check_deps(_utils.get_deps_dict(recipe))
-
         return self.messages
+
+    def check_source(self, source: dict, section: str) -> None:
+        """
+        Execute check on each source
+
+        :param source: dictionary containing the source section
+        :param section: Path to the section. Can be `source` or `source/0` (1,2,3...).
+        """
 
     def check_recipe(self, recipe: _recipe.Recipe) -> None:
         """
@@ -327,30 +391,16 @@ class LintCheck(metaclass=LintCheckMeta):
         :param recipe: The recipe under test.
         """
 
-    def check_source(self, source: dict, section: str) -> None:
+    def check_recipe_crm(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
         """
-        Execute check on each source
+        Execute check on recipe using CRM
 
-        :param source: dictionary containing the source section
-        :param section: Path to the section. Can be `source` or `source/0` (1,2,3...).
-        """
+        Override this method in subclasses, using ``self.message()``
+        to issue `LintMessage` as failures are encountered.
 
-    def check_deps(self, deps: dict[str, list[str]]) -> None:
-        """
-        Execute check on recipe dependencies
-
-        Example format for **deps**::
-
-            {
-              'setuptools': ['requirements/run',
-                             'outputs/0/requirements/run/1'],
-              'compiler_cxx': ['requirements/build/0']
-            }
-
-        You can use the values in the list directly as `section`
-        parameter to `self.message()`.
-
-        :param deps: dictionary mapping requirements occurring in the recipe to their locations within the recipe.
+        :param recipe_name: Name of the recipe
+        :param arch_name: Architecture of the recipe
+        :param recipe: Recipe to be checked
         """
 
     def can_auto_fix(self) -> bool:
@@ -375,9 +425,9 @@ class LintCheck(metaclass=LintCheckMeta):
     def message(
         self,
         *args,
+        fname: str = "meta.yaml",
         section: str = None,
         severity: Severity = SEVERITY_DEFAULT,
-        fname: str = None,
         line: int = None,
         data: Any = None,
         output: int = -1,
@@ -399,9 +449,9 @@ class LintCheck(metaclass=LintCheckMeta):
         message = self.make_message(
             *args,
             recipe=self.recipe,
+            fname=fname,
             section=section,
             severity=severity,
-            fname=fname,
             line=line,
             canfix=self.can_auto_fix(),
             output=output,
@@ -415,10 +465,10 @@ class LintCheck(metaclass=LintCheckMeta):
     def make_message(
         cls,
         *args: Any,
-        recipe: _recipe.Recipe,
+        recipe: RecipeReaderDeps,
+        fname: str = "meta.yaml",
         section: str = None,
         severity: Severity = SEVERITY_DEFAULT,
-        fname: str = None,
         line: int = None,
         title_in: str = None,
         body_in: str = None,
@@ -446,24 +496,23 @@ class LintCheck(metaclass=LintCheckMeta):
         if len(args) > 0:
             title = title.format(*args)
         if output >= 0:
-            name = recipe.get(f"outputs/{output}/name", "")
+            name = recipe.get_value(f"/outputs/{output}/name", "")
             if name != "":
                 title = f'output "{name}": {title}'
         if section:
             try:
-                sl, _, el, ec = recipe.get_raw_range(section)
+                # TODO: Remove this once we have a proper RecipeReaderDeps get_raw_range()
+                raise KeyError
+                # sl, _, el, ec = recipe.get_raw_range(section)
             except KeyError:
                 sl, el, ec = 1, 1, 1
-            if ec == 0:
-                el = el - 1
-            start_line = sl
+            if ec == 0:  # pylint: disable=used-before-assignment
+                el = el - 1  # pylint: disable=used-before-assignment
+            start_line = sl  # pylint: disable=used-before-assignment
             end_line = el
         else:
             start_line = end_line = line or 0
 
-        if not fname:
-            fname = recipe.path
-        fname = str(Path(*Path(fname).parts[-3:]))
         title = title_in if title_in is not None else title
         body = body_in if body_in is not None else body
         return LintMessage(
@@ -710,7 +759,7 @@ class Linter:
 
     def lint(  # pylint: disable=too-many-positional-arguments
         self,
-        recipes: list[Union[str, _recipe.Recipe]],
+        recipes: list[str],
         arch_name: str = "linux-64",
         variant_config_files: Optional[list[str]] = None,
         exclusive_config_files: Optional[list[str]] = None,
@@ -722,7 +771,7 @@ class Linter:
         Lint messages are collected in the linter. They can be retrieved
         with `get_messages` and the list cleared with `clear_messages`.
 
-        :param recipes: list of names of recipes or Recipe objects to lint
+        :param recipes: list of names of recipes
         :param arch_name: Target architecture to run against
         :param variant_config_files: Configuration information for variants
         :param exclusive_config_files: Configuration information for exclusive files
@@ -736,36 +785,22 @@ class Linter:
             exclusive_config_files = []
         if len(recipes) == 0:
             return Severity.NONE
-        if isinstance(recipes[0], str):
-            for recipe_name in sorted(recipes):
-                try:
-                    msgs = self.lint_file(
-                        recipe_name,
-                        arch_name=arch_name,
-                        variant_config_files=variant_config_files,
-                        exclusive_config_files=exclusive_config_files,
-                        fix=fix,
-                    )
-                except Exception:  # pylint: disable=broad-exception-caught
-                    if self.nocatch:
-                        raise
-                    logger.exception("Unexpected exception in lint")
-                    recipe = _recipe.Recipe(recipe_name)
-                    msgs = [linter_failure.make_message(recipe=recipe)]
-                self._messages.extend(msgs)
-        elif isinstance(recipes[0], _recipe.Recipe):
-            for recipe in recipes:
-                try:
-                    msgs = self.lint_recipe(
-                        recipe,
-                        fix=fix,
-                    )
-                except Exception:  # pylint: disable=broad-exception-caught
-                    if self.nocatch:
-                        raise
-                    logger.exception("Unexpected exception in lint")
-                    msgs = [linter_failure.make_message(recipe=recipe)]
-                self._messages.extend(msgs)
+        for recipe_name in sorted(recipes):
+            try:
+                msgs = self.lint_file(
+                    recipe_name,
+                    arch_name=arch_name,
+                    variant_config_files=variant_config_files,
+                    exclusive_config_files=exclusive_config_files,
+                    fix=fix,
+                )
+            except Exception:  # pylint: disable=broad-exception-caught
+                if self.nocatch:
+                    raise
+                logger.exception("Unexpected exception in lint")
+                recipe = _recipe.Recipe(recipe_name)
+                msgs = [linter_failure.make_message(recipe=recipe, fname=recipe_name)]
+            self._messages.extend(msgs)
 
         result: Severity = Severity.NONE
         for message in self._messages:
@@ -804,7 +839,10 @@ class Linter:
             print(f"Linting subdir:{arch_name} recipe:{recipe_name}")
 
         # Gather variants for specified subdir
-        variants = None
+        # As a compatibility stopgap, this process outputs a dict of variant_id -> recipe_dump
+        # TODO: replace with CRM variants generation
+        # TODO: track recipe variants (python version, arch, etc.) all the way to error reporting to ease fixing
+        recipe_variants: list[tuple[dict, RecipeReaderDeps]] = []
         try:
             meta_yaml = Path(recipe_name) / "meta.yaml"
             if (Path(__file__) / "conda_build_config.yaml").is_file():
@@ -827,46 +865,66 @@ class Linter:
                     variant_config_files=var_config_files,
                     exclusive_config_files=exclusive_config_files,
                 )
-        except RecipeError as exc:
-            recipe = _recipe.Recipe(recipe_name)
-            check_cls = recipe_error_to_lint_check.get(exc.__class__, linter_failure)
-            return [check_cls.make_message(recipe=recipe, line=getattr(exc, "line"))]
-
-        # lint variants
-        messages = set()
-        try:
             for vid, variant in variants:
-                logging.debug("Linting variant %s", vid)
                 recipe = _recipe.Recipe.from_file(
                     recipe_fname=str(meta_yaml),
                     variant_id=vid,
                     variant=variant,
                     renderer=RendererType.RUAMEL,
                 )
-                if not recipe.skip:
+                buf = StringIO()
+                yaml = YAML()
+                yaml.indent(mapping=2, sequence=4, offset=2)
+                yaml.dump(recipe.meta, buf)
+                recipe_content = buf.getvalue()
+                recipe_variants.append((vid, variant, recipe_content))
+        except RecipeError as exc:
+            recipe = _recipe.Recipe(recipe_name)
+            check_cls = recipe_error_to_lint_check.get(exc.__class__, linter_failure)
+            return [check_cls.make_message(recipe=recipe, fname=recipe_name, line=getattr(exc, "line"))]
+
+        # lint variants
+        messages = set()
+        try:
+            for vid, variant, recipe_dump in recipe_variants:
+                logging.debug("Linting variant %s", vid)
+                recipe = RecipeReaderDeps(recipe_dump)
+                if not recipe.contains_value("/build/skip"):
                     messages.update(
                         self.lint_recipe(
+                            recipe_name,
+                            meta_yaml,
+                            (vid, variant),
+                            arch_name,
                             recipe,
                             fix=fix,
                         )
                     )
-                    if fix and recipe.is_modified():
-                        with open(recipe.path, "w", encoding="utf-8") as fdes:
-                            fdes.write(recipe.dump())
-        except RecipeError as exc:
+            # TODO: Implement auto-fixing without overwriting each variant
+            # TODO: Implement CRM exception handling, and adapt LintCheck, including message() and make_message()
+        except Exception:  # pylint: disable=broad-exception-caught
             recipe = _recipe.Recipe(recipe_name)
-            check_cls = recipe_error_to_lint_check.get(exc.__class__, linter_failure)
-            return [check_cls.make_message(recipe=recipe, line=getattr(exc, "line"))]
+            return [linter_failure.make_message(recipe=recipe, fname=recipe_name)]
 
         return list(messages)
 
-    def lint_recipe(
+    # TODO: Remove percy-specific arguments after percy is removed
+    def lint_recipe(  # pylint: disable=too-many-positional-arguments
         self,
-        recipe: _recipe.Recipe,
+        recipe_name: str,
+        meta_yaml: Path,
+        variant_tuple: tuple[dict, dict],
+        arch_name: str,
+        recipe: RecipeReaderDeps,
         fix: bool = False,
     ) -> list[LintMessage]:
         """
         Lints a recipe
+
+        :param recipe_name: Name of recipe to lint
+        :param meta_yaml: Path to meta.yaml file
+        :param variant_tuple: Tuple of variant ID and variant
+        :param arch_name: Architecture to consider
         :param recipe: Recipe to lint against.
         :param fix: (Optional) Enables auto-fixing of the lint checks
         :returns: list of linting messages returned from executing checks against the linter.
@@ -876,8 +934,8 @@ class Linter:
 
         # currently skip-lints will overwrite only-lint, we can check for the key
         # being in checks_to_skip, but I think letting the user do this is best?
-        checks_to_skip.update(recipe.get("extra/skip-lints", []))
-        if only_lint := recipe.get("extra/only-lint", []):
+        checks_to_skip.update(recipe.get_value("/extra/skip-lints", []))
+        if only_lint := recipe.get_value("/extra/only-lint", []):
             # getting the symmetric difference between all checks and only_lint
             all_other_checks = set(only_lint) ^ self.checks_dag.nodes
             checks_to_skip.update(all_other_checks)
@@ -905,11 +963,19 @@ class Linter:
                 print("Running check: " + check)
 
             try:
-                res = self.check_instances[check].run(recipe, fix)
+                res = self.check_instances[check].run(
+                    recipe_name=recipe_name,
+                    recipe_path=meta_yaml,
+                    variant_tuple=variant_tuple,
+                    arch_name=arch_name,
+                    recipe=recipe,
+                    fix=fix,
+                )
             except Exception:  # pylint: disable=broad-exception-caught
                 if self.nocatch:
                     raise
                 logger.exception("Unexpected exception in lint_recipe")
+                # TODO: Adapt LintMessage to CRM recipes
                 res = [
                     LintMessage(
                         recipe=recipe,

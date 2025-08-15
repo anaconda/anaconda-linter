@@ -9,6 +9,7 @@ import os
 import re
 
 import conda_build.license_family
+from conda_recipe_manager.parser.recipe_reader_deps import RecipeReaderDeps
 from percy.render.recipe import OpMode, Recipe
 
 from anaconda_linter.lint import LintCheck, Severity
@@ -279,14 +280,13 @@ class missing_hash(LintCheck):
 
     """
 
-    checksum_names = ["sha256"]
-
     exempt_types = ["git_url", "path"]
 
-    def check_source(self, source, section) -> None:
-        if not any(source.get(typ, None) for typ in self.exempt_types) and not any(
-            source.get(chk, None) for chk in self.checksum_names
-        ):
+    def check_source(self, source: dict, section: str) -> None:
+        for type in self.exempt_types:
+            if type in source:
+                return
+        if "sha256" not in source:
             self.message(section=section)
 
 
