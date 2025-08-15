@@ -23,8 +23,6 @@ def test_output_missing_name_good(base_yaml: str) -> None:
     assert len(messages) == 0
 
 
-# TODO: Re-enable this test once CRM is fixed
-@pytest.mark.skip(reason="CRM Bug")
 def test_output_missing_name_bad(base_yaml: str) -> None:
     yaml_str = (
         base_yaml

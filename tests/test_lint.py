@@ -425,6 +425,5 @@ def test_get_report_no_error() -> None:
             title="Info message",
         )
     ]
-    print(messages)
     report: Final[str] = Linter.get_report(messages)
     assert report == ("All checks OK")
