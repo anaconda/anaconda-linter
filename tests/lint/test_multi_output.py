@@ -101,18 +101,16 @@ def test_outputs_not_unique_bad(base_yaml: str) -> None:
     assert len(messages) == 1 and "not unique" in messages[0].title
 
 
-# TODO: Re-enable this test once CRM is fixed
-@pytest.mark.skip(reason="CRM Bug")
 def test_no_global_test_good(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
         outputs:
-          - output1:
+          - name: output1
             test:
               import:
                 module1
-          - output2:
+          - name: output2
             test:
               import:
                 module2
