@@ -73,22 +73,32 @@ def test_missing_section_bad_multi(base_yaml: str) -> None:
     assert len(messages) == 4 and all("section is missing" in msg.title for msg in messages)
 
 
-def test_missing_build_number_good(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        build:
-          number: 0
-        """
-    )
+@pytest.mark.parametrize(
+    "recipe_file",
+    [
+        "tests/test_aux_files/auto_fix/build_number.yaml",
+    ],
+)
+def test_missing_build_number_good(recipe_file: str) -> None:
+    with open(recipe_file, encoding="utf-8") as f:
+        recipe_content = f.read()
     lint_check = "missing_build_number"
-    messages = check(lint_check, yaml_str)
+    messages = check(lint_check, recipe_content)
     assert len(messages) == 0
 
 
-def test_missing_build_number_bad(base_yaml: str) -> None:
+@pytest.mark.parametrize(
+    "recipe_file",
+    [
+        "tests/test_aux_files/auto_fix/build_number_missing.yaml",  # file without build number
+    ],
+)
+def test_missing_build_number_bad(recipe_file: str) -> None:
+    # Read the recipe file
+    with open(recipe_file, encoding="utf-8") as f:
+        recipe_content = f.read()
     lint_check = "missing_build_number"
-    messages = check(lint_check, base_yaml)
+    messages = check(lint_check, recipe_content)
     assert len(messages) == 1 and "missing a build number" in messages[0].title
 
 
