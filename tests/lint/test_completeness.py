@@ -77,6 +77,7 @@ def test_missing_section_bad_multi(base_yaml: str) -> None:
     "recipe_file",
     [
         "tests/test_aux_files/auto_fix/build_number.yaml",
+        "tests/test_aux_files/auto_fix/build_number_multi_output.yaml",
     ],
 )
 def test_missing_build_number_good(recipe_file: str) -> None:
@@ -90,11 +91,11 @@ def test_missing_build_number_good(recipe_file: str) -> None:
 @pytest.mark.parametrize(
     "recipe_file",
     [
-        "tests/test_aux_files/auto_fix/build_number_missing.yaml",  # file without build number
+        "tests/test_aux_files/auto_fix/build_number_missing.yaml",
+        "tests/test_aux_files/auto_fix/build_number_missing_multi_output.yaml",
     ],
 )
 def test_missing_build_number_bad(recipe_file: str) -> None:
-    # Read the recipe file
     with open(recipe_file, encoding="utf-8") as f:
         recipe_content = f.read()
     lint_check = "missing_build_number"
