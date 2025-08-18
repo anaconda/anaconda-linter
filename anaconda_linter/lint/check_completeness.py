@@ -9,7 +9,7 @@ import os
 import re
 
 import conda_build.license_family
-from conda_recipe_manager.parser.recipe_parser_deps import RecipeParser
+from conda_recipe_manager.parser.recipe_reader import RecipeReader
 from percy.render.recipe import OpMode, Recipe
 
 from anaconda_linter.lint import LintCheck, Severity
@@ -54,10 +54,9 @@ class missing_build_number(LintCheck):
     """
 
     def check_recipe(self, recipe: Recipe) -> None:
-        parser = RecipeParser(recipe.dump())
+        reader = RecipeReader(recipe.dump())
 
-        # check if build/number exists
-        contains_value = parser.contains_value("/build/number/")
+        contains_value = reader.contains_value("/build/number/")
         if not contains_value:
             self.message(section="build", data=recipe)
 
