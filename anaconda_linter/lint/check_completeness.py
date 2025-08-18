@@ -61,15 +61,6 @@ class missing_build_number(LintCheck):
         if not contains_value:
             self.message(section="build", data=recipe)
 
-    def fix(self, message, data) -> bool:
-        recipe: Recipe = data
-        try:
-            # Create a new build section with number: 0 using JSON Patch
-            op = [{"op": "add", "path": "/build", "value": {"number": 0}}]
-            return recipe.patch(op, op_mode=OpMode.PARSE_TREE)
-        except ValueError:
-            return False
-
 
 class missing_package_name(LintCheck):
     """
