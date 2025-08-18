@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Final
 
 import pytest
+from conda_recipe_manager.parser.recipe_reader_deps import RecipeReaderDeps
 from conftest import check, check_dir
 from percy.render._renderer import RendererType
 from percy.render.exceptions import RecipeError
@@ -217,12 +218,14 @@ def test_jinja_functions(base_yaml: str, jinja_func: str, expected: bool, recipe
             return messages
 
         # Only this test needs the weird exception handling
+        # TODO: Investigate if we can remove this try/except block, and not pass a line to the section
+        # argument in the make_message function
         try:
             recipe = Recipe.from_string(recipe_text=yaml_str, renderer=RendererType.RUAMEL)
         except RecipeError as exc:
-            recipe = Recipe("")
+            recipe = RecipeReaderDeps("")
             check_cls = lint.recipe_error_to_lint_check.get(exc.__class__, lint.linter_failure)
-            messages = [check_cls.make_message(recipe=recipe, fname="recipe", line=getattr(exc, "line"))]
+            messages = [check_cls.make_message(recipe=recipe, fname="recipe", section=getattr(exc, "line"))]
             return messages
 
         # Should not reach here
@@ -249,8 +252,6 @@ def test_jinja_functions(base_yaml: str, jinja_func: str, expected: bool, recipe
     assert any(str(msg.check) == lint_check for msg in messages) == expected
 
 
-# TODO: Re-enable this test once get_raw_range is implemented outside of Percy
-@pytest.mark.skip(reason="Disabled line-reporting temporarily while we migrate to CRM")
 def test_error_report_line(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
@@ -264,7 +265,7 @@ def test_error_report_line(base_yaml: str) -> None:
     )
     lint_check = "incorrect_license"
     messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and messages[0].start_line == 5
+    assert len(messages) == 1 and messages[0].section == "/about/license"
 
 
 def test_message_title(base_yaml: str) -> None:
@@ -279,8 +280,6 @@ def test_message_title_format(base_yaml: str) -> None:
     assert len(messages) == 1 and messages[0].title == "Dummy message of severity ERROR"
 
 
-@pytest.mark.skip(reason="Disabled temporarily while we migrate to CRM")
-# TODO: Re-enable this test once fname handling is defined properly
 def test_message_path(base_yaml: str, tmpdir: Path) -> None:
     recipe_directory_short = Path("fake_feedstock/recipe")
     recipe_directory = Path(tmpdir) / recipe_directory_short
@@ -298,7 +297,6 @@ def test_get_report_error() -> None:
             severity=Severity.WARNING,
             recipe=None,
             fname="fake_feedstock/recipe/meta.yaml",
-            start_line=1,
             check="dummy_warning",
             title="Warning message 1",
         ),
@@ -306,7 +304,6 @@ def test_get_report_error() -> None:
             severity=Severity.ERROR,
             recipe=None,
             fname="fake_feedstock/recipe/meta.yaml",
-            start_line=1,
             check="dummy_error",
             title="Error message 1",
         ),
@@ -314,7 +311,6 @@ def test_get_report_error() -> None:
             severity=Severity.ERROR,
             recipe=None,
             fname="fake_feedstock/recipe/meta.yaml",
-            start_line=1,
             check="dummy_error",
             title="Error message 2",
         ),
@@ -325,10 +321,10 @@ def test_get_report_error() -> None:
     assert report == (
         "The following problems have been found:\n"
         "\n===== WARNINGS =====\n"
-        "- fake_feedstock/recipe/meta.yaml:0: dummy_warning: Warning message 1\n"
+        "- fake_feedstock/recipe/meta.yaml:: dummy_warning: Warning message 1\n"
         "\n===== ERRORS ====="
-        "\n- fake_feedstock/recipe/meta.yaml:0: dummy_error: Error message 1\n"
-        "- fake_feedstock/recipe/meta.yaml:0: dummy_error: Error message 2\n"
+        "\n- fake_feedstock/recipe/meta.yaml:: dummy_error: Error message 1\n"
+        "- fake_feedstock/recipe/meta.yaml:: dummy_error: Error message 2\n"
         "===== Final Report: =====\n"
         "2 Errors and 1 Warning were found"
     )
@@ -343,7 +339,6 @@ def test_get_report_auto_fixes() -> None:
             severity=Severity.WARNING,
             recipe=None,
             fname="fake_feedstock/recipe/meta.yaml",
-            start_line=1,
             check="dummy_warning",
             title="Warning message 1",
         ),
@@ -351,7 +346,6 @@ def test_get_report_auto_fixes() -> None:
             severity=Severity.ERROR,
             recipe=None,
             fname="fake_feedstock/recipe/meta.yaml",
-            start_line=1,
             check="dummy_error",
             title="Error message 1",
         ),
@@ -359,7 +353,6 @@ def test_get_report_auto_fixes() -> None:
             severity=Severity.ERROR,
             recipe=None,
             fname="fake_feedstock/recipe/meta.yaml",
-            start_line=1,
             check="auto_fix_1",
             title="Auto message 1",
             auto_fix_state=AutoFixState.FIX_PASSED,
@@ -368,7 +361,6 @@ def test_get_report_auto_fixes() -> None:
             severity=Severity.ERROR,
             recipe=None,
             fname="fake_feedstock/recipe/meta.yaml",
-            start_line=80,
             check="dummy_error",
             title="Error message 2",
         ),
@@ -376,7 +368,6 @@ def test_get_report_auto_fixes() -> None:
             severity=Severity.WARNING,
             recipe=None,
             fname="fake_feedstock/recipe/meta.yaml",
-            start_line=37,
             check="auto_fix_2",
             title="Auto message 2",
             auto_fix_state=AutoFixState.FIX_PASSED,
@@ -385,7 +376,6 @@ def test_get_report_auto_fixes() -> None:
             severity=Severity.ERROR,
             recipe=None,
             fname="fake_feedstock/recipe/meta.yaml",
-            start_line=42,
             check="auto_fix_3",
             title="Auto message 3",
             auto_fix_state=AutoFixState.FIX_FAILED,
@@ -400,11 +390,11 @@ def test_get_report_auto_fixes() -> None:
         "- auto_fix_1\n"
         "- auto_fix_2\n"
         "\n===== WARNINGS =====\n"
-        "- fake_feedstock/recipe/meta.yaml:0: dummy_warning: Warning message 1\n"
+        "- fake_feedstock/recipe/meta.yaml:: dummy_warning: Warning message 1\n"
         "\n===== ERRORS ====="
-        "\n- fake_feedstock/recipe/meta.yaml:0: dummy_error: Error message 1\n"
-        "- fake_feedstock/recipe/meta.yaml:0: dummy_error: Error message 2\n"
-        "- fake_feedstock/recipe/meta.yaml:0: auto_fix_3: Auto message 3\n"
+        "\n- fake_feedstock/recipe/meta.yaml:: dummy_error: Error message 1\n"
+        "- fake_feedstock/recipe/meta.yaml:: dummy_error: Error message 2\n"
+        "- fake_feedstock/recipe/meta.yaml:: auto_fix_3: Auto message 3\n"
         "===== Final Report: =====\n"
         "Automatically fixed 2 issues.\n"
         "3 Errors and 1 Warning were found"
@@ -420,7 +410,6 @@ def test_get_report_no_error() -> None:
             severity=Severity.INFO,
             recipe=None,
             fname="fake_feedstock/recipe/meta.yaml",
-            start_line=1,
             check="dummy_info",
             title="Info message",
         )

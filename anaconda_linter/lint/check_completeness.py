@@ -9,10 +9,11 @@ import os
 import re
 
 import conda_build.license_family
-from conda_recipe_manager.parser.recipe_reader_deps import RecipeReaderDeps
-from percy.render.recipe import OpMode, Recipe
+from percy.render.recipe import Recipe
 
 from anaconda_linter.lint import LintCheck, Severity
+
+# from percy.render.recipe import OpMode
 
 
 class missing_section(LintCheck):
@@ -174,10 +175,11 @@ class license_file_overspecified(LintCheck):
         if recipe.get("about/license_file", "") and recipe.get("about/license_url", ""):
             self.message(section="about", severity=Severity.WARNING, data=recipe)
 
-    def fix(self, message, data) -> bool:
-        recipe = data
-        op = [{"op": "remove", "path": "/about/license_url"}]
-        return recipe.patch(op, op_mode=OpMode.PARSE_TREE)
+    # TODO: Re-enable this fix once auto-fixing is enabled
+    # def fix(self, message, data) -> bool:
+    #     recipe = data
+    #     op = [{"op": "remove", "path": "/about/license_url"}]
+    #     return recipe.patch(op, op_mode=OpMode.PARSE_TREE)
 
 
 class missing_license_family(LintCheck):
@@ -283,8 +285,8 @@ class missing_hash(LintCheck):
     exempt_types = ["git_url", "path"]
 
     def check_source(self, source: dict, section: str) -> None:
-        for type in self.exempt_types:
-            if type in source:
+        for ex_type in self.exempt_types:
+            if ex_type in source:
                 return
         if "sha256" not in source:
             self.message(section=section)

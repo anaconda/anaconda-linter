@@ -158,14 +158,11 @@ class LintMessage:
     #: Message body to be presented to user
     body: str = ""
 
-    #: Line at which problem begins
-    start_line: int = 0
-
-    #: Line at which problem ends
-    end_line: int = 0
+    #: Section of the recipe in which the problem was found
+    section: str = ""
 
     #: Name of file in which error was found
-    fname: str = "meta.yaml"
+    fname: str = ""
 
     #: Whether the problem can be auto fixed
     canfix: bool = False
@@ -187,8 +184,7 @@ class LintMessage:
             and self.severity == other.severity
             and self.title == other.title
             and self.body == other.body
-            and self.start_line == other.start_line
-            and self.end_line == other.end_line
+            and self.section == other.section
             and self.fname == other.fname
             and self.canfix == other.canfix
             and self.auto_fix_state == other.auto_fix_state
@@ -206,8 +202,7 @@ class LintMessage:
                 self.severity,
                 self.title,
                 self.body,
-                self.start_line,
-                self.end_line,
+                self.section,
                 self.fname,
                 self.auto_fix_state,
             )
@@ -290,7 +285,7 @@ class LintCheck(metaclass=LintCheckMeta):
         recipe: RecipeReaderDeps,
         recipe_path: Optional[Path] = None,
         variant_tuple: tuple = (None, None),
-        recipe_name: str = "recipe",
+        recipe_name: str = "",
         arch_name: Optional[str] = None,
         fix: bool = False,
     ) -> list[LintMessage]:
@@ -425,10 +420,8 @@ class LintCheck(metaclass=LintCheckMeta):
     def message(
         self,
         *args,
-        fname: str = "meta.yaml",
-        section: str = None,
+        section: str = "",
         severity: Severity = SEVERITY_DEFAULT,
-        line: int = None,
         data: Any = None,
         output: int = -1,
     ) -> None:
@@ -441,18 +434,24 @@ class LintCheck(metaclass=LintCheckMeta):
         :param section: If specified, a lint location within the recipe meta.yaml pointing to this section/subsection
             will be added to the message
         :param severity: The severity level of the message.
-        :param fname: If specified, the message will apply to this file, rather than the recipe meta.yaml
-        :param line: If specified, sets the line number for the message directly
         :param data: Data to be passed to `fix`. If check can fix, set this to something other than None.
         :param output: the output the error occurred in (multi-output recipes only)
         """
+        # In order to handle Percy-based rules generating messages with a section
+        # We must adapt the section by adding a slash to the section
+        if section:
+            section = "/" + section
+        # This should only happen during testing
+        if not self.recipe_path:
+            self.recipe_path = Path("meta.yaml")
+        fname = self.recipe_path.relative_to(self.recipe_path.parent.parent.parent)
+        fname = str(fname)
         message = self.make_message(
             *args,
             recipe=self.recipe,
             fname=fname,
             section=section,
             severity=severity,
-            line=line,
             canfix=self.can_auto_fix(),
             output=output,
         )
@@ -466,10 +465,9 @@ class LintCheck(metaclass=LintCheckMeta):
         cls,
         *args: Any,
         recipe: RecipeReaderDeps,
-        fname: str = "meta.yaml",
-        section: str = None,
+        fname: str,
+        section: str = "",
         severity: Severity = SEVERITY_DEFAULT,
-        line: int = None,
         title_in: str = None,
         body_in: str = None,
         canfix: bool = False,
@@ -484,7 +482,6 @@ class LintCheck(metaclass=LintCheckMeta):
             will be added to the message
         :param severity: The severity level of the message.
         :param fname: If specified, the message will apply to this file, rather than the recipe meta.yaml
-        :param line: If specified, sets the line number for the message directly
         :param title_in: If specified, the title of the message will be set to this value
         :param body_in: If specified, the body of the message will be set to this value
         :param canfix: If specified, indicates if the rule can/can't be auto-fixed
@@ -499,20 +496,6 @@ class LintCheck(metaclass=LintCheckMeta):
             name = recipe.get_value(f"/outputs/{output}/name", "")
             if name != "":
                 title = f'output "{name}": {title}'
-        if section:
-            try:
-                # TODO: Remove this once we have a proper RecipeReaderDeps get_raw_range()
-                raise KeyError
-                # sl, _, el, ec = recipe.get_raw_range(section)
-            except KeyError:
-                sl, el, ec = 1, 1, 1
-            if ec == 0:  # pylint: disable=used-before-assignment
-                el = el - 1  # pylint: disable=used-before-assignment
-            start_line = sl  # pylint: disable=used-before-assignment
-            end_line = el
-        else:
-            start_line = end_line = line or 0
-
         title = title_in if title_in is not None else title
         body = body_in if body_in is not None else body
         return LintMessage(
@@ -522,8 +505,7 @@ class LintCheck(metaclass=LintCheckMeta):
             title=title.strip(),
             body=body,
             fname=fname,
-            start_line=start_line,
-            end_line=end_line,
+            section=section,
             canfix=canfix,
         )
 
@@ -695,7 +677,7 @@ class Linter:
         """
         return sorted(
             [msg for msg in self._messages if msg.severity >= self.severity_min],
-            key=lambda d: (d.fname, d.end_line),
+            key=lambda d: (d.fname, d.section),
         )
 
     def clear_messages(self) -> None:
@@ -736,7 +718,7 @@ class Linter:
             info = severity_data[sev]
             severity_section = f"\n===== {sev.name.upper()}S =====\n"
             severity_section += "\n".join(
-                f"- {msg.fname}:{msg.end_line}: {msg.check}: {msg.title}"
+                f"- {msg.fname}:{msg.section}: {msg.check}: {msg.title}"
                 + (f"\n Additional Details: {msg.body}" if verbose else "")
                 for msg in info
             )
