@@ -631,24 +631,23 @@ class patch_unnecessary(LintCheck):
           - msys2-patch
     """
 
-    def check_recipe(self, recipe: Recipe) -> None:
-        recipe_reader = RecipeReaderDeps(recipe.dump())
-        all_deps = recipe_reader.get_all_dependencies()
+    def check_recipe_crm(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
+        all_deps = recipe.get_all_dependencies()
         for package in all_deps:
             for dep in all_deps[package]:
                 if dep.data.name in ["patch", "msys2-patch", "m2-patch"]:
-                    self.message(section=dep.path, data=recipe)
+                    self.message(fname=recipe_name, section=dep.path)
                     return
 
-    def fix(self, message, data) -> bool:
-        # remove patch/msys2-patch/m2-patch from the recipe
-        recipe: Recipe = data
-        try:
-            return recipe.patch_with_parser(
-                lambda parser: _utils.remove_deps_by_name_crm(parser, {"patch", "msys2-patch", "m2-patch"}),
-            )
-        except ValueError:
-            return False
+    # def fix(self, message, data) -> bool:
+    #     # remove patch/msys2-patch/m2-patch from the recipe
+    #     recipe: Recipe = data
+    #     try:
+    #         return recipe.patch_with_parser(
+    #             lambda parser: _utils.remove_deps_by_name_crm(parser, {"patch", "msys2-patch", "m2-patch"}),
+    #         )
+    #     except ValueError:
+    #         return False
 
 
 class has_run_test_and_commands(LintCheck):
