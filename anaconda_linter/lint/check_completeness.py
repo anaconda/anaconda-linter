@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import os
 import re
+from typing import Final
 
 import conda_build.license_family
 from conda_recipe_manager.parser.recipe_reader import RecipeReader
@@ -56,7 +57,7 @@ class missing_build_number(LintCheck):
     def check_recipe(self, recipe: Recipe) -> None:
         reader = RecipeReader(recipe.dump())
 
-        contains_value = reader.contains_value("/build/number/")
+        contains_value: Final = reader.contains_value("/build/number")
         if not contains_value:
             self.message(section="build", data=recipe)
 
