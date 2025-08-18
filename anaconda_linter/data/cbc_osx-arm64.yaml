@@ -2,6 +2,7 @@ arch: arm64       # ppc64le aarch64 ppc64 s390x win
 platform: osx # linux os win
 target_platform: osx-arm64
 build_platform: osx-arm64
+c_stdlib: macosx_deployment_target
 ccache_method: None
 lang_c: clang
 lang_cxx: clangxx

@@ -9,7 +9,7 @@ dependencies:
   - pip
   - make
   # run
-  - distro-tooling::percy >=0.1.5
+  - distro-tooling::percy >=0.2.5
   - distro-tooling::anaconda-packaging-utils
   - ruamel.yaml
   - license-expression

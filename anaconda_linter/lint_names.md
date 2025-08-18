@@ -123,3 +123,7 @@ cbc_dep_in_run_missing_from_host
 wrong_output_script_key
 
 potentially_bad_ignore_run_exports
+
+should_use_stdlib
+
+stdlib_must_be_in_build

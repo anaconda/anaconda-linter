@@ -8,7 +8,7 @@ from __future__ import annotations
 import os
 import re
 from pathlib import Path
-from typing import Any
+from typing import Any, Final
 
 from conda.models.match_spec import MatchSpec
 from conda_recipe_manager.parser.dependency import Dependency, DependencySection
@@ -19,7 +19,7 @@ from anaconda_linter import utils as _utils
 from anaconda_linter.lint import LintCheck, Severity
 
 # Does not include m2-tools, which should be checked using wild cards.
-BUILD_TOOLS = (
+BUILD_TOOLS: Final[tuple] = (
     "autoconf",
     "automake",
     "bison",
@@ -36,7 +36,7 @@ BUILD_TOOLS = (
     "posix",
 )
 
-PYTHON_BUILD_TOOLS = (
+PYTHON_BUILD_TOOLS: Final[tuple] = (
     "cython",
     "flit",
     "flit-core",
@@ -67,7 +67,7 @@ PYTHON_BUILD_TOOLS = (
 # Historical note: pyproject.toml file was introduced initially to specify the build system (backend).
 # Only later was the ability to specify all the project metadata (name, version, dependencies, etc)
 # into it added, via PEP-621.
-PYTHON_BUILD_BACKENDS = (
+PYTHON_BUILD_BACKENDS: Final[tuple] = (
     "flit",  # Our packages are not supposed to depend on flit, but apparently they do, so we need to support it here.
     "flit-core",  # Backend of flit.
     "hatch",  # Same as flit, we should not depend on it. We should instead depend on hatchling, which is the backend.
@@ -81,7 +81,7 @@ PYTHON_BUILD_BACKENDS = (
     "maturin",
 )
 
-COMPILERS = (
+COMPILERS: Final[tuple] = (
     "cgo",
     "cuda",
     "dpcpp",
@@ -100,6 +100,8 @@ COMPILERS = (
     "rust",
     "toolchain",
 )
+
+STDLIBS: Final[tuple] = ("sysroot", "macosx_deployment_target", "vs")  # linux  # osx  # windows
 
 
 def is_pypi_source(recipe: Recipe) -> bool:
@@ -277,6 +279,67 @@ class compilers_must_be_in_build(LintCheck):
             if recipe.get_value(dependency_path).startswith("compiler_"):
                 if "run" in dependency_path or "host" in dependency_path:
                     self.message(fname=recipe_name, section=dependency_path)
+
+
+class should_use_stdlib(LintCheck):
+    """
+    The recipe requires a {{ stdlib('c') }} dependency in requirements.build
+
+    Please use::
+
+        requirements:
+           build:
+             - {{ stdlib('c') }}
+
+    """
+
+    def check_recipe(self, recipe: Recipe) -> None:
+        """
+        Ensures a {{ stdlib('c') }} macro is used in any recipe using a compiler.
+        """
+        stdlib_name = (
+            f"{recipe.selector_dict.get('c_stdlib', 'unknown_stdlib')}_"
+            f"{recipe.selector_dict.get('target_platform', 'unknown_target_platform')}"
+        )
+        for output in recipe.packages.values():
+            compiler_dep = None
+            for dep in output.build:
+                if dep.pkg == stdlib_name:
+                    break  # Found a stdlib dependency, all good.
+                elif dep.pkg.startswith("compiler_"):
+                    compiler_dep = dep
+            else:
+                if compiler_dep:
+                    # Output has a compiler but is missing a stdlib dependency.
+                    self.message(section=compiler_dep.path)
+
+    def check_deps(self, deps) -> None:
+        """
+        Checks for manual use of the `sysroot`, `macosx_deployment_target` or `vs` packages in recipes.
+        """
+        for stdlib in STDLIBS:
+            for location in deps.get(stdlib, {}).get("paths", []):
+                self.message(section=location)
+
+
+class stdlib_must_be_in_build(LintCheck):
+    """
+    The recipe requests a stdlib in a section other than build
+
+    Please move the ``{{ stdlib('c') }}`` line into the
+    ``requirements: build:`` section.
+
+    """
+
+    def check_deps(self, deps) -> None:
+        for dep in deps:
+            for stdlib in STDLIBS:
+                if not dep.startswith(stdlib):
+                    continue
+
+                for section in deps[dep]["paths"]:
+                    if "run" in section or "host" in section:
+                        self.message(section=section)
 
 
 class build_tools_must_be_in_build(LintCheck):
