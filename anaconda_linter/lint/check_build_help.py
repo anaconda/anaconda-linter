@@ -464,7 +464,7 @@ class uses_setup_py(LintCheck):
                                         output = int(package.path_prefix.split("/")[1])
                                     else:
                                         output = -1
-                                    self.message(output=output)
+                                    self.message(fname=build_file, output=output)
                 except (FileNotFoundError, TypeError):
                     pass
 
@@ -538,7 +538,7 @@ class pip_install_args(LintCheck):
                                         output = int(package.path_prefix.split("/")[1])
                                     else:
                                         output = -1
-                                    self.message(output=output)
+                                    self.message(fname=build_file, output=output)
                 except (FileNotFoundError, TypeError):
                     pass
 
@@ -808,7 +808,7 @@ class missing_pip_check(LintCheck):
                 for line in test_file:
                     if "pip check" in line:
                         return
-        self.message(data=(recipe, package))
+        self.message(fname=file, data=(recipe, package))
 
     def check_recipe(self, recipe: Recipe) -> None:
         is_pypi = is_pypi_source(recipe)

@@ -400,6 +400,7 @@ class LintCheck(metaclass=LintCheckMeta):
     def message(
         self,
         *args,
+        fname: str | Path | None = None,
         section: str = "",
         severity: Severity = SEVERITY_DEFAULT,
         data: Any = None,
@@ -411,6 +412,7 @@ class LintCheck(metaclass=LintCheckMeta):
         Also calls `fix` if we are supposed to be fixing.
 
         :param args: Additional arguments to pass directly to the message
+        :param fname: If specified, the message will apply to this file, rather than the recipe meta.yaml
         :param section: If specified, a lint location within the recipe meta.yaml pointing to this section/subsection
             will be added to the message
         :param severity: The severity level of the message.
@@ -421,11 +423,14 @@ class LintCheck(metaclass=LintCheckMeta):
         # We must adapt the section by prepending a slash
         if section and not section.startswith("/"):
             section = "/" + section
-        # This should only happen during testing
-        if not self.recipe_path:
-            self.recipe_path = Path("meta.yaml")
-        fname = self.recipe_path.relative_to(self.recipe_path.parent.parent.parent)
-        fname = str(fname)
+        if fname is None:
+            if not self.recipe_path:
+                # This should only happen during testing
+                self.recipe_path = Path("meta.yaml")
+            fname = self.recipe_path.relative_to(self.recipe_path.parent.parent.parent)
+            fname = str(fname)
+        else:
+            fname = str(fname)
         message = self.make_message(
             *args,
             recipe=self.recipe,
