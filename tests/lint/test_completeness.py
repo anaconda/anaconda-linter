@@ -11,6 +11,19 @@ import pytest
 from conftest import check, check_dir
 
 
+def read_recipe_content(recipe_file: str) -> str:
+    """
+    Helper function to read the content of a recipe file.
+    """
+    with open(recipe_file, encoding="utf-8") as f:
+        return f.read()
+
+
+def assert_lint_check_msg_count(file_name: str, lint_check: str, msg_count: int = 0):
+    messages = check(lint_check, read_recipe_content(file_name))
+    assert len(messages) == msg_count
+
+
 def test_missing_section_good(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
@@ -76,15 +89,17 @@ def test_missing_section_bad_multi(base_yaml: str) -> None:
 @pytest.mark.parametrize(
     "recipe_file",
     [
-        "tests/test_aux_files/auto_fix/build_number.yaml",
+        "tests/test_aux_files/auto_fix/meta.yaml",
         "tests/test_aux_files/auto_fix/build_number_multi_output.yaml",
     ],
 )
-def test_missing_build_number_good(recipe_file: str) -> None:
-    with open(recipe_file, encoding="utf-8") as f:
-        recipe_content = f.read()
-    lint_check = "missing_build_number"
-    messages = check(lint_check, recipe_content)
+def test_no_missing_build_number(recipe_file: str) -> None:
+    """
+    Test that the missing_build_number lint check works correctly when the recipe has a build number.
+    """
+    messages = check("missing_build_number", read_recipe_content(recipe_file))
+    assert_lint_check_msg_count(recipe_file, "missing_build_number", 0)
+
     assert len(messages) == 0
 
 
@@ -95,11 +110,11 @@ def test_missing_build_number_good(recipe_file: str) -> None:
         "tests/test_aux_files/auto_fix/build_number_missing_multi_output.yaml",
     ],
 )
-def test_missing_build_number_bad(recipe_file: str) -> None:
-    with open(recipe_file, encoding="utf-8") as f:
-        recipe_content = f.read()
-    lint_check = "missing_build_number"
-    messages = check(lint_check, recipe_content)
+def test_missing_build_number(recipe_file: str) -> None:
+    """
+    Test that the missing_build_number lint check works correctly when the recipe does not have a build number.
+    """
+    messages = check("missing_build_number", read_recipe_content(recipe_file))
     assert len(messages) == 1 and "missing a build number" in messages[0].title
 
 
