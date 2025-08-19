@@ -12,6 +12,7 @@ from typing import Any, Final
 
 from conda.models.match_spec import MatchSpec
 from conda_recipe_manager.parser.dependency import Dependency, DependencySection
+from conda_recipe_manager.parser.enums import SelectorConflictMode
 from conda_recipe_manager.parser.recipe_reader_deps import RecipeReaderDeps
 from percy.render.recipe import Recipe
 
@@ -210,18 +211,17 @@ class cbc_dep_in_run_missing_from_host(LintCheck):
         )
         return package in exceptions
 
-    # TODO: Re-enable this fix once auto-fixing is enabled
-    # def fix(self, message, data) -> bool:
-    #     (recipe, path, dep) = data
-    #     op = [
-    #         {
-    #             "op": "add",
-    #             "path": path,
-    #             "match": f"{dep}.*",
-    #             "value": [f"{dep} " + "{{ " + f"{dep}" + " }}"],
-    #         },
-    #     ]
-    #     return recipe.patch(op)
+    def fix(self, message, data) -> bool:
+        (recipe, path, dep) = data
+        op = [
+            {
+                "op": "add",
+                "path": path,
+                "match": f"{dep}.*",
+                "value": [f"{dep} " + "{{ " + f"{dep}" + " }}"],
+            },
+        ]
+        return recipe.patch(op)
 
 
 class potentially_bad_ignore_run_exports(LintCheck):
@@ -469,21 +469,20 @@ class uses_setup_py(LintCheck):
                 except (FileNotFoundError, TypeError):
                     pass
 
-    # TODO: Re-enable this fix once auto-fixing is enabled
-    # def fix(self, message, data) -> bool:
-    #     (recipe, path) = data
-    #     op = [
-    #         {
-    #             "op": "replace",
-    #             "path": path,
-    #             "match": ".* setup.py .*",
-    #             "value": (
-    #                 "{{PYTHON}} -m pip install . --no-deps --no-build-isolation --ignore-installed"
-    #                 " --no-cache-dir -vv"
-    #             ),
-    #         },
-    #     ]
-    #     return recipe.patch(op)
+    def fix(self, message, data) -> bool:
+        (recipe, path) = data
+        op = [
+            {
+                "op": "replace",
+                "path": path,
+                "match": ".* setup.py .*",
+                "value": (
+                    "{{PYTHON}} -m pip install . --no-deps --no-build-isolation --ignore-installed"
+                    " --no-cache-dir -vv"
+                ),
+            },
+        ]
+        return recipe.patch(op)
 
 
 class pip_install_args(LintCheck):
@@ -544,21 +543,20 @@ class pip_install_args(LintCheck):
                 except (FileNotFoundError, TypeError):
                     pass
 
-    # TODO: Re-enable this fix once auto-fixing is enabled
-    # def fix(self, message, data) -> bool:
-    #     (recipe, path) = data
-    #     op = [
-    #         {
-    #             "op": "replace",
-    #             "path": path,
-    #             "match": r"(.*\s)?pip install(?!=.*--no-build-isolation).*",
-    #             "value": (
-    #                 "{{ PYTHON }} -m pip install . --no-deps --no-build-isolation --ignore-installed"
-    #                 " --no-cache-dir -vv"
-    #             ),
-    #         },
-    #     ]
-    #     return recipe.patch(op)
+    def fix(self, message, data) -> bool:
+        (recipe, path) = data
+        op = [
+            {
+                "op": "replace",
+                "path": path,
+                "match": r"(.*\s)?pip install(?!=.*--no-build-isolation).*",
+                "value": (
+                    "{{ PYTHON }} -m pip install . --no-deps --no-build-isolation --ignore-installed"
+                    " --no-cache-dir -vv"
+                ),
+            },
+        ]
+        return recipe.patch(op)
 
 
 class python_build_tools_in_host(LintCheck):
@@ -641,57 +639,56 @@ class avoid_noarch(LintCheck):
             ):
                 self.message(section=f"{package.path_prefix}build", severity=Severity.WARNING, data=(recipe, package))
 
-    # TODO: Re-enable this fix once auto-fixing is enabled
-    # def fix(self, message, data) -> bool:
-    #     (recipe, package) = data
-    #     skip_selector = None
-    #     sep_map = {
-    #         ">=": "<",
-    #         ">": "<=",
-    #         "==": "!=",
-    #         "!=": "==",
-    #         "<=": ">",
-    #         "<": ">=",
-    #     }
-    #     for dep in recipe.get(f"{package.path_prefix}requirements/run", []):
-    #         if dep.startswith("python"):
-    #             for sep, opp in sep_map.items():
-    #                 s = dep.split(sep)
-    #                 if len(s) > 1:
-    #                     skip_selector = f" # [py{opp}{s[1].strip().replace('.','')}]"
-    #                     break
-    #             if skip_selector:
-    #                 break
-    #     op = [
-    #         {"op": "remove", "path": f"{package.path_prefix}build/noarch"},
-    #         {
-    #             "op": "add",
-    #             "path": f"{package.path_prefix}requirements/host",
-    #             "match": "python",
-    #             "value": ["python"],
-    #         },
-    #         {
-    #             "op": "add",
-    #             "path": f"{package.path_prefix}requirements/run",
-    #             "match": "python",
-    #             "value": ["python"],
-    #         },
-    #         {
-    #             "op": "replace",
-    #             "path": f"{package.path_prefix}test/requires",
-    #             "match": "python",
-    #             "value": ["python"],
-    #         },
-    #     ]
-    #     if skip_selector:
-    #         op.append(
-    #             {
-    #                 "op": "add",
-    #                 "path": f"{package.path_prefix}build/skip",
-    #                 "value": f"True {skip_selector}",
-    #             }
-    #         )
-    #     return recipe.patch(op)
+    def fix(self, message, data) -> bool:
+        (recipe, package) = data
+        skip_selector = None
+        sep_map = {
+            ">=": "<",
+            ">": "<=",
+            "==": "!=",
+            "!=": "==",
+            "<=": ">",
+            "<": ">=",
+        }
+        for dep in recipe.get(f"{package.path_prefix}requirements/run", []):
+            if dep.startswith("python"):
+                for sep, opp in sep_map.items():
+                    s = dep.split(sep)
+                    if len(s) > 1:
+                        skip_selector = f" # [py{opp}{s[1].strip().replace('.','')}]"
+                        break
+                if skip_selector:
+                    break
+        op = [
+            {"op": "remove", "path": f"{package.path_prefix}build/noarch"},
+            {
+                "op": "add",
+                "path": f"{package.path_prefix}requirements/host",
+                "match": "python",
+                "value": ["python"],
+            },
+            {
+                "op": "add",
+                "path": f"{package.path_prefix}requirements/run",
+                "match": "python",
+                "value": ["python"],
+            },
+            {
+                "op": "replace",
+                "path": f"{package.path_prefix}test/requires",
+                "match": "python",
+                "value": ["python"],
+            },
+        ]
+        if skip_selector:
+            op.append(
+                {
+                    "op": "add",
+                    "path": f"{package.path_prefix}build/skip",
+                    "value": f"True {skip_selector}",
+                }
+            )
+        return recipe.patch(op)
 
 
 class patch_unnecessary(LintCheck):
@@ -713,16 +710,13 @@ class patch_unnecessary(LintCheck):
                     self.message(section=dep.path)
                     return
 
-    # TODO: Re-enable this fix once auto-fixing is enabled
-    # def fix(self, message, data) -> bool:
-    #     # remove patch/msys2-patch/m2-patch from the recipe
-    #     recipe: Recipe = data
-    #     try:
-    #         return recipe.patch_with_parser(
-    #             lambda parser: _utils.remove_deps_by_name_crm(parser, {"patch", "msys2-patch", "m2-patch"}),
-    #         )
-    #     except ValueError:
-    #         return False
+    def fix(self, message, data) -> bool:
+        # remove patch/msys2-patch/m2-patch from the recipe
+        try:
+            _utils.remove_deps_by_name_crm(self.unrendered_recipe, {"patch", "msys2-patch", "m2-patch"})
+            return True
+        except ValueError:
+            return False
 
 
 class has_run_test_and_commands(LintCheck):
@@ -858,18 +852,17 @@ class missing_pip_check(LintCheck):
                     # use the recipe parser.
                     self.message(section=f"{package.path_prefix}test", data=(recipe, package))
 
-    # TODO: Re-enable this fix once auto-fixing is enabled
-    # def fix(self, message, data) -> bool:
-    #     (recipe, package) = data
-    #     op = [
-    #         {
-    #             "op": "add",
-    #             "path": f"{package.path_prefix}test/commands",
-    #             "match": "pip check",
-    #             "value": ["pip check"],
-    #         },
-    #     ]
-    #     return recipe.patch(op)
+    def fix(self, message, data) -> bool:
+        (recipe, package) = data
+        op = [
+            {
+                "op": "add",
+                "path": f"{package.path_prefix}test/commands",
+                "match": "pip check",
+                "value": ["pip check"],
+            },
+        ]
+        return recipe.patch(op)
 
 
 class missing_test_requirement_pip(LintCheck):  #
@@ -931,18 +924,17 @@ class missing_test_requirement_pip(LintCheck):  #
             ):
                 self.message(section=f"{package.path_prefix}test/requires", data=(recipe, package))
 
-    # TODO: Re-enable this fix once auto-fixing is enabled
-    # def fix(self, message, data) -> bool:
-    #     (recipe, package) = data
-    #     op = [
-    #         {
-    #             "op": "add",
-    #             "path": f"{package.path_prefix}test/requires",
-    #             "match": "pip",
-    #             "value": ["pip"],
-    #         },
-    #     ]
-    #     return recipe.patch(op)
+    def fix(self, message, data) -> bool:
+        (recipe, package) = data
+        op = [
+            {
+                "op": "add",
+                "path": f"{package.path_prefix}test/requires",
+                "match": "pip",
+                "value": ["pip"],
+            },
+        ]
+        return recipe.patch(op)
 
 
 class missing_python(LintCheck):
@@ -973,24 +965,23 @@ class missing_python(LintCheck):
                             data=(recipe, package),
                         )
 
-    # TODO: Re-enable this fix once auto-fixing is enabled
-    # def fix(self, message, data) -> bool:
-    #     (recipe, package) = data
-    #     op = [
-    #         {
-    #             "op": "add",
-    #             "path": f"{package.path_prefix}requirements/host",
-    #             "match": "python",
-    #             "value": ["python"],
-    #         },
-    #         {
-    #             "op": "add",
-    #             "path": f"{package.path_prefix}requirements/run",
-    #             "match": "python",
-    #             "value": ["python"],
-    #         },
-    #     ]
-    #     return recipe.patch(op)
+    def fix(self, message, data) -> bool:
+        (recipe, package) = data
+        op = [
+            {
+                "op": "add",
+                "path": f"{package.path_prefix}requirements/host",
+                "match": "python",
+                "value": ["python"],
+            },
+            {
+                "op": "add",
+                "path": f"{package.path_prefix}requirements/run",
+                "match": "python",
+                "value": ["python"],
+            },
+        ]
+        return recipe.patch(op)
 
 
 class remove_python_pinning(LintCheck):
@@ -1017,21 +1008,20 @@ class remove_python_pinning(LintCheck):
                         if dep.pkg == "python" and dep.constraint != "":
                             self.message(section=dep.path, data=(recipe, package, dep))
 
-    # TODO: Re-enable this fix once auto-fixing is enabled
-    # def fix(self, message, data) -> bool:
-    #     (recipe, package, dep) = data
-    #     s = dep.split(">=")
-    #     if len(s) > 1:
-    #         skip_selector = f" # [py<{s[1].replace('.','')}]"
-    #         op = [
-    #             {
-    #                 "op": "add",
-    #                 "path": f"{package.path_prefix}build/skip",
-    #                 "value": f"True {skip_selector}",
-    #             }
-    #         ]
-    #         return recipe.patch(op)
-    #     return False
+    def fix(self, message, data) -> bool:
+        (recipe, package, dep) = data
+        s = dep.split(">=")
+        if len(s) > 1:
+            skip_selector = f" # [py<{s[1].replace('.','')}]"
+            op = [
+                {
+                    "op": "add",
+                    "path": f"{package.path_prefix}build/skip",
+                    "value": f"True {skip_selector}",
+                }
+            ]
+            return recipe.patch(op)
+        return False
 
 
 class no_git_on_windows(LintCheck):
@@ -1048,20 +1038,17 @@ class no_git_on_windows(LintCheck):
             if recipe.get_value(dependency_path) == "git":
                 self.message(section=dependency_path)
 
-    # TODO: Re-enable this fix once auto-fixing is enabled
-    # def fix(self, message, data) -> bool:
-    #     # NOTE: The path found in `check_deps()` is a post-selector-rendering
-    #     # path to the dependency. So in order to change the recipe file, we need
-    #     # to relocate `git`, relative to the raw file.
-    #     def _add_git_selector(parser: RecipeParser) -> None:
-    #         paths = parser.find_value("git")
-    #         for path in paths:
-    #             # Attempt to filter-out false-positives
-    #             if "/requirements" not in path:
-    #                 continue
-    #             parser.add_selector(path, "[not win]", SelectorConflictMode.AND)
-
-    #     return self.percy_recipe.patch_with_parser(_add_git_selector)
+    def fix(self, message, data) -> bool:
+        # NOTE: The path found in `check_deps()` is a post-selector-rendering
+        # path to the dependency. So in order to change the recipe file, we need
+        # to relocate `git`, relative to the raw file.
+        paths = self.unrendered_recipe.find_value("git")
+        for path in paths:
+            # Attempt to filter-out false-positives
+            if "/requirements" not in path:
+                continue
+            self.unrendered_recipe.add_selector(path, "[not win]", SelectorConflictMode.AND)
+        return True
 
 
 class gui_app(LintCheck):

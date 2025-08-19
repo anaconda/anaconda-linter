@@ -11,6 +11,7 @@ from typing import Final, Optional
 from unittest.mock import mock_open, patch
 
 import pytest
+from conda_recipe_manager.parser.recipe_parser_deps import RecipeParserDeps
 from conda_recipe_manager.parser.recipe_reader_deps import RecipeReaderDeps
 from percy.render._renderer import RendererType
 from percy.render.recipe import Recipe
@@ -90,7 +91,8 @@ def load_linter_and_recipe(
     yaml.dump(percy_recipe.meta, buf)
     recipe_content = buf.getvalue()
     recipe = RecipeReaderDeps(recipe_content)
-    return linter_obj, recipe, variant
+    unrendered_recipe = RecipeParserDeps(percy_recipe.dump())
+    return linter_obj, recipe, unrendered_recipe, percy_recipe
 
 
 def check(
@@ -107,9 +109,13 @@ def check(
     :param expand_variant:  (Optional) Dictionary of variant information to augment the recipe with.
     :return: A list containing errors or warnings for the target rule.
     """
-    linter_obj, recipe, variant = load_linter_and_recipe(recipe_str, arch, expand_variant)
+    linter_obj, recipe, unrendered_recipe, percy_recipe = load_linter_and_recipe(recipe_str, arch, expand_variant)
     messages = linter_obj.check_instances[check_name].run(
-        recipe=recipe, variant_tuple=("dummy", variant), arch_name=arch
+        recipe=recipe,
+        unrendered_recipe=unrendered_recipe,
+        percy_recipe=percy_recipe,
+        recipe_name="dummy",
+        arch_name=arch,
     )
     return messages
 
@@ -148,8 +154,13 @@ def check_dir(check_name: str, feedstock_dir: str | Path, recipe_str: str, arch:
     yaml.dump(percy_recipe.meta, buf)
     recipe_content = buf.getvalue()
     recipe = RecipeReaderDeps(recipe_content)
+    unrendered_recipe = RecipeParserDeps(percy_recipe.dump())
     messages = linter_obj.check_instances[check_name].run(
-        recipe=recipe, recipe_path=meta_yaml, variant_tuple=(vid, variant), arch_name=arch
+        recipe=recipe,
+        unrendered_recipe=unrendered_recipe,
+        percy_recipe=percy_recipe,
+        recipe_name="dummy",
+        arch_name=arch,
     )
     return messages
 
@@ -168,16 +179,28 @@ def assert_on_auto_fix(check_name: str, suffix: str, arch: str) -> None:
     broken_file: Final[str] = f"{TEST_AUTO_FIX_FILES_PATH}/{check_name}{suffix_adjusted}.yaml"
     fixed_file: Final[str] = f"{TEST_AUTO_FIX_FILES_PATH}/{check_name}{suffix_adjusted}_fixed.yaml"
 
-    linter_obj, recipe, _ = load_linter_and_recipe(load_file(broken_file), arch)
+    linter_obj, recipe, unrendered_recipe, percy_recipe = load_linter_and_recipe(load_file(broken_file), arch)
 
     messages: list[LintMessage]
     # Prevent writing to the test file. The `Recipe` instance will contain the file contents of interest in a string
     with patch("builtins.open", mock_open()):
-        messages = linter_obj.check_instances[check_name].run(recipe=recipe, fix=True)
+        messages = linter_obj.check_instances[check_name].run(
+            recipe=recipe,
+            unrendered_recipe=unrendered_recipe,
+            percy_recipe=percy_recipe,
+            recipe_name="dummy",
+            arch_name=arch,
+            fix=True,
+        )
 
     # Ensure that the rule triggered, that the correct rule triggered, and that the rule was actually fixed
     assert len(messages) == 1
     assert messages[0].auto_fix_state == AutoFixState.FIX_PASSED
     assert str(messages[0].check) == check_name
     # Ensure that the output matches the expected output
-    assert recipe.dump() == load_file(fixed_file)
+    if percy_recipe.is_modified():
+        assert percy_recipe.dump() == load_file(fixed_file)
+    elif unrendered_recipe.is_modified():
+        assert unrendered_recipe.render() == load_file(fixed_file)
+    else:
+        assert False, "No changes were made to the recipe"

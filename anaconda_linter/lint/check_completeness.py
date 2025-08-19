@@ -9,11 +9,9 @@ import os
 import re
 
 import conda_build.license_family
-from percy.render.recipe import Recipe
+from percy.render.recipe import OpMode, Recipe
 
 from anaconda_linter.lint import LintCheck, Severity
-
-# from percy.render.recipe import OpMode
 
 
 class missing_section(LintCheck):
@@ -175,11 +173,10 @@ class license_file_overspecified(LintCheck):
         if recipe.get("about/license_file", "") and recipe.get("about/license_url", ""):
             self.message(section="about", severity=Severity.WARNING, data=recipe)
 
-    # TODO: Re-enable this fix once auto-fixing is enabled
-    # def fix(self, message, data) -> bool:
-    #     recipe = data
-    #     op = [{"op": "remove", "path": "/about/license_url"}]
-    #     return recipe.patch(op, op_mode=OpMode.PARSE_TREE)
+    def fix(self, message, data) -> bool:
+        recipe = data
+        op = [{"op": "remove", "path": "/about/license_url"}]
+        return recipe.patch(op, op_mode=OpMode.PARSE_TREE)
 
 
 class missing_license_family(LintCheck):

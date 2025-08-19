@@ -140,7 +140,7 @@ def execute_linter(  # pylint: disable=too-many-positional-arguments
     exclusive_config_files: Optional[list[str]] = None,
     subdirs: Optional[list[str]] = None,
     severity: lint.Severity = lint.SEVERITY_MIN_DEFAULT,
-    fix_flag: bool = False,  # pylint: disable=unused-argument
+    fix_flag: bool = False,
     verbose_flag: bool = False,
 ) -> tuple[ReturnCode, str]:
     """
@@ -180,7 +180,7 @@ def execute_linter(  # pylint: disable=too-many-positional-arguments
     # TODO evaluate when the linter must be run on each variant,
     # and how to handle the auto-fixing. For now, auto-fixing is disabled.
     for subdir in subdirs:
-        result = linter.lint(recipes, subdir, variant_config_files, exclusive_config_files, fix=False)
+        result = linter.lint(recipes, subdir, variant_config_files, exclusive_config_files, fix=fix_flag)
         if result > overall_result:  # pylint: disable=consider-using-max-builtin
             overall_result = result
         messages = messages | set(linter.get_messages())

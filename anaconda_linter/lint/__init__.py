@@ -95,6 +95,7 @@ from typing import Any, Final, Optional
 
 import networkx as nx
 import percy.render.recipe as _recipe
+from conda_recipe_manager.parser.recipe_parser_deps import RecipeParserDeps
 from conda_recipe_manager.parser.recipe_reader_deps import RecipeReaderDeps
 from percy.render._renderer import RendererType
 from percy.render.exceptions import EmptyRecipe, JinjaRenderFailure, MissingMetaYaml, RecipeError, YAMLRenderFailure
@@ -280,11 +281,13 @@ class LintCheck(metaclass=LintCheckMeta):
         return self.__class__.__name__
 
     # TODO: remove the Percy specific arguments once we transition to CRM recipes, and re-enable pylint
+    # TODO: The LintCheck class passes its attributes in as arguments to its member functions,
+    # we should remove them and call `self` directly instead.
     def run(  # pylint: disable=too-many-positional-arguments
         self,
         recipe: RecipeReaderDeps,
-        recipe_path: Optional[Path] = None,
-        variant_tuple: tuple = (None, None),
+        unrendered_recipe: RecipeParserDeps,
+        percy_recipe: _recipe.Recipe,
         recipe_name: str = "",
         arch_name: Optional[str] = None,
         fix: bool = False,
@@ -293,41 +296,18 @@ class LintCheck(metaclass=LintCheckMeta):
         Run the check on a recipe. Called by Linter
 
         :param recipe: The recipe to be linted
-        :param recipe_path: The path to the recipe
-        :param variant_tuple: The variant tuple
+        :param unrendered_recipe: The unrendered recipe parser instance
+        :param percy_recipe: The Percy recipe instance
         :param recipe_name: The name of the recipe
         :param arch_name: The architecture of the recipe
         :param fix: Whether to attempt to fix the recipe
         """
         self.messages: list[LintMessage] = []
         self.recipe: RecipeReaderDeps = recipe
-        self.recipe_path: Optional[Path] = recipe_path
-        # TODO: Remove this once we transition to CRM recipes
-        try:
-            if recipe_path:
-                self.percy_recipe: _recipe.Recipe = _recipe.Recipe.from_file(
-                    recipe_fname=recipe_path,
-                    variant_id=variant_tuple[0],
-                    variant=variant_tuple[1],
-                    renderer=RendererType.RUAMEL,
-                )
-            else:
-                self.percy_recipe: _recipe.Recipe = _recipe.Recipe.from_string(
-                    recipe_text=recipe.render(),
-                    variant_id=variant_tuple[0],
-                    variant=variant_tuple[1],
-                    renderer=RendererType.RUAMEL,
-                )
-        except Exception:  # pylint: disable=broad-exception-caught
-            message = self.make_message(
-                recipe=self.recipe,
-                fname=recipe_name,
-                severity=Severity.ERROR,
-                title_in="An unexpected error occurred in Percy. "
-                "Please report this issue to the pi-automation team through the #pi-automation channel.",
-                body_in="",
-            )
-            return [message]
+        self.unrendered_recipe: RecipeParserDeps = unrendered_recipe
+        self.percy_recipe: _recipe.Recipe = percy_recipe
+        self.recipe_path: Optional[Path] = percy_recipe.path
+
         self.try_fix = fix
 
         # Run general checks with CRM
@@ -759,7 +739,7 @@ class Linter:
         :param exclusive_config_files: Configuration information for exclusive files
         :param fix: Whether checks should attempt to fix detected issues
 
-        :returns: True if issues with errors were found
+        :returns: Maximum severity level of issues found (ERROR, WARNING, or NONE)
         """
         if variant_config_files is None:
             variant_config_files = []
@@ -848,7 +828,7 @@ class Linter:
                     exclusive_config_files=exclusive_config_files,
                 )
             for vid, variant in variants:
-                recipe = _recipe.Recipe.from_file(
+                percy_recipe = _recipe.Recipe.from_file(
                     recipe_fname=str(meta_yaml),
                     variant_id=vid,
                     variant=variant,
@@ -857,9 +837,9 @@ class Linter:
                 buf = StringIO()
                 yaml = YAML()
                 yaml.indent(mapping=2, sequence=4, offset=2)
-                yaml.dump(recipe.meta, buf)
+                yaml.dump(percy_recipe.meta, buf)
                 recipe_content = buf.getvalue()
-                recipe_variants.append((vid, variant, recipe_content))
+                recipe_variants.append((vid, variant, recipe_content, percy_recipe))
         except RecipeError as exc:
             recipe = _recipe.Recipe(recipe_name)
             check_cls = recipe_error_to_lint_check.get(exc.__class__, linter_failure)
@@ -868,21 +848,29 @@ class Linter:
         # lint variants
         messages = set()
         try:
-            for vid, variant, recipe_dump in recipe_variants:
+            for vid, variant, recipe_content, percy_recipe in recipe_variants:
                 logging.debug("Linting variant %s", vid)
-                recipe = RecipeReaderDeps(recipe_dump)
+                recipe = RecipeReaderDeps(recipe_content)
+                unrendered_recipe = RecipeParserDeps(percy_recipe.dump())
                 if not recipe.contains_value("/build/skip"):
                     messages.update(
                         self.lint_recipe(
-                            recipe_name,
-                            meta_yaml,
-                            (vid, variant),
-                            arch_name,
-                            recipe,
+                            recipe=recipe,
+                            unrendered_recipe=unrendered_recipe,
+                            percy_recipe=percy_recipe,
+                            recipe_name=recipe_name,
+                            arch_name=arch_name,
                             fix=fix,
                         )
                     )
-            # TODO: Implement auto-fixing when variant generation is implemented
+                    # Auto-fixing
+                    write_path = percy_recipe.path
+                    if fix and percy_recipe.is_modified():
+                        with open(write_path, "w", encoding="utf-8") as fdes:
+                            fdes.write(percy_recipe.dump())
+                    if fix and unrendered_recipe.is_modified():
+                        with open(write_path, "w", encoding="utf-8") as fdes:
+                            fdes.write(unrendered_recipe.render())
         except Exception:  # pylint: disable=broad-exception-caught
             recipe = _recipe.Recipe(recipe_name)
             return [linter_failure.make_message(recipe=recipe, fname=recipe_name)]
@@ -892,21 +880,21 @@ class Linter:
     # TODO: Remove percy-specific arguments after percy is removed
     def lint_recipe(  # pylint: disable=too-many-positional-arguments
         self,
-        recipe_name: str,
-        meta_yaml: Path,
-        variant_tuple: tuple[dict, dict],
-        arch_name: str,
         recipe: RecipeReaderDeps,
+        unrendered_recipe: RecipeParserDeps,
+        percy_recipe: _recipe.Recipe,
+        recipe_name: str,
+        arch_name: str,
         fix: bool = False,
     ) -> list[LintMessage]:
         """
         Lints a recipe
 
+        :param recipe: Recipe to lint against
+        :param unrendered_recipe: The unrendered recipe parser instance
+        :param percy_recipe: The Percy recipe instance
         :param recipe_name: Name of recipe to lint
-        :param meta_yaml: Path to meta.yaml file
-        :param variant_tuple: Tuple of variant ID and variant
         :param arch_name: Architecture to consider
-        :param recipe: Recipe to lint against.
         :param fix: (Optional) Enables auto-fixing of the lint checks
         :returns: list of linting messages returned from executing checks against the linter.
         """
@@ -945,11 +933,11 @@ class Linter:
 
             try:
                 res = self.check_instances[check].run(
-                    recipe_name=recipe_name,
-                    recipe_path=meta_yaml,
-                    variant_tuple=variant_tuple,
-                    arch_name=arch_name,
                     recipe=recipe,
+                    unrendered_recipe=unrendered_recipe,
+                    percy_recipe=percy_recipe,
+                    recipe_name=recipe_name,
+                    arch_name=arch_name,
                     fix=fix,
                 )
             except Exception:  # pylint: disable=broad-exception-caught

@@ -28,7 +28,6 @@ from conftest import assert_on_auto_fix
         ("patch_unnecessary", "", "linux-64"),
     ],
 )
-@pytest.mark.skip(reason="Percy deprecation has broken this feature - patching needs to be fixed")
 def test_auto_fix_rule(check: str, suffix: str, arch: str):
     """
     Tests auto-fixable rules by passing in a file with the issue and checking the output with an expected file.
