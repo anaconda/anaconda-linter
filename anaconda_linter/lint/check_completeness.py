@@ -55,7 +55,7 @@ class missing_build_number(LintCheck):
     """
 
     def check_recipe(self, recipe: Recipe) -> None:
-        reader = RecipeReader(recipe.dump())
+        reader: Final = RecipeReader(recipe.dump())
 
         contains_value: Final = reader.contains_value("/build/number/")
         if not contains_value:
