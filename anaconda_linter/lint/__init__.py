@@ -801,7 +801,8 @@ class Linter:
             print(f"Linting subdir:{arch_name} recipe:{recipe_name}")
 
         # Gather variants for specified subdir
-        # As a compatibility stopgap, this process outputs a dict of variant_id -> recipe_dump
+        # As a stopgap, this process outputs a tuple with
+        # variants and variant info using Percy
         # TODO: replace with CRM variants generation
         # TODO: track recipe variants (python version, arch, etc.) all the way to error reporting to ease fixing
         recipe_variants: list[tuple[dict, RecipeReaderDeps]] = []
