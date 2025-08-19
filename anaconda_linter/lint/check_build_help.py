@@ -366,7 +366,6 @@ class build_tools_must_be_in_build(LintCheck):
             if tool.startswith("msys2-") or tool.startswith("m2-") or tool in BUILD_TOOLS:
                 for path in dep["paths"]:
                     o = -1 if not path.startswith("outputs") else int(path.split("/")[1])
-                    print("")
                     self.message(tool, severity=Severity.WARNING, section=path, output=o)
 
 
