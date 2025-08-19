@@ -64,7 +64,7 @@ def load_file(file: Path | str) -> str:
 
 def load_linter_and_recipe(
     recipe_str: str, arch: str = "linux-64", expand_variant: Optional[Variant] = None
-) -> tuple[Linter, RecipeReaderDeps]:
+) -> tuple[Linter, RecipeReaderDeps, RecipeParserDeps, Recipe]:
     """
     Convenience function that loads instantiates linter and recipe objects based on default configurations.
     :param recipe_str:      Recipe file, as a raw string
