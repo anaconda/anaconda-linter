@@ -1047,7 +1047,10 @@ class no_git_on_windows(LintCheck):
             # Attempt to filter-out false-positives
             if "/requirements" not in path:
                 continue
-            self.unrendered_recipe.add_selector(path, "[not win]", SelectorConflictMode.AND)
+            try:
+                self.unrendered_recipe.add_selector(path, "[not win]", SelectorConflictMode.AND)
+            except KeyError:
+                return False
         return True
 
 

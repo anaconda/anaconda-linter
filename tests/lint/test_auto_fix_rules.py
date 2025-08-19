@@ -36,7 +36,5 @@ def test_auto_fix_rule(check: str, suffix: str, arch: str):
     :param suffix: File suffix, allowing developers to create multiple test files against a linter check.
     :param arch: Architecture to run the test against.
     """
-    if check == "no_git_on_windows":
-        pytest.xfail("Percy deprecation has broken this feature - patching needs to be fixed")
 
     assert_on_auto_fix(check, suffix, arch)
