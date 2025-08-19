@@ -178,7 +178,7 @@ def execute_linter(  # pylint: disable=too-many-positional-arguments
     overall_result = 0
     # TODO evaluate this: Not all of our rules require checking against variants now that we have the parser in percy.
     for subdir in subdirs:
-        result = linter.lint(recipes, subdir, variant_config_files, exclusive_config_files, fix=fix_flag)
+        result = linter.lint(recipes, subdir, variant_config_files, exclusive_config_files, fix_flag)
         if result > overall_result:  # pylint: disable=consider-using-max-builtin
             overall_result = result
         messages = messages | set(linter.get_messages())
