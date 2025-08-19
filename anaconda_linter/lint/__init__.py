@@ -801,11 +801,11 @@ class Linter:
             print(f"Linting subdir:{arch_name} recipe:{recipe_name}")
 
         # Gather variants for specified subdir
-        # As a stopgap, this process outputs a tuple with
+        # As a stopgap, this process outputs a tuple per variant with
         # variants and variant info using Percy
         # TODO: replace with CRM variants generation
         # TODO: track recipe variants (python version, arch, etc.) all the way to error reporting to ease fixing
-        recipe_variants: list[tuple[dict, RecipeReaderDeps]] = []
+        recipe_variants: list[tuple] = []
         try:
             meta_yaml = Path(recipe_name) / "meta.yaml"
             if (Path(__file__) / "conda_build_config.yaml").is_file():
