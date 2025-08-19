@@ -15,7 +15,6 @@ import pytest
 from conftest import assert_on_auto_fix
 
 
-# TODO: Re-enable this test once auto-fixing is re-enabled
 # Format: (Check Name, File Suffix, Architecture, Number of Occurrences)
 # Common file suffixes:
 #   - `mo` -> For multi-output test cases
