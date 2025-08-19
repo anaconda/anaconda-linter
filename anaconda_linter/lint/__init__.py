@@ -418,8 +418,8 @@ class LintCheck(metaclass=LintCheckMeta):
         :param output: the output the error occurred in (multi-output recipes only)
         """
         # In order to handle Percy-based rules generating messages with a section
-        # We must adapt the section by adding a slash to the section
-        if section:
+        # We must adapt the section by prepending a slash
+        if section and not section.startswith("/"):
             section = "/" + section
         # This should only happen during testing
         if not self.recipe_path:
