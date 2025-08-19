@@ -89,7 +89,7 @@ def test_missing_section_bad_multi(base_yaml: str) -> None:
 @pytest.mark.parametrize(
     "recipe_file",
     [
-        "tests/test_aux_files/auto_fix/meta.yaml",
+        "tests/test_aux_files/auto_fix/streamlit-folium.yaml",
         "tests/test_aux_files/auto_fix/build_number_multi_output.yaml",
     ],
 )
