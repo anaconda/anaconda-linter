@@ -140,7 +140,7 @@ def execute_linter(  # pylint: disable=too-many-positional-arguments
     exclusive_config_files: Optional[list[str]] = None,
     subdirs: Optional[list[str]] = None,
     severity: lint.Severity = lint.SEVERITY_MIN_DEFAULT,
-    fix_flag: bool = False,
+    fix_flag: bool = False,  # pylint: disable=unused-argument
     verbose_flag: bool = False,
 ) -> tuple[ReturnCode, str]:
     """
@@ -177,7 +177,8 @@ def execute_linter(  # pylint: disable=too-many-positional-arguments
     messages = set()
     overall_result = 0
     # TODO evaluate this: Not all of our rules require checking against variants now that we have the parser in percy.
-    # TODO evaluate when the linter must be run on each variant, and how to handle the auto-fixing. For now, auto-fixing is disabled.
+    # TODO evaluate when the linter must be run on each variant,
+    # and how to handle the auto-fixing. For now, auto-fixing is disabled.
     for subdir in subdirs:
         result = linter.lint(recipes, subdir, variant_config_files, exclusive_config_files, fix=False)
         if result > overall_result:  # pylint: disable=consider-using-max-builtin
