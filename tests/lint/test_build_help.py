@@ -484,19 +484,19 @@ def test_build_tools_must_be_in_build_good_multi(base_yaml: str, tool: str) -> N
 
 
 @pytest.mark.parametrize("section", ("host", "run"))
-# @pytest.mark.parametrize("tool", BUILD_TOOLS)
-def test_build_tools_must_be_in_build_bad(base_yaml: str, section: str) -> None:
+@pytest.mark.parametrize("tool", BUILD_TOOLS)
+def test_build_tools_must_be_in_build_bad(base_yaml: str, section: str, tool: str) -> None:
     yaml_str = (
         base_yaml
         + f"""
         requirements:
           {section}:
-            - msys2-gcc
+            - {tool}
         """
     )
     lint_check = "build_tools_must_be_in_build"
     messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "build tool msys2-gcc is not in the build section" in messages[0].title
+    assert len(messages) == 1 and f"build tool {tool} is not in the build section" in messages[0].title
 
 
 @pytest.mark.parametrize("section", ("host", "run"))
