@@ -882,8 +882,7 @@ class Linter:
                             fix=fix,
                         )
                     )
-            # TODO: Implement auto-fixing without overwriting each variant
-            # TODO: Implement CRM exception handling, and adapt LintCheck, including message() and make_message()
+            # TODO: Implement auto-fixing when variant generation is implemented
         except Exception:  # pylint: disable=broad-exception-caught
             recipe = _recipe.Recipe(recipe_name)
             return [linter_failure.make_message(recipe=recipe, fname=recipe_name)]

@@ -294,6 +294,15 @@ class should_use_stdlib(LintCheck):
 
     """
 
+    # NOTE: This is a temporary fix since LintCheck.check_deps() is deprecated
+    def _check_deps(self, deps) -> None:
+        """
+        Checks for manual use of the `sysroot`, `macosx_deployment_target` or `vs` packages in recipes.
+        """
+        for stdlib in STDLIBS:
+            for location in deps.get(stdlib, {}).get("paths", []):
+                self.message(section=location)
+
     def check_recipe(self, recipe: Recipe) -> None:
         """
         Ensures a {{ stdlib('c') }} macro is used in any recipe using a compiler.
@@ -314,13 +323,7 @@ class should_use_stdlib(LintCheck):
                     # Output has a compiler but is missing a stdlib dependency.
                     self.message(section=compiler_dep.path)
 
-    def check_deps(self, deps) -> None:
-        """
-        Checks for manual use of the `sysroot`, `macosx_deployment_target` or `vs` packages in recipes.
-        """
-        for stdlib in STDLIBS:
-            for location in deps.get(stdlib, {}).get("paths", []):
-                self.message(section=location)
+        self._check_deps(_utils.get_deps_dict(recipe))
 
 
 class stdlib_must_be_in_build(LintCheck):
@@ -332,7 +335,8 @@ class stdlib_must_be_in_build(LintCheck):
 
     """
 
-    def check_deps(self, deps) -> None:
+    # NOTE: This is a temporary fix since LintCheck.check_deps() is deprecated
+    def _check_deps(self, deps) -> None:
         for dep in deps:
             for stdlib in STDLIBS:
                 if not dep.startswith(stdlib):
@@ -341,6 +345,9 @@ class stdlib_must_be_in_build(LintCheck):
                 for section in deps[dep]["paths"]:
                     if "run" in section or "host" in section:
                         self.message(section=section)
+
+    def check_recipe(self, recipe: Recipe) -> None:
+        self._check_deps(_utils.get_deps_dict(recipe))
 
 
 class build_tools_must_be_in_build(LintCheck):
