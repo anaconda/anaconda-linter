@@ -945,7 +945,6 @@ class Linter:
                 if self.nocatch:
                     raise
                 logger.exception("Unexpected exception in lint_recipe")
-                # TODO: Adapt LintMessage to CRM recipes
                 res = [
                     LintMessage(
                         recipe=recipe,
