@@ -874,15 +874,12 @@ class Linter:
                     )
                     # Auto-fixing
                     write_path = percy_recipe.path
-                    if fix and percy_recipe.is_modified():
-                        with open(write_path, "w", encoding="utf-8") as fdes:
-                            fdes.write(percy_recipe.dump())
                     if fix and unrendered_recipe.is_modified():
                         with open(write_path, "w", encoding="utf-8") as fdes:
                             fdes.write(unrendered_recipe.render())
-        except Exception:  # pylint: disable=broad-exception-caught
+        except Exception as e:  # pylint: disable=broad-exception-caught
             recipe = _recipe.Recipe(recipe_name)
-            return [linter_failure.make_message(recipe=recipe, fname=recipe_name)]
+            return [linter_failure.make_message(recipe=recipe, fname=recipe_name, title_in=e.message)]
 
         return list(messages)
 
@@ -949,7 +946,24 @@ class Linter:
                     arch_name=arch_name,
                     fix=fix,
                 )
-            except Exception:  # pylint: disable=broad-exception-caught
+                # Merge the changes from the percy recipe into the CRM recipe,
+                # and vice versa, in case of an auto-fix.
+                if fix and percy_recipe.is_modified() and unrendered_recipe.is_modified():
+                    raise ValueError(
+                        "Error occurred during auto-fixing. "
+                        "Please report this issue in https://github.com/anaconda/anaconda-linter/issues/new"
+                    )
+                if fix and percy_recipe.is_modified():
+                    unrendered_recipe = RecipeParserDeps(percy_recipe.dump())
+                    unrendered_recipe._is_modified = True  # pylint: disable=protected-access
+                if fix and unrendered_recipe.is_modified():
+                    percy_recipe = _recipe.Recipe.from_string(
+                        unrendered_recipe.render(),
+                        variant_id=percy_recipe.variant_id,
+                        variant=percy_recipe.selector_dict,
+                        renderer=RendererType.RUAMEL,
+                    )
+            except Exception as e:  # pylint: disable=broad-exception-caught
                 if self.nocatch:
                     raise
                 logger.exception("Unexpected exception in lint_recipe")
@@ -958,7 +972,7 @@ class Linter:
                         recipe=recipe,
                         check=check,
                         severity=Severity.ERROR,
-                        title="Check raised an unexpected exception",
+                        title="Check raised an unexpected exception: " + str(e),
                     )
                 ]
 
