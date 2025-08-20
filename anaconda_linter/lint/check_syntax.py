@@ -21,7 +21,7 @@ class version_constraints_missing_whitespace(LintCheck):
 
     """
 
-    def check_recipe(self, recipe) -> None:
+    def check_recipe_legacy(self, recipe) -> None:
         check_paths = []
         for section in ("build", "run", "host"):
             check_paths.append(f"requirements/{section}")

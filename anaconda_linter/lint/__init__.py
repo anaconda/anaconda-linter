@@ -312,7 +312,7 @@ class LintCheck(metaclass=LintCheckMeta):
 
         # Run general checks with CRM
         try:
-            self.check_recipe_crm(recipe_name, arch_name, self.recipe)
+            self.check_recipe(recipe_name, arch_name, self.recipe)
         except Exception:  # pylint: disable=broad-exception-caught
             message = self.make_message(
                 recipe=self.recipe,
@@ -327,7 +327,7 @@ class LintCheck(metaclass=LintCheckMeta):
 
         # Run general checks with Percy
         try:
-            self.check_recipe(self.percy_recipe)
+            self.check_recipe_legacy(self.percy_recipe)
         except Exception:  # pylint: disable=broad-exception-caught
             message = self.make_message(
                 recipe=self.percy_recipe,
@@ -358,7 +358,7 @@ class LintCheck(metaclass=LintCheckMeta):
         :param section: Path to the section. Can be `source` or `source/0` (1,2,3...).
         """
 
-    def check_recipe(self, recipe: _recipe.Recipe) -> None:
+    def check_recipe_legacy(self, recipe: _recipe.Recipe) -> None:
         """
         Execute check on recipe
 
@@ -368,7 +368,7 @@ class LintCheck(metaclass=LintCheckMeta):
         :param recipe: The recipe under test.
         """
 
-    def check_recipe_crm(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
+    def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
         """
         Execute check on recipe using CRM
 

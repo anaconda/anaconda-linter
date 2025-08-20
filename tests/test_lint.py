@@ -24,7 +24,7 @@ class DummyInfo(lint.LintCheck):
     Info message
     """
 
-    def check_recipe(self, _) -> None:
+    def check_recipe_legacy(self, _) -> None:
         self.message(severity=Severity.INFO)
 
 
@@ -33,7 +33,7 @@ class DummyWarning(lint.LintCheck):
     Warning message
     """
 
-    def check_recipe(self, _) -> None:
+    def check_recipe_legacy(self, _) -> None:
         self.message(severity=Severity.WARNING)
 
 
@@ -42,7 +42,7 @@ class DummyError(lint.LintCheck):
     Error message
     """
 
-    def check_recipe(self, _) -> None:
+    def check_recipe_legacy(self, _) -> None:
         self.message(severity=Severity.ERROR)
 
 
@@ -51,7 +51,7 @@ class DummyErrorFormat(lint.LintCheck):
     {} message of severity {}
     """
 
-    def check_recipe(self, _) -> None:
+    def check_recipe_legacy(self, _) -> None:
         self.message("Dummy", "ERROR")
 
 
