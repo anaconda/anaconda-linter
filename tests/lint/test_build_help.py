@@ -83,7 +83,7 @@ def test_host_section_needs_exact_pinnings_good_exception_multi(base_yaml: str, 
     assert len(messages) == 0
 
 
-def test_host_section_needs_exact_pinnings_good_cbc(base_yaml: str, recipe_dir: Path) -> None:
+def test_host_section_needs_exact_pinnings_bad_cbc(base_yaml: str, recipe_dir: Path) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -100,7 +100,7 @@ def test_host_section_needs_exact_pinnings_good_cbc(base_yaml: str, recipe_dir: 
     cbc_file.write_text(cbc)
     lint_check = "host_section_needs_exact_pinnings"
     messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
-    assert len(messages) == 0
+    assert len(messages) == 1 and "Linked libraries host should have exact version pinnings." in messages[0].title
 
 
 def test_host_section_needs_exact_pinnings_good_cbc_jinjavar(base_yaml: str, recipe_dir: Path) -> None:
@@ -123,7 +123,7 @@ def test_host_section_needs_exact_pinnings_good_cbc_jinjavar(base_yaml: str, rec
     assert len(messages) == 0
 
 
-def test_host_section_needs_exact_pinnings_good_cbc_multi(base_yaml: str, recipe_dir: Path) -> None:
+def test_host_section_needs_exact_pinnings_bad_cbc_multi(base_yaml: str, recipe_dir: Path) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -146,7 +146,9 @@ def test_host_section_needs_exact_pinnings_good_cbc_multi(base_yaml: str, recipe
     cbc_file.write_text(cbc)
     lint_check = "host_section_needs_exact_pinnings"
     messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
-    assert len(messages) == 0
+    assert len(messages) == 2 and all(
+        "Linked libraries host should have exact version pinnings." in msg.title for msg in messages
+    )
 
 
 @pytest.mark.parametrize("constraint", ("", ">=0.13", "<0.14", "!=0.13.7"))
@@ -1227,21 +1229,22 @@ def test_pip_install_args_multi_script_missing(base_yaml: str, recipe_dir: Path)
     assert len(messages) == 1 and "should be run with --no-deps and --no-build-isolation" in messages[0].title
 
 
-def test_cython_must_be_in_host_good(base_yaml: str) -> None:
+def test_python_build_tools_in_host_good(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
         requirements:
           host:
-            - cython
+            - setuptools
+            - pip
         """
     )
-    lint_check = "cython_must_be_in_host"
+    lint_check = "python_build_tools_in_host"
     messages = check(lint_check, yaml_str)
     assert len(messages) == 0
 
 
-def test_cython_must_be_in_host_good_multi(base_yaml: str) -> None:
+def test_python_build_tools_in_host_good_multi(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -1249,36 +1252,39 @@ def test_cython_must_be_in_host_good_multi(base_yaml: str) -> None:
           - name: output1
             requirements:
               host:
-                - cython
+                - setuptools
+                - pip
           - name: output2
             requirements:
               host:
-                - cython
+                - setuptools
+                - pip
         """
     )
-    lint_check = "cython_must_be_in_host"
+    lint_check = "python_build_tools_in_host"
     messages = check(lint_check, yaml_str)
     assert len(messages) == 0
 
 
 @pytest.mark.parametrize("section", ["build", "run"])
-def test_cython_must_be_in_host_bad(base_yaml: str, section: str) -> None:
-    lint_check = "cython_must_be_in_host"
+def test_python_build_tools_in_host_bad(base_yaml: str, section: str) -> None:
+    lint_check = "python_build_tools_in_host"
     yaml_str = (
         base_yaml
         + f"""
         requirements:
           {section}:
-            - cython
+            - setuptools
+            - pip
         """
     )
     messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "Cython should be" in messages[0].title
+    assert len(messages) == 2 and "Python build tools should be" in messages[0].title
 
 
 @pytest.mark.parametrize("section", ["build", "run"])
-def test_cython_must_be_in_host_bad_multi(base_yaml: str, section: str) -> None:
-    lint_check = "cython_must_be_in_host"
+def test_python_build_tools_in_host_bad_multi(base_yaml: str, section: str) -> None:
+    lint_check = "python_build_tools_in_host"
     yaml_str = (
         base_yaml
         + f"""
@@ -1286,15 +1292,17 @@ def test_cython_must_be_in_host_bad_multi(base_yaml: str, section: str) -> None:
           - name: output1
             requirements:
               {section}:
-                - cython
+                - setuptools
+                - pip
           - name: output2
             requirements:
               {section}:
-                - cython
+                - setuptools
+                - pip
     """
     )
     messages = check(lint_check, yaml_str)
-    assert len(messages) == 2 and all("Cython should be" in msg.title for msg in messages)
+    assert len(messages) == 4 and all("Python build tools should be" in msg.title for msg in messages)
 
 
 def test_cython_needs_compiler_good(base_yaml: str) -> None:

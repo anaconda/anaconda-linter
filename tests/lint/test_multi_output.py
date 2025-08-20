@@ -104,11 +104,11 @@ def test_no_global_test_good(base_yaml: str) -> None:
         base_yaml
         + """
         outputs:
-          - output1:
+          - name: output1
             test:
               import:
                 module1
-          - output2:
+          - name: output2
             test:
               import:
                 module2

@@ -100,6 +100,12 @@ dev: clean  ## install the package's development version
 	conda run --name $(CONDA_ENV_NAME) pip install -e .
 	$(CONDA_ACTIVATE) $(CONDA_ENV_NAME) && pre-commit install
 
+dev-crm: clean
+	conda env create -f environment_dev_crm.yaml --name $(CONDA_ENV_NAME) --yes
+	conda run --name $(CONDA_ENV_NAME) pip install -e $(CRM_PATH)
+	conda run --name $(CONDA_ENV_NAME) pip install -e .
+	$(CONDA_ACTIVATE) $(CONDA_ENV_NAME) && pre-commit install
+
 pre-commit:     ## runs pre-commit against files. NOTE: older files are disabled in the pre-commit config.
 	pre-commit run --all-files
 

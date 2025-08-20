@@ -511,7 +511,7 @@ def test_missing_source_bad_type(base_yaml: str) -> None:
 def test_non_url_source_good(base_yaml: str, src_type: str) -> None:  # pylint: disable=unused-argument
     yaml_str = (
         base_yaml
-        + """
+        + f"""
         source:
           {src_type}: https://sqlite.com/2022/sqlite-autoconf-3380500.tar.gz
           md5: 5af07de982ba658fd91a03170c945f99c971f6955bc79df3266544373e39869c

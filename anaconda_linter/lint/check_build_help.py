@@ -10,8 +10,10 @@ import re
 from pathlib import Path
 from typing import Any, Final
 
+from conda.models.match_spec import MatchSpec
+from conda_recipe_manager.parser.dependency import Dependency, DependencySection
+from conda_recipe_manager.parser.enums import SelectorConflictMode
 from conda_recipe_manager.parser.recipe_reader_deps import RecipeReaderDeps
-from percy.parser.recipe_parser import RecipeParser, SelectorConflictMode
 from percy.render.recipe import Recipe
 
 from anaconda_linter import utils as _utils
@@ -149,8 +151,7 @@ class host_section_needs_exact_pinnings(LintCheck):
     specified in a conda_build_config.yaml file.
     """
 
-    @staticmethod
-    def is_exception(package: str) -> bool:
+    def _is_exception(self, package: str) -> bool:
         """
         Determines if a package is an exception to this pinning linter check.
         :param package: Package name to check
@@ -168,17 +169,22 @@ class host_section_needs_exact_pinnings(LintCheck):
         # this seemed lower maintenance
         return (package in exceptions) or any(package.startswith(f"{pkg}-") for pkg in PYTHON_BUILD_TOOLS)
 
-    def check_recipe(self, recipe: Recipe) -> None:
-        deps = _utils.get_deps_dict(recipe, "host")
-        for package, dep in deps.items():
-            if not self.is_exception(package) and not (
-                package in recipe.selector_dict and recipe.selector_dict[package]
-            ):
-                for c, constraint in enumerate(dep["constraints"]):
-                    if constraint == "" or re.search("^[<>!]", constraint) is not None:
-                        path = dep["paths"][c]
-                        output = -1 if not path.startswith("outputs") else int(path.split("/")[1])
-                        self.message(section=path, severity=Severity.WARNING, output=output)
+    def _check_dependency(self, dependency: Dependency) -> bool:
+        if not isinstance(dependency.data, MatchSpec):
+            return True
+        name = dependency.data.name
+        version = dependency.data.version
+        if dependency.type != DependencySection.HOST or self._is_exception(name):
+            return False
+        if not version or str(version) == "" or re.search("^[<>!]", str(version)) is not None:
+            return True
+        return False
+
+    def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
+        for dependency_list in recipe.get_all_dependencies().values():
+            for dependency in dependency_list:
+                if self._check_dependency(dependency):
+                    self.message(section=dependency.path, severity=Severity.WARNING)
 
 
 class cbc_dep_in_run_missing_from_host(LintCheck):
@@ -186,7 +192,7 @@ class cbc_dep_in_run_missing_from_host(LintCheck):
     Run dependencies listed in the cbc should also be present in the host section.
     """
 
-    def check_recipe(self, recipe: Recipe) -> None:
+    def check_recipe_legacy(self, recipe: Recipe) -> None:
         for package in recipe.packages.values():
             for dep in package.run:
                 if dep.pkg in recipe.selector_dict and recipe.selector_dict[dep.pkg]:
@@ -224,7 +230,7 @@ class potentially_bad_ignore_run_exports(LintCheck):
     flag of conda-build.
     """
 
-    def check_recipe(self, recipe: Recipe) -> None:
+    def check_recipe_legacy(self, recipe: Recipe) -> None:
         for package in recipe.packages.values():
             for dep in package.host:
                 if dep.pkg in package.ignore_run_exports:
@@ -254,10 +260,10 @@ class should_use_compilers(LintCheck):
 
     compilers = COMPILERS
 
-    def check_deps(self, deps) -> None:
-        for compiler in self.compilers:
-            for location in deps.get(compiler, {}).get("paths", []):
-                self.message(section=location)
+    def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
+        for dependency_path in recipe.get_dependency_paths():
+            if recipe.get_value(dependency_path) in self.compilers:
+                self.message(section=dependency_path)
 
 
 class compilers_must_be_in_build(LintCheck):
@@ -269,12 +275,11 @@ class compilers_must_be_in_build(LintCheck):
 
     """
 
-    def check_deps(self, deps) -> None:
-        for dep in deps:
-            if dep.startswith("compiler_"):
-                for location in deps[dep]["paths"]:
-                    if "run" in location or "host" in location:
-                        self.message(section=location)
+    def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
+        for dependency_path in recipe.get_dependency_paths():
+            if recipe.get_value(dependency_path).startswith("compiler_"):
+                if "run" in dependency_path or "host" in dependency_path:
+                    self.message(section=dependency_path)
 
 
 class should_use_stdlib(LintCheck):
@@ -289,7 +294,16 @@ class should_use_stdlib(LintCheck):
 
     """
 
-    def check_recipe(self, recipe: Recipe) -> None:
+    # NOTE: This is a temporary fix since LintCheck.check_deps() is deprecated
+    def _check_deps(self, deps) -> None:
+        """
+        Checks for manual use of the `sysroot`, `macosx_deployment_target` or `vs` packages in recipes.
+        """
+        for stdlib in STDLIBS:
+            for location in deps.get(stdlib, {}).get("paths", []):
+                self.message(section=location)
+
+    def check_recipe_legacy(self, recipe: Recipe) -> None:
         """
         Ensures a {{ stdlib('c') }} macro is used in any recipe using a compiler.
         """
@@ -309,13 +323,7 @@ class should_use_stdlib(LintCheck):
                     # Output has a compiler but is missing a stdlib dependency.
                     self.message(section=compiler_dep.path)
 
-    def check_deps(self, deps) -> None:
-        """
-        Checks for manual use of the `sysroot`, `macosx_deployment_target` or `vs` packages in recipes.
-        """
-        for stdlib in STDLIBS:
-            for location in deps.get(stdlib, {}).get("paths", []):
-                self.message(section=location)
+        self._check_deps(_utils.get_deps_dict(recipe))
 
 
 class stdlib_must_be_in_build(LintCheck):
@@ -327,7 +335,8 @@ class stdlib_must_be_in_build(LintCheck):
 
     """
 
-    def check_deps(self, deps) -> None:
+    # NOTE: This is a temporary fix since LintCheck.check_deps() is deprecated
+    def _check_deps(self, deps) -> None:
         for dep in deps:
             for stdlib in STDLIBS:
                 if not dep.startswith(stdlib):
@@ -336,6 +345,9 @@ class stdlib_must_be_in_build(LintCheck):
                 for section in deps[dep]["paths"]:
                     if "run" in section or "host" in section:
                         self.message(section=section)
+
+    def check_recipe_legacy(self, recipe: Recipe) -> None:
+        self._check_deps(_utils.get_deps_dict(recipe))
 
 
 class build_tools_must_be_in_build(LintCheck):
@@ -348,7 +360,7 @@ class build_tools_must_be_in_build(LintCheck):
             - {}
     """
 
-    def check_recipe(self, recipe: Recipe) -> None:
+    def check_recipe_legacy(self, recipe: Recipe) -> None:
         deps = _utils.get_deps_dict(recipe, ["host", "run"])
         for tool, dep in deps.items():
             if tool.startswith("msys2-") or tool.startswith("m2-") or tool in BUILD_TOOLS:
@@ -367,7 +379,7 @@ class python_build_tool_in_run(LintCheck):
 
     """
 
-    def check_recipe(self, recipe: Recipe) -> None:
+    def check_recipe_legacy(self, recipe: Recipe) -> None:
         deps = _utils.get_deps_dict(recipe, "run")
         for tool in PYTHON_BUILD_TOOLS:
             if tool in deps:
@@ -383,7 +395,7 @@ class missing_python_build_tool(LintCheck):
     Please add the build tool specified by the upstream package to the host section.
     """
 
-    def check_recipe(self, recipe: Recipe) -> None:
+    def check_recipe_legacy(self, recipe: Recipe) -> None:
         is_pypi = is_pypi_source(recipe)
         if outputs := recipe.get("outputs", None):
             deps = _utils.get_deps_dict(recipe, "host")
@@ -426,7 +438,7 @@ class uses_setup_py(LintCheck):
                 return False
         return True
 
-    def check_recipe(self, recipe: Recipe) -> None:
+    def check_recipe_legacy(self, recipe: Recipe) -> None:
         for package in recipe.packages.values():
             if not self._check_line(recipe.get(f"{package.path_prefix}build/script", None)):
                 self.message(
@@ -438,21 +450,21 @@ class uses_setup_py(LintCheck):
                     section=f"{package.path_prefix}script",
                     data=(recipe, f"{package.path_prefix}script"),
                 )
-            elif self.recipe.dir:
+            elif self.percy_recipe.dir:
                 try:
-                    build_file = self.recipe.get(f"{package.path_prefix}script", "")
+                    build_file = self.percy_recipe.get(f"{package.path_prefix}script", "")
                     if not build_file:
-                        build_file = self.recipe.get(f"{package.path_prefix}build/script", "build.sh")
-                    build_file = self.recipe.dir / Path(build_file)
+                        build_file = self.percy_recipe.get(f"{package.path_prefix}build/script", "build.sh")
+                    build_file = self.percy_recipe.dir / Path(build_file)
                     if build_file.exists():
                         with open(str(build_file), encoding="utf-8") as buildsh:
-                            for num, line in enumerate(buildsh):
+                            for line in buildsh:
                                 if not self._check_line(line):
                                     if package.path_prefix.startswith("output"):
                                         output = int(package.path_prefix.split("/")[1])
                                     else:
                                         output = -1
-                                    self.message(fname=build_file, line=num, output=output)
+                                    self.message(fname=build_file, output=output)
                 except (FileNotFoundError, TypeError):
                     pass
 
@@ -500,7 +512,7 @@ class pip_install_args(LintCheck):
 
         return True
 
-    def check_recipe(self, recipe: Recipe) -> None:
+    def check_recipe_legacy(self, recipe: Recipe) -> None:
         for package in recipe.packages.values():
             if not self._check_line(recipe.get(f"{package.path_prefix}build/script", None)):
                 self.message(
@@ -512,21 +524,21 @@ class pip_install_args(LintCheck):
                     section=f"{package.path_prefix}script",
                     data=(recipe, f"{package.path_prefix}script"),
                 )
-            elif self.recipe.dir:
+            elif self.percy_recipe.dir:
                 try:
-                    build_file = self.recipe.get(f"{package.path_prefix}script", "")
+                    build_file = self.percy_recipe.get(f"{package.path_prefix}script", "")
                     if not build_file:
-                        build_file = self.recipe.get(f"{package.path_prefix}build/script", "build.sh")
-                    build_file = self.recipe.dir / Path(build_file)
+                        build_file = self.percy_recipe.get(f"{package.path_prefix}build/script", "build.sh")
+                    build_file = self.percy_recipe.dir / Path(build_file)
                     if build_file.exists():
                         with open(str(build_file), encoding="utf-8") as buildsh:
-                            for num, line in enumerate(buildsh):
+                            for line in buildsh:
                                 if not self._check_line(line):
                                     if package.path_prefix.startswith("output"):
                                         output = int(package.path_prefix.split("/")[1])
                                     else:
                                         output = -1
-                                    self.message(fname=build_file, line=num, output=output)
+                                    self.message(fname=build_file, output=output)
                 except (FileNotFoundError, TypeError):
                     pass
 
@@ -546,22 +558,22 @@ class pip_install_args(LintCheck):
         return recipe.patch(op)
 
 
-class cython_must_be_in_host(LintCheck):
+class python_build_tools_in_host(LintCheck):
     """
-    Cython should be in the host section
+    Python build tools should be in the host section
 
-    Move cython to ``host``::
+    Move python build tools to ``host``::
 
       requirements:
         host:
-          - cython
+          - setuptools
+          - pip
     """
 
-    def check_deps(self, deps) -> None:
-        if "cython" in deps:
-            for location in deps["cython"]["paths"]:
-                if "/host" not in location:
-                    self.message(section=location)
+    def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
+        for dependency_path in recipe.get_dependency_paths():
+            if recipe.get_value(dependency_path) in PYTHON_BUILD_TOOLS and "/host" not in dependency_path:
+                self.message(section=dependency_path)
 
 
 class cython_needs_compiler(LintCheck):
@@ -576,18 +588,17 @@ class cython_needs_compiler(LintCheck):
 
     """
 
-    def check_deps(self, deps) -> None:
-        if "cython" in deps:
-            for location in deps["cython"]["paths"]:
-                if location.startswith("outputs"):
-                    n = location.split("/")[1]
-                    section = f"outputs/{n}/requirements/build"
-                    output = int(n)
-                else:
-                    section = "requirements/build"
-                    output = -1
-                if "compiler_c" not in self.recipe.get(section, ""):
-                    self.message(section=section, output=output)
+    def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
+        for dependency_path in recipe.get_dependency_paths():
+            if not recipe.get_value(dependency_path) == "cython":
+                continue
+            requirements_path = "/".join(dependency_path.split("/")[:-2])
+            build_deps = recipe.get_value(f"{requirements_path}/build", None)
+            if not build_deps or not isinstance(build_deps, list):
+                self.message(section=dependency_path)
+                continue
+            if "compiler_c" not in build_deps:
+                self.message(section=dependency_path)
 
 
 class avoid_noarch(LintCheck):
@@ -617,7 +628,7 @@ class avoid_noarch(LintCheck):
 
     """
 
-    def check_recipe(self, recipe: Recipe) -> None:
+    def check_recipe_legacy(self, recipe: Recipe) -> None:
         for package in recipe.packages.values():
             noarch = recipe.get(f"{package.path_prefix}build/noarch", "")
             if (
@@ -691,22 +702,19 @@ class patch_unnecessary(LintCheck):
           - msys2-patch
     """
 
-    def check_recipe(self, recipe: Recipe) -> None:
-        recipe_reader = RecipeReaderDeps(recipe.dump())
-        all_deps = recipe_reader.get_all_dependencies()
+    def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
+        all_deps = recipe.get_all_dependencies()
         for package in all_deps:
             for dep in all_deps[package]:
                 if dep.data.name in ["patch", "msys2-patch", "m2-patch"]:
-                    self.message(section=dep.path, data=recipe)
+                    self.message(section=dep.path)
                     return
 
     def fix(self, message, data) -> bool:
         # remove patch/msys2-patch/m2-patch from the recipe
-        recipe: Recipe = data
         try:
-            return recipe.patch_with_parser(
-                lambda parser: _utils.remove_deps_by_name_crm(parser, {"patch", "msys2-patch", "m2-patch"}),
-            )
+            _utils.remove_deps_by_name_crm(self.unrendered_recipe, {"patch", "msys2-patch", "m2-patch"})
+            return True
         except ValueError:
             return False
 
@@ -718,7 +726,7 @@ class has_run_test_and_commands(LintCheck):
     Add the test commands to run_test.sh/.bat/.pl
     """
 
-    def check_recipe(self, recipe: Recipe) -> None:
+    def check_recipe_legacy(self, recipe: Recipe) -> None:
         if outputs := recipe.get("outputs", None):
             for o in range(len(outputs)):
                 test_section = f"outputs/{o}/test"
@@ -751,7 +759,7 @@ class missing_imports_or_run_test_py(LintCheck):
           script: <test file>
     """
 
-    def check_recipe(self, recipe: Recipe) -> None:
+    def check_recipe_legacy(self, recipe: Recipe) -> None:
         is_pypi = is_pypi_source(recipe)
         deps = _utils.get_deps_dict(recipe, "host")
         if not is_pypi and "python" not in deps:
@@ -803,7 +811,7 @@ class missing_pip_check(LintCheck):
                         return
         self.message(fname=file, data=(recipe, package))
 
-    def check_recipe(self, recipe: Recipe) -> None:
+    def check_recipe_legacy(self, recipe: Recipe) -> None:
         is_pypi = is_pypi_source(recipe)
 
         single_output = True
@@ -894,7 +902,7 @@ class missing_test_requirement_pip(LintCheck):  #
         if commands := recipe.get(f"{test_section}/commands", None):
             if any("pip check" in cmd for cmd in commands):
                 return True
-        elif self.recipe.dir:
+        elif self.percy_recipe.dir:
             if output.startswith("outputs"):
                 script = recipe.get(f"{test_section}/script", "")
                 return self._check_file(os.path.join(recipe.dir, script))
@@ -909,7 +917,7 @@ class missing_test_requirement_pip(LintCheck):  #
                         return True
         return False
 
-    def check_recipe(self, recipe: Recipe) -> None:
+    def check_recipe_legacy(self, recipe: Recipe) -> None:
         for package in recipe.packages.values():
             if self._has_pip_check(recipe, output=package.path_prefix) and "pip" not in recipe.get(
                 f"{package.path_prefix}test/requires", []
@@ -942,7 +950,7 @@ class missing_python(LintCheck):
           - python
     """
 
-    def check_recipe(self, recipe: Recipe) -> None:
+    def check_recipe_legacy(self, recipe: Recipe) -> None:
         is_pypi = is_pypi_source(recipe)
         for package in recipe.packages.values():
             if (
@@ -992,7 +1000,7 @@ class remove_python_pinning(LintCheck):
           - python
     """
 
-    def check_recipe(self, recipe: Recipe) -> None:
+    def check_recipe_legacy(self, recipe: Recipe) -> None:
         for package in recipe.packages.values():
             if recipe.get(f"{package.path_prefix}build/noarch", "") == "":
                 for section in ["host", "run"]:
@@ -1023,25 +1031,27 @@ class no_git_on_windows(LintCheck):
     git is supplied by the cygwin environment. Installing it may break the build.
     """
 
-    def check_deps(self, deps) -> None:
-        if self.recipe.selector_dict.get("win", 0) == 1 and "git" in deps:
-            for path in deps["git"]["paths"]:
-                output = -1 if not path.startswith("outputs") else int(path.split("/")[1])
-                self.message(section=path, output=output, data=path)
+    def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
+        if not arch_name.startswith("win"):
+            return
+        for dependency_path in recipe.get_dependency_paths():
+            if recipe.get_value(dependency_path) == "git":
+                self.message(section=dependency_path)
 
     def fix(self, message, data) -> bool:
         # NOTE: The path found in `check_deps()` is a post-selector-rendering
         # path to the dependency. So in order to change the recipe file, we need
         # to relocate `git`, relative to the raw file.
-        def _add_git_selector(parser: RecipeParser) -> None:
-            paths = parser.find_value("git")
-            for path in paths:
-                # Attempt to filter-out false-positives
-                if "/requirements" not in path:
-                    continue
-                parser.add_selector(path, "[not win]", SelectorConflictMode.AND)
-
-        return self.recipe.patch_with_parser(_add_git_selector)
+        paths = self.unrendered_recipe.find_value("git")
+        for path in paths:
+            # Attempt to filter-out false-positives
+            if "/requirements" not in path:
+                continue
+            try:
+                self.unrendered_recipe.add_selector(path, "[not win]", SelectorConflictMode.AND)
+            except KeyError:
+                return False
+        return True
 
 
 class gui_app(LintCheck):
@@ -1064,6 +1074,6 @@ class gui_app(LintCheck):
         "wxpython",
     )
 
-    def check_recipe(self, recipe: Recipe) -> None:
+    def check_recipe_legacy(self, recipe: Recipe) -> None:
         if set(self.guis).intersection(set(_utils.get_deps(recipe, "run"))):
             self.message(severity=Severity.INFO)

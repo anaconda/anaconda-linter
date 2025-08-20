@@ -21,7 +21,7 @@ class version_constraints_missing_whitespace(LintCheck):
 
     """
 
-    def check_recipe(self, recipe) -> None:
+    def check_recipe_legacy(self, recipe) -> None:
         check_paths = []
         for section in ("build", "run", "host"):
             check_paths.append(f"requirements/{section}")
@@ -49,14 +49,14 @@ class version_constraints_missing_whitespace(LintCheck):
         check_paths = []
         for section in ("build", "run", "host"):
             check_paths.append(f"requirements/{section}")
-        if outputs := self.recipe.get("outputs", None):
+        if outputs := self.percy_recipe.get("outputs", None):
             for n in range(len(outputs)):
                 for section in ("build", "run", "host"):
                     check_paths.append(f"outputs/{n}/requirements/{section}")
 
         constraints = re.compile("(.*?)([!<=>].*)")
         for path in check_paths:
-            for spec in self.recipe.get(path, []):
+            for spec in self.percy_recipe.get(path, []):
                 has_constraints = constraints.search(spec)
                 if has_constraints:
                     # The second condition is a fallback.
@@ -64,5 +64,5 @@ class version_constraints_missing_whitespace(LintCheck):
                     space_separated = has_constraints[1].endswith(" ") or " " in has_constraints[0]
                     if not space_separated:
                         dep, ver = has_constraints.groups()
-                        self.recipe.replace(spec, f"{dep} {ver}", within="requirements")
+                        self.percy_recipe.replace(spec, f"{dep} {ver}", within="requirements")
         return True
