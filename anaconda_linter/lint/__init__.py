@@ -877,9 +877,9 @@ class Linter:
                     if fix and unrendered_recipe.is_modified():
                         with open(write_path, "w", encoding="utf-8") as fdes:
                             fdes.write(unrendered_recipe.render())
-        except Exception as e:  # pylint: disable=broad-exception-caught
+        except Exception:  # pylint: disable=broad-exception-caught
             recipe = _recipe.Recipe(recipe_name)
-            return [linter_failure.make_message(recipe=recipe, fname=recipe_name, title_in=e.message)]
+            return [linter_failure.make_message(recipe=recipe, fname=recipe_name)]
 
         return list(messages)
 
