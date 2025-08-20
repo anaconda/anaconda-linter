@@ -810,8 +810,9 @@ class Linter:
         # Gather variants for specified subdir
         # As a stopgap, this process outputs a tuple per variant with
         # variants and variant info using Percy
-        # TODO: replace with CRM variants generation
+        # TODO: replace with CRM variants generation -> CRM #399
         # TODO: track recipe variants (python version, arch, etc.) all the way to error reporting to ease fixing
+        # anaconda-linter #403
         recipe_variants: list[tuple] = []
         try:
             meta_yaml = Path(recipe_name) / "meta.yaml"
