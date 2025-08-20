@@ -76,8 +76,8 @@ def test_missing_section_bad_multi(base_yaml: str) -> None:
 @pytest.mark.parametrize(
     "recipe_file",
     [
-        ("tests/test_aux_files/auto_fix/streamlit-folium.yaml"),
-        ("tests/test_aux_files/auto_fix/build_number_multi_output.yaml"),
+        ("auto_fix/streamlit-folium.yaml"),
+        ("auto_fix/build_number_multi_output.yaml"),
     ],
 )
 def test_no_missing_build_number(recipe_file: str) -> None:
@@ -90,8 +90,8 @@ def test_no_missing_build_number(recipe_file: str) -> None:
 @pytest.mark.parametrize(
     "recipe_file",
     [
-        "tests/test_aux_files/auto_fix/build_number_missing.yaml",
-        "tests/test_aux_files/auto_fix/build_number_missing_multi_output.yaml",
+        "auto_fix/build_number_missing.yaml",
+        "auto_fix/build_number_missing_multi_output.yaml",
     ],
 )
 def test_missing_build_number(recipe_file: str) -> None:

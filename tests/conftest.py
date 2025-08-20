@@ -22,6 +22,13 @@ TEST_FILES_PATH: Final[str] = "tests/test_aux_files"
 TEST_AUTO_FIX_FILES_PATH: Final[str] = f"{TEST_FILES_PATH}/auto_fix"
 
 
+def get_test_path() -> Path:
+    """
+    Returns a path object that points to the directory containing all auxiliary testing files.
+    """
+    return Path(TEST_FILES_PATH)
+
+
 @pytest.fixture()
 def linter() -> Linter:
     """Sets up linter for use in other tests"""
@@ -152,7 +159,8 @@ def assert_lint_messages(recipe_file: str, lint_check: str, msg_title: str, msg_
     :param msg_title: Title of the lint message to check for
     :param msg_count: Number of lint messages to expect
     """
-    messages: Final = check(lint_check, read_recipe_content(recipe_file))
+    recipe_file_path: Final[Path] = get_test_path() / recipe_file
+    messages: Final = check(lint_check, read_recipe_content(recipe_file_path))
     assert len(messages) == msg_count and all(msg_title in msg.title for msg in messages)
 
 
@@ -162,7 +170,8 @@ def assert_no_lint_message(recipe_file: str, lint_check: str) -> None:
     :param recipe_file: Path to the recipe file to read
     :param lint_check: Name of the linting rule. This corresponds with input and output files.
     """
-    messages: Final = check(lint_check, read_recipe_content(recipe_file))
+    recipe_file_path: Final[Path] = get_test_path() / recipe_file
+    messages: Final = check(lint_check, read_recipe_content(recipe_file_path))
     assert len(messages) == 0
 
 
