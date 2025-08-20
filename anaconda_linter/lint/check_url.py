@@ -35,7 +35,7 @@ class invalid_url(LintCheck):
         else:
             _verify_url(url)
 
-    def check_recipe(self, recipe) -> None:
+    def check_recipe_legacy(self, recipe) -> None:
         url_fields: list[str] = [
             "about/home",
             "about/doc_url",
@@ -83,7 +83,7 @@ class http_url(LintCheck):
         else:
             self._check_url(url, section)
 
-    def check_recipe(self, recipe) -> None:
+    def check_recipe_legacy(self, recipe) -> None:
         url_fields = [
             "about/home",
             "about/doc_url",

@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Final
 
 import pytest
+from conda_recipe_manager.parser.recipe_reader_deps import RecipeReaderDeps
 from conftest import check, check_dir
 from percy.render._renderer import RendererType
 from percy.render.exceptions import RecipeError
@@ -23,7 +24,7 @@ class DummyInfo(lint.LintCheck):
     Info message
     """
 
-    def check_recipe(self, _) -> None:
+    def check_recipe_legacy(self, _) -> None:
         self.message(severity=Severity.INFO)
 
 
@@ -32,7 +33,7 @@ class DummyWarning(lint.LintCheck):
     Warning message
     """
 
-    def check_recipe(self, _) -> None:
+    def check_recipe_legacy(self, _) -> None:
         self.message(severity=Severity.WARNING)
 
 
@@ -41,7 +42,7 @@ class DummyError(lint.LintCheck):
     Error message
     """
 
-    def check_recipe(self, _) -> None:
+    def check_recipe_legacy(self, _) -> None:
         self.message(severity=Severity.ERROR)
 
 
@@ -50,11 +51,11 @@ class DummyErrorFormat(lint.LintCheck):
     {} message of severity {}
     """
 
-    def check_recipe(self, _) -> None:
+    def check_recipe_legacy(self, _) -> None:
         self.message("Dummy", "ERROR")
 
 
-def test_only_lint(base_yaml: str, linter: Linter) -> None:
+def test_only_lint(base_yaml: str, linter: Linter, recipe_dir: Path) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -65,12 +66,13 @@ def test_only_lint(base_yaml: str, linter: Linter) -> None:
             - DummyWarning
         """
     )
-    recipes = [Recipe.from_string(recipe_text=yaml_str, renderer=RendererType.RUAMEL)]
-    linter.lint(recipes)
+    meta_yaml = recipe_dir / "meta.yaml"
+    meta_yaml.write_text(yaml_str)
+    linter.lint([str(recipe_dir)])
     assert len(linter.get_messages()) == 3
 
 
-def test_skip_lints(base_yaml: str, linter: Linter) -> None:
+def test_skip_lints(base_yaml: str, linter: Linter, recipe_dir: Path) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -81,13 +83,14 @@ def test_skip_lints(base_yaml: str, linter: Linter) -> None:
             - DummyWarning
         """
     )
-    recipes_base = [Recipe.from_string(recipe_text=base_yaml, renderer=RendererType.RUAMEL)]
-    linter.lint(recipes_base)
+    meta_yaml = recipe_dir / "meta.yaml"
+    meta_yaml.write_text(base_yaml)
+    linter.lint([str(recipe_dir)])
     messages_base = linter.get_messages()
     linter.clear_messages()
     assert len(linter.get_messages()) == 0
-    recipes_skip = [Recipe.from_string(recipe_text=yaml_str, renderer=RendererType.RUAMEL)]
-    linter.lint(recipes_skip)
+    meta_yaml.write_text(yaml_str)
+    linter.lint([str(recipe_dir)])
     messages_skip = linter.get_messages()
     assert len(messages_base) == len(messages_skip) + 3
 
@@ -153,7 +156,7 @@ def test_severity_level(base_yaml: str, level: Severity, string: str, lint_check
 
 
 @pytest.mark.parametrize("level,expected", ((Severity.INFO, 3), (Severity.WARNING, 2), (Severity.ERROR, 1)))
-def test_severity_min_enum(base_yaml: str, level: Severity | str, expected: int) -> None:
+def test_severity_min_enum(base_yaml: str, level: Severity | str, expected: int, recipe_dir: Path) -> None:
     yaml_str = (
         base_yaml
         + """
@@ -164,11 +167,12 @@ def test_severity_min_enum(base_yaml: str, level: Severity | str, expected: int)
             - DummyWarning
         """
     )
-    recipes = [Recipe.from_string(recipe_text=yaml_str, renderer=RendererType.RUAMEL)]
+    meta_yaml = recipe_dir / "meta.yaml"
+    meta_yaml.write_text(yaml_str)
     config_file = Path(__file__).parent / "config.yaml"
     config = utils.load_config(config_file)
     linter = lint.Linter(config=config, severity_min=level)
-    linter.lint(recipes)
+    linter.lint([str(recipe_dir)])
     assert len(linter.get_messages()) == expected
 
 
@@ -197,7 +201,7 @@ def test_lint_list() -> None:
         ("pin_subpackage('dotnet-runtime', exact=True, badParam=False)", True),
     ],
 )
-def test_jinja_functions(base_yaml: str, jinja_func: str, expected: bool) -> None:
+def test_jinja_functions(base_yaml: str, jinja_func: str, expected: bool, recipe_dir: Path) -> None:
     def run_lint(yaml_str: str) -> list[LintMessage]:
         config_file = Path(__file__).parent / "config.yaml"
         config = utils.load_config(config_file)
@@ -207,20 +211,21 @@ def test_jinja_functions(base_yaml: str, jinja_func: str, expected: bool) -> Non
         # we don't have conditional logic in our tests?
         if not jinja_func == "pin_subpackage('dotnet-runtime', exact=True, badParam=False)":
             print(jinja_func)
-            recipe = Recipe.from_string(
-                recipe_text=yaml_str, renderer=RendererType.RUAMEL, variant={"target_platform": "dummy-platform"}
-            )
-            linter.lint([recipe])
+            meta_yaml = recipe_dir / "meta.yaml"
+            meta_yaml.write_text(yaml_str)
+            linter.lint([str(recipe_dir)])
             messages = linter.get_messages()
             return messages
 
         # Only this test needs the weird exception handling
+        # TODO: Investigate if we can remove this try/except block, and not pass a line to the section
+        # argument in the make_message function
         try:
             recipe = Recipe.from_string(recipe_text=yaml_str, renderer=RendererType.RUAMEL)
         except RecipeError as exc:
-            recipe = Recipe("")
+            recipe = RecipeReaderDeps("")
             check_cls = lint.recipe_error_to_lint_check.get(exc.__class__, lint.linter_failure)
-            messages = [check_cls.make_message(recipe=recipe, line=getattr(exc, "line"))]
+            messages = [check_cls.make_message(recipe=recipe, fname="recipe", section=getattr(exc, "line"))]
             return messages
 
         # Should not reach here
@@ -260,7 +265,7 @@ def test_error_report_line(base_yaml: str) -> None:
     )
     lint_check = "incorrect_license"
     messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and messages[0].start_line == 5
+    assert len(messages) == 1 and messages[0].section == "/about/license"
 
 
 def test_message_title(base_yaml: str) -> None:
@@ -292,7 +297,7 @@ def test_get_report_error() -> None:
             severity=Severity.WARNING,
             recipe=None,
             fname="fake_feedstock/recipe/meta.yaml",
-            start_line=1,
+            section="/about/license",
             check="dummy_warning",
             title="Warning message 1",
         ),
@@ -300,7 +305,7 @@ def test_get_report_error() -> None:
             severity=Severity.ERROR,
             recipe=None,
             fname="fake_feedstock/recipe/meta.yaml",
-            start_line=1,
+            section="/build/number",
             check="dummy_error",
             title="Error message 1",
         ),
@@ -308,7 +313,7 @@ def test_get_report_error() -> None:
             severity=Severity.ERROR,
             recipe=None,
             fname="fake_feedstock/recipe/meta.yaml",
-            start_line=1,
+            section="/outputs/0/name",
             check="dummy_error",
             title="Error message 2",
         ),
@@ -319,10 +324,10 @@ def test_get_report_error() -> None:
     assert report == (
         "The following problems have been found:\n"
         "\n===== WARNINGS =====\n"
-        "- fake_feedstock/recipe/meta.yaml:0: dummy_warning: Warning message 1\n"
+        "- fake_feedstock/recipe/meta.yaml:/about/license: dummy_warning: Warning message 1\n"
         "\n===== ERRORS ====="
-        "\n- fake_feedstock/recipe/meta.yaml:0: dummy_error: Error message 1\n"
-        "- fake_feedstock/recipe/meta.yaml:0: dummy_error: Error message 2\n"
+        "\n- fake_feedstock/recipe/meta.yaml:/build/number: dummy_error: Error message 1\n"
+        "- fake_feedstock/recipe/meta.yaml:/outputs/0/name: dummy_error: Error message 2\n"
         "===== Final Report: =====\n"
         "2 Errors and 1 Warning were found"
     )
@@ -337,7 +342,7 @@ def test_get_report_auto_fixes() -> None:
             severity=Severity.WARNING,
             recipe=None,
             fname="fake_feedstock/recipe/meta.yaml",
-            start_line=1,
+            section="/about/license",
             check="dummy_warning",
             title="Warning message 1",
         ),
@@ -345,7 +350,7 @@ def test_get_report_auto_fixes() -> None:
             severity=Severity.ERROR,
             recipe=None,
             fname="fake_feedstock/recipe/meta.yaml",
-            start_line=1,
+            section="/build/number",
             check="dummy_error",
             title="Error message 1",
         ),
@@ -353,7 +358,7 @@ def test_get_report_auto_fixes() -> None:
             severity=Severity.ERROR,
             recipe=None,
             fname="fake_feedstock/recipe/meta.yaml",
-            start_line=1,
+            section="/outputs/0/name",
             check="auto_fix_1",
             title="Auto message 1",
             auto_fix_state=AutoFixState.FIX_PASSED,
@@ -362,7 +367,7 @@ def test_get_report_auto_fixes() -> None:
             severity=Severity.ERROR,
             recipe=None,
             fname="fake_feedstock/recipe/meta.yaml",
-            start_line=80,
+            section="/outputs/1/requirements/run/0",
             check="dummy_error",
             title="Error message 2",
         ),
@@ -370,7 +375,7 @@ def test_get_report_auto_fixes() -> None:
             severity=Severity.WARNING,
             recipe=None,
             fname="fake_feedstock/recipe/meta.yaml",
-            start_line=37,
+            section="/outputs/1/requirements/run/0",
             check="auto_fix_2",
             title="Auto message 2",
             auto_fix_state=AutoFixState.FIX_PASSED,
@@ -379,7 +384,7 @@ def test_get_report_auto_fixes() -> None:
             severity=Severity.ERROR,
             recipe=None,
             fname="fake_feedstock/recipe/meta.yaml",
-            start_line=42,
+            section="/outputs/1/requirements/host/3",
             check="auto_fix_3",
             title="Auto message 3",
             auto_fix_state=AutoFixState.FIX_FAILED,
@@ -394,11 +399,11 @@ def test_get_report_auto_fixes() -> None:
         "- auto_fix_1\n"
         "- auto_fix_2\n"
         "\n===== WARNINGS =====\n"
-        "- fake_feedstock/recipe/meta.yaml:0: dummy_warning: Warning message 1\n"
+        "- fake_feedstock/recipe/meta.yaml:/about/license: dummy_warning: Warning message 1\n"
         "\n===== ERRORS ====="
-        "\n- fake_feedstock/recipe/meta.yaml:0: dummy_error: Error message 1\n"
-        "- fake_feedstock/recipe/meta.yaml:0: dummy_error: Error message 2\n"
-        "- fake_feedstock/recipe/meta.yaml:0: auto_fix_3: Auto message 3\n"
+        "\n- fake_feedstock/recipe/meta.yaml:/build/number: dummy_error: Error message 1\n"
+        "- fake_feedstock/recipe/meta.yaml:/outputs/1/requirements/run/0: dummy_error: Error message 2\n"
+        "- fake_feedstock/recipe/meta.yaml:/outputs/1/requirements/host/3: auto_fix_3: Auto message 3\n"
         "===== Final Report: =====\n"
         "Automatically fixed 2 issues.\n"
         "3 Errors and 1 Warning were found"
@@ -414,11 +419,9 @@ def test_get_report_no_error() -> None:
             severity=Severity.INFO,
             recipe=None,
             fname="fake_feedstock/recipe/meta.yaml",
-            start_line=1,
             check="dummy_info",
             title="Info message",
         )
     ]
-    print(messages)
     report: Final[str] = Linter.get_report(messages)
     assert report == ("All checks OK")
