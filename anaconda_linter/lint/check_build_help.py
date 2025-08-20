@@ -590,14 +590,15 @@ class cython_needs_compiler(LintCheck):
 
     def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
         for dependency_path in recipe.get_dependency_paths():
-            if recipe.get_value(dependency_path) == "cython":
-                requirements_path = "/".join(dependency_path.split("/")[:-2])
-                build_deps = recipe.get_value(f"{requirements_path}/build", None)
-                if not build_deps or not isinstance(build_deps, list):
-                    self.message(section=dependency_path)
-                    continue
-                if "compiler_c" not in build_deps:
-                    self.message(section=dependency_path)
+            if not recipe.get_value(dependency_path) == "cython":
+                continue
+            requirements_path = "/".join(dependency_path.split("/")[:-2])
+            build_deps = recipe.get_value(f"{requirements_path}/build", None)
+            if not build_deps or not isinstance(build_deps, list):
+                self.message(section=dependency_path)
+                continue
+            if "compiler_c" not in build_deps:
+                self.message(section=dependency_path)
 
 
 class avoid_noarch(LintCheck):
