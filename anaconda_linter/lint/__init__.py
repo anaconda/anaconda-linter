@@ -318,8 +318,9 @@ class LintCheck(metaclass=LintCheckMeta):
                 recipe=self.recipe,
                 fname=recipe_name,
                 severity=Severity.ERROR,
-                title_in="An unexpected error occurred in CRM. "
-                "Please report this issue to the pi-automation team through the #pi-automation channel.",
+                title_in="An unexpected error occurred in the linter. "
+                "Please describe the issue in https://github.com/anaconda/anaconda-linter/issues/new, "
+                "and we will fix it as soon as possible.",
                 body_in="",
             )
             return [message]
@@ -332,8 +333,9 @@ class LintCheck(metaclass=LintCheckMeta):
                 recipe=self.percy_recipe,
                 fname=recipe_name,
                 severity=Severity.ERROR,
-                title_in="An unexpected error occurred in Percy. "
-                "Please report this issue to the pi-automation team through the #pi-automation channel.",
+                title_in="An unexpected error occurred in the linter. "
+                "Please describe the issue in https://github.com/anaconda/anaconda-linter/issues/new, "
+                "and we will fix it as soon as possible.",
                 body_in="",
             )
             return [message]
