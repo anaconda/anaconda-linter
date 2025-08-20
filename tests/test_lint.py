@@ -297,6 +297,7 @@ def test_get_report_error() -> None:
             severity=Severity.WARNING,
             recipe=None,
             fname="fake_feedstock/recipe/meta.yaml",
+            section="/about/license",
             check="dummy_warning",
             title="Warning message 1",
         ),
@@ -304,6 +305,7 @@ def test_get_report_error() -> None:
             severity=Severity.ERROR,
             recipe=None,
             fname="fake_feedstock/recipe/meta.yaml",
+            section="/build/number",
             check="dummy_error",
             title="Error message 1",
         ),
@@ -311,6 +313,7 @@ def test_get_report_error() -> None:
             severity=Severity.ERROR,
             recipe=None,
             fname="fake_feedstock/recipe/meta.yaml",
+            section="/outputs/0/name",
             check="dummy_error",
             title="Error message 2",
         ),
@@ -321,10 +324,10 @@ def test_get_report_error() -> None:
     assert report == (
         "The following problems have been found:\n"
         "\n===== WARNINGS =====\n"
-        "- fake_feedstock/recipe/meta.yaml:: dummy_warning: Warning message 1\n"
+        "- fake_feedstock/recipe/meta.yaml:/about/license: dummy_warning: Warning message 1\n"
         "\n===== ERRORS ====="
-        "\n- fake_feedstock/recipe/meta.yaml:: dummy_error: Error message 1\n"
-        "- fake_feedstock/recipe/meta.yaml:: dummy_error: Error message 2\n"
+        "\n- fake_feedstock/recipe/meta.yaml:/build/number: dummy_error: Error message 1\n"
+        "- fake_feedstock/recipe/meta.yaml:/outputs/0/name: dummy_error: Error message 2\n"
         "===== Final Report: =====\n"
         "2 Errors and 1 Warning were found"
     )
@@ -339,6 +342,7 @@ def test_get_report_auto_fixes() -> None:
             severity=Severity.WARNING,
             recipe=None,
             fname="fake_feedstock/recipe/meta.yaml",
+            section="/about/license",
             check="dummy_warning",
             title="Warning message 1",
         ),
@@ -346,6 +350,7 @@ def test_get_report_auto_fixes() -> None:
             severity=Severity.ERROR,
             recipe=None,
             fname="fake_feedstock/recipe/meta.yaml",
+            section="/build/number",
             check="dummy_error",
             title="Error message 1",
         ),
@@ -353,6 +358,7 @@ def test_get_report_auto_fixes() -> None:
             severity=Severity.ERROR,
             recipe=None,
             fname="fake_feedstock/recipe/meta.yaml",
+            section="/outputs/0/name",
             check="auto_fix_1",
             title="Auto message 1",
             auto_fix_state=AutoFixState.FIX_PASSED,
@@ -361,6 +367,7 @@ def test_get_report_auto_fixes() -> None:
             severity=Severity.ERROR,
             recipe=None,
             fname="fake_feedstock/recipe/meta.yaml",
+            section="/outputs/1/requirements/run/0",
             check="dummy_error",
             title="Error message 2",
         ),
@@ -368,6 +375,7 @@ def test_get_report_auto_fixes() -> None:
             severity=Severity.WARNING,
             recipe=None,
             fname="fake_feedstock/recipe/meta.yaml",
+            section="/outputs/1/requirements/run/0",
             check="auto_fix_2",
             title="Auto message 2",
             auto_fix_state=AutoFixState.FIX_PASSED,
@@ -376,6 +384,7 @@ def test_get_report_auto_fixes() -> None:
             severity=Severity.ERROR,
             recipe=None,
             fname="fake_feedstock/recipe/meta.yaml",
+            section="/outputs/1/requirements/host/3",
             check="auto_fix_3",
             title="Auto message 3",
             auto_fix_state=AutoFixState.FIX_FAILED,
@@ -390,11 +399,11 @@ def test_get_report_auto_fixes() -> None:
         "- auto_fix_1\n"
         "- auto_fix_2\n"
         "\n===== WARNINGS =====\n"
-        "- fake_feedstock/recipe/meta.yaml:: dummy_warning: Warning message 1\n"
+        "- fake_feedstock/recipe/meta.yaml:/about/license: dummy_warning: Warning message 1\n"
         "\n===== ERRORS ====="
-        "\n- fake_feedstock/recipe/meta.yaml:: dummy_error: Error message 1\n"
-        "- fake_feedstock/recipe/meta.yaml:: dummy_error: Error message 2\n"
-        "- fake_feedstock/recipe/meta.yaml:: auto_fix_3: Auto message 3\n"
+        "\n- fake_feedstock/recipe/meta.yaml:/build/number: dummy_error: Error message 1\n"
+        "- fake_feedstock/recipe/meta.yaml:/outputs/1/requirements/run/0: dummy_error: Error message 2\n"
+        "- fake_feedstock/recipe/meta.yaml:/outputs/1/requirements/host/3: auto_fix_3: Auto message 3\n"
         "===== Final Report: =====\n"
         "Automatically fixed 2 issues.\n"
         "3 Errors and 1 Warning were found"
