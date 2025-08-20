@@ -18,9 +18,6 @@ from anaconda_linter import __version__, lint, utils
 DEFAULT_SUBDIRS: Final[list[str]] = [
     "linux-64",
     "linux-aarch64",
-    "linux-ppc64le",
-    "linux-s390x",
-    "osx-64",
     "osx-arm64",
     "win-64",
 ]
