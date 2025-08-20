@@ -8,20 +8,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from conftest import check, check_dir
-
-
-def read_recipe_content(recipe_file: str) -> str:
-    """
-    Helper function to read the content of a recipe file.
-    """
-    with open(recipe_file, encoding="utf-8") as f:
-        return f.read()
-
-
-def assert_lint_check_msg_count(file_name: str, lint_check: str, msg_count: int = 0):
-    messages = check(lint_check, read_recipe_content(file_name))
-    assert len(messages) == msg_count
+from conftest import assert_lint_messages, assert_no_lint_message, check, check_dir
 
 
 def test_missing_section_good(base_yaml: str) -> None:
@@ -89,18 +76,15 @@ def test_missing_section_bad_multi(base_yaml: str) -> None:
 @pytest.mark.parametrize(
     "recipe_file",
     [
-        "tests/test_aux_files/auto_fix/streamlit-folium.yaml",
-        "tests/test_aux_files/auto_fix/build_number_multi_output.yaml",
+        ("tests/test_aux_files/auto_fix/streamlit-folium.yaml"),
+        ("tests/test_aux_files/auto_fix/build_number_multi_output.yaml"),
     ],
 )
 def test_no_missing_build_number(recipe_file: str) -> None:
     """
     Test that the missing_build_number lint check works correctly when the recipe has a build number.
     """
-    messages = check("missing_build_number", read_recipe_content(recipe_file))
-    assert_lint_check_msg_count(recipe_file, "missing_build_number", 0)
-
-    assert len(messages) == 0
+    assert_no_lint_message(recipe_file, "missing_build_number")
 
 
 @pytest.mark.parametrize(
@@ -114,8 +98,7 @@ def test_missing_build_number(recipe_file: str) -> None:
     """
     Test that the missing_build_number lint check works correctly when the recipe does not have a build number.
     """
-    messages = check("missing_build_number", read_recipe_content(recipe_file))
-    assert len(messages) == 1 and "missing a build number" in messages[0].title
+    assert_lint_messages(recipe_file, "missing_build_number", "missing a build number")
 
 
 def test_missing_package_name_good(base_yaml: str) -> None:  # pylint: disable=unused-argument

@@ -134,6 +134,38 @@ def check_dir(check_name: str, feedstock_dir: str | Path, recipe_str: str, arch:
     return messages
 
 
+def read_recipe_content(recipe_file: str) -> str:
+    """
+    Helper function to read the content of a recipe file.
+    :param recipe_file: Path to the recipe file to read
+    :return: The content of the recipe file as a string
+    """
+    with open(recipe_file, encoding="utf-8") as f:
+        return f.read()
+
+
+def assert_lint_messages(recipe_file: str, lint_check: str, msg_title: str, msg_count: int = 1):
+    """
+    Assert that a recipe file has a specific number of lint messages for a specific lint check.
+    :param recipe_file: Path to the recipe file to read
+    :param lint_check: Name of the linting rule. This corresponds with input and output files.
+    :param msg_title: Title of the lint message to check for
+    :param msg_count: Number of lint messages to expect
+    """
+    messages: Final = check(lint_check, read_recipe_content(recipe_file))
+    assert len(messages) == msg_count and all(msg_title in msg.title for msg in messages)
+
+
+def assert_no_lint_message(recipe_file: str, lint_check: str) -> None:
+    """
+    Assert that a recipe file has no lint messages for a specific lint check.
+    :param recipe_file: Path to the recipe file to read
+    :param lint_check: Name of the linting rule. This corresponds with input and output files.
+    """
+    messages: Final = check(lint_check, read_recipe_content(recipe_file))
+    assert len(messages) == 0
+
+
 def assert_on_auto_fix(check_name: str, suffix: str, arch: str) -> None:
     """
     Utility function executes a fix function against an offending recipe file. Then asserts the resulting file against
