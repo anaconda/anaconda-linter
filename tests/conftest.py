@@ -29,6 +29,8 @@ TEST_AUTO_FIX_FILES_PATH: Final[str] = f"{TEST_FILES_PATH}/auto_fix"
 def get_test_path() -> Path:
     """
     Returns a path object that points to the directory containing all auxiliary testing files.
+    
+    :returns: Path object that points to where all additional test files are stored.
     """
     return Path(TEST_FILES_PATH)
 
@@ -175,8 +177,9 @@ def check_dir(check_name: str, feedstock_dir: str | Path, recipe_str: str, arch:
 def read_recipe_content(recipe_file: str) -> str:
     """
     Helper function to read the content of a recipe file.
+    
     :param recipe_file: Path to the recipe file to read
-    :return: The content of the recipe file as a string
+    :returns: The content of the recipe file as a string
     """
     with open(recipe_file, encoding="utf-8") as f:
         return f.read()
@@ -184,7 +187,7 @@ def read_recipe_content(recipe_file: str) -> str:
 
 def assert_lint_messages(recipe_file: str, lint_check: str, msg_title: str, msg_count: int = 1):
     """
-    Assert that a recipe file has a specific number of lint messages for a specific lint check.
+    Assert that a recipe file has a specific number and type of lint message for a specific lint check.
     :param recipe_file: Path to the recipe file to read
     :param lint_check: Name of the linting rule. This corresponds with input and output files.
     :param msg_title: Title of the lint message to check for
