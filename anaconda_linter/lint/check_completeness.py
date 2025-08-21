@@ -10,7 +10,7 @@ import re
 from typing import Final
 
 import conda_build.license_family
-from conda_recipe_manager.parser.recipe_reader import RecipeReader
+from conda_recipe_manager.parser.recipe_reader_deps import RecipeReaderDeps
 from percy.render.recipe import OpMode, Recipe
 
 from anaconda_linter.lint import LintCheck, Severity
@@ -54,13 +54,12 @@ class missing_build_number(LintCheck):
             number: 0
     """
 
+    def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
 
-    def check_recipe(self, recipe: Recipe) -> None:
-        reader: Final = RecipeReader(recipe.dump())
-
-        contains_value: Final = reader.contains_value("/build/number/")
+        contains_value: Final = recipe.contains_value("/build/number/")
         if not contains_value:
             self.message(section="build", data=recipe)
+
 
 class missing_package_name(LintCheck):
     """
