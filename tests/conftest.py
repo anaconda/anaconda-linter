@@ -100,6 +100,7 @@ def check(
     recipe_str: str,
     arch: str = "linux-64",
     expand_variant: Optional[Variant] = None,
+    fix: bool = False,
 ) -> list[LintMessage]:
     """
     Utility function that checks a linting rule against a recipe file.
@@ -116,6 +117,7 @@ def check(
         percy_recipe=percy_recipe,
         recipe_name="dummy",
         arch_name=arch,
+        fix=fix,
     )
     return messages
 

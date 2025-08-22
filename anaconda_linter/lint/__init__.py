@@ -407,6 +407,7 @@ class LintCheck(metaclass=LintCheckMeta):
         severity: Severity = SEVERITY_DEFAULT,
         data: Any = None,
         output: int = -1,
+        title_in: str = None,
     ) -> None:
         """
         Add a message to the lint results
@@ -441,6 +442,7 @@ class LintCheck(metaclass=LintCheckMeta):
             severity=severity,
             canfix=self.can_auto_fix(),
             output=output,
+            title_in=title_in,
         )
         # If able, attempt to autofix the rule and mark the message object accordingly
         if self.try_fix and self.can_auto_fix():

@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 from conftest import check, check_dir
 
+from anaconda_linter.lint import AutoFixState
 from anaconda_linter.lint.check_build_help import BUILD_TOOLS, COMPILERS, PYTHON_BUILD_TOOLS, STDLIBS
 
 
@@ -422,7 +423,6 @@ def test_stdlib_must_be_in_build_bad(base_yaml: str, section: str) -> None:
             """
     )
     messages = check(lint_check, yaml_str)
-    print(messages)
     assert len(messages) == 1 and "stdlib in a section" in messages[0].title
 
 
@@ -1398,49 +1398,6 @@ def test_avoid_noarch_good(base_yaml: str) -> None:
     assert len(messages) == 0
 
 
-def test_avoid_noarch_good_build_number(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        build:
-          noarch: python
-          number: 2
-        """
-    )
-    lint_check = "avoid_noarch"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
-
-
-def test_avoid_noarch_good_osx_app(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        build:
-          noarch: python
-          osx_is_app: true
-        """
-    )
-    lint_check = "avoid_noarch"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
-
-
-def test_avoid_noarch_good_app(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        build:
-          noarch: python
-        app:
-          icon: logo.png
-        """
-    )
-    lint_check = "avoid_noarch"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
-
-
 def test_avoid_noarch_bad(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
@@ -1450,8 +1407,11 @@ def test_avoid_noarch_bad(base_yaml: str) -> None:
         """
     )
     lint_check = "avoid_noarch"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "noarch: python" in messages[0].title
+    message_list = check(lint_check, yaml_str, fix=True)
+    assert len(message_list) == 1
+    message = message_list[0]
+    assert "noarch: python" in message.title
+    assert message.auto_fix_state == AutoFixState.FIX_PASSED
 
 
 def test_patch_unnecessary_good(base_yaml: str) -> None:

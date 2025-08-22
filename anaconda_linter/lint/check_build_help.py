@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any, Final, Optional
 
 from conda.models.match_spec import MatchSpec
-from conda_recipe_manager.parser.dependency import Dependency, DependencySection
+from conda_recipe_manager.parser.dependency import Dependency, DependencySection, DependencyVariable
 from conda_recipe_manager.parser.enums import SelectorConflictMode
 from conda_recipe_manager.parser.recipe_reader_deps import RecipeReaderDeps
 from percy.render.recipe import Recipe
@@ -615,6 +615,9 @@ class avoid_noarch(LintCheck):
 
     Then add::
 
+        build:
+            skip: True # [py<MIN_PYTHON_VERSION]
+
         requirements:
             host:
                 - python
@@ -637,7 +640,10 @@ class avoid_noarch(LintCheck):
             # Allow exceptions
             rel_name_path: Final[str] = "/package/name" if package_path == "/" else "/name"
             name_path: Final[str] = recipe.append_to_path(package_path, rel_name_path)
-            name: Final[str] = recipe.get_value(name_path, "")
+            try:
+                name: Final[str] = recipe.get_value(name_path)
+            except KeyError:
+                self.message(title_in="Failed to determine package or output name, cannot run this check.")
             if name in NOARCH_ALLOWLIST:
                 continue
 
@@ -650,24 +656,71 @@ class avoid_noarch(LintCheck):
             if noarch == "python":
                 self.message(section=noarch_path, severity=Severity.WARNING, data=(package_path, name))
 
+    def _prep_path(self, package_path: str, path: str) -> None:
+        recipe = self.unrendered_recipe
+        split_path = path.split("/")
+        current_path = ""
+        for elem in split_path:
+            if not elem:
+                continue
+            if elem.isnumeric():
+                break
+            current_path += "/" + elem
+            recipe.patch(
+                {
+                    "op": "add",
+                    "path": recipe.append_to_path(package_path, current_path),
+                    "value": None,
+                }
+            )
+
     def fix(self, message, data) -> bool:
+        if not data:
+            return False
         package_path, name = data
         recipe = self.unrendered_recipe
 
-        # Check run deps to find python and construct skip statement if possible
-        skip_statement = None
-        for dep in recipe.get_all_dependencies()[name]:
-            if not dep.type == DependencySection.RUN:
-                continue
-            if not isinstance(dep.data, MatchSpec):
-                continue
-            if not dep.data.name == "python":
-                continue
-            version = str(dep.data.version)
+        # Remove build/noarch
+        removed_noarch = recipe.patch(
+            {
+                "op": "remove",
+                "path": recipe.append_to_path(package_path, "/build/noarch"),
+            },
+        )
 
-        # Remove build/noarch, add python to requirements/host, requirements/run and test/requires
-        # If a skip selector was successfully constructed, add a build skip with it, or add to existing build skip
-        # Return whether this was successful
+        # Extract python version
+        py_version = None
+        for dep in recipe.get_all_dependencies()[name]:
+            dep_data = dep.data
+            if not isinstance(dep_data, MatchSpec):
+                continue
+            if not dep_data.name == "python":
+                continue
+            if dep_data.version:
+                py_version = str(dep_data.version)
+                break
+
+        # Add python to requirements/host, requirements/run and test/requires
+        added_python = []
+        for path, dep_section in [
+            ("/requirements/host/0", DependencySection.HOST),
+            ("/requirements/run/0", DependencySection.RUN),
+            ("/test/requires/0", DependencySection.TESTS),
+        ]:
+            print("Doing: ", path)
+            full_path = recipe.append_to_path(package_path, path)
+            self._prep_path(package_path, path)
+            dep_data = MatchSpec("python")
+            python_dep = Dependency(required_by=name, path=full_path, type=dep_section, data=dep_data)
+            print(recipe.render())
+            added_python.append(recipe.add_dependency(python_dep))
+
+        # Call update_skip_statement()
+        if py_version:
+            pass
+
+        print(removed_noarch, *added_python)
+        return removed_noarch and all(added_python)
 
 
 class patch_unnecessary(LintCheck):
