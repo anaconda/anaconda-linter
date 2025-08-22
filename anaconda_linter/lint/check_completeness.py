@@ -55,10 +55,20 @@ class missing_build_number(LintCheck):
     """
 
     def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
-
         contains_value: Final = recipe.contains_value("/build/number/")
-        if not contains_value:
+        if contains_value:
+            return
+        if not recipe.is_multi_output():
             self.message(section="build", data=recipe)
+            return
+
+        output_paths: Final = recipe.get_package_paths()
+        for package_path in output_paths:
+            if package_path == "/":
+                continue
+            path: Final = recipe.append_to_path(package_path, "build/number")
+            if not recipe.contains_value(path):
+                self.message(section="build", data=recipe)
 
 
 class missing_package_name(LintCheck):
