@@ -12,16 +12,16 @@ source:
 build:
   skip: true  # [py<37]
   script: {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
+  run_exports:
+    # OK for minor
+    # https://abi-laboratory.pro/?view=timeline&l=libdb
+    - bar
 
 
 outputs:
   - name: libdb
     build:
       number: 0
-      run_exports:
-        # OK for minor
-        # https://abi-laboratory.pro/?view=timeline&l=libdb
-        - bar
     test:
       commands:
         - test -f ${PREFIX}/lib/libdb${SHLIB_EXT}  # [unix]
