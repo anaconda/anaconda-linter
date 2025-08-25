@@ -1,0 +1,28 @@
+package:
+  name: test_package
+  version: 0.0.1
+
+build:
+
+outputs:
+  - name: test_output
+    build:
+      number: 0
+    requirements:
+      host:
+        - python
+      run:
+        - python
+    test:
+      requires:
+        - python
+
+requirements:
+  host:
+    - python
+  run:
+    - python
+
+test:
+  requires:
+    - python
