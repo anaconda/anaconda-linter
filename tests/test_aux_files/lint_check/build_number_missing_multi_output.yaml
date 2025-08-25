@@ -13,9 +13,9 @@ build:
   skip: true  # [py<37]
   script: {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
   run_exports:
-  # OK for minor
-  # https://abi-laboratory.pro/?view=timeline&l=libdb
-  - bar
+    # OK for minor
+    # https://abi-laboratory.pro/?view=timeline&l=libdb
+    - bar
 
 
 outputs:
