@@ -104,6 +104,9 @@ COMPILERS: Final[tuple] = (
 
 STDLIBS: Final[tuple] = ("sysroot", "macosx_deployment_target", "vs")  # linux  # osx  # windows
 
+# Allowlist for noarch packages
+NOARCH_ALLOWLIST: Final[set] = {*PYTHON_BUILD_TOOLS}
+
 
 def is_pypi_source(recipe: Recipe) -> bool:
     """
@@ -612,13 +615,17 @@ class avoid_noarch(LintCheck):
 
     Then add::
 
+        build:
+            skip: True # [py<MIN_PYTHON_VERSION]
+
         requirements:
             host:
                 - python
-                - pip
-                - setuptools
-                - wheel
             run:
+                - python
+
+        test:
+            requires:
                 - python
 
     noarch packages should be avoided because it is difficult to
@@ -628,67 +635,96 @@ class avoid_noarch(LintCheck):
 
     """
 
-    def check_recipe_legacy(self, recipe: Recipe) -> None:
-        for package in recipe.packages.values():
-            noarch = recipe.get(f"{package.path_prefix}build/noarch", "")
-            if (
-                noarch == "python"
-                and int(recipe.get(f"{package.path_prefix}build/number", 0)) == 0
-                and not recipe.get(f"{package.path_prefix}build/osx_is_app", False)
-                and not recipe.get(f"{package.path_prefix}app", None)
-            ):
-                self.message(section=f"{package.path_prefix}build", severity=Severity.WARNING, data=(recipe, package))
+    def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
+        for package_path in recipe.get_package_paths():
+            # Allow exceptions
+            rel_name_path: Final[str] = "/package/name" if package_path == "/" else "/name"
+            name_path: Final[str] = recipe.append_to_path(package_path, rel_name_path)
+            try:
+                name: Final[str] = recipe.get_value(name_path)
+            except KeyError:
+                self.message(title_in="Failed to determine package or output name, cannot run this check.")
+            if name in NOARCH_ALLOWLIST:
+                continue
 
-    def fix(self, message, data) -> bool:
-        (recipe, package) = data
-        skip_selector = None
-        sep_map = {
-            ">=": "<",
-            ">": "<=",
-            "==": "!=",
-            "!=": "==",
-            "<=": ">",
-            "<": ">=",
-        }
-        for dep in recipe.get(f"{package.path_prefix}requirements/run", []):
-            if dep.startswith("python"):
-                for sep, opp in sep_map.items():
-                    s = dep.split(sep)
-                    if len(s) > 1:
-                        skip_selector = f" # [py{opp}{s[1].strip().replace('.','')}]"
-                        break
-                if skip_selector:
-                    break
-        op = [
-            {"op": "remove", "path": f"{package.path_prefix}build/noarch"},
-            {
-                "op": "add",
-                "path": f"{package.path_prefix}requirements/host",
-                "match": "python",
-                "value": ["python"],
-            },
-            {
-                "op": "add",
-                "path": f"{package.path_prefix}requirements/run",
-                "match": "python",
-                "value": ["python"],
-            },
-            {
-                "op": "replace",
-                "path": f"{package.path_prefix}test/requires",
-                "match": "python",
-                "value": ["python"],
-            },
-        ]
-        if skip_selector:
-            op.append(
+            # Perform check
+            noarch_path = recipe.append_to_path(package_path, "/build/noarch")
+            try:
+                noarch = recipe.get_value(noarch_path)
+            except KeyError:
+                continue
+            if noarch == "python":
+                self.message(section=noarch_path, severity=Severity.WARNING, data=(package_path, name))
+
+    def _prep_path(self, package_path: str, path: str) -> None:
+        """
+        Performs necessary patch-add operations before attempting to add dependencies.
+        For example, a requirements or test section.
+        """
+        recipe = self.unrendered_recipe
+        split_path = path.split("/")
+        current_path = ""
+        for elem in split_path:
+            if not elem:
+                continue
+            if elem.isnumeric():
+                break
+            current_path += "/" + elem
+            add_path = recipe.append_to_path(package_path, current_path)
+            if recipe.contains_value(add_path):
+                continue
+            recipe.patch(
                 {
                     "op": "add",
-                    "path": f"{package.path_prefix}build/skip",
-                    "value": f"True {skip_selector}",
+                    "path": add_path,
+                    "value": None,
                 }
             )
-        return recipe.patch(op)
+
+    def fix(self, message, data) -> bool:
+        if not data:
+            return False
+        package_path, name = data
+        recipe = self.unrendered_recipe
+
+        # Remove build/noarch
+        removed_noarch = recipe.patch(
+            {
+                "op": "remove",
+                "path": recipe.append_to_path(package_path, "/build/noarch"),
+            },
+        )
+
+        # Extract python version
+        py_version = None
+        for dep in recipe.get_all_dependencies()[name]:
+            dep_data = dep.data
+            if not isinstance(dep_data, MatchSpec):
+                continue
+            if not dep_data.name == "python":
+                continue
+            if dep_data.version:
+                py_version = str(dep_data.version)
+                break
+
+        # Add python to requirements/host, requirements/run and test/requires
+        added_python = []
+        for path, dep_section in [
+            ("/requirements/host/0", DependencySection.HOST),
+            ("/requirements/run/0", DependencySection.RUN),
+            ("/test/requires/0", DependencySection.TESTS),
+        ]:
+            full_path = recipe.append_to_path(package_path, path)
+            self._prep_path(package_path, path)
+            dep_data = MatchSpec("python")
+            python_dep = Dependency(required_by=name, path=full_path, type=dep_section, data=dep_data)
+            added_python.append(recipe.add_dependency(python_dep))
+
+        # Call update_skip_statement()
+        if py_version:
+            pass
+
+        return removed_noarch and all(added_python)
 
 
 class patch_unnecessary(LintCheck):
