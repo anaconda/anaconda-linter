@@ -76,29 +76,36 @@ def test_missing_section_bad_multi(base_yaml: str) -> None:
 @pytest.mark.parametrize(
     "recipe_file",
     [
-        ("auto_fix/streamlit-folium.yaml"),
-        ("auto_fix/build_number_multi_output.yaml"),
+        "lint_check/streamlit-folium.yaml",
+        "lint_check/build_number_multi_output.yaml",
+        "lint_check/build_number_multi_only_outputs.yaml",
     ],
 )
 def test_no_missing_build_number(recipe_file: str) -> None:
     """
     Test that the missing_build_number lint check works correctly when the recipe has a build number.
+
+    :param recipe_file: Path to the recipe file to read
     """
     assert_no_lint_message(recipe_file, "missing_build_number")
 
 
 @pytest.mark.parametrize(
-    "recipe_file",
+    ("recipe_file", "msg_count"),
     [
-        "auto_fix/build_number_missing.yaml",
-        "auto_fix/build_number_missing_multi_output.yaml",
+        ("lint_check/build_number_missing.yaml", 1),
+        ("lint_check/build_number_missing_multi_output.yaml", 2),
+        ("lint_check/build_number_in_some_outputs.yaml", 1),
     ],
 )
-def test_missing_build_number(recipe_file: str) -> None:
+def test_missing_build_number(recipe_file: str, msg_count: int) -> None:
     """
     Test that the missing_build_number lint check works correctly when the recipe does not have a build number.
+
+    :param recipe_file: Path to the recipe file to read
+    :param msg_count: Number of lint messages to expect
     """
-    assert_lint_messages(recipe_file, "missing_build_number", "missing a build number")
+    assert_lint_messages(recipe_file, "missing_build_number", "missing a build number", msg_count)
 
 
 def test_missing_package_name_good(base_yaml: str) -> None:  # pylint: disable=unused-argument

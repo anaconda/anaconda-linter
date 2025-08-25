@@ -46,27 +46,25 @@ class missing_section(LintCheck):
 
 class missing_build_number(LintCheck):
     """
-    The recipe is missing a build number
+    missing a build number
 
     Please add::
 
         build:
-            number: 0
+            number: <build number>
     """
 
     def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
-        contains_value: Final = recipe.contains_value("/build/number/")
-        if contains_value:
+        if recipe.contains_value("/build/number"):
             return
         if not recipe.is_multi_output():
             self.message(section="build", data=recipe)
             return
-
         output_paths: Final = recipe.get_package_paths()
         for package_path in output_paths:
             if package_path == "/":
                 continue
-            path: Final = recipe.append_to_path(package_path, "build/number")
+            path: Final = recipe.append_to_path(package_path, "/build/number")
             if not recipe.contains_value(path):
                 self.message(section="build", data=recipe)
 
