@@ -8,10 +8,10 @@ from __future__ import annotations
 import os
 import re
 from pathlib import Path
-from typing import Any, Final, Optional
+from typing import Any, Final
 
 from conda.models.match_spec import MatchSpec
-from conda_recipe_manager.parser.dependency import Dependency, DependencySection, DependencyVariable
+from conda_recipe_manager.parser.dependency import Dependency, DependencySection
 from conda_recipe_manager.parser.enums import SelectorConflictMode
 from conda_recipe_manager.parser.recipe_reader_deps import RecipeReaderDeps
 from percy.render.recipe import Recipe
@@ -657,6 +657,10 @@ class avoid_noarch(LintCheck):
                 self.message(section=noarch_path, severity=Severity.WARNING, data=(package_path, name))
 
     def _prep_path(self, package_path: str, path: str) -> None:
+        """
+        Performs necessary patch-add operations before attempting to add dependencies.
+        For example, a requirements or test section.
+        """
         recipe = self.unrendered_recipe
         split_path = path.split("/")
         current_path = ""
@@ -666,10 +670,13 @@ class avoid_noarch(LintCheck):
             if elem.isnumeric():
                 break
             current_path += "/" + elem
+            add_path = recipe.append_to_path(package_path, current_path)
+            if recipe.contains_value(add_path):
+                continue
             recipe.patch(
                 {
                     "op": "add",
-                    "path": recipe.append_to_path(package_path, current_path),
+                    "path": add_path,
                     "value": None,
                 }
             )
@@ -707,19 +714,16 @@ class avoid_noarch(LintCheck):
             ("/requirements/run/0", DependencySection.RUN),
             ("/test/requires/0", DependencySection.TESTS),
         ]:
-            print("Doing: ", path)
             full_path = recipe.append_to_path(package_path, path)
             self._prep_path(package_path, path)
             dep_data = MatchSpec("python")
             python_dep = Dependency(required_by=name, path=full_path, type=dep_section, data=dep_data)
-            print(recipe.render())
             added_python.append(recipe.add_dependency(python_dep))
 
         # Call update_skip_statement()
         if py_version:
             pass
 
-        print(removed_noarch, *added_python)
         return removed_noarch and all(added_python)
 
 
