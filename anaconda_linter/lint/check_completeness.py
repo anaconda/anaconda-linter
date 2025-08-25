@@ -7,8 +7,10 @@ from __future__ import annotations
 
 import os
 import re
+from typing import Final
 
 import conda_build.license_family
+from conda_recipe_manager.parser.recipe_reader_deps import RecipeReaderDeps
 from percy.render.recipe import OpMode, Recipe
 
 from anaconda_linter.lint import LintCheck, Severity
@@ -49,12 +51,23 @@ class missing_build_number(LintCheck):
     Please add::
 
         build:
-            number: 0
+            number: <build number>
     """
 
-    def check_recipe_legacy(self, recipe: Recipe) -> None:
-        if not recipe.get("build/number", ""):
-            self.message(section="build")
+    def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
+        if recipe.contains_value("/build/number"):
+            return
+        if not recipe.is_multi_output():
+            self.message(section="build", data=recipe)
+            return
+        output_paths: Final = recipe.get_package_paths()
+        for package_path in output_paths:
+            if package_path == "/":
+                continue
+            path: Final = recipe.append_to_path(package_path, "/build/number")
+            if not recipe.contains_value(path):
+                # we message per missing build number
+                self.message(section="build", data=recipe)
 
 
 class missing_package_name(LintCheck):

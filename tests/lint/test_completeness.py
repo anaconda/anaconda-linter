@@ -8,7 +8,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from conftest import check, check_dir
+from conftest import assert_lint_messages, assert_no_lint_message, check, check_dir
 
 
 def test_missing_section_good(base_yaml: str) -> None:
@@ -73,23 +73,39 @@ def test_missing_section_bad_multi(base_yaml: str) -> None:
     assert len(messages) == 4 and all("section is missing" in msg.title for msg in messages)
 
 
-def test_missing_build_number_good(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        build:
-          number: 0
-        """
-    )
-    lint_check = "missing_build_number"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
+@pytest.mark.parametrize(
+    "recipe_file",
+    [
+        "lint_check/streamlit-folium.yaml",
+        "lint_check/build_number_multi_output.yaml",
+        "lint_check/build_number_multi_only_outputs.yaml",
+    ],
+)
+def test_no_missing_build_number(recipe_file: str) -> None:
+    """
+    Test that the missing_build_number lint check works correctly when the recipe has a build number.
+
+    :param recipe_file: Path to the recipe file to read
+    """
+    assert_no_lint_message(recipe_file, "missing_build_number")
 
 
-def test_missing_build_number_bad(base_yaml: str) -> None:
-    lint_check = "missing_build_number"
-    messages = check(lint_check, base_yaml)
-    assert len(messages) == 1 and "missing a build number" in messages[0].title
+@pytest.mark.parametrize(
+    ("recipe_file", "msg_count"),
+    [
+        ("lint_check/build_number_missing.yaml", 1),
+        ("lint_check/build_number_missing_multi_output.yaml", 2),
+        ("lint_check/build_number_in_some_outputs.yaml", 1),
+    ],
+)
+def test_missing_build_number(recipe_file: str, msg_count: int) -> None:
+    """
+    Test that the missing_build_number lint check works correctly when the recipe does not have a build number.
+
+    :param recipe_file: Path to the recipe file to read
+    :param msg_count: Number of lint messages to expect
+    """
+    assert_lint_messages(recipe_file, "missing_build_number", "missing a build number", msg_count)
 
 
 def test_missing_package_name_good(base_yaml: str) -> None:  # pylint: disable=unused-argument
