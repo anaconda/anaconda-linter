@@ -720,9 +720,11 @@ class avoid_noarch(LintCheck):
             python_dep = Dependency(required_by=name, path=full_path, type=dep_section, data=dep_data)
             added_python.append(recipe.add_dependency(python_dep))
 
-        # Call update_skip_statement()
+        # Update skip statement
         if py_version:
-            pass
+            updated_skip = recipe.update_skip_statement_python(package_path, py_version)
+            if not updated_skip:
+                return False
 
         return removed_noarch and all(added_python)
 

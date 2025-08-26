@@ -8,6 +8,7 @@ outputs:
   - name: test_output
     build:
       number: 0
+      skip: true  # [py<311]
     requirements:
       host:
         - python
