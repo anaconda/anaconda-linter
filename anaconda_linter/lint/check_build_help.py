@@ -701,7 +701,9 @@ class avoid_noarch(LintCheck):
             dep_data = dep.data
             if not isinstance(dep_data, MatchSpec):
                 continue
-            if not dep_data.name == "python":
+            if dep_data.name != "python":
+                continue
+            if dep.type != DependencySection.RUN:
                 continue
             if dep_data.version:
                 py_version = str(dep_data.version)
