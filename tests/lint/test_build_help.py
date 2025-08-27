@@ -1241,7 +1241,7 @@ def test_python_build_tools_in_host_all_in_host() -> None:
 
 def test_python_build_tools_in_host_some_in_build() -> None:
     """
-    This case tests python build tools being in build, which is wrong.
+    This case tests python build tools being in build, which is invalid.
     """
     assert_lint_messages(
         recipe_file="python_build_tools_in_host/some_in_build.yaml",
@@ -1253,7 +1253,7 @@ def test_python_build_tools_in_host_some_in_build() -> None:
 
 def test_python_build_tools_in_host_some_in_run() -> None:
     """
-    This case tests python build tools being in run, which is wrong.
+    This case tests python build tools being in run, which is invalid.
     """
     assert_lint_messages(
         recipe_file="python_build_tools_in_host/some_in_run.yaml",
@@ -1265,7 +1265,7 @@ def test_python_build_tools_in_host_some_in_run() -> None:
 
 def test_python_build_tools_in_host_some_in_build_and_run() -> None:
     """
-    This case tests python build tools being in build and run, which is wrong.
+    This case tests python build tools being in build and run, which is invalid.
     """
     assert_lint_messages(
         recipe_file="python_build_tools_in_host/some_in_build_and_run.yaml",
@@ -1277,7 +1277,7 @@ def test_python_build_tools_in_host_some_in_build_and_run() -> None:
 
 def test_cython_needs_compiler_no_cython_no_compiler() -> None:
     """
-    This case tests no cython and no compiler, which is correct.
+    This case tests no cython and no compiler, which is valid.
     """
     assert_no_lint_message(
         recipe_file="cython_needs_compiler/no_cython_no_compiler.yaml",
@@ -1287,7 +1287,7 @@ def test_cython_needs_compiler_no_cython_no_compiler() -> None:
 
 def test_cython_needs_compiler_output_cython_top_level_compiler() -> None:
     """
-    This case tests a cython dependency in an output and the compiler at the top level, which is correct.
+    This case tests a cython dependency in an output and the compiler at the top level, which is valid.
     """
     assert_no_lint_message(
         recipe_file="cython_needs_compiler/output_cython_top_level_compiler.yaml",
@@ -1297,7 +1297,7 @@ def test_cython_needs_compiler_output_cython_top_level_compiler() -> None:
 
 def test_cython_needs_compiler_output_cython_output_compiler() -> None:
     """
-    This case tests a cython dependency in an output and the compiler in the output, which is correct.
+    This case tests a cython dependency in an output and the compiler in the output, which is valid.
     """
     assert_no_lint_message(
         recipe_file="cython_needs_compiler/output_cython_output_compiler.yaml",
@@ -1307,7 +1307,7 @@ def test_cython_needs_compiler_output_cython_output_compiler() -> None:
 
 def test_cython_needs_compiler_output_cython_output_compiler_in_host() -> None:
     """
-    This case tests a cython dependency in an output and the compiler in the output's host, which is wrong.
+    This case tests a cython dependency in an output and the compiler in the output's host, which is invalid.
     """
     assert_lint_messages(
         recipe_file="cython_needs_compiler/output_cython_output_compiler_in_host.yaml",
@@ -1319,7 +1319,7 @@ def test_cython_needs_compiler_output_cython_output_compiler_in_host() -> None:
 
 def test_cython_needs_compiler_output_cython_top_level_cpp_compiler() -> None:
     """
-    This case tests a cython dependency in an output and a c++ compiler at the top level, which is wrong.
+    This case tests a cython dependency in an output and a c++ compiler at the top level, which is invalid.
     """
     assert_lint_messages(
         recipe_file="cython_needs_compiler/output_cython_top_level_cpp_compiler.yaml",
