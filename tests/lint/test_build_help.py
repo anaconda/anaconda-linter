@@ -1230,6 +1230,9 @@ def test_pip_install_args_multi_script_missing(base_yaml: str, recipe_dir: Path)
 
 
 def test_python_build_tools_in_host_all_in_host() -> None:
+    """
+    This is the ideal case with no errors.
+    """
     assert_no_lint_message(
         recipe_file="python_build_tools_in_host/all_in_host.yaml",
         lint_check="python_build_tools_in_host",
@@ -1237,6 +1240,9 @@ def test_python_build_tools_in_host_all_in_host() -> None:
 
 
 def test_python_build_tools_in_host_some_in_build() -> None:
+    """
+    This case tests python build tools being in build, which is wrong.
+    """
     assert_lint_messages(
         recipe_file="python_build_tools_in_host/some_in_build.yaml",
         lint_check="python_build_tools_in_host",
@@ -1246,6 +1252,9 @@ def test_python_build_tools_in_host_some_in_build() -> None:
 
 
 def test_python_build_tools_in_host_some_in_run() -> None:
+    """
+    This case tests python build tools being in run, which is wrong.
+    """
     assert_lint_messages(
         recipe_file="python_build_tools_in_host/some_in_run.yaml",
         lint_check="python_build_tools_in_host",
@@ -1255,6 +1264,9 @@ def test_python_build_tools_in_host_some_in_run() -> None:
 
 
 def test_python_build_tools_in_host_some_in_build_and_run() -> None:
+    """
+    This case tests python build tools being in build and run, which is wrong.
+    """
     assert_lint_messages(
         recipe_file="python_build_tools_in_host/some_in_build_and_run.yaml",
         lint_check="python_build_tools_in_host",
