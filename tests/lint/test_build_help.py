@@ -1275,84 +1275,58 @@ def test_python_build_tools_in_host_some_in_build_and_run() -> None:
     )
 
 
-def test_cython_needs_compiler_good(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        requirements:
-          build:
-            - {{ compiler('c') }}
-          host:
-            - cython
-        """
+def test_cython_needs_compiler_no_cython_no_compiler() -> None:
+    """
+    This case tests no cython and no compiler, which is correct.
+    """
+    assert_no_lint_message(
+        recipe_file="cython_needs_compiler/no_cython_no_compiler.yaml",
+        lint_check="cython_needs_compiler",
     )
-    lint_check = "cython_needs_compiler"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
 
 
-def test_cython_needs_compiler_good_multi(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        outputs:
-          - name: output1
-            requirements:
-              build:
-                - {{ compiler('c') }}
-              host:
-                - cython
-          - name: output2
-            requirements:
-              build:
-                - {{ compiler('c') }}
-              host:
-                - cython
-        """
+def test_output_cython_top_level_compiler() -> None:
+    """
+    This case tests a cython dependency in an output and the compiler at the top level, which is correct.
+    """
+    assert_no_lint_message(
+        recipe_file="cython_needs_compiler/output_cython_top_level_compiler.yaml",
+        lint_check="cython_needs_compiler",
     )
-    lint_check = "cython_needs_compiler"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
 
 
-def test_cython_needs_compiler_bad(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        requirements:
-          build:
-            - {{ compiler('cxx') }}
-          host:
-            - cython
-        """
+def test_output_cython_output_compiler() -> None:
+    """
+    This case tests a cython dependency in an output and the compiler in the output, which is correct.
+    """
+    assert_no_lint_message(
+        recipe_file="cython_needs_compiler/output_cython_output_compiler.yaml",
+        lint_check="cython_needs_compiler",
     )
-    lint_check = "cython_needs_compiler"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "Cython generates C code" in messages[0].title
 
 
-def test_cython_needs_compiler_bad_multi(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        outputs:
-          - name: output1
-            requirements:
-              build:
-                - {{ compiler('cxx') }}
-              host:
-                - cython
-          - name: output2
-            requirements:
-              build:
-                - {{ compiler('cxx') }}
-              host:
-                - cython
-        """
+def test_output_cython_output_compiler_in_host() -> None:
+    """
+    This case tests a cython dependency in an output and the compiler in the output's host, which is wrong.
+    """
+    assert_lint_messages(
+        recipe_file="cython_needs_compiler/output_cython_output_compiler_in_host.yaml",
+        lint_check="cython_needs_compiler",
+        msg_title="Cython generates C code",
+        msg_count=1,
     )
-    lint_check = "cython_needs_compiler"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 2 and all("Cython generates C code" in msg.title for msg in messages)
+
+
+def test_output_cython_top_level_cpp_compiler() -> None:
+    """
+    This case tests a cython dependency in an output and a c++ compiler at the top level, which is wrong.
+    """
+    assert_lint_messages(
+        recipe_file="cython_needs_compiler/output_cython_top_level_cpp_compiler.yaml",
+        lint_check="cython_needs_compiler",
+        msg_title="Cython generates C code",
+        msg_count=1,
+    )
 
 
 def test_avoid_noarch_good(base_yaml: str) -> None:
