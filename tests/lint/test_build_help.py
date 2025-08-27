@@ -1285,7 +1285,7 @@ def test_cython_needs_compiler_no_cython_no_compiler() -> None:
     )
 
 
-def test_output_cython_top_level_compiler() -> None:
+def test_cython_needs_compiler_output_cython_top_level_compiler() -> None:
     """
     This case tests a cython dependency in an output and the compiler at the top level, which is correct.
     """
@@ -1295,7 +1295,7 @@ def test_output_cython_top_level_compiler() -> None:
     )
 
 
-def test_output_cython_output_compiler() -> None:
+def test_cython_needs_compiler_output_cython_output_compiler() -> None:
     """
     This case tests a cython dependency in an output and the compiler in the output, which is correct.
     """
@@ -1305,7 +1305,7 @@ def test_output_cython_output_compiler() -> None:
     )
 
 
-def test_output_cython_output_compiler_in_host() -> None:
+def test_cython_needs_compiler_output_cython_output_compiler_in_host() -> None:
     """
     This case tests a cython dependency in an output and the compiler in the output's host, which is wrong.
     """
@@ -1317,7 +1317,7 @@ def test_output_cython_output_compiler_in_host() -> None:
     )
 
 
-def test_output_cython_top_level_cpp_compiler() -> None:
+def test_cython_needs_compiler_output_cython_top_level_cpp_compiler() -> None:
     """
     This case tests a cython dependency in an output and a c++ compiler at the top level, which is wrong.
     """
