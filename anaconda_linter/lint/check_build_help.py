@@ -572,9 +572,14 @@ class python_build_tools_in_host(LintCheck):
     """
 
     def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
-        for dependency_path in recipe.get_dependency_paths():
-            if recipe.get_value(dependency_path) in PYTHON_BUILD_TOOLS and "/host/" not in dependency_path:
-                self.message(section=dependency_path)
+        problem_paths: set[str] = set()
+        all_deps = recipe.get_all_dependencies()
+        for output in all_deps:
+            for dep in all_deps[output]:
+                if dep.data.name in PYTHON_BUILD_TOOLS and dep.type != DependencySection.HOST:
+                    problem_paths.add(dep.path)
+        for path in problem_paths:
+            self.message(section=path)
 
 
 class cython_needs_compiler(LintCheck):
