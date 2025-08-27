@@ -577,9 +577,10 @@ class python_build_tools_in_host(LintCheck):
         for output in all_deps:
             for dep in all_deps[output]:
                 if dep.data.name in PYTHON_BUILD_TOOLS and dep.type != DependencySection.HOST:
+                    if dep.path in problem_paths:
+                        continue
+                    self.message(section=dep.path)
                     problem_paths.add(dep.path)
-        for path in problem_paths:
-            self.message(section=path)
 
 
 class cython_needs_compiler(LintCheck):
