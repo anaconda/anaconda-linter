@@ -8,7 +8,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from conftest import check, check_dir
+from conftest import assert_lint_messages, assert_no_lint_message, check, check_dir
 
 from anaconda_linter.lint.check_build_help import BUILD_TOOLS, COMPILERS, PYTHON_BUILD_TOOLS, STDLIBS
 
@@ -1229,80 +1229,50 @@ def test_pip_install_args_multi_script_missing(base_yaml: str, recipe_dir: Path)
     assert len(messages) == 1 and "should be run with --no-deps and --no-build-isolation" in messages[0].title
 
 
-def test_python_build_tools_in_host_good(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        requirements:
-          host:
-            - setuptools
-            - pip
-        """
-    )
-    lint_check = "python_build_tools_in_host"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
-
-
-def test_python_build_tools_in_host_good_multi(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        outputs:
-          - name: output1
-            requirements:
-              host:
-                - setuptools
-                - pip
-          - name: output2
-            requirements:
-              host:
-                - setuptools
-                - pip
-        """
-    )
-    lint_check = "python_build_tools_in_host"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
-
-
-@pytest.mark.parametrize("section", ["build", "run"])
-def test_python_build_tools_in_host_bad(base_yaml: str, section: str) -> None:
-    lint_check = "python_build_tools_in_host"
-    yaml_str = (
-        base_yaml
-        + f"""
-        requirements:
-          {section}:
-            - setuptools
-            - pip
-        """
-    )
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 2 and "Python build tools should be" in messages[0].title
-
-
-@pytest.mark.parametrize("section", ["build", "run"])
-def test_python_build_tools_in_host_bad_multi(base_yaml: str, section: str) -> None:
-    lint_check = "python_build_tools_in_host"
-    yaml_str = (
-        base_yaml
-        + f"""
-        outputs:
-          - name: output1
-            requirements:
-              {section}:
-                - setuptools
-                - pip
-          - name: output2
-            requirements:
-              {section}:
-                - setuptools
-                - pip
+def test_python_build_tools_in_host_all_in_host() -> None:
     """
+    This is the ideal case with no errors.
+    """
+    assert_no_lint_message(
+        recipe_file="python_build_tools_in_host/all_in_host.yaml",
+        lint_check="python_build_tools_in_host",
     )
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 4 and all("Python build tools should be" in msg.title for msg in messages)
+
+
+def test_python_build_tools_in_host_some_in_build() -> None:
+    """
+    This case tests python build tools being in build, which is wrong.
+    """
+    assert_lint_messages(
+        recipe_file="python_build_tools_in_host/some_in_build.yaml",
+        lint_check="python_build_tools_in_host",
+        msg_title="Python build tools should be in the host section",
+        msg_count=3,
+    )
+
+
+def test_python_build_tools_in_host_some_in_run() -> None:
+    """
+    This case tests python build tools being in run, which is wrong.
+    """
+    assert_lint_messages(
+        recipe_file="python_build_tools_in_host/some_in_run.yaml",
+        lint_check="python_build_tools_in_host",
+        msg_title="Python build tools should be in the host section",
+        msg_count=3,
+    )
+
+
+def test_python_build_tools_in_host_some_in_build_and_run() -> None:
+    """
+    This case tests python build tools being in build and run, which is wrong.
+    """
+    assert_lint_messages(
+        recipe_file="python_build_tools_in_host/some_in_build_and_run.yaml",
+        lint_check="python_build_tools_in_host",
+        msg_title="Python build tools should be in the host section",
+        msg_count=6,
+    )
 
 
 def test_cython_needs_compiler_good(base_yaml: str) -> None:
