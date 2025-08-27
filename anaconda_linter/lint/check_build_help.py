@@ -568,6 +568,7 @@ class python_build_tools_in_host(LintCheck):
         host:
           - setuptools
           - pip
+          - cython
     """
 
     def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
