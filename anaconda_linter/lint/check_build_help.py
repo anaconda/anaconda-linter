@@ -1061,12 +1061,11 @@ class no_git_on_windows(LintCheck):
         all_deps = recipe.get_all_dependencies()
         for output in all_deps:
             for dep in all_deps[output]:
-                if dep.data.name == "git":
-                    if dep.path in problem_paths:
-                        continue
-                    self.unrendered_recipe.add_selector(dep.path, "[not win]", SelectorConflictMode.AND)
-                    fixed = True
-                    problem_paths.add(dep.path)
+                if dep.data.name != "git" or dep.path in problem_paths:
+                    continue
+                self.unrendered_recipe.add_selector(dep.path, "[not win]", SelectorConflictMode.AND)
+                fixed = True
+                problem_paths.add(dep.path)
         return fixed
 
 
