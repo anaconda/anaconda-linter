@@ -276,10 +276,15 @@ class compilers_must_be_in_build(LintCheck):
     """
 
     def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
-        for dependency_path in recipe.get_dependency_paths():
-            if recipe.get_value(dependency_path).startswith("compiler_"):
-                if "run" in dependency_path or "host" in dependency_path:
-                    self.message(section=dependency_path)
+        all_deps = recipe.get_all_dependencies()
+        problem_paths: set[str] = set()
+        for output in all_deps:
+            for dep in all_deps[output]:
+                if dep.path in problem_paths:
+                    continue
+                if dep.data.name.startswith("compiler_") and dep.type != DependencySection.BUILD:
+                    self.message(section=dep.path)
+                    problem_paths.add(dep.path)
 
 
 class should_use_stdlib(LintCheck):

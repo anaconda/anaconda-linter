@@ -306,74 +306,54 @@ def test_should_use_stdlib_bad_missing(base_yaml: str) -> None:
     assert len(messages) == 1 and "{{ stdlib('c') }} dependency" in messages[0].title
 
 
-def test_compilers_must_be_in_build_good(base_yaml: str) -> None:
-    lint_check = "compilers_must_be_in_build"
-    yaml_str = (
-        base_yaml
-        + """
-        requirements:
-          build:
-            - {{ compiler('c') }}
-        """
+@pytest.mark.parametrize(
+    "file",
+    [
+        "compilers_must_be_in_build/all_in_build.yaml",
+        "compilers_must_be_in_build/no_compilers.yaml",
+    ],
+)
+def test_compilers_must_be_in_build_all_compilers_in_build(file: str) -> None:
+    """
+    This test checks the cases where no compilers are found in a non-build section.
+    """
+    assert_no_lint_message(
+        recipe_file=file,
+        lint_check="compilers_must_be_in_build",
     )
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
 
 
-def test_compilers_must_be_in_build_good_multi(base_yaml: str) -> None:
-    lint_check = "compilers_must_be_in_build"
-    yaml_str = (
-        base_yaml
-        + """
-        outputs:
-          - name: output1
-            requirements:
-              build:
-                - {{ compiler('c') }}
-          - name: output2
-            requirements:
-              build:
-                - {{ compiler('c') }}
-        """
+def test_compilers_must_be_in_build_single_output_not_in_build() -> None:
+    """
+    This test checks the case where compilers are found in the host section
+    of single-output recipe.
+    """
+    assert_lint_messages(
+        recipe_file="compilers_must_be_in_build/single_output_2_in_host.yaml",
+        lint_check="compilers_must_be_in_build",
+        msg_title="The recipe requests a compiler in a section other than build",
+        msg_count=2,
     )
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
 
 
-@pytest.mark.parametrize("section", ["host", "run"])
-def test_compilers_must_be_in_build_bad(base_yaml: str, section: str) -> None:
-    lint_check = "compilers_must_be_in_build"
-    yaml_str = (
-        base_yaml
-        + f"""
-        requirements:
-          {section}:
-            - {{{{ compiler('c') }}}}
-            """
+@pytest.mark.parametrize(
+    "file, msg_count",
+    [
+        ("compilers_must_be_in_build/top_level_1_in_host.yaml", 1),
+        ("compilers_must_be_in_build/top_level_1_in_host_output_1_in_run.yaml", 2),
+    ],
+)
+def test_compilers_must_be_in_build_multi_output_not_in_build(file: str, msg_count: int) -> None:
+    """
+    This test checks the case where compilers are found in non-build sections
+    of multi-output recipes.
+    """
+    assert_lint_messages(
+        recipe_file=file,
+        lint_check="compilers_must_be_in_build",
+        msg_title="The recipe requests a compiler in a section other than build",
+        msg_count=msg_count,
     )
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "compiler in a section" in messages[0].title
-
-
-@pytest.mark.parametrize("section", ["host", "run"])
-def test_compilers_must_be_in_build_bad_multi(base_yaml: str, section: str) -> None:
-    lint_check = "compilers_must_be_in_build"
-    yaml_str = (
-        base_yaml
-        + f"""
-        outputs:
-          - name: output1
-            requirements:
-              {section}:
-                - {{{{ compiler('c') }}}}
-          - name: output2
-            requirements:
-              {section}:
-                - {{{{ compiler('c') }}}}
-        """
-    )
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 2 and all("compiler in a section" in msg.title for msg in messages)
 
 
 def test_stdlib_must_be_in_build_good(base_yaml: str) -> None:
