@@ -596,7 +596,7 @@ class cython_needs_compiler(LintCheck):
     """
 
     def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
-        all_deps = recipe.get_all_dependencies()
+        all_deps: Final = recipe.get_all_dependencies()
         for output in all_deps:
             cython = None
             compiler = None
