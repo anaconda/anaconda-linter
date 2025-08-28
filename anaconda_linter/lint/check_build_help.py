@@ -667,11 +667,9 @@ class avoid_noarch(LintCheck):
 
             # Perform check
             noarch_path = recipe.append_to_path(package_path, "/build/noarch")
-            try:
-                noarch = recipe.get_value(noarch_path)
-            except KeyError:
+            if not recipe.contains_value(noarch_path):
                 continue
-            if noarch == "python":
+            if recipe.get_value(noarch_path) == "python":
                 self.message(section=noarch_path, severity=Severity.WARNING, data=(package_path, name))
 
     def _prep_path(self, package_path: str, path: str) -> None:
