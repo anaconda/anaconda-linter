@@ -382,28 +382,23 @@ class LintCheck(metaclass=LintCheckMeta):
 
     def validate_if_recipe_path_is_missing(  # pylint: disable=too-many-positional-arguments, unused-argument
         self,
-        recipe_name: str,
-        arch_name: str,
-        recipe: RecipeReaderDeps,
         section_path: str,
-        section: str,
+        severity: Severity = SEVERITY_DEFAULT,
     ) -> None:
         """
         Validate if a recipe path is missing
         Helper function to check if a recipe path is missing.
 
-        :param recipe_name: Name of the recipe
-        :param arch_name: Architecture of the recipe
-        :param recipe: Recipe to be checked
-        :param section: Section of the recipe to be checked
         :param section_path: Path of the section to be checked
+        :param severity: Severity of the message
         """
+
+        recipe = self.recipe
         if recipe.contains_value(section_path):
             return
         if not recipe.is_multi_output():
-            self.message(section=section, data=recipe)
+            self.message(section=section_path, data=recipe, severity=severity)
             return
-
         output_paths: Final = recipe.get_package_paths()
         for package_path in output_paths:
             if package_path == "/":
@@ -411,7 +406,7 @@ class LintCheck(metaclass=LintCheckMeta):
             path: Final = recipe.append_to_path(package_path, section_path)
             if not recipe.contains_value(path):
                 # we message per missing build number
-                self.message(section=section, data=recipe)
+                self.message(section=path, data=recipe, severity=severity)
 
     def can_auto_fix(self) -> bool:
         """

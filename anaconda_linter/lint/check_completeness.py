@@ -418,7 +418,7 @@ class missing_description(LintCheck):
     """
 
     def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
-        self.validate_if_recipe_path_is_missing(recipe_name, arch_name, recipe, "/about/description", "about")
+        self.validate_if_recipe_path_is_missing("/about/description", Severity.WARNING)
 
 
 class wrong_output_script_key(LintCheck):
