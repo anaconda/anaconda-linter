@@ -185,7 +185,7 @@ def read_recipe_content(recipe_file: str) -> str:
         return f.read()
 
 
-def assert_lint_messages(recipe_file: str, lint_check: str, msg_title: str, msg_count: int = 1):
+def assert_lint_messages(recipe_file: str, lint_check: str, msg_title: str, msg_count: int = 1, arch: str = "linux-64"):
     """
     Assert that a recipe file has a specific number and type of lint message for a specific lint check.
 
@@ -193,21 +193,23 @@ def assert_lint_messages(recipe_file: str, lint_check: str, msg_title: str, msg_
     :param lint_check: Name of the linting rule. This corresponds with input and output files.
     :param msg_title: Title of the lint message to check for
     :param msg_count: Number of lint messages to expect
+    :param arch: Target architecture to render recipe as
     """
     recipe_file_path: Final[Path] = get_test_path() / recipe_file
-    messages: Final = check(lint_check, read_recipe_content(recipe_file_path))
+    messages: Final = check(lint_check, read_recipe_content(recipe_file_path), arch=arch)
     assert len(messages) == msg_count and all(msg_title in msg.title for msg in messages)
 
 
-def assert_no_lint_message(recipe_file: str, lint_check: str) -> None:
+def assert_no_lint_message(recipe_file: str, lint_check: str, arch: str = "linux-64") -> None:
     """
     Assert that a recipe file has no lint messages for a specific lint check.
 
     :param recipe_file: Path to the recipe file to read
     :param lint_check: Name of the linting rule. This corresponds with input and output files.
+    :param arch: Target architecture to render recipe as
     """
     recipe_file_path: Final[Path] = get_test_path() / recipe_file
-    messages: Final = check(lint_check, read_recipe_content(recipe_file_path))
+    messages: Final = check(lint_check, read_recipe_content(recipe_file_path), arch=arch)
     assert len(messages) == 0
 
 

@@ -18,7 +18,7 @@ build:
 requirements:
   build:
     - {{ compiler('c') }}
-    - git
+    - git # [not win]
   host:
     - python
     - pip
@@ -39,7 +39,7 @@ outputs:
   - name: output1
     requirements:
       build:
-       - git # [not osx-arm64]
+       - git # [not osx-arm64 and not win]
 
 test:
   imports:
