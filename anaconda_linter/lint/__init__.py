@@ -421,6 +421,7 @@ class LintCheck(metaclass=LintCheckMeta):
         :param severity: The severity level of the message.
         :param data: Data to be passed to `fix`. If check can fix, set this to something other than None.
         :param output: the output the error occurred in (multi-output recipes only)
+        :param title_in: If specified, the title of the message will be set to this value
         """
         # In order to handle Percy-based rules generating messages with a section
         # We must adapt the section by prepending a slash
