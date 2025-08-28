@@ -35,6 +35,12 @@ requirements:
     - fsspec
     - packaging
 
+outputs:
+  - name: output1
+    requirements:
+      build:
+        - git  # [not osx-arm64 and not win]
+
 test:
   imports:
     - fastparquet
