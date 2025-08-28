@@ -3,12 +3,13 @@ package:
   version: 0.0.1
 
 build:
+  number: 0
   noarch: python
 
 outputs:
   - name: test_output
     build:
-      number: 0
+      number: 1
       noarch: python
     requirements:
       host:

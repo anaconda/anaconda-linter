@@ -3,20 +3,17 @@ package:
   version: 0.0.1
 
 build:
+  number: 0
 
 outputs:
   - name: test_output
     build:
-      number: 0
-      skip: true  # [py<311]
+      number: 1
+      noarch: python
     requirements:
       host:
-        - python
       run:
-        - python
-    test:
-      requires:
-        - python
+        - python >=3.11
 
 requirements:
   host:

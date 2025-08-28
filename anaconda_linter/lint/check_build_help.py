@@ -651,7 +651,18 @@ class avoid_noarch(LintCheck):
                 name: Final[str] = recipe.get_value(name_path)
             except KeyError:
                 self.message(title_in="Failed to determine package or output name, cannot run this check.")
+                continue
             if name in NOARCH_ALLOWLIST:
+                continue
+            try:
+                build_number: Final[str] = recipe.get_value(recipe.append_to_path(package_path, "/build/number"))
+            except KeyError:
+                try:
+                    build_number: Final[str] = recipe.get_value("/build/number")
+                except KeyError:
+                    self.message(title_in="Failed to determine build number, cannot run this check.")
+                    continue
+            if build_number is not None and int(build_number) > 0:
                 continue
 
             # Perform check
