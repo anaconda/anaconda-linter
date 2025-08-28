@@ -185,6 +185,7 @@ def read_recipe_content(recipe_file: str) -> str:
         return f.read()
 
 
+# TODO: Passing a specific arch is not a good idea long-term, we should use a more generic approach.
 def assert_lint_messages(recipe_file: str, lint_check: str, msg_title: str, msg_count: int = 1, arch: str = "linux-64"):
     """
     Assert that a recipe file has a specific number and type of lint message for a specific lint check.
@@ -200,6 +201,7 @@ def assert_lint_messages(recipe_file: str, lint_check: str, msg_title: str, msg_
     assert len(messages) == msg_count and all(msg_title in msg.title for msg in messages)
 
 
+# TODO: Passing a specific arch is not a good idea long-term, we should use a more generic approach.
 def assert_no_lint_message(recipe_file: str, lint_check: str, arch: str = "linux-64") -> None:
     """
     Assert that a recipe file has no lint messages for a specific lint check.
