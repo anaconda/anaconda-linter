@@ -607,9 +607,8 @@ class cython_needs_compiler(LintCheck):
                     compiler = dep
                 if cython and compiler:
                     break
-            if cython:
-                if not compiler or compiler.type != DependencySection.BUILD:
-                    self.message(section=cython.path)
+            if cython and (not compiler or compiler.type != DependencySection.BUILD):
+                self.message(section=cython.path)
 
 
 class avoid_noarch(LintCheck):
