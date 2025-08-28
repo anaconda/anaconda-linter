@@ -189,26 +189,38 @@ def test_host_section_needs_exact_pinnings_bad_multi(base_yaml: str, constraint:
     )
 
 
-def test_should_use_compilers_using_compilers() -> None:
+@pytest.mark.parametrize(
+    "file,",
+    [
+        ("should_use_compilers/using_compiler_function.yaml"),
+    ],
+)
+def test_should_use_compilers_using_compilers(file: str) -> None:
     """
     This test checks the case where the "compiler" function is used.
     """
     assert_no_lint_message(
-        recipe_file="should_use_compilers/using_compiler_function.yaml",
+        recipe_file=file,
         lint_check="should_use_compilers",
     )
 
 
-def test_should_use_compilers_using_cgo_cuda_llvm() -> None:
+@pytest.mark.parametrize(
+    "file,msg_count",
+    [
+        ("should_use_compilers/requesting_compilers_directly.yaml", 6),
+    ],
+)
+def test_should_use_compilers_using_cgo_cuda_llvm(file: str, msg_count: int) -> None:
     """
     This test checks the case where the "compiler" function is not used, but compilers
     cgo, cuda, and llvm are requested directly.
     """
     assert_lint_messages(
-        recipe_file="should_use_compilers/requesting_compilers_directly.yaml",
+        recipe_file=file,
         lint_check="should_use_compilers",
         msg_title="The recipe requires a compiler directly",
-        msg_count=6,
+        msg_count=msg_count,
     )
 
 
