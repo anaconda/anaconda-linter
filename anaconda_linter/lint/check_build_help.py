@@ -1044,24 +1044,29 @@ class no_git_on_windows(LintCheck):
     def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
         if not arch_name.startswith("win"):
             return
-        for dependency_path in recipe.get_dependency_paths():
-            if recipe.get_value(dependency_path) == "git":
-                self.message(section=dependency_path)
+        all_deps = recipe.get_all_dependencies()
+        for output in all_deps:
+            for dep in all_deps[output]:
+                if dep.data.name == "git":
+                    self.message(section=dep.path)
+                    return
 
     def fix(self, message, data) -> bool:
-        # NOTE: The path found in `check_deps()` is a post-selector-rendering
+        # NOTE: The path found in `check_recipe()` is a post-selector-rendering
         # path to the dependency. So in order to change the recipe file, we need
         # to relocate `git`, relative to the raw file.
-        paths = self.unrendered_recipe.find_value("git")
-        for path in paths:
-            # Attempt to filter-out false-positives
-            if "/requirements" not in path:
-                continue
-            try:
-                self.unrendered_recipe.add_selector(path, "[not win]", SelectorConflictMode.AND)
-            except KeyError:
-                return False
-        return True
+        fixed = False
+        recipe = self.unrendered_recipe
+        problem_paths: set[str] = set()
+        all_deps = recipe.get_all_dependencies()
+        for output in all_deps:
+            for dep in all_deps[output]:
+                if dep.data.name != "git" or dep.path in problem_paths:
+                    continue
+                self.unrendered_recipe.add_selector(dep.path, "[not win]", SelectorConflictMode.AND)
+                fixed = True
+                problem_paths.add(dep.path)
+        return fixed
 
 
 class gui_app(LintCheck):
