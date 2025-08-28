@@ -605,6 +605,8 @@ class cython_needs_compiler(LintCheck):
                     cython = dep
                 elif dep.data.name == "compiler_c":
                     compiler = dep
+                if cython and compiler:
+                    break
             if cython:
                 if not compiler or compiler.type != DependencySection.BUILD:
                     self.message(section=cython.path)
