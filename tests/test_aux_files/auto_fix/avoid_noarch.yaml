@@ -6,6 +6,12 @@ build:
   number: 0
   noarch: python
 
+requirements:
+  host:
+    - setuptools
+  run:
+    - python >=3.10
+
 outputs:
   - name: test_output
     build:

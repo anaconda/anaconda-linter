@@ -4,6 +4,14 @@ package:
 
 build:
   number: 0
+  skip: true  # [py<310]
+
+requirements:
+  host:
+    - setuptools
+    - python
+  run:
+    - python
 
 outputs:
   - name: test_output
@@ -14,12 +22,6 @@ outputs:
       host:
       run:
         - python >=3.11
-
-requirements:
-  host:
-    - python
-  run:
-    - python
 
 test:
   requires:
