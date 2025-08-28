@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 from conftest import assert_lint_messages, assert_no_lint_message, check, check_dir
 
-from anaconda_linter.lint.check_build_help import BUILD_TOOLS, COMPILERS, PYTHON_BUILD_TOOLS, STDLIBS
+from anaconda_linter.lint.check_build_help import BUILD_TOOLS, PYTHON_BUILD_TOOLS, STDLIBS
 
 
 def test_host_section_needs_exact_pinnings_good(base_yaml: str) -> None:
@@ -189,54 +189,39 @@ def test_host_section_needs_exact_pinnings_bad_multi(base_yaml: str, constraint:
     )
 
 
-@pytest.mark.parametrize("compiler", COMPILERS)
-def test_should_use_compilers_good(base_yaml: str, compiler: str) -> None:
-    lint_check = "should_use_compilers"
-    yaml_str = (
-        base_yaml
-        + f"""
-        requirements:
-          build:
-            - {{{{ compiler('{compiler}') }}}}
-        """
+@pytest.mark.parametrize(
+    "file,",
+    [
+        ("should_use_compilers/using_compiler_function.yaml"),
+    ],
+)
+def test_should_use_compilers_using_compilers(file: str) -> None:
+    """
+    This test checks the case where the "compiler" function is used.
+    """
+    assert_no_lint_message(
+        recipe_file=file,
+        lint_check="should_use_compilers",
     )
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
 
 
-@pytest.mark.parametrize("compiler", COMPILERS)
-def test_should_use_compilers_bad(base_yaml: str, compiler: str) -> None:
-    lint_check = "should_use_compilers"
-    yaml_str = (
-        base_yaml
-        + f"""
-        requirements:
-          build:
-            - {compiler}
-        """
+@pytest.mark.parametrize(
+    "file,msg_count",
+    [
+        ("should_use_compilers/requesting_compilers_directly.yaml", 6),
+    ],
+)
+def test_should_use_compilers_using_cgo_cuda_llvm(file: str, msg_count: int) -> None:
+    """
+    This test checks the case where the "compiler" function is not used, but compilers
+    cgo, cuda, and llvm are requested directly.
+    """
+    assert_lint_messages(
+        recipe_file=file,
+        lint_check="should_use_compilers",
+        msg_title="The recipe requires a compiler directly",
+        msg_count=msg_count,
     )
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "compiler directly" in messages[0].title
-
-
-def test_should_use_compilers_bad_multi(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        outputs:
-          - name: output1
-            requirements:
-              build:
-                - gcc
-          - name: output2
-            requirements:
-              build:
-                - gcc
-        """
-    )
-    lint_check = "should_use_compilers"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 2 and all("compiler directly" in msg.title for msg in messages)
 
 
 def test_should_use_stdlib_good(base_yaml: str) -> None:
