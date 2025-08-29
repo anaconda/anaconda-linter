@@ -261,9 +261,15 @@ class should_use_compilers(LintCheck):
     compilers = COMPILERS
 
     def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
-        for dependency_path in recipe.get_dependency_paths():
-            if recipe.get_value(dependency_path) in self.compilers:
-                self.message(section=dependency_path)
+        all_deps: Final = recipe.get_all_dependencies()
+        problem_paths: set[str] = set()
+        for output in all_deps:
+            for dep in all_deps[output]:
+                if dep.path in problem_paths:
+                    continue
+                if dep.data.name in self.compilers:
+                    self.message(section=dep.path)
+                    problem_paths.add(dep.path)
 
 
 class compilers_must_be_in_build(LintCheck):
@@ -601,16 +607,19 @@ class cython_needs_compiler(LintCheck):
     """
 
     def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
-        for dependency_path in recipe.get_dependency_paths():
-            if not recipe.get_value(dependency_path) == "cython":
-                continue
-            requirements_path = "/".join(dependency_path.split("/")[:-2])
-            build_deps = recipe.get_value(f"{requirements_path}/build", None)
-            if not build_deps or not isinstance(build_deps, list):
-                self.message(section=dependency_path)
-                continue
-            if "compiler_c" not in build_deps:
-                self.message(section=dependency_path)
+        all_deps: Final = recipe.get_all_dependencies()
+        for output in all_deps:
+            cython = None
+            compiler = None
+            for dep in all_deps[output]:
+                if dep.data.name == "cython":
+                    cython = dep
+                elif dep.data.name == "compiler_c":
+                    compiler = dep
+                if cython and compiler:
+                    break
+            if cython and (not compiler or compiler.type != DependencySection.BUILD):
+                self.message(section=cython.path)
 
 
 class avoid_noarch(LintCheck):
@@ -1046,24 +1055,29 @@ class no_git_on_windows(LintCheck):
     def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
         if not arch_name.startswith("win"):
             return
-        for dependency_path in recipe.get_dependency_paths():
-            if recipe.get_value(dependency_path) == "git":
-                self.message(section=dependency_path)
+        all_deps = recipe.get_all_dependencies()
+        for output in all_deps:
+            for dep in all_deps[output]:
+                if dep.data.name == "git":
+                    self.message(section=dep.path)
+                    return
 
     def fix(self, message, data) -> bool:
-        # NOTE: The path found in `check_deps()` is a post-selector-rendering
+        # NOTE: The path found in `check_recipe()` is a post-selector-rendering
         # path to the dependency. So in order to change the recipe file, we need
         # to relocate `git`, relative to the raw file.
-        paths = self.unrendered_recipe.find_value("git")
-        for path in paths:
-            # Attempt to filter-out false-positives
-            if "/requirements" not in path:
-                continue
-            try:
-                self.unrendered_recipe.add_selector(path, "[not win]", SelectorConflictMode.AND)
-            except KeyError:
-                return False
-        return True
+        fixed = False
+        recipe = self.unrendered_recipe
+        problem_paths: set[str] = set()
+        all_deps = recipe.get_all_dependencies()
+        for output in all_deps:
+            for dep in all_deps[output]:
+                if dep.data.name != "git" or dep.path in problem_paths:
+                    continue
+                self.unrendered_recipe.add_selector(dep.path, "[not win]", SelectorConflictMode.AND)
+                fixed = True
+                problem_paths.add(dep.path)
+        return fixed
 
 
 class gui_app(LintCheck):

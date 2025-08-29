@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 from conftest import assert_lint_messages, assert_no_lint_message, check, check_dir
 
-from anaconda_linter.lint.check_build_help import BUILD_TOOLS, COMPILERS, PYTHON_BUILD_TOOLS, STDLIBS
+from anaconda_linter.lint.check_build_help import BUILD_TOOLS, PYTHON_BUILD_TOOLS, STDLIBS
 
 
 def test_host_section_needs_exact_pinnings_good(base_yaml: str) -> None:
@@ -189,54 +189,39 @@ def test_host_section_needs_exact_pinnings_bad_multi(base_yaml: str, constraint:
     )
 
 
-@pytest.mark.parametrize("compiler", COMPILERS)
-def test_should_use_compilers_good(base_yaml: str, compiler: str) -> None:
-    lint_check = "should_use_compilers"
-    yaml_str = (
-        base_yaml
-        + f"""
-        requirements:
-          build:
-            - {{{{ compiler('{compiler}') }}}}
-        """
+@pytest.mark.parametrize(
+    "file,",
+    [
+        ("should_use_compilers/using_compiler_function.yaml"),
+    ],
+)
+def test_should_use_compilers_using_compilers(file: str) -> None:
+    """
+    This test checks the case where the "compiler" function is used.
+    """
+    assert_no_lint_message(
+        recipe_file=file,
+        lint_check="should_use_compilers",
     )
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
 
 
-@pytest.mark.parametrize("compiler", COMPILERS)
-def test_should_use_compilers_bad(base_yaml: str, compiler: str) -> None:
-    lint_check = "should_use_compilers"
-    yaml_str = (
-        base_yaml
-        + f"""
-        requirements:
-          build:
-            - {compiler}
-        """
+@pytest.mark.parametrize(
+    "file,msg_count",
+    [
+        ("should_use_compilers/requesting_compilers_directly.yaml", 6),
+    ],
+)
+def test_should_use_compilers_using_cgo_cuda_llvm(file: str, msg_count: int) -> None:
+    """
+    This test checks the case where the "compiler" function is not used, but compilers
+    cgo, cuda, and llvm are requested directly.
+    """
+    assert_lint_messages(
+        recipe_file=file,
+        lint_check="should_use_compilers",
+        msg_title="The recipe requires a compiler directly",
+        msg_count=msg_count,
     )
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "compiler directly" in messages[0].title
-
-
-def test_should_use_compilers_bad_multi(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        outputs:
-          - name: output1
-            requirements:
-              build:
-                - gcc
-          - name: output2
-            requirements:
-              build:
-                - gcc
-        """
-    )
-    lint_check = "should_use_compilers"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 2 and all("compiler directly" in msg.title for msg in messages)
 
 
 def test_should_use_stdlib_good(base_yaml: str) -> None:
@@ -1221,7 +1206,7 @@ def test_python_build_tools_in_host_all_in_host() -> None:
 
 def test_python_build_tools_in_host_some_in_build() -> None:
     """
-    This case tests python build tools being in build, which is wrong.
+    This case tests python build tools being in build, which is invalid.
     """
     assert_lint_messages(
         recipe_file="python_build_tools_in_host/some_in_build.yaml",
@@ -1233,7 +1218,7 @@ def test_python_build_tools_in_host_some_in_build() -> None:
 
 def test_python_build_tools_in_host_some_in_run() -> None:
     """
-    This case tests python build tools being in run, which is wrong.
+    This case tests python build tools being in run, which is invalid.
     """
     assert_lint_messages(
         recipe_file="python_build_tools_in_host/some_in_run.yaml",
@@ -1245,7 +1230,7 @@ def test_python_build_tools_in_host_some_in_run() -> None:
 
 def test_python_build_tools_in_host_some_in_build_and_run() -> None:
     """
-    This case tests python build tools being in build and run, which is wrong.
+    This case tests python build tools being in build and run, which is invalid.
     """
     assert_lint_messages(
         recipe_file="python_build_tools_in_host/some_in_build_and_run.yaml",
@@ -1255,84 +1240,58 @@ def test_python_build_tools_in_host_some_in_build_and_run() -> None:
     )
 
 
-def test_cython_needs_compiler_good(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        requirements:
-          build:
-            - {{ compiler('c') }}
-          host:
-            - cython
-        """
+def test_cython_needs_compiler_no_cython_no_compiler() -> None:
+    """
+    This case tests no cython and no compiler, which is valid.
+    """
+    assert_no_lint_message(
+        recipe_file="cython_needs_compiler/no_cython_no_compiler.yaml",
+        lint_check="cython_needs_compiler",
     )
-    lint_check = "cython_needs_compiler"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
 
 
-def test_cython_needs_compiler_good_multi(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        outputs:
-          - name: output1
-            requirements:
-              build:
-                - {{ compiler('c') }}
-              host:
-                - cython
-          - name: output2
-            requirements:
-              build:
-                - {{ compiler('c') }}
-              host:
-                - cython
-        """
+def test_cython_needs_compiler_output_cython_top_level_compiler() -> None:
+    """
+    This case tests a cython dependency in an output and the compiler at the top level, which is valid.
+    """
+    assert_no_lint_message(
+        recipe_file="cython_needs_compiler/output_cython_top_level_compiler.yaml",
+        lint_check="cython_needs_compiler",
     )
-    lint_check = "cython_needs_compiler"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
 
 
-def test_cython_needs_compiler_bad(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        requirements:
-          build:
-            - {{ compiler('cxx') }}
-          host:
-            - cython
-        """
+def test_cython_needs_compiler_output_cython_output_compiler() -> None:
+    """
+    This case tests a cython dependency in an output and the compiler in the output, which is valid.
+    """
+    assert_no_lint_message(
+        recipe_file="cython_needs_compiler/output_cython_output_compiler.yaml",
+        lint_check="cython_needs_compiler",
     )
-    lint_check = "cython_needs_compiler"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "Cython generates C code" in messages[0].title
 
 
-def test_cython_needs_compiler_bad_multi(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        outputs:
-          - name: output1
-            requirements:
-              build:
-                - {{ compiler('cxx') }}
-              host:
-                - cython
-          - name: output2
-            requirements:
-              build:
-                - {{ compiler('cxx') }}
-              host:
-                - cython
-        """
+def test_cython_needs_compiler_output_cython_output_compiler_in_host() -> None:
+    """
+    This case tests a cython dependency in an output and the compiler in the output's host, which is invalid.
+    """
+    assert_lint_messages(
+        recipe_file="cython_needs_compiler/output_cython_output_compiler_in_host.yaml",
+        lint_check="cython_needs_compiler",
+        msg_title="Cython generates C code",
+        msg_count=1,
     )
-    lint_check = "cython_needs_compiler"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 2 and all("Cython generates C code" in msg.title for msg in messages)
+
+
+def test_cython_needs_compiler_output_cython_top_level_cpp_compiler() -> None:
+    """
+    This case tests a cython dependency in an output and a c++ compiler at the top level, which is invalid.
+    """
+    assert_lint_messages(
+        recipe_file="cython_needs_compiler/output_cython_top_level_cpp_compiler.yaml",
+        lint_check="cython_needs_compiler",
+        msg_title="Cython generates C code",
+        msg_count=1,
+    )
 
 
 def test_avoid_noarch_good(base_yaml: str) -> None:
@@ -2657,74 +2616,37 @@ def test_remove_python_pinning_bad_multi(base_yaml: str) -> None:
     assert len(messages) == 4 and all("python deps should not be constrained" in m.title for m in messages)
 
 
-@pytest.mark.parametrize("arch", ("linux-64", "win-64"))
-def test_no_git_on_windows_good(base_yaml: str, arch: str) -> None:  # pylint: disable=unused-argument
-    yaml_str = (
-        base_yaml
-        + """
-        requirements:
-          build:
-            - git  # [not win]
-        """
+@pytest.mark.parametrize(
+    "file",
+    [
+        "no_git_on_windows/no_git.yaml",
+        "no_git_on_windows/git_w_selector.yaml",
+    ],
+)
+def test_no_git_on_windows_git_absent(file: str) -> None:
+    """
+    This test checks files that do not contain git on Windows.
+    Either through actual absence or appropriate use of selectors.
+    """
+    assert_no_lint_message(
+        recipe_file=file,
+        lint_check="no_git_on_windows",
+        arch="win-64",
     )
-    lint_check = "no_git_on_windows"
-    messages = check(lint_check, yaml_str, arch="win-64")
-    assert len(messages) == 0
 
 
-def test_no_git_on_windows_bad(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        requirements:
-          build:
-            - git
-        """
+def test_no_git_on_windows_git_present() -> None:
+    """
+    This test checks a file that do contains git on Windows since
+    the necessary selectors weren't used.
+    """
+    assert_lint_messages(
+        recipe_file="no_git_on_windows/git_present.yaml",
+        lint_check="no_git_on_windows",
+        msg_title="git should not be used as a dependency on Windows",
+        msg_count=1,
+        arch="win-64",
     )
-    lint_check = "no_git_on_windows"
-    messages = check(lint_check, yaml_str, arch="win-64")
-    assert len(messages) == 1 and "git should not be used" in messages[0].title
-
-
-@pytest.mark.parametrize("arch", ("linux-64", "win-64"))
-def test_no_git_on_windows_good_multi(base_yaml: str, arch: str) -> None:  # pylint: disable=unused-argument
-    yaml_str = (
-        base_yaml
-        + """
-        outputs:
-          - name: output1
-            requirements:
-              build:
-                - git  # [not win]
-          - name: output2
-            requirements:
-              build:
-                - git  # [not win]
-        """
-    )
-    lint_check = "no_git_on_windows"
-    messages = check(lint_check, yaml_str, arch="win-64")
-    assert len(messages) == 0
-
-
-def test_no_git_on_windows_bad_multi(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        outputs:
-          - name: output1
-            requirements:
-              build:
-                - git
-          - name: output2
-            requirements:
-              build:
-                - git
-        """
-    )
-    lint_check = "no_git_on_windows"
-    messages = check(lint_check, yaml_str, arch="win-64")
-    assert len(messages) == 2 and all("git should not be used" in msg.title for msg in messages)
 
 
 def test_gui_app_good(base_yaml: str) -> None:
