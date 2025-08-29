@@ -282,7 +282,7 @@ class compilers_must_be_in_build(LintCheck):
     """
 
     def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
-        all_deps = recipe.get_all_dependencies()
+        all_deps: Final = recipe.get_all_dependencies()
         problem_paths: set[str] = set()
         for output in all_deps:
             for dep in all_deps[output]:
