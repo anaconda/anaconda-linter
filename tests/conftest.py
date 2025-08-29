@@ -215,7 +215,7 @@ def assert_no_lint_message(recipe_file: str, lint_check: str, arch: str = "linux
     assert len(messages) == 0
 
 
-def assert_on_auto_fix(check_name: str, suffix: str, arch: str) -> None:
+def assert_on_auto_fix(check_name: str, suffix: str, arch: str, occurrences: int) -> None:
     """
     Utility function executes a fix function against an offending recipe file. Then asserts the resulting file against
     a known fixed equivalent of the offending recipe file.
@@ -224,6 +224,7 @@ def assert_on_auto_fix(check_name: str, suffix: str, arch: str) -> None:
                             variants of input-to-expected-output files. If non-empty, the files should be named:
                             `<check_name>_<suffix>.yaml` and `<check_name>_<suffix>_fixed.yaml`, respectively.
     :param arch:            Target architecture to render recipe as
+    :param occurrences:     Number of times the rule should be triggered
     """
     suffix_adjusted: Final[str] = f"_{suffix}" if suffix else ""
     broken_file: Final[str] = f"{TEST_AUTO_FIX_FILES_PATH}/{check_name}{suffix_adjusted}.yaml"
@@ -244,7 +245,8 @@ def assert_on_auto_fix(check_name: str, suffix: str, arch: str) -> None:
         )
 
     # Ensure that the rule is triggered, that the correct rule triggered, and that the rule was actually fixed
-    assert len(messages) >= 1
+    # for the correct number of times
+    assert len(messages) == occurrences
     for mes in messages:
         assert mes.auto_fix_state == AutoFixState.FIX_PASSED
         assert str(mes.check) == check_name
