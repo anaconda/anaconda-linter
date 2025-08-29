@@ -17,10 +17,11 @@ build:
     # OK for minor
     # https://abi-laboratory.pro/?view=timeline&l=libdb
     - bar
-  requirements:
-    build:
-      - {{ compiler('c') }}
-      - {{ compiler('cxx') }}
+
+requirements:
+  build:
+    - {{ compiler('c') }}
+    - {{ compiler('cxx') }}
 
 outputs:
   - name: libdb
