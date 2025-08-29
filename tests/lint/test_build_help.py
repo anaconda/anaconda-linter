@@ -368,7 +368,7 @@ def test_compilers_must_be_in_build_bad_multi(base_yaml: str, section: str) -> N
         "stdlib_must_be_in_build/multi_output_in_build.yaml",
     ],
 )
-def test_stdlib_must_be_in_build(file: str) -> None:
+def test_stdlib_must_be_in_build_in_build(file: str) -> None:
     """
     Test that the stdlib_must_be_in_build lint check passes when the recipe has a stdlib in the build section.
     """
@@ -382,9 +382,9 @@ def test_stdlib_must_be_in_build(file: str) -> None:
         ("stdlib_must_be_in_build/multi_output_in_host_run.yaml", 6),
     ],
 )
-def test_stdlib_must_be_in_build_bad(file: str, msg_count: int) -> None:
+def test_stdlib_must_be_in_build_in_host_run(file: str, msg_count: int) -> None:
     """
-    Test that the stdlib_must_be_in_build lint check fails when the recipe has a stdlib in a section other than build.
+    Test that the stdlib_must_be_in_build lint check fails when the recipe has a stdlib in host or run.
     """
     assert_lint_messages(
         recipe_file=file,
