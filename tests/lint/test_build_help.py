@@ -1276,73 +1276,38 @@ def test_cython_needs_compiler_output_cython_top_level_cpp_compiler() -> None:
     )
 
 
-def test_avoid_noarch_good(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        build:
-          noarch: generic
-        """
+@pytest.mark.parametrize(
+    "file",
+    [
+        "avoid_noarch/avoid_noarch_multi_output_no_noarch.yaml",
+    ],
+)
+def test_avoid_noarch_no_noarch(file: str) -> None:
+    """
+    This case tests a multi-output recipe with no noarch:python.
+    """
+    assert_no_lint_message(
+        recipe_file=file,
+        lint_check="avoid_noarch",
     )
-    lint_check = "avoid_noarch"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
 
 
-def test_avoid_noarch_good_build_number(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        build:
-          noarch: python
-          number: 2
-        """
+@pytest.mark.parametrize(
+    "file",
+    [
+        "avoid_noarch/avoid_noarch_top_level_and_output_noarch.yaml",
+    ],
+)
+def test_avoid_noarch_top_level_and_output_noarch(file: str) -> None:
+    """
+    This case tests a recipe with noarch:python at the top level and in an output.
+    """
+    assert_lint_messages(
+        recipe_file=file,
+        lint_check="avoid_noarch",
+        msg_title="noarch: python packages should be avoided",
+        msg_count=2,
     )
-    lint_check = "avoid_noarch"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
-
-
-def test_avoid_noarch_good_osx_app(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        build:
-          noarch: python
-          osx_is_app: true
-        """
-    )
-    lint_check = "avoid_noarch"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
-
-
-def test_avoid_noarch_good_app(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        build:
-          noarch: python
-        app:
-          icon: logo.png
-        """
-    )
-    lint_check = "avoid_noarch"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
-
-
-def test_avoid_noarch_bad(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        build:
-          noarch: python
-        """
-    )
-    lint_check = "avoid_noarch"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "noarch: python" in messages[0].title
 
 
 def test_patch_unnecessary_good(base_yaml: str) -> None:

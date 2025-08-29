@@ -407,6 +407,7 @@ class LintCheck(metaclass=LintCheckMeta):
         severity: Severity = SEVERITY_DEFAULT,
         data: Any = None,
         output: int = -1,
+        title_in: str = None,
     ) -> None:
         """
         Add a message to the lint results
@@ -420,6 +421,7 @@ class LintCheck(metaclass=LintCheckMeta):
         :param severity: The severity level of the message.
         :param data: Data to be passed to `fix`. If check can fix, set this to something other than None.
         :param output: the output the error occurred in (multi-output recipes only)
+        :param title_in: If specified, the title of the message will be set to this value
         """
         # In order to handle Percy-based rules generating messages with a section
         # We must adapt the section by prepending a slash
@@ -441,6 +443,7 @@ class LintCheck(metaclass=LintCheckMeta):
             severity=severity,
             canfix=self.can_auto_fix(),
             output=output,
+            title_in=title_in,
         )
         # If able, attempt to autofix the rule and mark the message object accordingly
         if self.try_fix and self.can_auto_fix():
