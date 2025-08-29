@@ -1,0 +1,23 @@
+package:
+  name: test
+  version: 0.1.0
+
+requirements:
+  host:
+    - {{ stdlib('c') }}
+  run:
+    - {{ stdlib('c') }}
+
+outputs:
+  - name: output1
+    requirements:
+      host:
+        - {{ stdlib('c') }}
+      run:
+        - {{ stdlib('c') }}
+  - name: output2
+    requirements:
+      host:
+        - {{ stdlib('c') }}
+      run:
+        - {{ stdlib('c') }}

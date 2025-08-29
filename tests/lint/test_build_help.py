@@ -347,75 +347,37 @@ def test_compilers_must_be_in_build_multi_output_not_in_build(file: str, msg_cou
     )
 
 
-# TODO: Re-enable after reworking stdlib_must_be_in_build
-# def test_stdlib_must_be_in_build_good(base_yaml: str) -> None:
-#     lint_check = "stdlib_must_be_in_build"
-#     yaml_str = (
-#         base_yaml
-#         + """
-#         requirements:
-#           build:
-#             - {{ stdlib('c') }}
-#         """
-#     )
-#     messages = check(lint_check, yaml_str)
-#     assert len(messages) == 0
+@pytest.mark.parametrize(
+    "file",
+    [
+        "stdlib_must_be_in_build/single_output_in_build.yaml",
+        "stdlib_must_be_in_build/multi_output_in_build.yaml",
+    ],
+)
+def test_stdlib_must_be_in_build_in_build(file: str) -> None:
+    """
+    Test that the stdlib_must_be_in_build lint check passes when the recipe has a stdlib in the build section.
+    """
+    assert_no_lint_message(recipe_file=file, lint_check="stdlib_must_be_in_build")
 
 
-# def test_stdlib_must_be_in_build_good_multi(base_yaml: str) -> None:
-#     lint_check = "stdlib_must_be_in_build"
-#     yaml_str = (
-#         base_yaml
-#         + """
-#         outputs:
-#           - name: output1
-#             requirements:
-#               build:
-#                 - {{ stdlib('c') }}
-#           - name: output2
-#             requirements:
-#               build:
-#                 - {{ stdlib('c') }}
-#         """
-#     )
-#     messages = check(lint_check, yaml_str)
-#     assert len(messages) == 0
-
-
-# @pytest.mark.parametrize("section", ["host", "run"])
-# def test_stdlib_must_be_in_build_bad(base_yaml: str, section: str) -> None:
-#     lint_check = "stdlib_must_be_in_build"
-#     yaml_str = (
-#         base_yaml
-#         + f"""
-#         requirements:
-#           {section}:
-#             - {{{{ stdlib('c') }}}}
-#             """
-#     )
-#     messages = check(lint_check, yaml_str)
-#     assert len(messages) == 1 and "stdlib in a section" in messages[0].title
-
-
-# @pytest.mark.parametrize("section", ["host", "run"])
-# def test_stdlib_must_be_in_build_bad_multi(base_yaml: str, section: str) -> None:
-#     lint_check = "stdlib_must_be_in_build"
-#     yaml_str = (
-#         base_yaml
-#         + f"""
-#         outputs:
-#           - name: output1
-#             requirements:
-#               {section}:
-#                 - {{{{ stdlib('c') }}}}
-#           - name: output2
-#             requirements:
-#               {section}:
-#                 - {{{{ stdlib('c') }}}}
-#         """
-#     )
-#     messages = check(lint_check, yaml_str)
-#     assert len(messages) == 2 and all("stdlib in a section" in msg.title for msg in messages)
+@pytest.mark.parametrize(
+    "file,msg_count",
+    [
+        ("stdlib_must_be_in_build/single_output_in_host_run.yaml", 2),
+        ("stdlib_must_be_in_build/multi_output_in_host_run.yaml", 6),
+    ],
+)
+def test_stdlib_must_be_in_build_in_host_run(file: str, msg_count: int) -> None:
+    """
+    Test that the stdlib_must_be_in_build lint check fails when the recipe has a stdlib in host or run.
+    """
+    assert_lint_messages(
+        recipe_file=file,
+        lint_check="stdlib_must_be_in_build",
+        msg_title="The recipe requests a stdlib in a section other than build",
+        msg_count=msg_count,
+    )
 
 
 @pytest.mark.parametrize("tool", BUILD_TOOLS)
