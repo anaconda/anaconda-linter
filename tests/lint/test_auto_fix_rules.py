@@ -19,15 +19,16 @@ from conftest import assert_on_auto_fix
 # Common file suffixes:
 #   - `mo` -> For multi-output test cases
 @pytest.mark.parametrize(
-    "check,suffix,arch",
+    "check,suffix,arch,occurrences",
     [
-        ("license_file_overspecified", "", "linux-64"),
-        ("license_file_overspecified", "", "win-64"),
-        ("no_git_on_windows", "", "win-64"),
-        ("patch_unnecessary", "", "linux-64"),
+        ("license_file_overspecified", "", "linux-64", 1),
+        ("license_file_overspecified", "", "win-64", 1),
+        ("no_git_on_windows", "", "win-64", 1),
+        ("patch_unnecessary", "", "linux-64", 1),
+        ("avoid_noarch", "", "linux-64", 2),
     ],
 )
-def test_auto_fix_rule(check: str, suffix: str, arch: str):
+def test_auto_fix_rule(check: str, suffix: str, arch: str, occurrences: int):
     """
     Tests auto-fixable rules by passing in a file with the issue and checking the output with an expected file.
     Files must be stored in the `test_aux_files/auto_fix/` directory, following our naming conventions.
@@ -36,4 +37,4 @@ def test_auto_fix_rule(check: str, suffix: str, arch: str):
     :param arch: Architecture to run the test against.
     """
 
-    assert_on_auto_fix(check, suffix, arch)
+    assert_on_auto_fix(check, suffix, arch, occurrences)
