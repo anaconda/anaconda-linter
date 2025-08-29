@@ -308,16 +308,22 @@ def test_compilers_must_be_in_build_all_compilers_in_build(file: str) -> None:
     )
 
 
-def test_compilers_must_be_in_build_single_output_not_in_build() -> None:
+@pytest.mark.parametrize(
+    "file,msg_count",
+    [
+        ("compilers_must_be_in_build/single_output_2_in_host.yaml", 2),
+    ],
+)
+def test_compilers_must_be_in_build_single_output_not_in_build(file: str, msg_count: int) -> None:
     """
     This test checks the case where compilers are found in the host section
     of single-output recipe.
     """
     assert_lint_messages(
-        recipe_file="compilers_must_be_in_build/single_output_2_in_host.yaml",
+        recipe_file=file,
         lint_check="compilers_must_be_in_build",
         msg_title="The recipe requests a compiler in a section other than build",
-        msg_count=2,
+        msg_count=msg_count,
     )
 
 
