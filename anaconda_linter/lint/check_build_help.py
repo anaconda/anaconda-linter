@@ -13,6 +13,7 @@ from typing import Any, Final
 from conda.models.match_spec import MatchSpec
 from conda_recipe_manager.parser.dependency import Dependency, DependencySection
 from conda_recipe_manager.parser.enums import SelectorConflictMode
+from conda_recipe_manager.parser.recipe_parser_deps import RecipeParserDeps
 from conda_recipe_manager.parser.recipe_reader_deps import RecipeReaderDeps
 from percy.render.recipe import Recipe
 
@@ -710,10 +711,10 @@ class avoid_noarch(LintCheck):
         if not data:
             return False
         package_path, name = data
-        recipe = self.unrendered_recipe
+        recipe: Final[RecipeParserDeps] = self.unrendered_recipe
 
         # Remove build/noarch
-        removed_noarch = recipe.patch(
+        removed_noarch: Final[bool] = recipe.patch(
             {
                 "op": "remove",
                 "path": recipe.append_to_path(package_path, "/build/noarch"),
