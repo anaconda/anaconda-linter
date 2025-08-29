@@ -1313,16 +1313,34 @@ def test_cython_needs_compiler_output_cython_top_level_cpp_compiler() -> None:
     )
 
 
-def test_avoid_noarch_no_noarch() -> None:
+@pytest.mark.parametrize(
+    "file",
+    [
+        "avoid_noarch/avoid_noarch_multi_output_no_noarch.yaml",
+    ],
+)
+def test_avoid_noarch_no_noarch(file: str) -> None:
+    """
+    This case tests a multi-output recipe with no noarch:python.
+    """
     assert_no_lint_message(
-        recipe_file="avoid_noarch/avoid_noarch_multi_output_no_noarch.yaml",
+        recipe_file=file,
         lint_check="avoid_noarch",
     )
 
 
-def test_avoid_noarch_top_level_and_output_noarch() -> None:
+@pytest.mark.parametrize(
+    "file",
+    [
+        "avoid_noarch/avoid_noarch_top_level_and_output_noarch.yaml",
+    ],
+)
+def test_avoid_noarch_top_level_and_output_noarch(file: str) -> None:
+    """
+    This case tests a recipe with noarch:python at the top level and in an output.
+    """
     assert_lint_messages(
-        recipe_file="avoid_noarch/avoid_noarch_top_level_and_output_noarch.yaml",
+        recipe_file=file,
         lint_check="avoid_noarch",
         msg_title="noarch: python packages should be avoided",
         msg_count=2,
