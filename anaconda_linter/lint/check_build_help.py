@@ -341,19 +341,16 @@ class stdlib_must_be_in_build(LintCheck):
 
     """
 
-    # NOTE: This is a temporary fix since LintCheck.check_deps() is deprecated
-    def _check_deps(self, deps) -> None:
-        for dep in deps:
-            for stdlib in STDLIBS:
-                if not dep.startswith(stdlib):
+    def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
+        all_deps: Final = recipe.get_all_dependencies()
+        problem_paths: set[str] = set()
+        for output in all_deps:
+            for dep in all_deps[output]:
+                if dep.path in problem_paths:
                     continue
-
-                for section in deps[dep]["paths"]:
-                    if "run" in section or "host" in section:
-                        self.message(section=section)
-
-    def check_recipe_legacy(self, recipe: Recipe) -> None:
-        self._check_deps(_utils.get_deps_dict(recipe))
+                if dep.data.name.startswith("stdlib_") and dep.type != DependencySection.BUILD:
+                    self.message(section=dep.path)
+                    problem_paths.add(dep.path)
 
 
 class build_tools_must_be_in_build(LintCheck):
