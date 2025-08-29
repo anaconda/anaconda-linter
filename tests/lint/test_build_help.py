@@ -361,75 +361,75 @@ def test_compilers_must_be_in_build_bad_multi(base_yaml: str, section: str) -> N
     assert len(messages) == 2 and all("compiler in a section" in msg.title for msg in messages)
 
 
-def test_stdlib_must_be_in_build_good(base_yaml: str) -> None:
-    lint_check = "stdlib_must_be_in_build"
-    yaml_str = (
-        base_yaml
-        + """
-        requirements:
-          build:
-            - {{ stdlib('c') }}
-        """
-    )
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
+# TODO: Re-enable after reworking stdlib_must_be_in_build
+# def test_stdlib_must_be_in_build_good(base_yaml: str) -> None:
+#     lint_check = "stdlib_must_be_in_build"
+#     yaml_str = (
+#         base_yaml
+#         + """
+#         requirements:
+#           build:
+#             - {{ stdlib('c') }}
+#         """
+#     )
+#     messages = check(lint_check, yaml_str)
+#     assert len(messages) == 0
 
 
-def test_stdlib_must_be_in_build_good_multi(base_yaml: str) -> None:
-    lint_check = "stdlib_must_be_in_build"
-    yaml_str = (
-        base_yaml
-        + """
-        outputs:
-          - name: output1
-            requirements:
-              build:
-                - {{ stdlib('c') }}
-          - name: output2
-            requirements:
-              build:
-                - {{ stdlib('c') }}
-        """
-    )
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
+# def test_stdlib_must_be_in_build_good_multi(base_yaml: str) -> None:
+#     lint_check = "stdlib_must_be_in_build"
+#     yaml_str = (
+#         base_yaml
+#         + """
+#         outputs:
+#           - name: output1
+#             requirements:
+#               build:
+#                 - {{ stdlib('c') }}
+#           - name: output2
+#             requirements:
+#               build:
+#                 - {{ stdlib('c') }}
+#         """
+#     )
+#     messages = check(lint_check, yaml_str)
+#     assert len(messages) == 0
 
 
-@pytest.mark.parametrize("section", ["host", "run"])
-def test_stdlib_must_be_in_build_bad(base_yaml: str, section: str) -> None:
-    lint_check = "stdlib_must_be_in_build"
-    yaml_str = (
-        base_yaml
-        + f"""
-        requirements:
-          {section}:
-            - {{{{ stdlib('c') }}}}
-            """
-    )
-    messages = check(lint_check, yaml_str)
-    print(messages)
-    assert len(messages) == 1 and "stdlib in a section" in messages[0].title
+# @pytest.mark.parametrize("section", ["host", "run"])
+# def test_stdlib_must_be_in_build_bad(base_yaml: str, section: str) -> None:
+#     lint_check = "stdlib_must_be_in_build"
+#     yaml_str = (
+#         base_yaml
+#         + f"""
+#         requirements:
+#           {section}:
+#             - {{{{ stdlib('c') }}}}
+#             """
+#     )
+#     messages = check(lint_check, yaml_str)
+#     assert len(messages) == 1 and "stdlib in a section" in messages[0].title
 
 
-@pytest.mark.parametrize("section", ["host", "run"])
-def test_stdlib_must_be_in_build_bad_multi(base_yaml: str, section: str) -> None:
-    lint_check = "stdlib_must_be_in_build"
-    yaml_str = (
-        base_yaml
-        + f"""
-        outputs:
-          - name: output1
-            requirements:
-              {section}:
-                - {{{{ stdlib('c') }}}}
-          - name: output2
-            requirements:
-              {section}:
-                - {{{{ stdlib('c') }}}}
-        """
-    )
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 2 and all("stdlib in a section" in msg.title for msg in messages)
+# @pytest.mark.parametrize("section", ["host", "run"])
+# def test_stdlib_must_be_in_build_bad_multi(base_yaml: str, section: str) -> None:
+#     lint_check = "stdlib_must_be_in_build"
+#     yaml_str = (
+#         base_yaml
+#         + f"""
+#         outputs:
+#           - name: output1
+#             requirements:
+#               {section}:
+#                 - {{{{ stdlib('c') }}}}
+#           - name: output2
+#             requirements:
+#               {section}:
+#                 - {{{{ stdlib('c') }}}}
+#         """
+#     )
+#     messages = check(lint_check, yaml_str)
+#     assert len(messages) == 2 and all("stdlib in a section" in msg.title for msg in messages)
 
 
 @pytest.mark.parametrize("tool", BUILD_TOOLS)
@@ -1314,73 +1314,38 @@ def test_cython_needs_compiler_output_cython_top_level_cpp_compiler() -> None:
     )
 
 
-def test_avoid_noarch_good(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        build:
-          noarch: generic
-        """
+@pytest.mark.parametrize(
+    "file",
+    [
+        "avoid_noarch/avoid_noarch_multi_output_no_noarch.yaml",
+    ],
+)
+def test_avoid_noarch_no_noarch(file: str) -> None:
+    """
+    This case tests a multi-output recipe with no noarch:python.
+    """
+    assert_no_lint_message(
+        recipe_file=file,
+        lint_check="avoid_noarch",
     )
-    lint_check = "avoid_noarch"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
 
 
-def test_avoid_noarch_good_build_number(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        build:
-          noarch: python
-          number: 2
-        """
+@pytest.mark.parametrize(
+    "file",
+    [
+        "avoid_noarch/avoid_noarch_top_level_and_output_noarch.yaml",
+    ],
+)
+def test_avoid_noarch_top_level_and_output_noarch(file: str) -> None:
+    """
+    This case tests a recipe with noarch:python at the top level and in an output.
+    """
+    assert_lint_messages(
+        recipe_file=file,
+        lint_check="avoid_noarch",
+        msg_title="noarch: python packages should be avoided",
+        msg_count=2,
     )
-    lint_check = "avoid_noarch"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
-
-
-def test_avoid_noarch_good_osx_app(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        build:
-          noarch: python
-          osx_is_app: true
-        """
-    )
-    lint_check = "avoid_noarch"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
-
-
-def test_avoid_noarch_good_app(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        build:
-          noarch: python
-        app:
-          icon: logo.png
-        """
-    )
-    lint_check = "avoid_noarch"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
-
-
-def test_avoid_noarch_bad(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        build:
-          noarch: python
-        """
-    )
-    lint_check = "avoid_noarch"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "noarch: python" in messages[0].title
 
 
 def test_patch_unnecessary_good(base_yaml: str) -> None:

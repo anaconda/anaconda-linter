@@ -1,0 +1,13 @@
+package:
+  name: test_package
+  version: 0.0.1
+
+build:
+  number: 0
+  skip: True # [py<311]
+
+outputs:
+  - name: test_output
+    build:
+      number: 0
+      skip: True # [py<310]
