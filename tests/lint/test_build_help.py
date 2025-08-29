@@ -369,6 +369,9 @@ def test_compilers_must_be_in_build_bad_multi(base_yaml: str, section: str) -> N
     ],
 )
 def test_stdlib_must_be_in_build(file: str) -> None:
+    """
+    Test that the stdlib_must_be_in_build lint check passes when the recipe has a stdlib in the build section.
+    """
     assert_no_lint_message(recipe_file=file, lint_check="stdlib_must_be_in_build")
 
 
@@ -380,6 +383,9 @@ def test_stdlib_must_be_in_build(file: str) -> None:
     ],
 )
 def test_stdlib_must_be_in_build_bad(file: str, msg_count: int) -> None:
+    """
+    Test that the stdlib_must_be_in_build lint check fails when the recipe has a stdlib in a section other than build.
+    """
     assert_lint_messages(
         recipe_file=file,
         lint_check="stdlib_must_be_in_build",
