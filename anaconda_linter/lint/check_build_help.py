@@ -563,11 +563,16 @@ class pip_install_args(LintCheck):
             if package == "/":
                 continue
             script_path = recipe.append_to_path(package, "/script")
+            output_build_script_path = recipe.append_to_path(package, "/build/script")
             script_val = None
             if recipe.contains_value(script_path):
                 script_val = recipe.get_value(script_path)
                 if script_path := self._check_block(script_path, script_val):
                     self.message(section=script_path)
+            elif recipe.contains_value(output_build_script_path):
+                script_val = recipe.get_value(output_build_script_path)
+                if output_build_script_path := self._check_block(output_build_script_path, script_val):
+                    self.message(section=output_build_script_path)
             if recipe_dir:
                 self._check_build_sh(recipe_dir, script_val)
 
