@@ -392,10 +392,11 @@ class LintCheck(metaclass=LintCheckMeta):
         :param section_path: Path of the section to be checked
         :param severity: Severity of the message
         """
-
         recipe = self.recipe
         if recipe.contains_value(section_path):
-            return
+            value = recipe.get_value(section_path)
+            if value is not None and len(str(value).strip()) > 0:
+                return
         if not recipe.is_multi_output():
             self.message(section=section_path, data=recipe, severity=severity)
             return
@@ -404,9 +405,11 @@ class LintCheck(metaclass=LintCheckMeta):
             if package_path == "/":
                 continue
             path: Final = recipe.append_to_path(package_path, section_path)
-            if not recipe.contains_value(path):
-                # we message per missing build number
-                self.message(section=path, data=recipe, severity=severity)
+            if recipe.contains_value(path):
+                value = recipe.get_value(path)
+                if value is not None and len(str(value).strip()) > 0:
+                    continue
+            self.message(section=path, data=recipe, severity=severity)
 
     def can_auto_fix(self) -> bool:
         """
