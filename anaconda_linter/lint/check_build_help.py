@@ -8,7 +8,7 @@ from __future__ import annotations
 import os
 import re
 from pathlib import Path
-from typing import Any, Final
+from typing import Any, Final, Optional
 
 from conda.models.match_spec import MatchSpec
 from conda_recipe_manager.parser.dependency import Dependency, DependencySection
@@ -507,67 +507,83 @@ class pip_install_args(LintCheck):
     """
 
     @staticmethod
-    def _check_line(x: Any) -> bool:
+    def _check_line(line: str) -> bool:
         """
-        Check a line (or list of lines) for a broken call to setup.py
+        Check a line for a broken call to pip install
         """
-        if isinstance(x, str):
-            x = [x]
-        elif not isinstance(x, list):
-            return True
+        if "pip install" in line:
+            required_args = ["--no-deps", "--no-build-isolation"]
+            if any(arg not in line for arg in required_args):
+                return True
+        return False
 
-        for line in x:
-            if "pip install" in line:
-                required_args = ["--no-deps", "--no-build-isolation"]
-                if any(arg not in line for arg in required_args):
-                    return False
+    def _check_block(self, path: str, value: Any) -> str:
+        """
+        Check a line or a list of lines for a broken call to pip install
+        """
+        if value is None:
+            return ""
+        if isinstance(value, str):
+            if not self._check_line(value):
+                return ""
+            return path
+        for idx, line in enumerate(value):
+            if self._check_line(line):
+                return path + "/" + str(idx)
 
-        return True
+    def _check_build_sh(self, recipe_dir: Optional[Path], build_script: Any) -> None:
+        """
+        Check a build.sh file for a broken call to pip install
+        """
+        if build_script:
+            if isinstance(build_script, list):
+                return
+            build_file = recipe_dir / build_script
+        else:
+            build_file = recipe_dir / "build.sh"
+        if build_file.exists():
+            with open(build_file, mode="r", encoding="utf-8") as build_sh:
+                for line in build_sh:
+                    if self._check_line(line):
+                        self.message(section=f"build script: {str(build_file)}")
 
-    def check_recipe_legacy(self, recipe: Recipe) -> None:
-        for package in recipe.packages.values():
-            if not self._check_line(recipe.get(f"{package.path_prefix}build/script", None)):
-                self.message(
-                    section=f"{package.path_prefix}build/script",
-                    data=(recipe, f"{package.path_prefix}build/script"),
-                )
-            elif not self._check_line(recipe.get(f"{package.path_prefix}script", None)):
-                self.message(
-                    section=f"{package.path_prefix}script",
-                    data=(recipe, f"{package.path_prefix}script"),
-                )
-            elif self.percy_recipe.dir:
-                try:
-                    build_file = self.percy_recipe.get(f"{package.path_prefix}script", "")
-                    if not build_file:
-                        build_file = self.percy_recipe.get(f"{package.path_prefix}build/script", "build.sh")
-                    build_file = self.percy_recipe.dir / Path(build_file)
-                    if build_file.exists():
-                        with open(str(build_file), encoding="utf-8") as buildsh:
-                            for line in buildsh:
-                                if not self._check_line(line):
-                                    if package.path_prefix.startswith("output"):
-                                        output = int(package.path_prefix.split("/")[1])
-                                    else:
-                                        output = -1
-                                    self.message(fname=build_file, output=output)
-                except (FileNotFoundError, TypeError):
-                    pass
+    def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
+        recipe_dir: Final[Optional[Path]] = Path(recipe_name) if recipe_name else None
+        # Check root level
+        build_script_path: Final[str] = "/build/script"
+        build_script_val = None
+        if recipe.contains_value(build_script_path):
+            build_script_val = recipe.get_value(build_script_path)
+            if build_script_path := self._check_block(build_script_path, build_script_val):
+                self.message(section=build_script_path)
+        if recipe_dir:
+            self._check_build_sh(recipe_dir, build_script_val)
+        # Check outputs
+        for package in recipe.get_package_paths():
+            if package == "/":
+                continue
+            script_path = recipe.append_to_path(package, "/script")
+            script_val = None
+            if recipe.contains_value(script_path):
+                script_val = recipe.get_value(script_path)
+                if script_path := self._check_block(script_path, script_val):
+                    self.message(section=script_path)
+            if recipe_dir:
+                self._check_build_sh(recipe_dir, script_val)
 
     def fix(self, message, data) -> bool:
-        (recipe, path) = data
-        op = [
+        section = message.section
+        if section.startswith("build script: "):
+            return False
+        recipe = self.unrendered_recipe
+        recipe.patch(
             {
                 "op": "replace",
-                "path": path,
-                "match": r"(.*\s)?pip install(?!=.*--no-build-isolation).*",
-                "value": (
-                    "{{ PYTHON }} -m pip install . --no-deps --no-build-isolation --ignore-installed"
-                    " --no-cache-dir -vv"
-                ),
-            },
-        ]
-        return recipe.patch(op)
+                "path": section,
+                "value": "{{ PYTHON }} -m pip install . --no-deps --no-build-isolation --ignore-installed"
+                " --no-cache-dir -vv",
+            }
+        )
 
 
 class python_build_tools_in_host(LintCheck):

@@ -168,7 +168,7 @@ def check_dir(check_name: str, feedstock_dir: str | Path, recipe_str: str, arch:
         recipe=recipe,
         unrendered_recipe=unrendered_recipe,
         percy_recipe=percy_recipe,
-        recipe_name="dummy",
+        recipe_name=str(recipe_directory),
         arch_name=arch,
     )
     return messages
