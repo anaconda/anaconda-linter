@@ -502,7 +502,7 @@ class pip_install_args(LintCheck):
 
     Please use::
 
-        $PYTHON -m pip install . --no-deps --no-build-isolation
+        {{ PYTHON }} -m pip install . --no-deps --no-build-isolation
 
     """
 
