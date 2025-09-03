@@ -763,204 +763,91 @@ def test_missing_python_build_tool_pip_install_bad_multi_list(base_yaml: str) ->
     assert len(messages) == 2 and all("require a python build tool" in msg.title for msg in messages)
 
 
-def test_uses_setup_py_good_missing(base_yaml: str) -> None:
-    lint_check = "uses_setup_py"
-    messages = check(lint_check, base_yaml)
-    assert len(messages) == 0
+@pytest.mark.parametrize(
+    "file,",
+    [
+        "deprecated_python_install_command/no_command.yaml",
+    ],
+)
+def test_deprecated_python_install_command_no_command(file: str) -> None:
+    assert_no_lint_message(recipe_file=file, lint_check="deprecated_python_install_command")
 
 
-def test_uses_setup_py_good_missing_file(base_yaml: str, recipe_dir: Path) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        requirements:
-          host:
-            - setuptools
-        """
+@pytest.mark.parametrize(
+    "file,",
+    [
+        "deprecated_python_install_command/no_command.yaml",
+    ],
+)
+def test_deprecated_python_install_command_no_command_no_file(file: str, recipe_dir: Path) -> None:
+    assert_no_lint_message(
+        recipe_file=file, lint_check="deprecated_python_install_command", feedstock_dir=recipe_dir.parent
     )
-    lint_check = "uses_setup_py"
-    messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
-    assert len(messages) == 0
 
 
-def test_uses_setup_py_good_cmd(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        build:
-          script: {{ PYTHON }} -m pip install . --no-deps --no-build-isolation
-        requirements:
-          host:
-            - setuptools
-        """
-    )
-    lint_check = "uses_setup_py"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
+@pytest.mark.parametrize(
+    "file,",
+    [
+        "deprecated_python_install_command/command_valid.yaml",
+        "deprecated_python_install_command/command_valid_multi.yaml",
+    ],
+)
+def test_deprecated_python_install_command_valid_command(file: str) -> None:
+    assert_no_lint_message(recipe_file=file, lint_check="deprecated_python_install_command")
 
 
-def test_uses_setup_py_good_script(base_yaml: str, recipe_dir: Path) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        requirements:
-          host:
-            - setuptools
-        """
-    )
-    lint_check = "uses_setup_py"
+@pytest.mark.parametrize(
+    "file,",
+    [
+        "deprecated_python_install_command/no_command.yaml",
+    ],
+)
+def test_deprecated_python_install_command_valid_script(file: str, recipe_dir: Path) -> None:
     test_file = recipe_dir / "build.sh"
     test_file.write_text("{{ PYTHON }} -m pip install . --no-deps --no-build-isolation\n")
-    messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
-    assert len(messages) == 0
-
-
-@pytest.mark.parametrize("arg_test", ["", "--no-deps", "--no-build-isolation"])
-def test_uses_setup_py_bad_cmd(base_yaml: str, arg_test: str) -> None:
-    yaml_str = (
-        base_yaml
-        + f"""
-        build:
-          script: {{{{ PYTHON }}}} -m setup.py install {arg_test}
-        requirements:
-          host:
-            - setuptools
-        """
+    assert_no_lint_message(
+        recipe_file=file, lint_check="deprecated_python_install_command", feedstock_dir=recipe_dir.parent
     )
-    lint_check = "uses_setup_py"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "python setup.py install" in messages[0].title
 
 
-@pytest.mark.parametrize("arg_test", ["", "--no-deps", "--no-build-isolation"])
-def test_uses_setup_py_bad_cmd_list(base_yaml: str, arg_test: str) -> None:
-    yaml_str = (
-        base_yaml
-        + f"""
-        build:
-          script:
-            - {{{{ PYTHON }}}} -m setup.py install {arg_test}
-        requirements:
-          host:
-            - setuptools
-        """
+@pytest.mark.parametrize(
+    "file,",
+    [
+        "deprecated_python_install_command/command_setup_py_multi_and_list.yaml",
+        "deprecated_python_install_command/command_pip_wheel_multi_and_list.yaml",
+        "deprecated_python_install_command/command_python_build_multi_and_list.yaml",
+    ],
+)
+def test_deprecated_python_install_command_invalid_command(file: str) -> None:
+    assert_lint_messages(
+        recipe_file=file,
+        lint_check="deprecated_python_install_command",
+        msg_title="python install command used in the build script is deprecated",
+        msg_count=3,
     )
-    lint_check = "uses_setup_py"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "python setup.py install" in messages[0].title
 
 
-@pytest.mark.parametrize("arg_test", ["", "--no-deps", "--no-build-isolation"])
-def test_uses_setup_py_bad_cmd_multi(base_yaml: str, arg_test: str) -> None:
-    yaml_str = (
-        base_yaml
-        + f"""
-        outputs:
-          - name: output1
-            script: {{{{ PYTHON }}}} -m setup.py install {arg_test}
-            requirements:
-              host:
-                - setuptools
-          - name: output2
-            script: {{{{ PYTHON }}}} -m setup.py install {arg_test}
-            requirements:
-              host:
-                - setuptools
-        """
+@pytest.mark.parametrize(
+    "file,script_file,msg_count",
+    [
+        ("deprecated_python_install_command/script_command_multi.yaml", "build_output.sh", 3),
+        ("deprecated_python_install_command/script_command_multi_missing_one.yaml", "build_output.sh", 2),
+        ("deprecated_python_install_command/script_command_multi_missing_one.yaml", "build.sh", 1),
+        ("deprecated_python_install_command/script_command.yaml", "build_script.sh", 1),
+    ],
+)
+def test_deprecated_python_install_command_invalid_script(
+    file: str, script_file: str, msg_count: int, recipe_dir: Path
+) -> None:
+    test_file = recipe_dir / script_file
+    test_file.write_text("{{ PYTHON }} -m setup.py install --no-deps\n")
+    assert_lint_messages(
+        recipe_file=file,
+        lint_check="deprecated_python_install_command",
+        msg_title="python install command used in the build script is deprecated",
+        msg_count=msg_count,
+        feedstock_dir=recipe_dir.parent,
     )
-    lint_check = "uses_setup_py"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 2 and all("python setup.py install" in msg.title for msg in messages)
-
-
-@pytest.mark.parametrize("arg_test", ["", "--no-deps", "--no-build-isolation"])
-def test_uses_setup_py_bad_cmd_multi_list(base_yaml: str, arg_test: str) -> None:
-    yaml_str = (
-        base_yaml
-        + f"""
-        outputs:
-          - name: output1
-            script:
-              - {{{{ PYTHON }}}} -m setup.py install {arg_test}
-            requirements:
-              host:
-                - setuptools
-          - name: output2
-            script: {{{{ PYTHON }}}} -m setup.py install {arg_test}
-            requirements:
-              host:
-                - setuptools
-        """
-    )
-    lint_check = "uses_setup_py"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 2 and all("python setup.py install" in msg.title for msg in messages)
-
-
-@pytest.mark.parametrize("arg_test", ["", "--no-deps", "--no-build-isolation"])
-def test_uses_setup_py_bad_script(base_yaml: str, recipe_dir: Path, arg_test: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        requirements:
-          host:
-            - setuptools
-        """
-    )
-    lint_check = "uses_setup_py"
-    test_file = recipe_dir / "build.sh"
-    test_file.write_text(f"{{{{ PYTHON }}}} -m setup.py install {arg_test}\n")
-    messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
-    assert len(messages) == 1 and "python setup.py install" in messages[0].title
-
-
-@pytest.mark.parametrize("arg_test", ["", "--no-deps", "--no-build-isolation"])
-def test_uses_setup_py_bad_script_multi(base_yaml: str, recipe_dir: Path, arg_test: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        outputs:
-          - name: output1
-            script: build_output.sh
-            requirements:
-              host:
-                - setuptools
-          - name: output2
-            script: build_output.sh
-            requirements:
-              host:
-                - setuptools
-        """
-    )
-    lint_check = "uses_setup_py"
-    test_file = recipe_dir / "build_output.sh"
-    test_file.write_text(f"{{{{ PYTHON }} }}-m setup.py install {arg_test}\n")
-    messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
-    assert len(messages) == 2 and all("python setup.py install" in msg.title for msg in messages)
-
-
-@pytest.mark.parametrize("arg_test", ["", "--no-deps", "--no-build-isolation"])
-def test_uses_setup_py_multi_script_missing(base_yaml: str, recipe_dir: Path, arg_test: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        outputs:
-          - name: output1
-            script: build_output.sh
-            requirements:
-              host:
-                - setuptools
-          - name: output2
-            requirements:
-              host:
-                - setuptools
-        """
-    )
-    lint_check = "uses_setup_py"
-    test_file = recipe_dir / "build_output.sh"
-    test_file.write_text(f"{{{{ PYTHON }}}} -m setup.py install {arg_test}\n")
-    messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
-    assert len(messages) == 1 and "python setup.py install" in messages[0].title
 
 
 @pytest.mark.parametrize(
