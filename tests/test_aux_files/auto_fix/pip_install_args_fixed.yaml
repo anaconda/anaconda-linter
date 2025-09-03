@@ -19,7 +19,8 @@ outputs:
       host:
         - pip
   - name: output2
-    script: {{ PYTHON }} -m pip install . --no-deps --no-build-isolation
+    build:
+      script: {{ PYTHON }} -m pip install . --no-deps --no-build-isolation
     requirements:
       host:
         - pip
