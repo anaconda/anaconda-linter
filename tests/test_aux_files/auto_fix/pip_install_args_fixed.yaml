@@ -25,7 +25,9 @@ outputs:
       host:
         - pip
   - name: output3
-    script: {{ PYTHON }} -m pip install . --no-deps --no-build-isolation
+    script:
+      - dummy_command
+      - {{ PYTHON }} -m pip install . --no-deps --no-build-isolation
     requirements:
       host:
         - pip
