@@ -963,203 +963,98 @@ def test_uses_setup_py_multi_script_missing(base_yaml: str, recipe_dir: Path, ar
     assert len(messages) == 1 and "python setup.py install" in messages[0].title
 
 
-def test_pip_install_args_good_missing(base_yaml: str) -> None:
-    lint_check = "pip_install_args"
-    messages = check(lint_check, base_yaml)
-    assert len(messages) == 0
+@pytest.mark.parametrize(
+    "file,",
+    [
+        "pip_install_args/no_command.yaml",
+    ],
+)
+def test_pip_install_args_no_command_no_script(file: str) -> None:
+    assert_no_lint_message(recipe_file=file, lint_check="pip_install_args")
 
 
-def test_pip_install_args_good_missing_file(base_yaml: str, recipe_dir: Path) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        requirements:
-          host:
-            - pip
-        """
-    )
-    lint_check = "pip_install_args"
-    messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
-    assert len(messages) == 0
-
-
-def test_pip_install_args_good_cmd(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        build:
-          script: {{ PYTHON }} -m pip install . --no-deps --no-build-isolation
-        requirements:
-          host:
-            - pip
-        """
-    )
-    lint_check = "pip_install_args"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
-
-
-def test_pip_install_args_good_script(base_yaml: str, recipe_dir: Path) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        requirements:
-          host:
-            - pip
-        """
-    )
-    lint_check = "pip_install_args"
+@pytest.mark.parametrize(
+    "file,",
+    [
+        "pip_install_args/no_command.yaml",
+    ],
+)
+def test_pip_install_args_no_command_valid_script(file: str, recipe_dir: Path) -> None:
     test_file = recipe_dir / "build.sh"
-    test_file.write_text("{{ PYTHON }} -m pip install . --no-deps --no-build-isolation\n")
-    messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
-    assert len(messages) == 0
+    test_file.write_text("$PYTHON -m pip install . --no-deps --no-build-isolation\n")
+    assert_no_lint_message(recipe_file=file, lint_check="pip_install_args", feedstock_dir=recipe_dir.parent)
 
 
-def test_pip_install_args_bad_cmd(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        build:
-          script: {{ PYTHON }} -m pip install .
-        requirements:
-          host:
-            - pip
-        """
-    )
-    lint_check = "pip_install_args"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "should be run with --no-deps and --no-build-isolation" in messages[0].title
+@pytest.mark.parametrize(
+    "file,",
+    [
+        "pip_install_args/command_valid.yaml",
+    ],
+)
+def test_pip_install_args_command_valid(file: str) -> None:
+    assert_no_lint_message(recipe_file=file, lint_check="pip_install_args")
 
 
-def test_pip_install_args_bad_cmd_list(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        build:
-          script:
-            - {{ PYTHON }} -m pip install .
-        requirements:
-          host:
-            - pip
-        """
-    )
-    lint_check = "pip_install_args"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "should be run with --no-deps and --no-build-isolation" in messages[0].title
-
-
-def test_pip_install_args_bad_cmd_multi(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        outputs:
-          - name: output1
-            script: {{ PYTHON }} -m pip install
-            requirements:
-              host:
-                - pip
-          - name: output2
-            script: {{ PYTHON }} -m pip install
-            requirements:
-              host:
-                - pip
-        """
-    )
-    lint_check = "pip_install_args"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 2 and all(
-        "should be run with --no-deps and --no-build-isolation" in msg.title for msg in messages
+@pytest.mark.parametrize(
+    "file,",
+    [
+        "pip_install_args/command_missing_no_deps.yaml",
+        "pip_install_args/command_missing_no_build.yaml",
+    ],
+)
+def test_pip_install_args_command_missing_args(file: str) -> None:
+    assert_lint_messages(
+        recipe_file=file,
+        lint_check="pip_install_args",
+        msg_title="should be run with --no-deps and --no-build-isolation",
+        msg_count=1,
     )
 
 
-def test_pip_install_args_bad_cmd_multi_list(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        outputs:
-          - name: output1
-            script:
-              - {{ PYTHON }} -m pip install
-            requirements:
-              host:
-                - pip
-          - name: output2
-            script: {{ PYTHON }} -m pip install
-            requirements:
-              host:
-                - pip
-        """
-    )
-    lint_check = "pip_install_args"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 2 and all(
-        "should be run with --no-deps and --no-build-isolation" in msg.title for msg in messages
+@pytest.mark.parametrize(
+    "file,",
+    [
+        "pip_install_args/command_missing_args_multi.yaml",
+    ],
+)
+def test_pip_install_args_command_missing_args_multi(file: str) -> None:
+    assert_lint_messages(
+        recipe_file=file,
+        lint_check="pip_install_args",
+        msg_title="should be run with --no-deps and --no-build-isolation",
+        msg_count=3,
     )
 
 
-def test_pip_install_args_bad_script(base_yaml: str, recipe_dir: Path) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        requirements:
-          host:
-            - pip
-        """
-    )
-    lint_check = "pip_install_args"
-    test_file = recipe_dir / "build.sh"
+@pytest.mark.parametrize(
+    "file,",
+    [
+        "pip_install_args/command_valid_multi.yaml",
+    ],
+)
+def test_pip_install_args_command_valid_multi(file: str) -> None:
+    assert_no_lint_message(recipe_file=file, lint_check="pip_install_args")
+
+
+@pytest.mark.parametrize(
+    "file,script_file,msg_count",
+    [
+        ("pip_install_args/no_command.yaml", "build.sh", 1),
+        ("pip_install_args/script_command.yaml", "build_script.sh", 1),
+        ("pip_install_args/script_command_multi.yaml", "build_output.sh", 3),
+        ("pip_install_args/script_command_multi_missing_one.yaml", "build_output.sh", 2),
+    ],
+)
+def test_pip_install_args_invalid_script(file: str, script_file: str, msg_count: int, recipe_dir: Path) -> None:
+    test_file = recipe_dir / script_file
     test_file.write_text("{{ PYTHON }} -m pip install .\n")
-    messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
-    assert len(messages) == 1 and "should be run with --no-deps and --no-build-isolation" in messages[0].title
-
-
-def test_pip_install_args_bad_script_multi(base_yaml: str, recipe_dir: Path) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        outputs:
-          - name: output1
-            script: build_output.sh
-            requirements:
-              host:
-                - pip
-          - name: output2
-            script: build_output.sh
-            requirements:
-              host:
-                - pip
-        """
+    assert_lint_messages(
+        recipe_file=file,
+        lint_check="pip_install_args",
+        msg_title="should be run with --no-deps and --no-build-isolation",
+        msg_count=msg_count,
+        feedstock_dir=recipe_dir.parent,
     )
-    lint_check = "pip_install_args"
-    test_file = recipe_dir / "build_output.sh"
-    test_file.write_text("{{ PYTHON }} -m pip install .\n")
-    messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
-    assert len(messages) == 2 and all(
-        "should be run with --no-deps and --no-build-isolation" in msg.title for msg in messages
-    )
-
-
-def test_pip_install_args_multi_script_missing(base_yaml: str, recipe_dir: Path) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        outputs:
-          - name: output1
-            script: build_output.sh
-            requirements:
-              host:
-                - pip
-          - name: output2
-            requirements:
-              host:
-                - pip
-        """
-    )
-    lint_check = "pip_install_args"
-    test_file = recipe_dir / "build_output.sh"
-    test_file.write_text("{{ PYTHON }} -m pip install .\n")
-    messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
-    assert len(messages) == 1 and "should be run with --no-deps and --no-build-isolation" in messages[0].title
 
 
 def test_python_build_tools_in_host_all_in_host() -> None:

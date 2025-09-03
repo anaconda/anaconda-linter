@@ -26,6 +26,7 @@ from conftest import assert_on_auto_fix
         ("no_git_on_windows", "", "win-64", 1),
         ("patch_unnecessary", "", "linux-64", 1),
         ("avoid_noarch", "", "linux-64", 2),
+        ("pip_install_args", "", "linux-64", 3),
     ],
 )
 def test_auto_fix_rule(check: str, suffix: str, arch: str, occurrences: int):
