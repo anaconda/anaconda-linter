@@ -513,12 +513,6 @@ class pip_install_args(ScriptCheck):
                 return True
         return False
 
-    def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
-        self._check_build_script(recipe_name, recipe)
-
-    def fix(self, message, data) -> bool:
-        return self._fix_script(message)
-
 
 class python_build_tools_in_host(LintCheck):
     """

@@ -540,7 +540,7 @@ class ScriptCheck(LintCheck):
                     if self._check_line(line):
                         self.message(section=f"build script: {str(build_file)}")
 
-    def _check_build_script(self, recipe_name: str, recipe: RecipeReaderDeps) -> None:
+    def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
         """
         Check the recipe build script, whether it's in the recipe or a standalone file
         """
@@ -572,7 +572,7 @@ class ScriptCheck(LintCheck):
             if recipe_dir:
                 self._check_build_sh(recipe_dir, script_val)
 
-    def _fix_script(self, message: LintMessage) -> bool:
+    def fix(self, message: LintMessage, data: Any) -> bool:
         section = message.section
         if section.startswith("build script: "):
             return False
