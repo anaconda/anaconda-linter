@@ -186,7 +186,14 @@ def read_recipe_content(recipe_file: str) -> str:
 
 
 # TODO: Passing a specific arch is not a good idea long-term, we should use a more generic approach.
-def assert_lint_messages(recipe_file: str, lint_check: str, msg_title: str, msg_count: int = 1, arch: str = "linux-64"):
+def assert_lint_messages(  # pylint: disable=too-many-positional-arguments
+    recipe_file: str,
+    lint_check: str,
+    msg_title: str,
+    msg_count: int = 1,
+    arch: str = "linux-64",
+    feedstock_dir: Optional[Path] = None,
+):
     """
     Assert that a recipe file has a specific number and type of lint message for a specific lint check.
 
@@ -195,23 +202,33 @@ def assert_lint_messages(recipe_file: str, lint_check: str, msg_title: str, msg_
     :param msg_title: Title of the lint message to check for
     :param msg_count: Number of lint messages to expect
     :param arch: Target architecture to render recipe as
+    :param feedstock_dir: Path to the feedstock directory to read
     """
     recipe_file_path: Final[Path] = get_test_path() / recipe_file
-    messages: Final = check(lint_check, read_recipe_content(recipe_file_path), arch=arch)
+    if feedstock_dir:
+        messages: Final = check_dir(lint_check, feedstock_dir, read_recipe_content(recipe_file_path), arch=arch)
+    else:
+        messages: Final = check(lint_check, read_recipe_content(recipe_file_path), arch=arch)
     assert len(messages) == msg_count and all(msg_title in msg.title for msg in messages)
 
 
 # TODO: Passing a specific arch is not a good idea long-term, we should use a more generic approach.
-def assert_no_lint_message(recipe_file: str, lint_check: str, arch: str = "linux-64") -> None:
+def assert_no_lint_message(
+    recipe_file: str, lint_check: str, arch: str = "linux-64", feedstock_dir: Optional[Path] = None
+) -> None:
     """
     Assert that a recipe file has no lint messages for a specific lint check.
 
     :param recipe_file: Path to the recipe file to read
     :param lint_check: Name of the linting rule. This corresponds with input and output files.
     :param arch: Target architecture to render recipe as
+    :param feedstock_dir: Path to the feedstock directory to read
     """
     recipe_file_path: Final[Path] = get_test_path() / recipe_file
-    messages: Final = check(lint_check, read_recipe_content(recipe_file_path), arch=arch)
+    if feedstock_dir:
+        messages: Final = check_dir(lint_check, feedstock_dir, read_recipe_content(recipe_file_path), arch=arch)
+    else:
+        messages: Final = check(lint_check, read_recipe_content(recipe_file_path), arch=arch)
     assert len(messages) == 0
 
 

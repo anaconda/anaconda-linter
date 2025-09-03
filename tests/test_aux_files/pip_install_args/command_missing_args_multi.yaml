@@ -1,0 +1,25 @@
+package:
+  name: package_name
+  version: 0.0.1
+
+build:
+  number: 0
+  script: {{ PYTHON }} -m pip install .
+
+requirements:
+  host:
+    - pip
+  run:
+    - python
+
+outputs:
+  - name: output1
+    script: {{ PYTHON }} -m pip install . --no-build-isolation
+    requirements:
+      host:
+        - pip
+  - name: output2
+    script: {{ PYTHON }} -m pip install . --no-deps
+    requirements:
+      host:
+        - pip
