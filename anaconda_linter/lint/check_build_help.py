@@ -581,12 +581,11 @@ class pip_install_args(LintCheck):
         if section.startswith("build script: "):
             return False
         recipe = self.unrendered_recipe
-        recipe.patch(
+        return recipe.patch(
             {
                 "op": "replace",
                 "path": section,
-                "value": "{{ PYTHON }} -m pip install . --no-deps --no-build-isolation --ignore-installed"
-                " --no-cache-dir -vv",
+                "value": "{{ PYTHON }} -m pip install . --no-deps --no-build-isolation",
             }
         )
 
