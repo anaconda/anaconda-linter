@@ -431,7 +431,7 @@ class uses_setup_py(LintCheck):
 
     Please use::
 
-        $PYTHON -m pip install . --no-deps --no-build-isolation
+        {{ PYTHON }} -m pip install . --no-deps --no-build-isolation
 
     Or use another python build tool.
     """
