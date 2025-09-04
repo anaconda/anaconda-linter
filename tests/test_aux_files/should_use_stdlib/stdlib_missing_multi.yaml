@@ -10,8 +10,8 @@ outputs:
   - name: output1
     requirements:
       build:
-        - {{ compiler('c') }}
+        - {{ compiler('cxx') }}
   - name: output2
     requirements:
       build:
-        - {{ compiler('c') }}
+        - {{ compiler('fortran') }}

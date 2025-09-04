@@ -324,7 +324,7 @@ class should_use_stdlib(LintCheck):
                     self.message(section=dep.path)
                 elif dep.data.name == "stdlib_c":
                     stdlib_dep = dep
-                elif dep.data.name == "compiler_c":
+                elif dep.data.name.startswith("compiler_"):
                     compiler_dep = dep
             if compiler_dep and not stdlib_dep:
                 # Output has a compiler but is missing a stdlib dependency.
