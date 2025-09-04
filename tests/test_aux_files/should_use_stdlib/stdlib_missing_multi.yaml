@@ -4,7 +4,7 @@ package:
 
 requirements:
   build:
-    - {{ compiler('c') }}
+    - {{ compiler('go') }}
 
 outputs:
   - name: output1
