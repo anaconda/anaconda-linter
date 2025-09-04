@@ -8,7 +8,7 @@ from __future__ import annotations
 import os
 import re
 from pathlib import Path
-from typing import Any, Final
+from typing import Final
 
 from conda.models.match_spec import MatchSpec
 from conda_recipe_manager.parser.dependency import Dependency, DependencySection
@@ -18,7 +18,7 @@ from conda_recipe_manager.parser.recipe_reader_deps import RecipeReaderDeps
 from percy.render.recipe import Recipe
 
 from anaconda_linter import utils as _utils
-from anaconda_linter.lint import LintCheck, Severity
+from anaconda_linter.lint import LintCheck, ScriptCheck, Severity
 
 # Does not include m2-tools, which should be checked using wild cards.
 BUILD_TOOLS: Final[tuple] = (
@@ -496,78 +496,22 @@ class uses_setup_py(LintCheck):
         return recipe.patch(op)
 
 
-class pip_install_args(LintCheck):
+class pip_install_args(ScriptCheck):
     """
     `pip install` should be run with --no-deps and --no-build-isolation.
 
     Please use::
 
-        $PYTHON -m pip install . --no-deps --no-build-isolation
+        {{ PYTHON }} -m pip install . --no-deps --no-build-isolation
 
     """
 
-    @staticmethod
-    def _check_line(x: Any) -> bool:
-        """
-        Check a line (or list of lines) for a broken call to setup.py
-        """
-        if isinstance(x, str):
-            x = [x]
-        elif not isinstance(x, list):
-            return True
-
-        for line in x:
-            if "pip install" in line:
-                required_args = ["--no-deps", "--no-build-isolation"]
-                if any(arg not in line for arg in required_args):
-                    return False
-
-        return True
-
-    def check_recipe_legacy(self, recipe: Recipe) -> None:
-        for package in recipe.packages.values():
-            if not self._check_line(recipe.get(f"{package.path_prefix}build/script", None)):
-                self.message(
-                    section=f"{package.path_prefix}build/script",
-                    data=(recipe, f"{package.path_prefix}build/script"),
-                )
-            elif not self._check_line(recipe.get(f"{package.path_prefix}script", None)):
-                self.message(
-                    section=f"{package.path_prefix}script",
-                    data=(recipe, f"{package.path_prefix}script"),
-                )
-            elif self.percy_recipe.dir:
-                try:
-                    build_file = self.percy_recipe.get(f"{package.path_prefix}script", "")
-                    if not build_file:
-                        build_file = self.percy_recipe.get(f"{package.path_prefix}build/script", "build.sh")
-                    build_file = self.percy_recipe.dir / Path(build_file)
-                    if build_file.exists():
-                        with open(str(build_file), encoding="utf-8") as buildsh:
-                            for line in buildsh:
-                                if not self._check_line(line):
-                                    if package.path_prefix.startswith("output"):
-                                        output = int(package.path_prefix.split("/")[1])
-                                    else:
-                                        output = -1
-                                    self.message(fname=build_file, output=output)
-                except (FileNotFoundError, TypeError):
-                    pass
-
-    def fix(self, message, data) -> bool:
-        (recipe, path) = data
-        op = [
-            {
-                "op": "replace",
-                "path": path,
-                "match": r"(.*\s)?pip install(?!=.*--no-build-isolation).*",
-                "value": (
-                    "{{ PYTHON }} -m pip install . --no-deps --no-build-isolation --ignore-installed"
-                    " --no-cache-dir -vv"
-                ),
-            },
-        ]
-        return recipe.patch(op)
+    def _check_line(self, line: str) -> bool:
+        if "pip install" in line:
+            required_args = ["--no-deps", "--no-build-isolation"]
+            if any(arg not in line for arg in required_args):
+                return True
+        return False
 
 
 class python_build_tools_in_host(LintCheck):
