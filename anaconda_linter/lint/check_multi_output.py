@@ -41,7 +41,9 @@ class outputs_not_unique(LintCheck):
         for output in recipe.get_package_paths():
             name_path = "/package/name" if output == "/" else recipe.append_to_path(output, "/name")
             if not recipe.contains_value(name_path):
-                self.message(section=name_path, title_in="Failed to find package name, cannot run this check.")
+                self.message(
+                    section=name_path, title_in="Failed to find package or output name, cannot run this check."
+                )
                 continue
             name = recipe.get_value(name_path)
             if name in unique_names:
