@@ -53,7 +53,7 @@ class missing_build_number(LintCheck):
             number: <build number>
     """
 
-    def validate_value(self, value: any) -> None:
+    def validate_value(self, value: any) -> bool:
         """
         Checks value is an integer
 
@@ -61,6 +61,7 @@ class missing_build_number(LintCheck):
         """
         if isinstance(value, int):
             return True
+        return False
 
     def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
         self.validate_if_recipe_path_is_missing("/build/number")
@@ -413,13 +414,15 @@ class missing_description(LintCheck):
 
     """
 
-    def validate_value(self, value: any) -> None:
+    def validate_value(self, value: any) -> bool:
         """
         Checks if value is a non-empty string
 
         :param value: Value to be checked
         """
-        return len(str(value).strip()) > 0
+        if isinstance(value, str):
+            return len(value.strip()) > 0
+        return False
 
     def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
         self.validate_if_recipe_path_is_missing("/about/description", Severity.WARNING)

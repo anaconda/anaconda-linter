@@ -380,12 +380,13 @@ class LintCheck(metaclass=LintCheckMeta):
         :param recipe: Recipe to be checked
         """
 
-    def validate_value(self, value: any) -> None:
+    def validate_value(self, value: any) -> bool:  # pylint: disable=unused-argument
         """
         checks the value is valid
 
         :param value: Value to be checked
         """
+        return False
 
     def validate_if_recipe_path_is_missing(  # pylint: disable=too-many-positional-arguments, unused-argument
         self,
@@ -414,7 +415,7 @@ class LintCheck(metaclass=LintCheckMeta):
             path: Final = recipe.append_to_path(package_path, section_path)
             if recipe.contains_value(path):
                 value = recipe.get_value(path)
-                if value is not None and len(str(value).strip()) > 0:
+                if value is not None and self.validate_value(value):
                     continue
             self.message(section=path, data=recipe, severity=severity)
 
