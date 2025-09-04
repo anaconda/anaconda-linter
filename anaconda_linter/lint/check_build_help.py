@@ -315,8 +315,6 @@ class should_use_stdlib(LintCheck):
             stdlib_dep = None
             compiler_dep = None
             for dep in all_deps[output]:
-                if stdlib_dep and compiler_dep:
-                    break
                 if dep.type != DependencySection.BUILD:
                     continue
                 if dep.data.name in STDLIBS:
