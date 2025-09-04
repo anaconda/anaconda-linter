@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 from conftest import assert_lint_messages, assert_no_lint_message, check, check_dir
 
-from anaconda_linter.lint.check_build_help import BUILD_TOOLS, PYTHON_BUILD_TOOLS, STDLIBS
+from anaconda_linter.lint.check_build_help import BUILD_TOOLS, PYTHON_BUILD_TOOLS
 
 
 def test_host_section_needs_exact_pinnings_good(base_yaml: str) -> None:
@@ -224,71 +224,41 @@ def test_should_use_compilers_using_cgo_cuda_llvm(file: str, msg_count: int) -> 
     )
 
 
-def test_should_use_stdlib_good(base_yaml: str) -> None:
-    lint_check = "should_use_stdlib"
-    yaml_str = (
-        base_yaml
-        + """
-        requirements:
-          build:
-            - {{ stdlib('c') }}
-        """
+@pytest.mark.parametrize("file,", ["should_use_stdlib/stdlib_present.yaml"])
+def test_should_use_stdlib_present(file: str) -> None:
+    assert_no_lint_message(recipe_file=file, lint_check="should_use_stdlib")
+
+
+@pytest.mark.parametrize(
+    "file,msg_count",
+    [
+        ("should_use_stdlib/stdlib_present_directly.yaml", 3),
+        ("should_use_stdlib/stdlib_present_directly_multi.yaml", 15),
+    ],
+)
+def test_should_use_stdlib_present_directly(file: str, msg_count: int) -> None:
+    assert_lint_messages(
+        recipe_file=file,
+        lint_check="should_use_stdlib",
+        msg_title="The recipe requires a {{ stdlib('c') }} dependency",
+        msg_count=msg_count,
     )
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
 
 
-@pytest.mark.parametrize("stdlib", STDLIBS)
-def test_should_use_stdlib_bad(base_yaml: str, stdlib: str) -> None:
-    lint_check = "should_use_stdlib"
-    yaml_str = (
-        base_yaml
-        + f"""
-        requirements:
-          build:
-            - {stdlib}
-        """
+@pytest.mark.parametrize(
+    "file,msg_count",
+    [
+        ("should_use_stdlib/stdlib_missing.yaml", 1),
+        ("should_use_stdlib/stdlib_missing_multi.yaml", 3),
+    ],
+)
+def test_should_use_stdlib_missing(file: str, msg_count: int) -> None:
+    assert_lint_messages(
+        recipe_file=file,
+        lint_check="should_use_stdlib",
+        msg_title="The recipe requires a {{ stdlib('c') }} dependency",
+        msg_count=msg_count,
     )
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "{{ stdlib('c') }} dependency" in messages[0].title
-
-
-def test_should_use_stdlib_bad_multi(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        outputs:
-          - name: output1
-            requirements:
-              build:
-                - sysroot
-          - name: output2
-            requirements:
-              build:
-                - macosx_deployment_target
-          - name: output3
-            requirements:
-              build:
-                - vs
-        """
-    )
-    lint_check = "should_use_stdlib"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 3 and all("{{ stdlib('c') }} dependency" in msg.title for msg in messages)
-
-
-def test_should_use_stdlib_bad_missing(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        requirements:
-          build:
-            - {{ compiler('c') }}
-        """
-    )
-    lint_check = "should_use_stdlib"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "{{ stdlib('c') }} dependency" in messages[0].title
 
 
 @pytest.mark.parametrize(

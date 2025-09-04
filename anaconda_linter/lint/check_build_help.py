@@ -103,7 +103,7 @@ COMPILERS: Final[tuple] = (
     "toolchain",
 )
 
-STDLIBS: Final[list] = ["sysroot", "macosx_deployment_target", "vs"]  # linux  # osx  # windows
+STDLIBS: Final[set] = {"sysroot", "macosx_deployment_target", "vs"}  # linux  # osx  # windows
 
 # Allowlist for noarch packages
 NOARCH_ALLOWLIST: Final[set] = {*PYTHON_BUILD_TOOLS}
