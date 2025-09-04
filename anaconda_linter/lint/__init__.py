@@ -406,7 +406,7 @@ class LintCheck(metaclass=LintCheckMeta):
             if value is not None and self.validate_value(value):
                 return
         if not recipe.is_multi_output():
-            self.message(section=section_path, data=recipe, severity=severity)
+            self.message(section=section_path, severity=severity)
             return
         output_paths: Final = recipe.get_package_paths()
         for package_path in output_paths:
@@ -417,7 +417,7 @@ class LintCheck(metaclass=LintCheckMeta):
                 value = recipe.get_value(path)
                 if value is not None and self.validate_value(value):
                     continue
-            self.message(section=path, data=recipe, severity=severity)
+            self.message(section=path, severity=severity)
 
     def can_auto_fix(self) -> bool:
         """
