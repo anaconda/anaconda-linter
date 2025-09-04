@@ -1,0 +1,13 @@
+package:
+  name: package_name
+  version: 0.0.1
+
+build:
+  number: 0
+  script: {{ PYTHON }} -m pip install . --no-deps
+
+requirements:
+  host:
+    - pip
+  run:
+    - python

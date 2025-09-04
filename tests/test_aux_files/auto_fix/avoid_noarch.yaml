@@ -1,0 +1,31 @@
+package:
+  name: test_package
+  version: 0.0.1
+
+build:
+  number: 0
+  noarch: python
+
+requirements:
+  host:
+    - setuptools
+  run:
+    - python >=3.10
+
+outputs:
+  - name: test_output_1
+    build:
+      number: 1
+      noarch: python
+    requirements:
+      host:
+      run:
+        - python >=3.11
+  - name: test_output_2
+    build:
+      number: 0
+      noarch: python
+    requirements:
+      host:
+      run:
+        - python >=3.9

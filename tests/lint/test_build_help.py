@@ -8,9 +8,9 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from conftest import check, check_dir
+from conftest import assert_lint_messages, assert_no_lint_message, check, check_dir
 
-from anaconda_linter.lint.check_build_help import BUILD_TOOLS, COMPILERS, PYTHON_BUILD_TOOLS, STDLIBS
+from anaconda_linter.lint.check_build_help import BUILD_TOOLS, PYTHON_BUILD_TOOLS, STDLIBS
 
 
 def test_host_section_needs_exact_pinnings_good(base_yaml: str) -> None:
@@ -189,54 +189,39 @@ def test_host_section_needs_exact_pinnings_bad_multi(base_yaml: str, constraint:
     )
 
 
-@pytest.mark.parametrize("compiler", COMPILERS)
-def test_should_use_compilers_good(base_yaml: str, compiler: str) -> None:
-    lint_check = "should_use_compilers"
-    yaml_str = (
-        base_yaml
-        + f"""
-        requirements:
-          build:
-            - {{{{ compiler('{compiler}') }}}}
-        """
+@pytest.mark.parametrize(
+    "file,",
+    [
+        ("should_use_compilers/using_compiler_function.yaml"),
+    ],
+)
+def test_should_use_compilers_using_compilers(file: str) -> None:
+    """
+    This test checks the case where the "compiler" function is used.
+    """
+    assert_no_lint_message(
+        recipe_file=file,
+        lint_check="should_use_compilers",
     )
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
 
 
-@pytest.mark.parametrize("compiler", COMPILERS)
-def test_should_use_compilers_bad(base_yaml: str, compiler: str) -> None:
-    lint_check = "should_use_compilers"
-    yaml_str = (
-        base_yaml
-        + f"""
-        requirements:
-          build:
-            - {compiler}
-        """
+@pytest.mark.parametrize(
+    "file,msg_count",
+    [
+        ("should_use_compilers/requesting_compilers_directly.yaml", 6),
+    ],
+)
+def test_should_use_compilers_using_cgo_cuda_llvm(file: str, msg_count: int) -> None:
+    """
+    This test checks the case where the "compiler" function is not used, but compilers
+    cgo, cuda, and llvm are requested directly.
+    """
+    assert_lint_messages(
+        recipe_file=file,
+        lint_check="should_use_compilers",
+        msg_title="The recipe requires a compiler directly",
+        msg_count=msg_count,
     )
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "compiler directly" in messages[0].title
-
-
-def test_should_use_compilers_bad_multi(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        outputs:
-          - name: output1
-            requirements:
-              build:
-                - gcc
-          - name: output2
-            requirements:
-              build:
-                - gcc
-        """
-    )
-    lint_check = "should_use_compilers"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 2 and all("compiler directly" in msg.title for msg in messages)
 
 
 def test_should_use_stdlib_good(base_yaml: str) -> None:
@@ -306,145 +291,93 @@ def test_should_use_stdlib_bad_missing(base_yaml: str) -> None:
     assert len(messages) == 1 and "{{ stdlib('c') }} dependency" in messages[0].title
 
 
-def test_compilers_must_be_in_build_good(base_yaml: str) -> None:
-    lint_check = "compilers_must_be_in_build"
-    yaml_str = (
-        base_yaml
-        + """
-        requirements:
-          build:
-            - {{ compiler('c') }}
-        """
+@pytest.mark.parametrize(
+    "file",
+    [
+        "compilers_must_be_in_build/all_in_build.yaml",
+        "compilers_must_be_in_build/no_compilers.yaml",
+    ],
+)
+def test_compilers_must_be_in_build_all_compilers_in_build(file: str) -> None:
+    """
+    This test checks the cases where no compilers are found in a non-build section.
+    """
+    assert_no_lint_message(
+        recipe_file=file,
+        lint_check="compilers_must_be_in_build",
     )
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
 
 
-def test_compilers_must_be_in_build_good_multi(base_yaml: str) -> None:
-    lint_check = "compilers_must_be_in_build"
-    yaml_str = (
-        base_yaml
-        + """
-        outputs:
-          - name: output1
-            requirements:
-              build:
-                - {{ compiler('c') }}
-          - name: output2
-            requirements:
-              build:
-                - {{ compiler('c') }}
-        """
+@pytest.mark.parametrize(
+    "file,msg_count",
+    [
+        ("compilers_must_be_in_build/single_output_2_in_host.yaml", 2),
+    ],
+)
+def test_compilers_must_be_in_build_single_output_not_in_build(file: str, msg_count: int) -> None:
+    """
+    This test checks the case where compilers are found in the host section
+    of single-output recipe.
+    """
+    assert_lint_messages(
+        recipe_file=file,
+        lint_check="compilers_must_be_in_build",
+        msg_title="The recipe requests a compiler in a section other than build",
+        msg_count=msg_count,
     )
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
 
 
-@pytest.mark.parametrize("section", ["host", "run"])
-def test_compilers_must_be_in_build_bad(base_yaml: str, section: str) -> None:
-    lint_check = "compilers_must_be_in_build"
-    yaml_str = (
-        base_yaml
-        + f"""
-        requirements:
-          {section}:
-            - {{{{ compiler('c') }}}}
-            """
+@pytest.mark.parametrize(
+    "file, msg_count",
+    [
+        ("compilers_must_be_in_build/top_level_1_in_host.yaml", 1),
+        ("compilers_must_be_in_build/top_level_1_in_host_output_1_in_run.yaml", 2),
+    ],
+)
+def test_compilers_must_be_in_build_multi_output_not_in_build(file: str, msg_count: int) -> None:
+    """
+    This test checks the case where compilers are found in non-build sections
+    of multi-output recipes.
+    """
+    assert_lint_messages(
+        recipe_file=file,
+        lint_check="compilers_must_be_in_build",
+        msg_title="The recipe requests a compiler in a section other than build",
+        msg_count=msg_count,
     )
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "compiler in a section" in messages[0].title
 
 
-@pytest.mark.parametrize("section", ["host", "run"])
-def test_compilers_must_be_in_build_bad_multi(base_yaml: str, section: str) -> None:
-    lint_check = "compilers_must_be_in_build"
-    yaml_str = (
-        base_yaml
-        + f"""
-        outputs:
-          - name: output1
-            requirements:
-              {section}:
-                - {{{{ compiler('c') }}}}
-          - name: output2
-            requirements:
-              {section}:
-                - {{{{ compiler('c') }}}}
-        """
+@pytest.mark.parametrize(
+    "file",
+    [
+        "stdlib_must_be_in_build/single_output_in_build.yaml",
+        "stdlib_must_be_in_build/multi_output_in_build.yaml",
+    ],
+)
+def test_stdlib_must_be_in_build_in_build(file: str) -> None:
+    """
+    Test that the stdlib_must_be_in_build lint check passes when the recipe has a stdlib in the build section.
+    """
+    assert_no_lint_message(recipe_file=file, lint_check="stdlib_must_be_in_build")
+
+
+@pytest.mark.parametrize(
+    "file,msg_count",
+    [
+        ("stdlib_must_be_in_build/single_output_in_host_run.yaml", 2),
+        ("stdlib_must_be_in_build/multi_output_in_host_run.yaml", 6),
+    ],
+)
+def test_stdlib_must_be_in_build_in_host_run(file: str, msg_count: int) -> None:
+    """
+    Test that the stdlib_must_be_in_build lint check fails when the recipe has a stdlib in host or run.
+    """
+    assert_lint_messages(
+        recipe_file=file,
+        lint_check="stdlib_must_be_in_build",
+        msg_title="The recipe requests a stdlib in a section other than build",
+        msg_count=msg_count,
     )
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 2 and all("compiler in a section" in msg.title for msg in messages)
-
-
-def test_stdlib_must_be_in_build_good(base_yaml: str) -> None:
-    lint_check = "stdlib_must_be_in_build"
-    yaml_str = (
-        base_yaml
-        + """
-        requirements:
-          build:
-            - {{ stdlib('c') }}
-        """
-    )
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
-
-
-def test_stdlib_must_be_in_build_good_multi(base_yaml: str) -> None:
-    lint_check = "stdlib_must_be_in_build"
-    yaml_str = (
-        base_yaml
-        + """
-        outputs:
-          - name: output1
-            requirements:
-              build:
-                - {{ stdlib('c') }}
-          - name: output2
-            requirements:
-              build:
-                - {{ stdlib('c') }}
-        """
-    )
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
-
-
-@pytest.mark.parametrize("section", ["host", "run"])
-def test_stdlib_must_be_in_build_bad(base_yaml: str, section: str) -> None:
-    lint_check = "stdlib_must_be_in_build"
-    yaml_str = (
-        base_yaml
-        + f"""
-        requirements:
-          {section}:
-            - {{{{ stdlib('c') }}}}
-            """
-    )
-    messages = check(lint_check, yaml_str)
-    print(messages)
-    assert len(messages) == 1 and "stdlib in a section" in messages[0].title
-
-
-@pytest.mark.parametrize("section", ["host", "run"])
-def test_stdlib_must_be_in_build_bad_multi(base_yaml: str, section: str) -> None:
-    lint_check = "stdlib_must_be_in_build"
-    yaml_str = (
-        base_yaml
-        + f"""
-        outputs:
-          - name: output1
-            requirements:
-              {section}:
-                - {{{{ stdlib('c') }}}}
-          - name: output2
-            requirements:
-              {section}:
-                - {{{{ stdlib('c') }}}}
-        """
-    )
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 2 and all("stdlib in a section" in msg.title for msg in messages)
 
 
 @pytest.mark.parametrize("tool", BUILD_TOOLS)
@@ -1030,428 +963,232 @@ def test_uses_setup_py_multi_script_missing(base_yaml: str, recipe_dir: Path, ar
     assert len(messages) == 1 and "python setup.py install" in messages[0].title
 
 
-def test_pip_install_args_good_missing(base_yaml: str) -> None:
-    lint_check = "pip_install_args"
-    messages = check(lint_check, base_yaml)
-    assert len(messages) == 0
+@pytest.mark.parametrize(
+    "file,",
+    [
+        "pip_install_args/no_command.yaml",
+    ],
+)
+def test_pip_install_args_no_command_no_script(file: str) -> None:
+    assert_no_lint_message(recipe_file=file, lint_check="pip_install_args")
 
 
-def test_pip_install_args_good_missing_file(base_yaml: str, recipe_dir: Path) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        requirements:
-          host:
-            - pip
-        """
-    )
-    lint_check = "pip_install_args"
-    messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
-    assert len(messages) == 0
-
-
-def test_pip_install_args_good_cmd(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        build:
-          script: {{ PYTHON }} -m pip install . --no-deps --no-build-isolation
-        requirements:
-          host:
-            - pip
-        """
-    )
-    lint_check = "pip_install_args"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
-
-
-def test_pip_install_args_good_script(base_yaml: str, recipe_dir: Path) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        requirements:
-          host:
-            - pip
-        """
-    )
-    lint_check = "pip_install_args"
+@pytest.mark.parametrize(
+    "file,",
+    [
+        "pip_install_args/no_command.yaml",
+    ],
+)
+def test_pip_install_args_no_command_valid_script(file: str, recipe_dir: Path) -> None:
     test_file = recipe_dir / "build.sh"
-    test_file.write_text("{{ PYTHON }} -m pip install . --no-deps --no-build-isolation\n")
-    messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
-    assert len(messages) == 0
+    test_file.write_text("$PYTHON -m pip install . --no-deps --no-build-isolation\n")
+    assert_no_lint_message(recipe_file=file, lint_check="pip_install_args", feedstock_dir=recipe_dir.parent)
 
 
-def test_pip_install_args_bad_cmd(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        build:
-          script: {{ PYTHON }} -m pip install .
-        requirements:
-          host:
-            - pip
-        """
-    )
-    lint_check = "pip_install_args"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "should be run with --no-deps and --no-build-isolation" in messages[0].title
+@pytest.mark.parametrize(
+    "file,",
+    [
+        "pip_install_args/command_valid.yaml",
+    ],
+)
+def test_pip_install_args_command_valid(file: str) -> None:
+    assert_no_lint_message(recipe_file=file, lint_check="pip_install_args")
 
 
-def test_pip_install_args_bad_cmd_list(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        build:
-          script:
-            - {{ PYTHON }} -m pip install .
-        requirements:
-          host:
-            - pip
-        """
-    )
-    lint_check = "pip_install_args"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "should be run with --no-deps and --no-build-isolation" in messages[0].title
-
-
-def test_pip_install_args_bad_cmd_multi(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        outputs:
-          - name: output1
-            script: {{ PYTHON }} -m pip install
-            requirements:
-              host:
-                - pip
-          - name: output2
-            script: {{ PYTHON }} -m pip install
-            requirements:
-              host:
-                - pip
-        """
-    )
-    lint_check = "pip_install_args"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 2 and all(
-        "should be run with --no-deps and --no-build-isolation" in msg.title for msg in messages
+@pytest.mark.parametrize(
+    "file,",
+    [
+        "pip_install_args/command_missing_no_deps.yaml",
+        "pip_install_args/command_missing_no_build.yaml",
+    ],
+)
+def test_pip_install_args_command_missing_args(file: str) -> None:
+    assert_lint_messages(
+        recipe_file=file,
+        lint_check="pip_install_args",
+        msg_title="should be run with --no-deps and --no-build-isolation",
+        msg_count=1,
     )
 
 
-def test_pip_install_args_bad_cmd_multi_list(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        outputs:
-          - name: output1
-            script:
-              - {{ PYTHON }} -m pip install
-            requirements:
-              host:
-                - pip
-          - name: output2
-            script: {{ PYTHON }} -m pip install
-            requirements:
-              host:
-                - pip
-        """
-    )
-    lint_check = "pip_install_args"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 2 and all(
-        "should be run with --no-deps and --no-build-isolation" in msg.title for msg in messages
+@pytest.mark.parametrize(
+    "file,",
+    [
+        "pip_install_args/command_missing_args_multi.yaml",
+    ],
+)
+def test_pip_install_args_command_missing_args_multi(file: str) -> None:
+    assert_lint_messages(
+        recipe_file=file,
+        lint_check="pip_install_args",
+        msg_title="should be run with --no-deps and --no-build-isolation",
+        msg_count=3,
     )
 
 
-def test_pip_install_args_bad_script(base_yaml: str, recipe_dir: Path) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        requirements:
-          host:
-            - pip
-        """
-    )
-    lint_check = "pip_install_args"
-    test_file = recipe_dir / "build.sh"
+@pytest.mark.parametrize(
+    "file,",
+    [
+        "pip_install_args/command_valid_multi.yaml",
+    ],
+)
+def test_pip_install_args_command_valid_multi(file: str) -> None:
+    assert_no_lint_message(recipe_file=file, lint_check="pip_install_args")
+
+
+@pytest.mark.parametrize(
+    "file,script_file,msg_count",
+    [
+        ("pip_install_args/no_command.yaml", "build.sh", 1),
+        ("pip_install_args/script_command.yaml", "build_script.sh", 1),
+        ("pip_install_args/script_command_multi.yaml", "build_output.sh", 3),
+        ("pip_install_args/script_command_multi_missing_one.yaml", "build_output.sh", 2),
+    ],
+)
+def test_pip_install_args_invalid_script(file: str, script_file: str, msg_count: int, recipe_dir: Path) -> None:
+    test_file = recipe_dir / script_file
     test_file.write_text("{{ PYTHON }} -m pip install .\n")
-    messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
-    assert len(messages) == 1 and "should be run with --no-deps and --no-build-isolation" in messages[0].title
-
-
-def test_pip_install_args_bad_script_multi(base_yaml: str, recipe_dir: Path) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        outputs:
-          - name: output1
-            script: build_output.sh
-            requirements:
-              host:
-                - pip
-          - name: output2
-            script: build_output.sh
-            requirements:
-              host:
-                - pip
-        """
-    )
-    lint_check = "pip_install_args"
-    test_file = recipe_dir / "build_output.sh"
-    test_file.write_text("{{ PYTHON }} -m pip install .\n")
-    messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
-    assert len(messages) == 2 and all(
-        "should be run with --no-deps and --no-build-isolation" in msg.title for msg in messages
+    assert_lint_messages(
+        recipe_file=file,
+        lint_check="pip_install_args",
+        msg_title="should be run with --no-deps and --no-build-isolation",
+        msg_count=msg_count,
+        feedstock_dir=recipe_dir.parent,
     )
 
 
-def test_pip_install_args_multi_script_missing(base_yaml: str, recipe_dir: Path) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        outputs:
-          - name: output1
-            script: build_output.sh
-            requirements:
-              host:
-                - pip
-          - name: output2
-            requirements:
-              host:
-                - pip
-        """
-    )
-    lint_check = "pip_install_args"
-    test_file = recipe_dir / "build_output.sh"
-    test_file.write_text("{{ PYTHON }} -m pip install .\n")
-    messages = check_dir(lint_check, recipe_dir.parent, yaml_str)
-    assert len(messages) == 1 and "should be run with --no-deps and --no-build-isolation" in messages[0].title
-
-
-def test_python_build_tools_in_host_good(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        requirements:
-          host:
-            - setuptools
-            - pip
-        """
-    )
-    lint_check = "python_build_tools_in_host"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
-
-
-def test_python_build_tools_in_host_good_multi(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        outputs:
-          - name: output1
-            requirements:
-              host:
-                - setuptools
-                - pip
-          - name: output2
-            requirements:
-              host:
-                - setuptools
-                - pip
-        """
-    )
-    lint_check = "python_build_tools_in_host"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
-
-
-@pytest.mark.parametrize("section", ["build", "run"])
-def test_python_build_tools_in_host_bad(base_yaml: str, section: str) -> None:
-    lint_check = "python_build_tools_in_host"
-    yaml_str = (
-        base_yaml
-        + f"""
-        requirements:
-          {section}:
-            - setuptools
-            - pip
-        """
-    )
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 2 and "Python build tools should be" in messages[0].title
-
-
-@pytest.mark.parametrize("section", ["build", "run"])
-def test_python_build_tools_in_host_bad_multi(base_yaml: str, section: str) -> None:
-    lint_check = "python_build_tools_in_host"
-    yaml_str = (
-        base_yaml
-        + f"""
-        outputs:
-          - name: output1
-            requirements:
-              {section}:
-                - setuptools
-                - pip
-          - name: output2
-            requirements:
-              {section}:
-                - setuptools
-                - pip
+def test_python_build_tools_in_host_all_in_host() -> None:
     """
+    This is the ideal case with no errors.
+    """
+    assert_no_lint_message(
+        recipe_file="python_build_tools_in_host/all_in_host.yaml",
+        lint_check="python_build_tools_in_host",
     )
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 4 and all("Python build tools should be" in msg.title for msg in messages)
 
 
-def test_cython_needs_compiler_good(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        requirements:
-          build:
-            - {{ compiler('c') }}
-          host:
-            - cython
-        """
+def test_python_build_tools_in_host_some_in_build() -> None:
+    """
+    This case tests python build tools being in build, which is invalid.
+    """
+    assert_lint_messages(
+        recipe_file="python_build_tools_in_host/some_in_build.yaml",
+        lint_check="python_build_tools_in_host",
+        msg_title="Python build tools should be in the host section",
+        msg_count=3,
     )
-    lint_check = "cython_needs_compiler"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
 
 
-def test_cython_needs_compiler_good_multi(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        outputs:
-          - name: output1
-            requirements:
-              build:
-                - {{ compiler('c') }}
-              host:
-                - cython
-          - name: output2
-            requirements:
-              build:
-                - {{ compiler('c') }}
-              host:
-                - cython
-        """
+def test_python_build_tools_in_host_some_in_run() -> None:
+    """
+    This case tests python build tools being in run, which is invalid.
+    """
+    assert_lint_messages(
+        recipe_file="python_build_tools_in_host/some_in_run.yaml",
+        lint_check="python_build_tools_in_host",
+        msg_title="Python build tools should be in the host section",
+        msg_count=3,
     )
-    lint_check = "cython_needs_compiler"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
 
 
-def test_cython_needs_compiler_bad(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        requirements:
-          build:
-            - {{ compiler('cxx') }}
-          host:
-            - cython
-        """
+def test_python_build_tools_in_host_some_in_build_and_run() -> None:
+    """
+    This case tests python build tools being in build and run, which is invalid.
+    """
+    assert_lint_messages(
+        recipe_file="python_build_tools_in_host/some_in_build_and_run.yaml",
+        lint_check="python_build_tools_in_host",
+        msg_title="Python build tools should be in the host section",
+        msg_count=6,
     )
-    lint_check = "cython_needs_compiler"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "Cython generates C code" in messages[0].title
 
 
-def test_cython_needs_compiler_bad_multi(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        outputs:
-          - name: output1
-            requirements:
-              build:
-                - {{ compiler('cxx') }}
-              host:
-                - cython
-          - name: output2
-            requirements:
-              build:
-                - {{ compiler('cxx') }}
-              host:
-                - cython
-        """
+def test_cython_needs_compiler_no_cython_no_compiler() -> None:
+    """
+    This case tests no cython and no compiler, which is valid.
+    """
+    assert_no_lint_message(
+        recipe_file="cython_needs_compiler/no_cython_no_compiler.yaml",
+        lint_check="cython_needs_compiler",
     )
-    lint_check = "cython_needs_compiler"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 2 and all("Cython generates C code" in msg.title for msg in messages)
 
 
-def test_avoid_noarch_good(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        build:
-          noarch: generic
-        """
+def test_cython_needs_compiler_output_cython_top_level_compiler() -> None:
+    """
+    This case tests a cython dependency in an output and the compiler at the top level, which is valid.
+    """
+    assert_no_lint_message(
+        recipe_file="cython_needs_compiler/output_cython_top_level_compiler.yaml",
+        lint_check="cython_needs_compiler",
     )
-    lint_check = "avoid_noarch"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
 
 
-def test_avoid_noarch_good_build_number(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        build:
-          noarch: python
-          number: 2
-        """
+def test_cython_needs_compiler_output_cython_output_compiler() -> None:
+    """
+    This case tests a cython dependency in an output and the compiler in the output, which is valid.
+    """
+    assert_no_lint_message(
+        recipe_file="cython_needs_compiler/output_cython_output_compiler.yaml",
+        lint_check="cython_needs_compiler",
     )
-    lint_check = "avoid_noarch"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
 
 
-def test_avoid_noarch_good_osx_app(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        build:
-          noarch: python
-          osx_is_app: true
-        """
+def test_cython_needs_compiler_output_cython_output_compiler_in_host() -> None:
+    """
+    This case tests a cython dependency in an output and the compiler in the output's host, which is invalid.
+    """
+    assert_lint_messages(
+        recipe_file="cython_needs_compiler/output_cython_output_compiler_in_host.yaml",
+        lint_check="cython_needs_compiler",
+        msg_title="Cython generates C code",
+        msg_count=1,
     )
-    lint_check = "avoid_noarch"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
 
 
-def test_avoid_noarch_good_app(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        build:
-          noarch: python
-        app:
-          icon: logo.png
-        """
+def test_cython_needs_compiler_output_cython_top_level_cpp_compiler() -> None:
+    """
+    This case tests a cython dependency in an output and a c++ compiler at the top level, which is invalid.
+    """
+    assert_lint_messages(
+        recipe_file="cython_needs_compiler/output_cython_top_level_cpp_compiler.yaml",
+        lint_check="cython_needs_compiler",
+        msg_title="Cython generates C code",
+        msg_count=1,
     )
-    lint_check = "avoid_noarch"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
 
 
-def test_avoid_noarch_bad(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        build:
-          noarch: python
-        """
+@pytest.mark.parametrize(
+    "file",
+    [
+        "avoid_noarch/avoid_noarch_multi_output_no_noarch.yaml",
+    ],
+)
+def test_avoid_noarch_no_noarch(file: str) -> None:
+    """
+    This case tests a multi-output recipe with no noarch:python.
+    """
+    assert_no_lint_message(
+        recipe_file=file,
+        lint_check="avoid_noarch",
     )
-    lint_check = "avoid_noarch"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "noarch: python" in messages[0].title
+
+
+@pytest.mark.parametrize(
+    "file",
+    [
+        "avoid_noarch/avoid_noarch_top_level_and_output_noarch.yaml",
+    ],
+)
+def test_avoid_noarch_top_level_and_output_noarch(file: str) -> None:
+    """
+    This case tests a recipe with noarch:python at the top level and in an output.
+    """
+    assert_lint_messages(
+        recipe_file=file,
+        lint_check="avoid_noarch",
+        msg_title="noarch: python packages should be avoided",
+        msg_count=2,
+    )
 
 
 def test_patch_unnecessary_good(base_yaml: str) -> None:
@@ -2707,74 +2444,37 @@ def test_remove_python_pinning_bad_multi(base_yaml: str) -> None:
     assert len(messages) == 4 and all("python deps should not be constrained" in m.title for m in messages)
 
 
-@pytest.mark.parametrize("arch", ("linux-64", "win-64"))
-def test_no_git_on_windows_good(base_yaml: str, arch: str) -> None:  # pylint: disable=unused-argument
-    yaml_str = (
-        base_yaml
-        + """
-        requirements:
-          build:
-            - git  # [not win]
-        """
+@pytest.mark.parametrize(
+    "file",
+    [
+        "no_git_on_windows/no_git.yaml",
+        "no_git_on_windows/git_w_selector.yaml",
+    ],
+)
+def test_no_git_on_windows_git_absent(file: str) -> None:
+    """
+    This test checks files that do not contain git on Windows.
+    Either through actual absence or appropriate use of selectors.
+    """
+    assert_no_lint_message(
+        recipe_file=file,
+        lint_check="no_git_on_windows",
+        arch="win-64",
     )
-    lint_check = "no_git_on_windows"
-    messages = check(lint_check, yaml_str, arch="win-64")
-    assert len(messages) == 0
 
 
-def test_no_git_on_windows_bad(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        requirements:
-          build:
-            - git
-        """
+def test_no_git_on_windows_git_present() -> None:
+    """
+    This test checks a file that do contains git on Windows since
+    the necessary selectors weren't used.
+    """
+    assert_lint_messages(
+        recipe_file="no_git_on_windows/git_present.yaml",
+        lint_check="no_git_on_windows",
+        msg_title="git should not be used as a dependency on Windows",
+        msg_count=1,
+        arch="win-64",
     )
-    lint_check = "no_git_on_windows"
-    messages = check(lint_check, yaml_str, arch="win-64")
-    assert len(messages) == 1 and "git should not be used" in messages[0].title
-
-
-@pytest.mark.parametrize("arch", ("linux-64", "win-64"))
-def test_no_git_on_windows_good_multi(base_yaml: str, arch: str) -> None:  # pylint: disable=unused-argument
-    yaml_str = (
-        base_yaml
-        + """
-        outputs:
-          - name: output1
-            requirements:
-              build:
-                - git  # [not win]
-          - name: output2
-            requirements:
-              build:
-                - git  # [not win]
-        """
-    )
-    lint_check = "no_git_on_windows"
-    messages = check(lint_check, yaml_str, arch="win-64")
-    assert len(messages) == 0
-
-
-def test_no_git_on_windows_bad_multi(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        outputs:
-          - name: output1
-            requirements:
-              build:
-                - git
-          - name: output2
-            requirements:
-              build:
-                - git
-        """
-    )
-    lint_check = "no_git_on_windows"
-    messages = check(lint_check, yaml_str, arch="win-64")
-    assert len(messages) == 2 and all("git should not be used" in msg.title for msg in messages)
 
 
 def test_gui_app_good(base_yaml: str) -> None:

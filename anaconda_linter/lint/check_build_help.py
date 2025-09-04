@@ -8,16 +8,17 @@ from __future__ import annotations
 import os
 import re
 from pathlib import Path
-from typing import Any, Final
+from typing import Final
 
 from conda.models.match_spec import MatchSpec
 from conda_recipe_manager.parser.dependency import Dependency, DependencySection
 from conda_recipe_manager.parser.enums import SelectorConflictMode
+from conda_recipe_manager.parser.recipe_parser_deps import RecipeParserDeps
 from conda_recipe_manager.parser.recipe_reader_deps import RecipeReaderDeps
 from percy.render.recipe import Recipe
 
 from anaconda_linter import utils as _utils
-from anaconda_linter.lint import LintCheck, Severity
+from anaconda_linter.lint import LintCheck, ScriptCheck, Severity
 
 # Does not include m2-tools, which should be checked using wild cards.
 BUILD_TOOLS: Final[tuple] = (
@@ -103,6 +104,9 @@ COMPILERS: Final[tuple] = (
 )
 
 STDLIBS: Final[tuple] = ("sysroot", "macosx_deployment_target", "vs")  # linux  # osx  # windows
+
+# Allowlist for noarch packages
+NOARCH_ALLOWLIST: Final[set] = {*PYTHON_BUILD_TOOLS}
 
 
 def is_pypi_source(recipe: Recipe) -> bool:
@@ -261,9 +265,15 @@ class should_use_compilers(LintCheck):
     compilers = COMPILERS
 
     def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
-        for dependency_path in recipe.get_dependency_paths():
-            if recipe.get_value(dependency_path) in self.compilers:
-                self.message(section=dependency_path)
+        all_deps: Final = recipe.get_all_dependencies()
+        problem_paths: set[str] = set()
+        for output in all_deps:
+            for dep in all_deps[output]:
+                if dep.path in problem_paths:
+                    continue
+                if dep.data.name in self.compilers:
+                    self.message(section=dep.path)
+                    problem_paths.add(dep.path)
 
 
 class compilers_must_be_in_build(LintCheck):
@@ -276,10 +286,15 @@ class compilers_must_be_in_build(LintCheck):
     """
 
     def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
-        for dependency_path in recipe.get_dependency_paths():
-            if recipe.get_value(dependency_path).startswith("compiler_"):
-                if "run" in dependency_path or "host" in dependency_path:
-                    self.message(section=dependency_path)
+        all_deps: Final = recipe.get_all_dependencies()
+        problem_paths: set[str] = set()
+        for output in all_deps:
+            for dep in all_deps[output]:
+                if dep.path in problem_paths:
+                    continue
+                if dep.data.name.startswith("compiler_") and dep.type != DependencySection.BUILD:
+                    self.message(section=dep.path)
+                    problem_paths.add(dep.path)
 
 
 class should_use_stdlib(LintCheck):
@@ -335,19 +350,16 @@ class stdlib_must_be_in_build(LintCheck):
 
     """
 
-    # NOTE: This is a temporary fix since LintCheck.check_deps() is deprecated
-    def _check_deps(self, deps) -> None:
-        for dep in deps:
-            for stdlib in STDLIBS:
-                if not dep.startswith(stdlib):
+    def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
+        all_deps: Final = recipe.get_all_dependencies()
+        problem_paths: set[str] = set()
+        for output in all_deps:
+            for dep in all_deps[output]:
+                if dep.path in problem_paths:
                     continue
-
-                for section in deps[dep]["paths"]:
-                    if "run" in section or "host" in section:
-                        self.message(section=section)
-
-    def check_recipe_legacy(self, recipe: Recipe) -> None:
-        self._check_deps(_utils.get_deps_dict(recipe))
+                if dep.data.name.startswith("stdlib_") and dep.type != DependencySection.BUILD:
+                    self.message(section=dep.path)
+                    problem_paths.add(dep.path)
 
 
 class build_tools_must_be_in_build(LintCheck):
@@ -484,78 +496,22 @@ class uses_setup_py(LintCheck):
         return recipe.patch(op)
 
 
-class pip_install_args(LintCheck):
+class pip_install_args(ScriptCheck):
     """
     `pip install` should be run with --no-deps and --no-build-isolation.
 
     Please use::
 
-        $PYTHON -m pip install . --no-deps --no-build-isolation
+        {{ PYTHON }} -m pip install . --no-deps --no-build-isolation
 
     """
 
-    @staticmethod
-    def _check_line(x: Any) -> bool:
-        """
-        Check a line (or list of lines) for a broken call to setup.py
-        """
-        if isinstance(x, str):
-            x = [x]
-        elif not isinstance(x, list):
-            return True
-
-        for line in x:
-            if "pip install" in line:
-                required_args = ["--no-deps", "--no-build-isolation"]
-                if any(arg not in line for arg in required_args):
-                    return False
-
-        return True
-
-    def check_recipe_legacy(self, recipe: Recipe) -> None:
-        for package in recipe.packages.values():
-            if not self._check_line(recipe.get(f"{package.path_prefix}build/script", None)):
-                self.message(
-                    section=f"{package.path_prefix}build/script",
-                    data=(recipe, f"{package.path_prefix}build/script"),
-                )
-            elif not self._check_line(recipe.get(f"{package.path_prefix}script", None)):
-                self.message(
-                    section=f"{package.path_prefix}script",
-                    data=(recipe, f"{package.path_prefix}script"),
-                )
-            elif self.percy_recipe.dir:
-                try:
-                    build_file = self.percy_recipe.get(f"{package.path_prefix}script", "")
-                    if not build_file:
-                        build_file = self.percy_recipe.get(f"{package.path_prefix}build/script", "build.sh")
-                    build_file = self.percy_recipe.dir / Path(build_file)
-                    if build_file.exists():
-                        with open(str(build_file), encoding="utf-8") as buildsh:
-                            for line in buildsh:
-                                if not self._check_line(line):
-                                    if package.path_prefix.startswith("output"):
-                                        output = int(package.path_prefix.split("/")[1])
-                                    else:
-                                        output = -1
-                                    self.message(fname=build_file, output=output)
-                except (FileNotFoundError, TypeError):
-                    pass
-
-    def fix(self, message, data) -> bool:
-        (recipe, path) = data
-        op = [
-            {
-                "op": "replace",
-                "path": path,
-                "match": r"(.*\s)?pip install(?!=.*--no-build-isolation).*",
-                "value": (
-                    "{{ PYTHON }} -m pip install . --no-deps --no-build-isolation --ignore-installed"
-                    " --no-cache-dir -vv"
-                ),
-            },
-        ]
-        return recipe.patch(op)
+    def _check_line(self, line: str) -> bool:
+        if "pip install" in line:
+            required_args = ["--no-deps", "--no-build-isolation"]
+            if any(arg not in line for arg in required_args):
+                return True
+        return False
 
 
 class python_build_tools_in_host(LintCheck):
@@ -568,12 +524,19 @@ class python_build_tools_in_host(LintCheck):
         host:
           - setuptools
           - pip
+          - cython
     """
 
     def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
-        for dependency_path in recipe.get_dependency_paths():
-            if recipe.get_value(dependency_path) in PYTHON_BUILD_TOOLS and "/host" not in dependency_path:
-                self.message(section=dependency_path)
+        problem_paths: set[str] = set()
+        all_deps = recipe.get_all_dependencies()
+        for output in all_deps:
+            for dep in all_deps[output]:
+                if dep.data.name in PYTHON_BUILD_TOOLS and dep.type != DependencySection.HOST:
+                    if dep.path in problem_paths:
+                        continue
+                    self.message(section=dep.path)
+                    problem_paths.add(dep.path)
 
 
 class cython_needs_compiler(LintCheck):
@@ -589,16 +552,19 @@ class cython_needs_compiler(LintCheck):
     """
 
     def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
-        for dependency_path in recipe.get_dependency_paths():
-            if not recipe.get_value(dependency_path) == "cython":
-                continue
-            requirements_path = "/".join(dependency_path.split("/")[:-2])
-            build_deps = recipe.get_value(f"{requirements_path}/build", None)
-            if not build_deps or not isinstance(build_deps, list):
-                self.message(section=dependency_path)
-                continue
-            if "compiler_c" not in build_deps:
-                self.message(section=dependency_path)
+        all_deps: Final = recipe.get_all_dependencies()
+        for output in all_deps:
+            cython = None
+            compiler = None
+            for dep in all_deps[output]:
+                if dep.data.name == "cython":
+                    cython = dep
+                elif dep.data.name == "compiler_c":
+                    compiler = dep
+                if cython and compiler:
+                    break
+            if cython and (not compiler or compiler.type != DependencySection.BUILD):
+                self.message(section=cython.path)
 
 
 class avoid_noarch(LintCheck):
@@ -612,13 +578,17 @@ class avoid_noarch(LintCheck):
 
     Then add::
 
+        build:
+            skip: True # [py<MIN_PYTHON_VERSION]
+
         requirements:
             host:
                 - python
-                - pip
-                - setuptools
-                - wheel
             run:
+                - python
+
+        test:
+            requires:
                 - python
 
     noarch packages should be avoided because it is difficult to
@@ -628,67 +598,109 @@ class avoid_noarch(LintCheck):
 
     """
 
-    def check_recipe_legacy(self, recipe: Recipe) -> None:
-        for package in recipe.packages.values():
-            noarch = recipe.get(f"{package.path_prefix}build/noarch", "")
-            if (
-                noarch == "python"
-                and int(recipe.get(f"{package.path_prefix}build/number", 0)) == 0
-                and not recipe.get(f"{package.path_prefix}build/osx_is_app", False)
-                and not recipe.get(f"{package.path_prefix}app", None)
-            ):
-                self.message(section=f"{package.path_prefix}build", severity=Severity.WARNING, data=(recipe, package))
+    def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
+        for package_path in recipe.get_package_paths():
+            # Allow exceptions
+            rel_name_path: Final[str] = "/package/name" if package_path == "/" else "/name"
+            name_path: Final[str] = recipe.append_to_path(package_path, rel_name_path)
+            try:
+                name: Final[str] = recipe.get_value(name_path)
+            except KeyError:
+                self.message(title_in="Failed to determine package or output name, cannot run this check.")
+                continue
+            if name in NOARCH_ALLOWLIST:
+                continue
+            try:
+                build_number: Final[str] = recipe.get_value(recipe.append_to_path(package_path, "/build/number"))
+            except KeyError:
+                try:
+                    build_number: Final[str] = recipe.get_value("/build/number")
+                except KeyError:
+                    self.message(title_in="Failed to determine build number, cannot run this check.")
+                    continue
+            if build_number is not None and int(build_number) > 0:
+                continue
 
-    def fix(self, message, data) -> bool:
-        (recipe, package) = data
-        skip_selector = None
-        sep_map = {
-            ">=": "<",
-            ">": "<=",
-            "==": "!=",
-            "!=": "==",
-            "<=": ">",
-            "<": ">=",
-        }
-        for dep in recipe.get(f"{package.path_prefix}requirements/run", []):
-            if dep.startswith("python"):
-                for sep, opp in sep_map.items():
-                    s = dep.split(sep)
-                    if len(s) > 1:
-                        skip_selector = f" # [py{opp}{s[1].strip().replace('.','')}]"
-                        break
-                if skip_selector:
-                    break
-        op = [
-            {"op": "remove", "path": f"{package.path_prefix}build/noarch"},
-            {
-                "op": "add",
-                "path": f"{package.path_prefix}requirements/host",
-                "match": "python",
-                "value": ["python"],
-            },
-            {
-                "op": "add",
-                "path": f"{package.path_prefix}requirements/run",
-                "match": "python",
-                "value": ["python"],
-            },
-            {
-                "op": "replace",
-                "path": f"{package.path_prefix}test/requires",
-                "match": "python",
-                "value": ["python"],
-            },
-        ]
-        if skip_selector:
-            op.append(
+            # Perform check
+            noarch_path = recipe.append_to_path(package_path, "/build/noarch")
+            if not recipe.contains_value(noarch_path):
+                continue
+            if recipe.get_value(noarch_path) == "python":
+                self.message(section=noarch_path, severity=Severity.WARNING, data=(package_path, name))
+
+    def _prep_path(self, package_path: str, path: str) -> None:
+        """
+        Performs necessary patch-add operations before attempting to add dependencies.
+        For example, a requirements or test section.
+        """
+        recipe = self.unrendered_recipe
+        split_path = path.split("/")
+        current_path = ""
+        for elem in split_path:
+            if not elem:
+                continue
+            if elem.isnumeric():
+                break
+            current_path += "/" + elem
+            add_path = recipe.append_to_path(package_path, current_path)
+            if recipe.contains_value(add_path):
+                continue
+            recipe.patch(
                 {
                     "op": "add",
-                    "path": f"{package.path_prefix}build/skip",
-                    "value": f"True {skip_selector}",
+                    "path": add_path,
+                    "value": None,
                 }
             )
-        return recipe.patch(op)
+
+    def fix(self, message, data) -> bool:
+        if not data:
+            return False
+        package_path, name = data
+        recipe: Final[RecipeParserDeps] = self.unrendered_recipe
+
+        # Remove build/noarch
+        removed_noarch: Final[bool] = recipe.patch(
+            {
+                "op": "remove",
+                "path": recipe.append_to_path(package_path, "/build/noarch"),
+            },
+        )
+
+        # Extract python version
+        py_version = None
+        for dep in recipe.get_all_dependencies()[name]:
+            dep_data = dep.data
+            if not isinstance(dep_data, MatchSpec):
+                continue
+            if dep_data.name != "python":
+                continue
+            if dep.type != DependencySection.RUN:
+                continue
+            if dep_data.version:
+                py_version = str(dep_data.version)
+                break
+
+        # Add python to requirements/host, requirements/run and test/requires
+        added_python = []
+        for path, dep_section in [
+            ("/requirements/host/0", DependencySection.HOST),
+            ("/requirements/run/0", DependencySection.RUN),
+            ("/test/requires/0", DependencySection.TESTS),
+        ]:
+            full_path = recipe.append_to_path(package_path, path)
+            self._prep_path(package_path, path)
+            dep_data = MatchSpec("python")
+            python_dep = Dependency(required_by=name, path=full_path, type=dep_section, data=dep_data)
+            added_python.append(recipe.add_dependency(python_dep))
+
+        # Update skip statement
+        if py_version:
+            updated_skip = recipe.update_skip_statement_python(package_path, py_version)
+            if not updated_skip:
+                return False
+
+        return removed_noarch and all(added_python)
 
 
 class patch_unnecessary(LintCheck):
@@ -1034,24 +1046,29 @@ class no_git_on_windows(LintCheck):
     def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
         if not arch_name.startswith("win"):
             return
-        for dependency_path in recipe.get_dependency_paths():
-            if recipe.get_value(dependency_path) == "git":
-                self.message(section=dependency_path)
+        all_deps = recipe.get_all_dependencies()
+        for output in all_deps:
+            for dep in all_deps[output]:
+                if dep.data.name == "git":
+                    self.message(section=dep.path)
+                    return
 
     def fix(self, message, data) -> bool:
-        # NOTE: The path found in `check_deps()` is a post-selector-rendering
+        # NOTE: The path found in `check_recipe()` is a post-selector-rendering
         # path to the dependency. So in order to change the recipe file, we need
         # to relocate `git`, relative to the raw file.
-        paths = self.unrendered_recipe.find_value("git")
-        for path in paths:
-            # Attempt to filter-out false-positives
-            if "/requirements" not in path:
-                continue
-            try:
-                self.unrendered_recipe.add_selector(path, "[not win]", SelectorConflictMode.AND)
-            except KeyError:
-                return False
-        return True
+        fixed = False
+        recipe = self.unrendered_recipe
+        problem_paths: set[str] = set()
+        all_deps = recipe.get_all_dependencies()
+        for output in all_deps:
+            for dep in all_deps[output]:
+                if dep.data.name != "git" or dep.path in problem_paths:
+                    continue
+                self.unrendered_recipe.add_selector(dep.path, "[not win]", SelectorConflictMode.AND)
+                fixed = True
+                problem_paths.add(dep.path)
+        return fixed
 
 
 class gui_app(LintCheck):

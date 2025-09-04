@@ -234,7 +234,7 @@ class LintCheckMeta(abc.ABCMeta):
         Creates LintCheck classes
         """
         typ = super().__new__(mcs, name, bases, namespace, **kwargs)
-        if name != "LintCheck":  # don't register base class
+        if name not in {"LintCheck", "ScriptCheck"}:  # don't register base classes
             mcs.registry.append(typ)
         return typ
 
@@ -445,6 +445,7 @@ class LintCheck(metaclass=LintCheckMeta):
         severity: Severity = SEVERITY_DEFAULT,
         data: Any = None,
         output: int = -1,
+        title_in: str = None,
     ) -> None:
         """
         Add a message to the lint results
@@ -458,6 +459,7 @@ class LintCheck(metaclass=LintCheckMeta):
         :param severity: The severity level of the message.
         :param data: Data to be passed to `fix`. If check can fix, set this to something other than None.
         :param output: the output the error occurred in (multi-output recipes only)
+        :param title_in: If specified, the title of the message will be set to this value
         """
         # In order to handle Percy-based rules generating messages with a section
         # We must adapt the section by prepending a slash
@@ -479,6 +481,7 @@ class LintCheck(metaclass=LintCheckMeta):
             severity=severity,
             canfix=self.can_auto_fix(),
             output=output,
+            title_in=title_in,
         )
         # If able, attempt to autofix the rule and mark the message object accordingly
         if self.try_fix and self.can_auto_fix():
@@ -532,6 +535,92 @@ class LintCheck(metaclass=LintCheckMeta):
             fname=fname,
             section=section,
             canfix=canfix,
+        )
+
+
+class ScriptCheck(LintCheck):
+    """
+    Base class for script checks
+    """
+
+    def _check_line(self, line: str) -> bool:
+        """
+        Check a line for an invalid or obsolete install command
+        """
+
+    def _check_block(self, path: str, value: Any) -> str:
+        """
+        Check a line or a list of lines for an invalid or obsolete install command
+        """
+        if value is None:
+            return ""
+        if isinstance(value, str):
+            if not self._check_line(value):
+                return ""
+            return path
+        for idx, line in enumerate(value):
+            if self._check_line(line):
+                return path + "/" + str(idx)
+
+    def _check_build_sh(self, recipe_dir: Optional[Path], build_script: Any) -> None:
+        """
+        Check a build.sh file for an invalid or obsolete install command
+        """
+        if build_script:
+            if isinstance(build_script, list):
+                return
+            build_file = recipe_dir / build_script
+        else:
+            build_file = recipe_dir / "build.sh"
+        if build_file.exists():
+            with open(build_file, mode="r", encoding="utf-8") as build_sh:
+                for line in build_sh:
+                    if self._check_line(line):
+                        self.message(section=f"build script: {str(build_file)}")
+
+    def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
+        """
+        Check the recipe build script, whether it's in the recipe or a standalone file
+        """
+        recipe_dir: Final[Optional[Path]] = Path(recipe_name) if recipe_name else None
+        # Check root level
+        build_script_path: Final[str] = "/build/script"
+        build_script_val = None
+        if recipe.contains_value(build_script_path):
+            build_script_val = recipe.get_value(build_script_path)
+            if build_script_path := self._check_block(build_script_path, build_script_val):
+                self.message(section=build_script_path)
+        if recipe_dir:
+            self._check_build_sh(recipe_dir, build_script_val)
+        # Check outputs
+        for package in recipe.get_package_paths():
+            if package == "/":
+                continue
+            script_path = recipe.append_to_path(package, "/script")
+            output_build_script_path = recipe.append_to_path(package, "/build/script")
+            script_val = None
+            if recipe.contains_value(script_path):
+                script_val = recipe.get_value(script_path)
+                if script_path := self._check_block(script_path, script_val):
+                    self.message(section=script_path)
+            elif recipe.contains_value(output_build_script_path):
+                script_val = recipe.get_value(output_build_script_path)
+                if output_build_script_path := self._check_block(output_build_script_path, script_val):
+                    self.message(section=output_build_script_path)
+            if recipe_dir:
+                self._check_build_sh(recipe_dir, script_val)
+
+    def fix(self, message: LintMessage, data: Any) -> bool:
+        section = message.section
+        if section.startswith("build script: "):
+            return False
+        recipe = self.unrendered_recipe
+        return recipe.patch(
+            {
+                "op": "replace",
+                "path": section,
+                "value": "{{ PYTHON }} -m pip install . --no-deps --no-build-isolation",
+            }
         )
 
 
