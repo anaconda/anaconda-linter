@@ -5,6 +5,8 @@ Description:    Contains linter checks for multi-output based rules.
 
 from __future__ import annotations
 
+from conda_recipe_manager.parser.recipe_reader_deps import RecipeReaderDeps
+
 from anaconda_linter import utils as _utils
 from anaconda_linter.lint import LintCheck, Severity
 
@@ -34,15 +36,17 @@ class outputs_not_unique(LintCheck):
     and are not the same as the package name.
     """
 
-    def check_recipe_legacy(self, recipe) -> None:
-        if outputs := recipe.get("outputs", None):
-            unique_names = [recipe.get("package/name")]
-            output_names = [recipe.get(f"outputs/{n}/name", "") for n in range(len(outputs))]
-            for n, name in enumerate(output_names):
-                if name in unique_names:
-                    self.message(section=f"outputs/{n}/name", output=n)
-                else:
-                    unique_names.append(name)
+    def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
+        unique_names: set[str] = set()
+        for output in recipe.get_package_paths():
+            name_path = "/package/name" if output == "/" else recipe.append_to_path(output, "/name")
+            if not recipe.contains_value(name_path):
+                self.message(section=name_path, title_in="Failed to find package name, cannot run this check.")
+                continue
+            name = recipe.get_value(name_path)
+            if name in unique_names:
+                self.message(section=name_path)
+            unique_names.add(name)
 
 
 class no_global_test(LintCheck):

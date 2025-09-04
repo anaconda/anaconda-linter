@@ -69,21 +69,6 @@ def test_outputs_not_unique_bad_package_name(base_yaml: str) -> None:
     assert len(messages) == 1 and "not unique" in messages[0].title
 
 
-def test_output_message(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        outputs:
-          - name: output1
-          - name: output2
-          - name: output2
-        """
-    )
-    lint_check = "outputs_not_unique"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and messages[0].title.startswith('output "output2": ')
-
-
 def test_outputs_not_unique_bad(base_yaml: str) -> None:
     yaml_str = (
         base_yaml
