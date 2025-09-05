@@ -64,7 +64,7 @@ class missing_build_number(LintCheck):
         return False
 
     def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
-        self.validate_if_recipe_path_is_missing("/build/number")
+        self._validate_if_recipe_path_is_missing("/build/number")
 
 
 class missing_package_name(LintCheck):
@@ -425,7 +425,7 @@ class missing_description(LintCheck):
         return False
 
     def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
-        self.validate_if_recipe_path_is_missing("/about/description", Severity.WARNING)
+        self._validate_if_recipe_path_is_missing("/about/description", Severity.WARNING)
 
 
 class wrong_output_script_key(LintCheck):

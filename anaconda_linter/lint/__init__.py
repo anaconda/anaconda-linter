@@ -388,7 +388,7 @@ class LintCheck(metaclass=LintCheckMeta):
         """
         return False
 
-    def validate_if_recipe_path_is_missing(
+    def _validate_if_recipe_path_is_missing(
         self,
         section_path: str,
         severity: Severity = SEVERITY_DEFAULT,
