@@ -25,8 +25,8 @@ outputs:
       commands:
         - test -f ${PREFIX}/lib/libdb${SHLIB_EXT}  # [unix]
         - if not exist %LIBRARY_BIN%\libdb%SHLIB_EXT%  # [win]
-      about:
-        description:
+    about:
+      description:
   # metapackage for old anaconda name (only available on linux/mac)
   - name: db
     requirements:

@@ -25,11 +25,11 @@ outputs:
       commands:
         - test -f ${PREFIX}/lib/libdb${SHLIB_EXT}  # [unix]
         - if not exist %LIBRARY_BIN%\libdb%SHLIB_EXT%  # [win]
-      about:
-        description: |
-          This is a PEP 561 type stub package for the toml package.
-          It can be used by type-checking tools like mypy, pyright,
-          pytype, PyCharm, etc. to check code that uses toml.
+    about:
+      description: |
+        This is a PEP 561 type stub package for the toml package.
+        It can be used by type-checking tools like mypy, pyright,
+        pytype, PyCharm, etc. to check code that uses toml.
   # metapackage for old anaconda name (only available on linux/mac)
   - name: db
     requirements:
