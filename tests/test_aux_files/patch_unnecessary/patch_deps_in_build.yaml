@@ -1,0 +1,16 @@
+package:
+  name: patch_unnecessary
+  version: 0.1.0
+
+source:
+  url: https://sqlite.com/2022/sqlite-autoconf-3380500.tar.gz
+  patches:
+    - some-patch.patch
+    - some-other-patch.patch
+
+requirements:
+  build:
+    - {{ compiler('c') }}
+    - patch
+    - msys2-patch
+    - m2-patch

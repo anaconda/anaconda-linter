@@ -33,6 +33,9 @@ requirements:
     - numpy {{ numpy }}
     - cython 0.29
     - pytest-runner
+    - patch
+    - m2-patch
+    - msys2-patch
   run:
     - python
     - {{ pin_compatible('numpy') }}
