@@ -424,76 +424,31 @@ def test_build_tools_must_be_in_build_bad_multi(base_yaml: str, section: str, to
     assert len(messages) == 2 and all(f"build tool {tool} is not in the build section" in msg.title for msg in messages)
 
 
-@pytest.mark.parametrize("tool", PYTHON_BUILD_TOOLS)
-def test_python_build_tool_in_run_good(base_yaml: str, tool: str) -> None:
-    yaml_str = (
-        base_yaml
-        + f"""
-        requirements:
-          host:
-            - {tool}
-        """
+@pytest.mark.parametrize(
+    "file,",
+    [
+        "python_build_tool_in_run/single_output_in_host.yaml",
+        "python_build_tool_in_run/multi_output_in_host.yaml",
+    ],
+)
+def test_python_build_tool_in_run_valid(file: str) -> None:
+    assert_no_lint_message(recipe_file=file, lint_check="python_build_tool_in_run")
+
+
+@pytest.mark.parametrize(
+    "file,msg_count,",
+    [
+        ("python_build_tool_in_run/single_output_in_run.yaml", len(PYTHON_BUILD_TOOLS)),
+        ("python_build_tool_in_run/multi_output_in_run.yaml", len(PYTHON_BUILD_TOOLS) * 3),
+    ],
+)
+def test_python_build_tool_in_run_invalid(file: str, msg_count: int) -> None:
+    assert_lint_messages(
+        recipe_file=file,
+        lint_check="python_build_tool_in_run",
+        msg_title="is in run depends",
+        msg_count=msg_count,
     )
-    lint_check = "python_build_tool_in_run"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
-
-
-@pytest.mark.parametrize("tool", PYTHON_BUILD_TOOLS)
-def test_python_build_tool_in_run_good_multi(base_yaml: str, tool: str) -> None:
-    yaml_str = (
-        base_yaml
-        + f"""
-        outputs:
-          - name: output1
-            requirements:
-              host:
-                - {tool}
-          - name: output2
-            requirements:
-              host:
-                - {tool}
-        """
-    )
-    lint_check = "python_build_tool_in_run"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
-
-
-@pytest.mark.parametrize("tool", PYTHON_BUILD_TOOLS)
-def test_python_build_tool_in_run_bad(base_yaml: str, tool: str) -> None:
-    yaml_str = (
-        base_yaml
-        + f"""
-        requirements:
-          run:
-            - {tool}
-        """
-    )
-    lint_check = "python_build_tool_in_run"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and f"python build tool {tool} is in run" in messages[0].title
-
-
-@pytest.mark.parametrize("tool", PYTHON_BUILD_TOOLS)
-def test_python_build_tool_in_run_bad_multi(base_yaml: str, tool: str) -> None:
-    yaml_str = (
-        base_yaml
-        + f"""
-        outputs:
-          - name: output1
-            requirements:
-              run:
-                - {tool}
-          - name: output2
-            requirements:
-              run:
-                - {tool}
-        """
-    )
-    lint_check = "python_build_tool_in_run"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 2 and all(f"python build tool {tool} is in run" in msg.title for msg in messages)
 
 
 @pytest.mark.parametrize("tool", PYTHON_BUILD_TOOLS)
