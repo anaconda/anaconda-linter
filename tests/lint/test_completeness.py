@@ -167,23 +167,30 @@ def test_missing_home_bad(base_yaml: str) -> None:
     assert len(messages) == 1 and "missing a homepage" in messages[0].title
 
 
-def test_missing_summary_good(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        about:
-          summary: amazing package
-        """
-    )
-    lint_check = "missing_summary"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
+@pytest.mark.parametrize(
+    "recipe_file",
+    [
+        "lint_check/streamlit-folium.yaml",
+        "lint_check/summary_multi_output.yaml",
+        "lint_check/build_number_multi_only_outputs.yaml",
+    ],
+)
+def test_no_missing_summary(recipe_file: str) -> None:
+    assert_no_lint_message(recipe_file, "missing_summary")
 
 
-def test_missing_summary_bad(base_yaml: str) -> None:
-    lint_check = "missing_summary"
-    messages = check(lint_check, base_yaml)
-    assert len(messages) == 1 and "missing a summary" in messages[0].title
+@pytest.mark.parametrize(
+    ("recipe_file", "msg_count"),
+    [("lint_check/summary_missing.yaml", 1), ("lint_check/summary_missing_multi_output.yaml", 2)],
+)
+def test_missing_summary(recipe_file: str, msg_count: int) -> None:
+    """
+    Test that the missing_build_number lint check works correctly when the recipe does not have a build number.
+
+    :param recipe_file: Path to the recipe file to read
+    :param msg_count: Number of lint messages to expect
+    """
+    assert_lint_messages(recipe_file, "missing_summary", "missing a summary", msg_count)
 
 
 def test_missing_license_good(base_yaml: str) -> None:
