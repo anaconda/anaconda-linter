@@ -102,7 +102,7 @@ COMPILERS: Final[tuple] = (
     "toolchain",
 )
 
-STDLIBS: Final[tuple] = ("sysroot", "macosx_deployment_target", "vs")  # linux  # osx  # windows
+STDLIBS: Final[set] = {"sysroot", "macosx_deployment_target", "vs"}  # linux  # osx  # windows
 
 # Allowlist for noarch packages
 NOARCH_ALLOWLIST: Final[set] = {*PYTHON_BUILD_TOOLS}
@@ -308,36 +308,24 @@ class should_use_stdlib(LintCheck):
 
     """
 
-    # NOTE: This is a temporary fix since LintCheck.check_deps() is deprecated
-    def _check_deps(self, deps) -> None:
-        """
-        Checks for manual use of the `sysroot`, `macosx_deployment_target` or `vs` packages in recipes.
-        """
-        for stdlib in STDLIBS:
-            for location in deps.get(stdlib, {}).get("paths", []):
-                self.message(section=location)
-
-    def check_recipe_legacy(self, recipe: Recipe) -> None:
-        """
-        Ensures a {{ stdlib('c') }} macro is used in any recipe using a compiler.
-        """
-        stdlib_name = (
-            f"{recipe.selector_dict.get('c_stdlib', 'unknown_stdlib')}_"
-            f"{recipe.selector_dict.get('target_platform', 'unknown_target_platform')}"
-        )
-        for output in recipe.packages.values():
+    def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
+        all_deps: Final = recipe.get_all_dependencies()
+        for output in all_deps:
+            stdlib_dep = None
             compiler_dep = None
-            for dep in output.build:
-                if dep.pkg == stdlib_name:
-                    break  # Found a stdlib dependency, all good.
-                elif dep.pkg.startswith("compiler_"):
+            for dep in all_deps[output]:
+                if dep.type != DependencySection.BUILD:
+                    continue
+                if dep.data.name in STDLIBS:
+                    # Bypassing the stdlib macro is not allowed.
+                    self.message(section=dep.path)
+                elif dep.data.name == "stdlib_c":
+                    stdlib_dep = dep
+                elif dep.data.name.startswith("compiler_"):
                     compiler_dep = dep
-            else:
-                if compiler_dep:
-                    # Output has a compiler but is missing a stdlib dependency.
-                    self.message(section=compiler_dep.path)
-
-        self._check_deps(_utils.get_deps_dict(recipe))
+            if compiler_dep and not stdlib_dep:
+                # Output has a compiler but is missing a stdlib dependency.
+                self.message(section=compiler_dep.path)
 
 
 class stdlib_must_be_in_build(LintCheck):
