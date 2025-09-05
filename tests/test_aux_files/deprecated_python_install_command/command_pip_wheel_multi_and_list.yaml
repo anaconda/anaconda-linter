@@ -1,0 +1,26 @@
+package:
+  name: package_name
+  version: 0.0.1
+
+build:
+  number: 0
+  script: {{ PYTHON }} -m pip wheel
+
+requirements:
+  host:
+    - pip
+  run:
+    - python
+
+outputs:
+  - name: output1
+    script: pip wheel
+    requirements:
+      host:
+        - pip
+  - name: output2
+    script: 
+      - $PYTHON -m pip wheel
+    requirements:
+      host:
+        - pip

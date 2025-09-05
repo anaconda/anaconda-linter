@@ -508,6 +508,8 @@ class ScriptCheck(LintCheck):
     def _check_line(self, line: str) -> bool:
         """
         Check a line for an invalid or obsolete install command
+
+        :returns: True if the line contains an invalid or obsolete install command
         """
 
     def _check_block(self, path: str, value: Any) -> str:

@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import os
 import re
-from pathlib import Path
 from typing import Final
 
 from conda.models.match_spec import MatchSpec
@@ -413,75 +412,28 @@ class missing_python_build_tool(LintCheck):
                 self.message(section="requirements/host")
 
 
-class uses_setup_py(LintCheck):
+class deprecated_python_install_command(ScriptCheck):
     """
-    `python setup.py install` is deprecated.
+    The python install command used in the build script is deprecated.
 
     Please use::
 
-        $PYTHON -m pip install . --no-deps --no-build-isolation
-
-    Or use another python build tool.
+        {{ PYTHON }} -m pip install . --no-deps --no-build-isolation
     """
 
-    @staticmethod
-    def _check_line(x: str) -> bool:
-        """
-        Check a line for a broken call to setup.py
-        """
-        if isinstance(x, str):
-            x = [x]
-        elif not isinstance(x, list):
-            return True
-        for line in x:
-            if "setup.py install" in line:
-                return False
-        return True
+    # Regex pattern to match deprecated python install commands
+    # Matches: python/PYTHON variants + optional -m + (setup.py|build), or pip wheel
+    deprecated_command_pattern = re.compile(
+        r"(?:(?:\$\{?PYTHON\}?|\{\{\s*PYTHON\s*\}\}|python)\s+(?:-m\s+)?(?:setup\.py|build)|pip\s+wheel)"
+    )
 
-    def check_recipe_legacy(self, recipe: Recipe) -> None:
-        for package in recipe.packages.values():
-            if not self._check_line(recipe.get(f"{package.path_prefix}build/script", None)):
-                self.message(
-                    section=f"{package.path_prefix}build/script",
-                    data=(recipe, f"{package.path_prefix}build/script"),
-                )
-            elif not self._check_line(recipe.get(f"{package.path_prefix}script", None)):
-                self.message(
-                    section=f"{package.path_prefix}script",
-                    data=(recipe, f"{package.path_prefix}script"),
-                )
-            elif self.percy_recipe.dir:
-                try:
-                    build_file = self.percy_recipe.get(f"{package.path_prefix}script", "")
-                    if not build_file:
-                        build_file = self.percy_recipe.get(f"{package.path_prefix}build/script", "build.sh")
-                    build_file = self.percy_recipe.dir / Path(build_file)
-                    if build_file.exists():
-                        with open(str(build_file), encoding="utf-8") as buildsh:
-                            for line in buildsh:
-                                if not self._check_line(line):
-                                    if package.path_prefix.startswith("output"):
-                                        output = int(package.path_prefix.split("/")[1])
-                                    else:
-                                        output = -1
-                                    self.message(fname=build_file, output=output)
-                except (FileNotFoundError, TypeError):
-                    pass
+    def _check_line(self, line: str) -> bool:
+        """
+        Check a line for an invalid or obsolete install command
 
-    def fix(self, message, data) -> bool:
-        (recipe, path) = data
-        op = [
-            {
-                "op": "replace",
-                "path": path,
-                "match": ".* setup.py .*",
-                "value": (
-                    "{{PYTHON}} -m pip install . --no-deps --no-build-isolation --ignore-installed"
-                    " --no-cache-dir -vv"
-                ),
-            },
-        ]
-        return recipe.patch(op)
+        :returns: True if the line contains an invalid or obsolete install command
+        """
+        return bool(self.deprecated_command_pattern.search(line))
 
 
 class pip_install_args(ScriptCheck):
@@ -495,6 +447,11 @@ class pip_install_args(ScriptCheck):
     """
 
     def _check_line(self, line: str) -> bool:
+        """
+        Check a line for an invalid or obsolete install command
+
+        :returns: True if the line contains an invalid or obsolete install command
+        """
         if "pip install" in line:
             required_args = ["--no-deps", "--no-build-isolation"]
             if any(arg not in line for arg in required_args):
