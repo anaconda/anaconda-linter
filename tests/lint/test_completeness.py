@@ -655,7 +655,7 @@ def test_missing_dev_url_bad(base_yaml: str) -> None:
         "lint_check/streamlit-folium.yaml",
         "lint_check/build_number_multi_output.yaml",
         "lint_check/build_number_multi_only_outputs.yaml",
-        ("lint_check/description_in_some_outpts.yaml"),
+        "lint_check/description_in_some_outpts.yaml",
     ],
 )
 def test_no_missing_description(recipe_file: str) -> None:
