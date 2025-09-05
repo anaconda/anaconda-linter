@@ -443,10 +443,11 @@ def test_python_build_tool_in_run_valid(file: str) -> None:
     ],
 )
 def test_python_build_tool_in_run_invalid(file: str, msg_count: int) -> None:
+    msg_title = [f"The python build tool {tool} is in run depends" for tool in PYTHON_BUILD_TOOLS]
     assert_lint_messages(
         recipe_file=file,
         lint_check="python_build_tool_in_run",
-        msg_title="is in run depends",
+        msg_title=msg_title,
         msg_count=msg_count,
     )
 
