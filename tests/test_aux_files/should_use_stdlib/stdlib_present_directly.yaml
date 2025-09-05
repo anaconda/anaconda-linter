@@ -1,0 +1,9 @@
+package:
+  name: test
+  version: 0.1.0
+
+requirements:
+  build:
+    - sysroot
+    - macosx_deployment_target
+    - vs

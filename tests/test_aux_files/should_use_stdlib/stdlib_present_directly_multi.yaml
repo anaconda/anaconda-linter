@@ -1,0 +1,23 @@
+package:
+  name: test
+  version: 0.1.0
+
+requirements:
+  build:
+    - sysroot
+    - macosx_deployment_target
+    - vs
+
+outputs:
+  - name: output1
+    requirements:
+      build:
+        - sysroot
+  - name: output2
+    requirements:
+      build:
+        - macosx_deployment_target
+  - name: output3
+    requirements:
+      build:
+        - vs

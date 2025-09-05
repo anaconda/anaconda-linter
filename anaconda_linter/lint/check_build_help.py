@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import os
 import re
-from pathlib import Path
 from typing import Final
 
 from conda.models.match_spec import MatchSpec
@@ -103,7 +102,7 @@ COMPILERS: Final[tuple] = (
     "toolchain",
 )
 
-STDLIBS: Final[tuple] = ("sysroot", "macosx_deployment_target", "vs")  # linux  # osx  # windows
+STDLIBS: Final[set] = {"sysroot", "macosx_deployment_target", "vs"}  # linux  # osx  # windows
 
 # Allowlist for noarch packages
 NOARCH_ALLOWLIST: Final[set] = {*PYTHON_BUILD_TOOLS}
@@ -322,36 +321,24 @@ class should_use_stdlib(LintCheck):
 
     """
 
-    # NOTE: This is a temporary fix since LintCheck.check_deps() is deprecated
-    def _check_deps(self, deps) -> None:
-        """
-        Checks for manual use of the `sysroot`, `macosx_deployment_target` or `vs` packages in recipes.
-        """
-        for stdlib in STDLIBS:
-            for location in deps.get(stdlib, {}).get("paths", []):
-                self.message(section=location)
-
-    def check_recipe_legacy(self, recipe: Recipe) -> None:
-        """
-        Ensures a {{ stdlib('c') }} macro is used in any recipe using a compiler.
-        """
-        stdlib_name = (
-            f"{recipe.selector_dict.get('c_stdlib', 'unknown_stdlib')}_"
-            f"{recipe.selector_dict.get('target_platform', 'unknown_target_platform')}"
-        )
-        for output in recipe.packages.values():
+    def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
+        all_deps: Final = recipe.get_all_dependencies()
+        for output in all_deps:
+            stdlib_dep = None
             compiler_dep = None
-            for dep in output.build:
-                if dep.pkg == stdlib_name:
-                    break  # Found a stdlib dependency, all good.
-                elif dep.pkg.startswith("compiler_"):
+            for dep in all_deps[output]:
+                if dep.type != DependencySection.BUILD:
+                    continue
+                if dep.data.name in STDLIBS:
+                    # Bypassing the stdlib macro is not allowed.
+                    self.message(section=dep.path)
+                elif dep.data.name == "stdlib_c":
+                    stdlib_dep = dep
+                elif dep.data.name.startswith("compiler_"):
                     compiler_dep = dep
-            else:
-                if compiler_dep:
-                    # Output has a compiler but is missing a stdlib dependency.
-                    self.message(section=compiler_dep.path)
-
-        self._check_deps(_utils.get_deps_dict(recipe))
+            if compiler_dep and not stdlib_dep:
+                # Output has a compiler but is missing a stdlib dependency.
+                self.message(section=compiler_dep.path)
 
 
 class stdlib_must_be_in_build(LintCheck):
@@ -442,75 +429,28 @@ class missing_python_build_tool(LintCheck):
                 self.message(section="requirements/host")
 
 
-class uses_setup_py(LintCheck):
+class deprecated_python_install_command(ScriptCheck):
     """
-    `python setup.py install` is deprecated.
+    The python install command used in the build script is deprecated.
 
     Please use::
 
-        $PYTHON -m pip install . --no-deps --no-build-isolation
-
-    Or use another python build tool.
+        {{ PYTHON }} -m pip install . --no-deps --no-build-isolation
     """
 
-    @staticmethod
-    def _check_line(x: str) -> bool:
-        """
-        Check a line for a broken call to setup.py
-        """
-        if isinstance(x, str):
-            x = [x]
-        elif not isinstance(x, list):
-            return True
-        for line in x:
-            if "setup.py install" in line:
-                return False
-        return True
+    # Regex pattern to match deprecated python install commands
+    # Matches: python/PYTHON variants + optional -m + (setup.py|build), or pip wheel
+    deprecated_command_pattern = re.compile(
+        r"(?:(?:\$\{?PYTHON\}?|\{\{\s*PYTHON\s*\}\}|python)\s+(?:-m\s+)?(?:setup\.py|build)|pip\s+wheel)"
+    )
 
-    def check_recipe_legacy(self, recipe: Recipe) -> None:
-        for package in recipe.packages.values():
-            if not self._check_line(recipe.get(f"{package.path_prefix}build/script", None)):
-                self.message(
-                    section=f"{package.path_prefix}build/script",
-                    data=(recipe, f"{package.path_prefix}build/script"),
-                )
-            elif not self._check_line(recipe.get(f"{package.path_prefix}script", None)):
-                self.message(
-                    section=f"{package.path_prefix}script",
-                    data=(recipe, f"{package.path_prefix}script"),
-                )
-            elif self.percy_recipe.dir:
-                try:
-                    build_file = self.percy_recipe.get(f"{package.path_prefix}script", "")
-                    if not build_file:
-                        build_file = self.percy_recipe.get(f"{package.path_prefix}build/script", "build.sh")
-                    build_file = self.percy_recipe.dir / Path(build_file)
-                    if build_file.exists():
-                        with open(str(build_file), encoding="utf-8") as buildsh:
-                            for line in buildsh:
-                                if not self._check_line(line):
-                                    if package.path_prefix.startswith("output"):
-                                        output = int(package.path_prefix.split("/")[1])
-                                    else:
-                                        output = -1
-                                    self.message(fname=build_file, output=output)
-                except (FileNotFoundError, TypeError):
-                    pass
+    def _check_line(self, line: str) -> bool:
+        """
+        Check a line for an invalid or obsolete install command
 
-    def fix(self, message, data) -> bool:
-        (recipe, path) = data
-        op = [
-            {
-                "op": "replace",
-                "path": path,
-                "match": ".* setup.py .*",
-                "value": (
-                    "{{PYTHON}} -m pip install . --no-deps --no-build-isolation --ignore-installed"
-                    " --no-cache-dir -vv"
-                ),
-            },
-        ]
-        return recipe.patch(op)
+        :returns: True if the line contains an invalid or obsolete install command
+        """
+        return bool(self.deprecated_command_pattern.search(line))
 
 
 class pip_install_args(ScriptCheck):
@@ -524,6 +464,11 @@ class pip_install_args(ScriptCheck):
     """
 
     def _check_line(self, line: str) -> bool:
+        """
+        Check a line for an invalid or obsolete install command
+
+        :returns: True if the line contains an invalid or obsolete install command
+        """
         if "pip install" in line:
             required_args = ["--no-deps", "--no-build-isolation"]
             if any(arg not in line for arg in required_args):
