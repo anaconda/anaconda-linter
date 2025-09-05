@@ -753,7 +753,7 @@ class patch_unnecessary(LintCheck):
             return
         for package in all_deps:
             for dep in all_deps[package]:
-                if dep.data.name in ["patch", "msys2-patch", "m2-patch"]:
+                if dep.data.name in {"patch", "msys2-patch", "m2-patch"}:
                     self.message(section=dep.path)
                     return
 
@@ -801,6 +801,8 @@ class patch_unnecessary(LintCheck):
             pass
 
     def fix(self, message, data) -> bool:
+        if not message.section:
+            return False
         # remove patch/msys2-patch/m2-patch from the recipe
         try:
             self._remove_deps_by_name_crm(self.unrendered_recipe, {"patch", "msys2-patch", "m2-patch"})
