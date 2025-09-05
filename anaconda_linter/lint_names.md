@@ -108,7 +108,7 @@ unknown_check
 
 unknown_selector
 
-uses_setup_py
+deprecated_python_install_command
 
 version_constraints_missing_whitespace
 
