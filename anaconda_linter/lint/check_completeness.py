@@ -53,7 +53,7 @@ class missing_build_number(LintCheck):
             number: <build number>
     """
 
-    def validate_value(self, value: any) -> bool:
+    def _validate_value(self, value: any) -> bool:
         """
         Checks value is an integer
 
@@ -414,7 +414,7 @@ class missing_description(LintCheck):
 
     """
 
-    def validate_value(self, value: any) -> bool:
+    def _validate_value(self, value: any) -> bool:
         """
         Checks if value is a non-empty string
 
