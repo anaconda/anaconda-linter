@@ -1,0 +1,28 @@
+package:
+  name: package_name
+  version: 0.0.1
+
+requirements:
+  run:
+    - build
+    - cython
+    - flit
+    - flit-core
+    - hatch
+    - hatchling
+    - maturin
+    - meson
+    - meson-python
+    - pdm
+    - pdm-pep517
+    - pip
+    - poetry
+    - poetry-core
+    - pybind11
+    - python-build
+    - scikit-build
+    - scikit-build-core
+    - setuptools
+    - setuptools-rust
+    - setuptools_scm
+    - whey

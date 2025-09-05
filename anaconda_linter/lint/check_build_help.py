@@ -378,13 +378,20 @@ class python_build_tool_in_run(LintCheck):
 
     """
 
-    def check_recipe_legacy(self, recipe: Recipe) -> None:
-        deps = _utils.get_deps_dict(recipe, "run")
-        for tool in PYTHON_BUILD_TOOLS:
-            if tool in deps:
-                for path in deps[tool]["paths"]:
-                    o = -1 if not path.startswith("outputs") else int(path.split("/")[1])
-                    self.message(tool, severity=Severity.WARNING, section=path, output=o)
+    def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
+        try:
+            all_deps: Final = recipe.get_all_dependencies()
+        except (KeyError, ValueError):
+            self.message(title_in=_utils.GET_ALL_DEPENDENCIES_ERROR_MESSAGE)
+            return
+        problem_paths: set[str] = set()
+        for output in all_deps:
+            for dep in all_deps[output]:
+                if dep.data.name in PYTHON_BUILD_TOOLS and dep.type == DependencySection.RUN:
+                    if dep.path in problem_paths:
+                        continue
+                    self.message(dep.data.name, section=dep.path, severity=Severity.WARNING)
+                    problem_paths.add(dep.path)
 
 
 class missing_python_build_tool(LintCheck):

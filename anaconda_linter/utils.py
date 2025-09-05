@@ -23,6 +23,11 @@ from ruamel.yaml import YAML
 
 HTTP_TIMEOUT: Final[int] = 120
 
+GET_ALL_DEPENDENCIES_ERROR_MESSAGE: Final[str] = (
+    "Failed to get all dependencies because package or output "
+    "names are missing or duplicated, cannot run this check/auto-fix."
+)
+
 logger = logging.getLogger(__name__)
 
 
