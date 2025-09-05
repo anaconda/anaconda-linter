@@ -405,6 +405,8 @@ class LintCheck(metaclass=LintCheckMeta):
             value = recipe.get_value(section_path)
             if value is not None and self._validate_value(value):
                 return
+            self.message(section=section_path, severity=severity)
+            return
         if not recipe.is_multi_output():
             self.message(section=section_path, severity=severity)
             return
