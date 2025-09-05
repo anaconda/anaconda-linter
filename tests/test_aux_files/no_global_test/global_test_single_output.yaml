@@ -1,0 +1,11 @@
+package:
+  name: package_name
+  version: 0.0.1
+
+requirements:
+  build:
+    - {{ stdlib('c') }}
+
+test:
+  imports:
+    - module

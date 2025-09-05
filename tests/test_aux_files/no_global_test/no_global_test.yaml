@@ -1,0 +1,13 @@
+package:
+  name: package_name
+  version: 0.0.1
+
+outputs:
+  - name: output1
+    test:
+      import:
+        module1
+  - name: output2
+    test:
+      import:
+        module2

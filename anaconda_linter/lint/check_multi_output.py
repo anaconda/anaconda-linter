@@ -5,6 +5,8 @@ Description:    Contains linter checks for multi-output based rules.
 
 from __future__ import annotations
 
+from conda_recipe_manager.parser.recipe_reader_deps import RecipeReaderDeps
+
 from anaconda_linter import utils as _utils
 from anaconda_linter.lint import LintCheck, Severity
 
@@ -52,9 +54,9 @@ class no_global_test(LintCheck):
     Tests must be added to each individual output.
     """
 
-    def check_recipe_legacy(self, recipe) -> None:
-        if recipe.get("outputs", None) and recipe.get("test", None):
-            self.message(severity=Severity.WARNING)
+    def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
+        if recipe.is_multi_output() and recipe.contains_value("/test"):
+            self.message(section="/test")
 
 
 class output_missing_script(LintCheck):
