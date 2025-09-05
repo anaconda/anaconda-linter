@@ -388,7 +388,7 @@ class LintCheck(metaclass=LintCheckMeta):
         """
         return False
 
-    def validate_if_recipe_path_is_missing(  # pylint: disable=too-many-positional-arguments, unused-argument
+    def validate_if_recipe_path_is_missing(
         self,
         section_path: str,
         severity: Severity = SEVERITY_DEFAULT,
