@@ -671,6 +671,7 @@ def test_no_missing_description(recipe_file: str) -> None:
     [
         ("lint_check/description_missing.yaml", 1),
         ("lint_check/description_empty.yaml", 1),
+        ("lint_check/description_empty_none.yaml", 1),
         ("lint_check/description_multi_output_missing.yaml", 2),
         ("lint_check/description_multi_output_in_one_output.yaml", 1),
         ("lint_check/description_multi_output_empty_outputs.yaml", 2),
