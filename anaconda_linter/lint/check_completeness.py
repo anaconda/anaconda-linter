@@ -124,7 +124,7 @@ class missing_summary(LintCheck):
 
     """
 
-    def validate_value(self, value: any) -> bool:
+    def _validate_value(self, value: any) -> bool:
         """
         Checks if value is a non-empty string
 
@@ -135,7 +135,7 @@ class missing_summary(LintCheck):
         return False
 
     def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
-        self.validate_if_recipe_path_is_missing("/about/summary")
+        self._validate_if_recipe_path_is_missing("/about/summary")
 
 
 class missing_license(LintCheck):

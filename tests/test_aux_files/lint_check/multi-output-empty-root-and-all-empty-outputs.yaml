@@ -24,6 +24,15 @@ outputs:
       commands:
         - test -f ${PREFIX}/lib/libdb${SHLIB_EXT}  # [unix]
         - if not exist %LIBRARY_BIN%\libdb%SHLIB_EXT%  # [win]
+    about:
+      home:
+      summary:
+      description:
+      license:
+      license_file:
+      license_family:
+      dev_url:
+      doc_url:
   # metapackage for old anaconda name (only available on linux/mac)
   - name: db
     requirements:
@@ -38,6 +47,15 @@ outputs:
     test:
       commands:
         - db_archive -m hello
+    about:
+      home:
+      summary:
+      description:
+      license:
+      license_file:
+      license_family:
+      dev_url:
+      doc_url:
 
 
 test:
@@ -49,15 +67,15 @@ test:
     - pip check
     - test -f $SP_DIR/toml-stubs/__init__.pyi  # [unix]
 
-about:
-  home:
-  summary:
-  description:
-  license:
-  license_file:
-  license_family:
-  dev_url:
-  doc_url:
+  about:
+    home:
+    summary:
+    description:
+    license:
+    license_file:
+    license_family:
+    dev_url:
+    doc_url:
 
 extra:
   recipe-maintainers:
