@@ -38,6 +38,7 @@ outputs:
     test:
       commands:
         - db_archive -m hello
+        
 
 test:
   imports:
