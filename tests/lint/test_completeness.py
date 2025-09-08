@@ -649,29 +649,43 @@ def test_missing_dev_url_bad(base_yaml: str) -> None:
     assert len(messages) == 1 and "dev_url" in messages[0].title
 
 
-def test_missing_description_good(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        about:
-          description: very nice package
-        """
-    )
-    lint_check = "missing_description"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
+@pytest.mark.parametrize(
+    "recipe_file",
+    [
+        "lint_check/streamlit-folium.yaml",
+        "lint_check/description_in_some_outputs.yaml",
+        "lint_check/description_in_only_multi_outputs.yaml",
+    ],
+)
+def test_no_missing_description(recipe_file: str) -> None:
+    """
+    Test that the missing_description lint check works correctly when the recipe has a description.
+
+    :param recipe_file: Path to the recipe file to read
+    """
+    assert_no_lint_message(recipe_file, "missing_description")
 
 
-def test_missing_description_bad(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        about:
-        """
-    )
-    lint_check = "missing_description"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "missing a description" in messages[0].title
+@pytest.mark.parametrize(
+    ("recipe_file", "msg_count"),
+    [
+        ("lint_check/description_missing.yaml", 1),
+        ("lint_check/description_empty.yaml", 1),
+        ("lint_check/description_empty_none.yaml", 1),
+        ("lint_check/description_multi_output_missing.yaml", 2),
+        ("lint_check/description_multi_output_in_one_output.yaml", 1),
+        ("lint_check/description_multi_output_empty_outputs.yaml", 2),
+        ("lint_check/description_multi_output_empty_root.yaml", 1),
+    ],
+)
+def test_missing_description(recipe_file: str, msg_count: int) -> None:
+    """
+    Test that the missing_description lint check works correctly when the recipe does not have a description.
+
+    :param recipe_file: Path to the recipe file to read
+    :param msg_count: Number of lint messages to expect
+    """
+    assert_lint_messages(recipe_file, "missing_description", "missing a description", msg_count)
 
 
 def test_wrong_output_script_key_good(base_yaml: str) -> None:
