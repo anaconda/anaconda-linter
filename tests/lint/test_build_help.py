@@ -972,58 +972,53 @@ def test_avoid_noarch_top_level_and_output_noarch(file: str) -> None:
     )
 
 
-def test_patch_unnecessary_good(base_yaml: str) -> None:
-    lint_check = "patch_unnecessary"
-    yaml_str = (
-        base_yaml
-        + """
-        source:
-          url: https://sqlite.com/2022/sqlite-autoconf-3380500.tar.gz
-          patches:
-            - some-patch.patch
-            - some-other-patch.patch
-        """
+@pytest.mark.parametrize("file,", ["patch_unnecessary/no_patch_deps.yaml"])
+def test_patch_unnecessary_no_patch_deps(file: str) -> None:
+    """
+    This case tests a recipe with no patch dependencies, which is valid.
+    """
+    assert_no_lint_message(
+        recipe_file=file,
+        lint_check="patch_unnecessary",
     )
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
 
 
-@pytest.mark.parametrize("patch", ["patch", "msys2-patch", "m2-patch"])
-@pytest.mark.parametrize("section", ["build", "host"])
-def test_patch_unnecessary_with_patches_bad(base_yaml: str, patch: str, section: str) -> None:
-    lint_check = "patch_unnecessary"
-    yaml_str = (
-        base_yaml
-        + f"""
-        source:
-          url: https://sqlite.com/2022/sqlite-autoconf-3380500.tar.gz
-          patches:
-            - some-patch.patch
-        requirements:
-          {section}:
-            - {patch}
-        """
+@pytest.mark.parametrize(
+    "file,",
+    [
+        "patch_unnecessary/patch_deps_in_build.yaml",
+        "patch_unnecessary/patch_deps_in_host.yaml",
+    ],
+)
+def test_patch_unnecessary_with_patch_deps(file: str) -> None:
+    """
+    This case tests a recipe with patch dependencies in the build or host section, which is invalid.
+    """
+    assert_lint_messages(
+        recipe_file=file,
+        lint_check="patch_unnecessary",
+        msg_title="patch should not be in the requirements section",
+        msg_count=1,
     )
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "patch should not be" in messages[0].title
 
 
-@pytest.mark.parametrize("patch", ["patch", "msys2-patch", "m2-patch"])
-@pytest.mark.parametrize("section", ["build", "host"])
-def test_patch_unnecessary_without_patches_bad(base_yaml: str, patch: str, section: str) -> None:
-    lint_check = "patch_unnecessary"
-    yaml_str = (
-        base_yaml
-        + f"""
-        source:
-          url: https://sqlite.com/2022/sqlite-autoconf-3380500.tar.gz
-        requirements:
-          {section}:
-            - {patch}
-        """
+@pytest.mark.parametrize(
+    "file,",
+    [
+        "patch_unnecessary/patch_deps_in_build_no_patches.yaml",
+        "patch_unnecessary/patch_deps_in_host_no_patches.yaml",
+    ],
+)
+def test_patch_unnecessary_with_patch_deps_without_patches(file: str) -> None:
+    """
+    This case tests a recipe with patch dependencies in the build or host section without patches, which is invalid.
+    """
+    assert_lint_messages(
+        recipe_file=file,
+        lint_check="patch_unnecessary",
+        msg_title="patch should not be in the requirements section",
+        msg_count=1,
     )
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "patch should not be" in messages[0].title
 
 
 def test_has_run_test_and_commands_good_cmd(base_yaml: str, tmpdir: Path) -> None:

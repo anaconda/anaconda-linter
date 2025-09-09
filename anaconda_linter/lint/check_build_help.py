@@ -184,7 +184,12 @@ class host_section_needs_exact_pinnings(LintCheck):
         return False
 
     def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
-        for dependency_list in recipe.get_all_dependencies().values():
+        try:
+            all_deps: Final = recipe.get_all_dependencies()
+        except (KeyError, ValueError):
+            self.message(title_in=_utils.GET_ALL_DEPENDENCIES_ERROR_MESSAGE)
+            return
+        for dependency_list in all_deps.values():
             for dependency in dependency_list:
                 if self._check_dependency(dependency):
                     self.message(section=dependency.path, severity=Severity.WARNING)
@@ -264,7 +269,11 @@ class should_use_compilers(LintCheck):
     compilers = COMPILERS
 
     def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
-        all_deps: Final = recipe.get_all_dependencies()
+        try:
+            all_deps: Final = recipe.get_all_dependencies()
+        except (KeyError, ValueError):
+            self.message(title_in=_utils.GET_ALL_DEPENDENCIES_ERROR_MESSAGE)
+            return
         problem_paths: set[str] = set()
         for output in all_deps:
             for dep in all_deps[output]:
@@ -285,7 +294,11 @@ class compilers_must_be_in_build(LintCheck):
     """
 
     def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
-        all_deps: Final = recipe.get_all_dependencies()
+        try:
+            all_deps: Final = recipe.get_all_dependencies()
+        except (KeyError, ValueError):
+            self.message(title_in=_utils.GET_ALL_DEPENDENCIES_ERROR_MESSAGE)
+            return
         problem_paths: set[str] = set()
         for output in all_deps:
             for dep in all_deps[output]:
@@ -338,7 +351,11 @@ class stdlib_must_be_in_build(LintCheck):
     """
 
     def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
-        all_deps: Final = recipe.get_all_dependencies()
+        try:
+            all_deps: Final = recipe.get_all_dependencies()
+        except (KeyError, ValueError):
+            self.message(title_in=_utils.GET_ALL_DEPENDENCIES_ERROR_MESSAGE)
+            return
         problem_paths: set[str] = set()
         for output in all_deps:
             for dep in all_deps[output]:
@@ -489,8 +506,12 @@ class python_build_tools_in_host(LintCheck):
     """
 
     def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
+        try:
+            all_deps: Final = recipe.get_all_dependencies()
+        except (KeyError, ValueError):
+            self.message(title_in=_utils.GET_ALL_DEPENDENCIES_ERROR_MESSAGE)
+            return
         problem_paths: set[str] = set()
-        all_deps = recipe.get_all_dependencies()
         for output in all_deps:
             for dep in all_deps[output]:
                 if dep.data.name in PYTHON_BUILD_TOOLS and dep.type != DependencySection.HOST:
@@ -513,7 +534,11 @@ class cython_needs_compiler(LintCheck):
     """
 
     def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
-        all_deps: Final = recipe.get_all_dependencies()
+        try:
+            all_deps: Final = recipe.get_all_dependencies()
+        except (KeyError, ValueError):
+            self.message(title_in=_utils.GET_ALL_DEPENDENCIES_ERROR_MESSAGE)
+            return
         for output in all_deps:
             cython = None
             compiler = None
@@ -630,7 +655,13 @@ class avoid_noarch(LintCheck):
 
         # Extract python version
         py_version = None
-        for dep in recipe.get_all_dependencies()[name]:
+        try:
+            all_deps: Final = recipe.get_all_dependencies()
+        except (KeyError, ValueError):
+            self.message(title_in=_utils.GET_ALL_DEPENDENCIES_ERROR_MESSAGE)
+            all_deps = {name: []}
+
+        for dep in all_deps[name]:
             dep_data = dep.data
             if not isinstance(dep_data, MatchSpec):
                 continue
@@ -676,17 +707,66 @@ class patch_unnecessary(LintCheck):
     """
 
     def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
-        all_deps = recipe.get_all_dependencies()
+        try:
+            all_deps: Final = recipe.get_all_dependencies()
+        except (KeyError, ValueError):
+            self.message(title_in=_utils.GET_ALL_DEPENDENCIES_ERROR_MESSAGE)
+            return
         for package in all_deps:
             for dep in all_deps[package]:
-                if dep.data.name in ["patch", "msys2-patch", "m2-patch"]:
+                if dep.data.name in {"patch", "msys2-patch", "m2-patch"}:
                     self.message(section=dep.path)
                     return
 
+    def _remove_single_dep_by_name_crm(
+        self,
+        recipe_parser: RecipeParserDeps,
+        deps_to_remove: set[str],
+    ) -> bool:
+        """
+        Removes the dependencies specified by name
+
+        :param recipe_parser: The parser of the original recipe
+        :param deps_to_remove: Set of dependency names to remove
+        :raises ValueError: If the remove operation fails
+        :returns: Whether the remove operation is complete
+        """
+        try:
+            all_deps: Final = recipe_parser.get_all_dependencies()
+        except (KeyError, ValueError) as e:
+            self.message(title_in=_utils.GET_ALL_DEPENDENCIES_ERROR_MESSAGE)
+            raise ValueError from e
+        for package_name in all_deps:
+            for dep in all_deps[package_name]:
+                if dep.data.name not in deps_to_remove:
+                    continue
+                if not recipe_parser.remove_dependency(dep):
+                    self.message(title_in=f"Failed to remove dependency {dep.data.name} from {package_name}")
+                    raise ValueError
+                return False
+        return True
+
+    def _remove_deps_by_name_crm(
+        self,
+        recipe_parser: RecipeParserDeps,
+        deps_to_remove: set[str],
+    ) -> None:
+        """
+        Removes the dependencies specified by name
+
+        :param recipe_parser: The parser of the original recipe
+        :param deps_to_remove: Set of dependency names to remove
+        :raises ValueError: If the remove operation fails
+        """
+        while not self._remove_single_dep_by_name_crm(recipe_parser, deps_to_remove):
+            pass
+
     def fix(self, message, data) -> bool:
+        if not message.section:
+            return False
         # remove patch/msys2-patch/m2-patch from the recipe
         try:
-            _utils.remove_deps_by_name_crm(self.unrendered_recipe, {"patch", "msys2-patch", "m2-patch"})
+            self._remove_deps_by_name_crm(self.unrendered_recipe, {"patch", "msys2-patch", "m2-patch"})
             return True
         except ValueError:
             return False
@@ -1007,7 +1087,11 @@ class no_git_on_windows(LintCheck):
     def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
         if not arch_name.startswith("win"):
             return
-        all_deps = recipe.get_all_dependencies()
+        try:
+            all_deps: Final = recipe.get_all_dependencies()
+        except (KeyError, ValueError):
+            self.message(title_in=_utils.GET_ALL_DEPENDENCIES_ERROR_MESSAGE)
+            return
         for output in all_deps:
             for dep in all_deps[output]:
                 if dep.data.name == "git":
@@ -1018,10 +1102,16 @@ class no_git_on_windows(LintCheck):
         # NOTE: The path found in `check_recipe()` is a post-selector-rendering
         # path to the dependency. So in order to change the recipe file, we need
         # to relocate `git`, relative to the raw file.
+        if not message.section:
+            return False
         fixed = False
         recipe = self.unrendered_recipe
+        try:
+            all_deps: Final = recipe.get_all_dependencies()
+        except (KeyError, ValueError):
+            self.message(title_in=_utils.GET_ALL_DEPENDENCIES_ERROR_MESSAGE)
+            return False
         problem_paths: set[str] = set()
-        all_deps = recipe.get_all_dependencies()
         for output in all_deps:
             for dep in all_deps[output]:
                 if dep.data.name != "git" or dep.path in problem_paths:

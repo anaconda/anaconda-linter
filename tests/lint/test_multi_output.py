@@ -41,62 +41,33 @@ def test_output_missing_name_bad(base_yaml: str) -> None:
     assert len(messages) == 2 and all("has no name" in msg.title for msg in messages)
 
 
-def test_outputs_not_unique_good(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        outputs:
-          - name: output1
-          - name: output2
-        """
+@pytest.mark.parametrize(
+    "file,",
+    [
+        "outputs_not_unique/outputs_unique.yaml",
+    ],
+)
+def test_outputs_not_unique_outputs_unique(file: str) -> None:
+    """
+    This case tests a recipe with unique output names, which is valid.
+    """
+    assert_no_lint_message(recipe_file=file, lint_check="outputs_not_unique")
+
+
+@pytest.mark.parametrize(
+    "file,msg_count",
+    [
+        ("outputs_not_unique/outputs_not_unique.yaml", 2),
+        ("outputs_not_unique/outputs_not_unique_package_name.yaml", 1),
+    ],
+)
+def test_outputs_not_unique_outputs_not_unique(file: str, msg_count: str) -> None:
+    """
+    This case tests a recipe with non-unique output names, which is invalid.
+    """
+    assert_lint_messages(
+        recipe_file=file, lint_check="outputs_not_unique", msg_title="Output name is not unique", msg_count=msg_count
     )
-    lint_check = "outputs_not_unique"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
-
-
-def test_outputs_not_unique_bad_package_name(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        outputs:
-          - name: output1
-          - name: test_package
-        """
-    )
-    lint_check = "outputs_not_unique"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "not unique" in messages[0].title
-
-
-def test_output_message(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        outputs:
-          - name: output1
-          - name: output2
-          - name: output2
-        """
-    )
-    lint_check = "outputs_not_unique"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and messages[0].title.startswith('output "output2": ')
-
-
-def test_outputs_not_unique_bad(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        outputs:
-          - name: output1
-          - name: output2
-          - name: output2
-        """
-    )
-    lint_check = "outputs_not_unique"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "not unique" in messages[0].title
 
 
 @pytest.mark.parametrize(
