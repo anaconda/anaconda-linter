@@ -171,8 +171,7 @@ def test_missing_home_bad(base_yaml: str) -> None:
     "recipe_file",
     [
         "lint_check/streamlit-folium.yaml",
-        # "lint_check/multi-output-only-outputs.yaml", should this pass, has no root - only outputs have values?
-        "lint_check/multi-output-complete.yaml",
+        "lint_check/about/about_multi_output_complete.yaml",
     ],
 )
 def test_no_missing_summary(recipe_file: str) -> None:
@@ -182,21 +181,16 @@ def test_no_missing_summary(recipe_file: str) -> None:
 @pytest.mark.parametrize(
     ("recipe_file", "msg_count"),
     [
-        # ("lint_check/summary_missing.yaml", 1),
-        # ("lint_check/summary_empty.yaml", 1),
-        # ("lint_check/summary_multi_output_missing.yaml", 2),
-        # ("lint_check/summary_multi_output_in_one_output.yaml", 1),
-        # ("lint_check/summary_multi_output_empty_outputs.yaml", 2),
-        # #("lint_check/description_multi_output_empty_root.yaml", 1),
-        ("lint_check/multi-output-empty-root-and-all-empty-outputs.yaml", 2),
-        ("lint_check/multi-output-empty-root-and-all-outputs.yaml", 1),
-        ("lint_check/multi-output-empty-root.yaml", 1),
-        ("lint_check/multi-output-missing-root-and-all-empty-outputs.yaml", 2),
-        ("lint_check/multi-output-missing-root-and-all-outputs.yaml", 2),
-        ("lint_check/multi-output-missing-root-and-empty-outputs.yaml", 2),
-        ("lint_check/multi-output-missing-root-and-one-empty-output.yaml", 1),
-        ("lint_check/multi-output-missing-root-and-one-output.yaml", 1),
-        ("lint_check/multi-output-missing-root.yaml", 1),
+        ("lint_check/summary/summary_empty.yaml", 1),
+        ("lint_check/summary/summary_missing.yaml", 1),
+        ("lint_check/about/about_multi_output_empty_root_and_all_empty_outputs.yaml", 2),
+        ("lint_check/about/about_multi_output_empty_root_and_all_outputs.yaml", 1),
+        ("lint_check/about/about_multi_output_empty_root.yaml", 1),
+        ("lint_check/about/about_multi_output_missing_all.yaml", 2),
+        ("lint_check/about/about_multi_output_missing_root_and_all_empty_outputs.yaml", 2),
+        ("lint_check/about/about_multi_output_missing_root_and_one_empty_output.yaml", 1),
+        ("lint_check/about/about_multi_output_missing_root_and_one_output.yaml", 1),
+        ("lint_check/about/about_multi_output_missing_root.yaml", 1),
     ],
 )
 def test_missing_summary(recipe_file: str, msg_count: int) -> None:
