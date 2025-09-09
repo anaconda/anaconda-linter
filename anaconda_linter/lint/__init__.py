@@ -427,6 +427,9 @@ class LintCheck(metaclass=LintCheckMeta):
     def _get_all_dependencies(self, recipe: RecipeReaderDeps | RecipeParserDeps) -> Optional[DependencyMap]:
         """
         Get all dependencies from the recipe
+
+        :param recipe: The recipe to get the dependencies from
+        :returns: A dictionary of dependencies, or None if an error occurred
         """
         try:
             return recipe.get_all_dependencies()
