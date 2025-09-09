@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import os
 import re
-from typing import Final
 
 import conda_build.license_family
 from conda_recipe_manager.parser.recipe_reader_deps import RecipeReaderDeps
@@ -54,20 +53,18 @@ class missing_build_number(LintCheck):
             number: <build number>
     """
 
+    def _validate_value(self, value: any) -> bool:
+        """
+        Checks value is an integer
+
+        :param value: Value to be checked
+        """
+        if isinstance(value, int):
+            return True
+        return False
+
     def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
-        if recipe.contains_value("/build/number"):
-            return
-        if not recipe.is_multi_output():
-            self.message(section="build", data=recipe)
-            return
-        output_paths: Final = recipe.get_package_paths()
-        for package_path in output_paths:
-            if package_path == "/":
-                continue
-            path: Final = recipe.append_to_path(package_path, "/build/number")
-            if not recipe.contains_value(path):
-                # we message per missing build number
-                self.message(section="build", data=recipe)
+        self._validate_if_recipe_path_is_missing("/build/number")
 
 
 class missing_package_name(LintCheck):
@@ -417,9 +414,18 @@ class missing_description(LintCheck):
 
     """
 
-    def check_recipe_legacy(self, recipe: Recipe) -> None:
-        if not recipe.get("about/description", ""):
-            self.message(section="about", severity=Severity.WARNING)
+    def _validate_value(self, value: any) -> bool:
+        """
+        Checks if value is a non-empty string
+
+        :param value: Value to be checked
+        """
+        if isinstance(value, str):
+            return len(value.strip()) > 0
+        return False
+
+    def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
+        self._validate_if_recipe_path_is_missing("/about/description", Severity.WARNING)
 
 
 class wrong_output_script_key(LintCheck):

@@ -1,0 +1,51 @@
+{% set name = "streamlit-folium" %}
+{% set version = "0.15.0" %}
+
+package:
+  name: {{ name|lower }}
+  version: {{ version }}
+
+source:
+  url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/streamlit_folium-{{ version }}.tar.gz
+  sha256: 2908c98487e914493c730fb71c70fa6dfb1e482a404b7c10b7511579358701c1
+
+build:
+  number: 
+  script: {{ PYTHON }} -m pip install . --no-deps --no-build-isolation -vv
+  skip: true  # [py<38 or s390x]
+
+requirements:
+  host:
+    - pip
+    - python
+    - setuptools
+    - wheel
+  run:
+    - python
+    - folium >=0.13
+    - streamlit >=1.13
+    - branca
+    - jinja2
+
+test:
+  imports:
+    - streamlit_folium
+  commands:
+    - pip check
+  requires:
+    - pip
+
+about:
+  home: https://github.com/randyzwitch/streamlit-folium
+  summary: Render Folium objects in Streamlit
+  license: MIT
+  license_family: MIT
+  license_file: LICENSE
+  description: |
+
+  doc_url: https://github.com/randyzwitch/streamlit-folium/blob/master/README.md
+  dev_url: https://github.com/randyzwitch/streamlit-folium
+
+extra:
+  recipe-maintainers:
+    - randyzwitch
