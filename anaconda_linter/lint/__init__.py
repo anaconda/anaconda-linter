@@ -95,12 +95,15 @@ from typing import Any, Final, Optional
 
 import networkx as nx
 import percy.render.recipe as _recipe
+from conda_recipe_manager.parser.dependency import DependencyMap
 from conda_recipe_manager.parser.recipe_parser_deps import RecipeParserDeps
 from conda_recipe_manager.parser.recipe_reader_deps import RecipeReaderDeps
 from percy.render._renderer import RendererType
 from percy.render.exceptions import EmptyRecipe, JinjaRenderFailure, MissingMetaYaml, RecipeError, YAMLRenderFailure
 from percy.render.variants import read_conda_build_config
 from ruamel.yaml import YAML
+
+from anaconda_linter import utils as _utils
 
 logger = logging.getLogger(__name__)
 
@@ -420,6 +423,19 @@ class LintCheck(metaclass=LintCheckMeta):
                 if value is not None and self._validate_value(value):
                     continue
             self.message(section=path, severity=severity)
+
+    def _get_all_dependencies(self, recipe: RecipeReaderDeps | RecipeParserDeps) -> Optional[DependencyMap]:
+        """
+        Get all dependencies from the recipe
+
+        :param recipe: The recipe to get the dependencies from
+        :returns: A dictionary of dependencies, or None if an error occurred
+        """
+        try:
+            return recipe.get_all_dependencies()
+        except (KeyError, ValueError):
+            self.message(title_in=_utils.GET_ALL_DEPENDENCIES_ERROR_MESSAGE)
+            return None
 
     def can_auto_fix(self) -> bool:
         """

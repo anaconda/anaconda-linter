@@ -350,150 +350,74 @@ def test_stdlib_must_be_in_build_in_host_run(file: str, msg_count: int) -> None:
     )
 
 
-@pytest.mark.parametrize("tool", BUILD_TOOLS)
-def test_build_tools_must_be_in_build_good(base_yaml: str, tool: str) -> None:
-    yaml_str = (
-        base_yaml
-        + f"""
-        requirements:
-          build:
-            - {tool}
-        """
+@pytest.mark.parametrize(
+    "file,",
+    [
+        "build_tools_must_be_in_build/all_in_build.yaml",
+        "build_tools_must_be_in_build/all_in_build_multi.yaml",
+    ],
+)
+def test_build_tools_must_be_in_build_valid(file: str) -> None:
+    """
+    Test that the build_tools_must_be_in_build lint check passes when the recipe
+    has all build tools in the build section.
+    """
+    assert_no_lint_message(recipe_file=file, lint_check="build_tools_must_be_in_build")
+
+
+@pytest.mark.parametrize(
+    "file,msg_count",
+    [
+        ("build_tools_must_be_in_build/all_in_host_and_run.yaml", len(BUILD_TOOLS) * 2),
+        ("build_tools_must_be_in_build/all_in_host_and_run_multi.yaml", len(BUILD_TOOLS) * 6),
+    ],
+)
+def test_build_tools_must_be_in_build_invalid(file: str, msg_count: int) -> None:
+    """
+    Test that the build_tools_must_be_in_build lint check fails when the recipe
+    does not have all build tools in the build section.
+    """
+    msg_title = [f"The build tool {tool} is not in the build section" for tool in BUILD_TOOLS]
+    assert_lint_messages(
+        recipe_file=file,
+        lint_check="build_tools_must_be_in_build",
+        msg_title=msg_title,
+        msg_count=msg_count,
     )
-    lint_check = "build_tools_must_be_in_build"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
 
 
-@pytest.mark.parametrize("tool", BUILD_TOOLS)
-def test_build_tools_must_be_in_build_good_multi(base_yaml: str, tool: str) -> None:
-    yaml_str = (
-        base_yaml
-        + f"""
-        outputs:
-          - name: output1
-            requirements:
-              build:
-                - {tool}
-          - name: output2
-            requirements:
-              build:
-                - {tool}
-        """
+@pytest.mark.parametrize(
+    "file,",
+    [
+        "python_build_tool_in_run/single_output_in_host.yaml",
+        "python_build_tool_in_run/multi_output_in_host.yaml",
+    ],
+)
+def test_python_build_tool_in_run_valid(file: str) -> None:
+    """
+    This case tests recipes with python build tools in the host section, which is valid.
+    """
+    assert_no_lint_message(recipe_file=file, lint_check="python_build_tool_in_run")
+
+
+@pytest.mark.parametrize(
+    "file,msg_count,",
+    [
+        ("python_build_tool_in_run/single_output_in_run.yaml", len(PYTHON_BUILD_TOOLS)),
+        ("python_build_tool_in_run/multi_output_in_run.yaml", len(PYTHON_BUILD_TOOLS) * 3),
+    ],
+)
+def test_python_build_tool_in_run_invalid(file: str, msg_count: int) -> None:
+    """
+    This case tests recipes with python build tools in the run section, which is invalid.
+    """
+    msg_title = [f"The python build tool {tool} is in run depends" for tool in PYTHON_BUILD_TOOLS]
+    assert_lint_messages(
+        recipe_file=file,
+        lint_check="python_build_tool_in_run",
+        msg_title=msg_title,
+        msg_count=msg_count,
     )
-    lint_check = "build_tools_must_be_in_build"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
-
-
-@pytest.mark.parametrize("section", ("host", "run"))
-@pytest.mark.parametrize("tool", BUILD_TOOLS)
-def test_build_tools_must_be_in_build_bad(base_yaml: str, section: str, tool: str) -> None:
-    yaml_str = (
-        base_yaml
-        + f"""
-        requirements:
-          {section}:
-            - {tool}
-        """
-    )
-    lint_check = "build_tools_must_be_in_build"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and f"build tool {tool} is not in the build section" in messages[0].title
-
-
-@pytest.mark.parametrize("section", ("host", "run"))
-@pytest.mark.parametrize("tool", BUILD_TOOLS)
-def test_build_tools_must_be_in_build_bad_multi(base_yaml: str, section: str, tool: str) -> None:
-    yaml_str = (
-        base_yaml
-        + f"""
-        outputs:
-          - name: output1
-            requirements:
-              {section}:
-                - {tool}
-          - name: output2
-            requirements:
-              {section}:
-                - {tool}
-        """
-    )
-    lint_check = "build_tools_must_be_in_build"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 2 and all(f"build tool {tool} is not in the build section" in msg.title for msg in messages)
-
-
-@pytest.mark.parametrize("tool", PYTHON_BUILD_TOOLS)
-def test_python_build_tool_in_run_good(base_yaml: str, tool: str) -> None:
-    yaml_str = (
-        base_yaml
-        + f"""
-        requirements:
-          host:
-            - {tool}
-        """
-    )
-    lint_check = "python_build_tool_in_run"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
-
-
-@pytest.mark.parametrize("tool", PYTHON_BUILD_TOOLS)
-def test_python_build_tool_in_run_good_multi(base_yaml: str, tool: str) -> None:
-    yaml_str = (
-        base_yaml
-        + f"""
-        outputs:
-          - name: output1
-            requirements:
-              host:
-                - {tool}
-          - name: output2
-            requirements:
-              host:
-                - {tool}
-        """
-    )
-    lint_check = "python_build_tool_in_run"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
-
-
-@pytest.mark.parametrize("tool", PYTHON_BUILD_TOOLS)
-def test_python_build_tool_in_run_bad(base_yaml: str, tool: str) -> None:
-    yaml_str = (
-        base_yaml
-        + f"""
-        requirements:
-          run:
-            - {tool}
-        """
-    )
-    lint_check = "python_build_tool_in_run"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and f"python build tool {tool} is in run" in messages[0].title
-
-
-@pytest.mark.parametrize("tool", PYTHON_BUILD_TOOLS)
-def test_python_build_tool_in_run_bad_multi(base_yaml: str, tool: str) -> None:
-    yaml_str = (
-        base_yaml
-        + f"""
-        outputs:
-          - name: output1
-            requirements:
-              run:
-                - {tool}
-          - name: output2
-            requirements:
-              run:
-                - {tool}
-        """
-    )
-    lint_check = "python_build_tool_in_run"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 2 and all(f"python build tool {tool} is in run" in msg.title for msg in messages)
 
 
 @pytest.mark.parametrize("tool", PYTHON_BUILD_TOOLS)
@@ -1048,58 +972,53 @@ def test_avoid_noarch_top_level_and_output_noarch(file: str) -> None:
     )
 
 
-def test_patch_unnecessary_good(base_yaml: str) -> None:
-    lint_check = "patch_unnecessary"
-    yaml_str = (
-        base_yaml
-        + """
-        source:
-          url: https://sqlite.com/2022/sqlite-autoconf-3380500.tar.gz
-          patches:
-            - some-patch.patch
-            - some-other-patch.patch
-        """
+@pytest.mark.parametrize("file,", ["patch_unnecessary/no_patch_deps.yaml"])
+def test_patch_unnecessary_no_patch_deps(file: str) -> None:
+    """
+    This case tests a recipe with no patch dependencies, which is valid.
+    """
+    assert_no_lint_message(
+        recipe_file=file,
+        lint_check="patch_unnecessary",
     )
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
 
 
-@pytest.mark.parametrize("patch", ["patch", "msys2-patch", "m2-patch"])
-@pytest.mark.parametrize("section", ["build", "host"])
-def test_patch_unnecessary_with_patches_bad(base_yaml: str, patch: str, section: str) -> None:
-    lint_check = "patch_unnecessary"
-    yaml_str = (
-        base_yaml
-        + f"""
-        source:
-          url: https://sqlite.com/2022/sqlite-autoconf-3380500.tar.gz
-          patches:
-            - some-patch.patch
-        requirements:
-          {section}:
-            - {patch}
-        """
+@pytest.mark.parametrize(
+    "file,",
+    [
+        "patch_unnecessary/patch_deps_in_build.yaml",
+        "patch_unnecessary/patch_deps_in_host.yaml",
+    ],
+)
+def test_patch_unnecessary_with_patch_deps(file: str) -> None:
+    """
+    This case tests a recipe with patch dependencies in the build or host section, which is invalid.
+    """
+    assert_lint_messages(
+        recipe_file=file,
+        lint_check="patch_unnecessary",
+        msg_title="patch should not be in the requirements section",
+        msg_count=1,
     )
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "patch should not be" in messages[0].title
 
 
-@pytest.mark.parametrize("patch", ["patch", "msys2-patch", "m2-patch"])
-@pytest.mark.parametrize("section", ["build", "host"])
-def test_patch_unnecessary_without_patches_bad(base_yaml: str, patch: str, section: str) -> None:
-    lint_check = "patch_unnecessary"
-    yaml_str = (
-        base_yaml
-        + f"""
-        source:
-          url: https://sqlite.com/2022/sqlite-autoconf-3380500.tar.gz
-        requirements:
-          {section}:
-            - {patch}
-        """
+@pytest.mark.parametrize(
+    "file,",
+    [
+        "patch_unnecessary/patch_deps_in_build_no_patches.yaml",
+        "patch_unnecessary/patch_deps_in_host_no_patches.yaml",
+    ],
+)
+def test_patch_unnecessary_with_patch_deps_without_patches(file: str) -> None:
+    """
+    This case tests a recipe with patch dependencies in the build or host section without patches, which is invalid.
+    """
+    assert_lint_messages(
+        recipe_file=file,
+        lint_check="patch_unnecessary",
+        msg_title="patch should not be in the requirements section",
+        msg_count=1,
     )
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "patch should not be" in messages[0].title
 
 
 def test_has_run_test_and_commands_good_cmd(base_yaml: str, tmpdir: Path) -> None:
