@@ -432,6 +432,9 @@ def test_build_tools_must_be_in_build_bad_multi(base_yaml: str, section: str, to
     ],
 )
 def test_python_build_tool_in_run_valid(file: str) -> None:
+    """
+    This case tests recipes with python build tools in the host section, which is valid.
+    """
     assert_no_lint_message(recipe_file=file, lint_check="python_build_tool_in_run")
 
 
@@ -443,6 +446,9 @@ def test_python_build_tool_in_run_valid(file: str) -> None:
     ],
 )
 def test_python_build_tool_in_run_invalid(file: str, msg_count: int) -> None:
+    """
+    This case tests recipes with python build tools in the run section, which is invalid.
+    """
     msg_title = [f"The python build tool {tool} is in run depends" for tool in PYTHON_BUILD_TOOLS]
     assert_lint_messages(
         recipe_file=file,
