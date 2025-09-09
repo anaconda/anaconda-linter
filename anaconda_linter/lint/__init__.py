@@ -380,6 +380,47 @@ class LintCheck(metaclass=LintCheckMeta):
         :param recipe: Recipe to be checked
         """
 
+    def _validate_value(self, value: any) -> bool:  # pylint: disable=unused-argument
+        """
+        checks the value is valid
+
+        :param value: Value to be checked
+        """
+        return False
+
+    def _validate_if_recipe_path_is_missing(
+        self,
+        section_path: str,
+        severity: Severity = SEVERITY_DEFAULT,
+    ) -> None:
+        """
+        Validate if a recipe path is missing
+        Helper function to check if a recipe path is missing.
+
+        :param section_path: Path of the section to be checked
+        :param severity: Severity of the message
+        """
+        recipe = self.recipe
+        if recipe.contains_value(section_path):
+            value = recipe.get_value(section_path)
+            if value is not None and self._validate_value(value):
+                return
+            self.message(section=section_path, severity=severity)
+            return
+        if not recipe.is_multi_output():
+            self.message(section=section_path, severity=severity)
+            return
+        output_paths: Final = recipe.get_package_paths()
+        for package_path in output_paths:
+            if package_path == "/":
+                continue
+            path: Final = recipe.append_to_path(package_path, section_path)
+            if recipe.contains_value(path):
+                value = recipe.get_value(path)
+                if value is not None and self._validate_value(value):
+                    continue
+            self.message(section=path, severity=severity)
+
     def can_auto_fix(self) -> bool:
         """
         Indicates if a rule can be auto-fixed (which is a LintCheck child class that has the `fix()` function
