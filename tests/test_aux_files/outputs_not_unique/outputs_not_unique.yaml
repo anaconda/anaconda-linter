@@ -1,0 +1,19 @@
+package:
+  name: package_name
+  version: 0.0.1
+
+build:
+  number: 0
+
+requirements:
+  host:
+    - python
+  run:
+    - python
+
+outputs:
+  - name: output1
+  - name: output2
+  - name: output3
+  - name: output2
+  - name: output3
