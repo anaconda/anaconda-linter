@@ -1,0 +1,101 @@
+package:
+  name: test
+  version: 0.1.0
+
+requirements:
+  host:
+    - autoconf
+    - automake
+    - bison
+    - cmake
+    - distutils
+    - flex
+    - git
+    - libtool
+    - m4
+    - make
+    - ninja
+    - patch
+    - pkg-config
+    - posix
+  run:
+    - autoconf
+    - automake
+    - bison
+    - cmake
+    - distutils
+    - flex
+    - git
+    - libtool
+    - m4
+    - make
+    - ninja
+    - patch
+    - pkg-config
+    - posix
+
+outputs:
+  - name: output1
+    requirements:
+      host:
+        - autoconf
+        - automake
+        - bison
+        - cmake
+        - distutils
+        - flex
+        - git
+        - libtool
+        - m4
+        - make
+        - ninja
+        - patch
+        - pkg-config
+        - posix
+      run:
+        - autoconf
+        - automake
+        - bison
+        - cmake
+        - distutils
+        - flex
+        - git
+        - libtool
+        - m4
+        - make
+        - ninja
+        - patch
+        - pkg-config
+        - posix
+  - name: output2
+    requirements:
+      host:
+        - autoconf
+        - automake
+        - bison
+        - cmake
+        - distutils
+        - flex
+        - git
+        - libtool
+        - m4
+        - make
+        - ninja
+        - patch
+        - pkg-config
+        - posix
+      run:
+        - autoconf
+        - automake
+        - bison
+        - cmake
+        - distutils
+        - flex
+        - git
+        - libtool
+        - m4
+        - make
+        - ninja
+        - patch
+        - pkg-config
+        - posix
