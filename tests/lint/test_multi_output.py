@@ -70,41 +70,33 @@ def test_outputs_not_unique_outputs_not_unique(file: str, msg_count: str) -> Non
     )
 
 
-def test_no_global_test_good(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        outputs:
-          - name: output1
-            test:
-              import:
-                module1
-          - name: output2
-            test:
-              import:
-                module2
-        """
-    )
-    lint_check = "no_global_test"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
+@pytest.mark.parametrize(
+    "file,", ["no_global_test/no_global_test.yaml", "no_global_test/global_test_single_output.yaml"]
+)
+def test_no_global_test_valid(file: str) -> None:
+    """
+    This case tests a multi-output recipe with no global test or a global test in a
+    single-output recipe, which is valid.
+    """
+    assert_no_lint_message(recipe_file=file, lint_check="no_global_test")
 
 
-def test_no_global_test_bad(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        outputs:
-          - name: output1
-          - name: output2
-        test:
-          imports:
-            - module
-        """
+@pytest.mark.parametrize(
+    "file,",
+    [
+        "no_global_test/global_test.yaml",
+    ],
+)
+def test_no_global_test_invalid(file: str) -> None:
+    """
+    This case tests a multi-output recipe with a global test, which is invalid.
+    """
+    assert_lint_messages(
+        recipe_file=file,
+        lint_check="no_global_test",
+        msg_title="Global tests are ignored in multi-output recipes.",
+        msg_count=1,
     )
-    lint_check = "no_global_test"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "Global tests" in messages[0].title
 
 
 def test_output_missing_script_good(base_yaml: str) -> None:
