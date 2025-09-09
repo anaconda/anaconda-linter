@@ -48,6 +48,9 @@ def test_output_missing_name_bad(base_yaml: str) -> None:
     ],
 )
 def test_outputs_not_unique_outputs_unique(file: str) -> None:
+    """
+    This case tests a recipe with unique output names, which is valid.
+    """
     assert_no_lint_message(recipe_file=file, lint_check="outputs_not_unique")
 
 
@@ -59,6 +62,9 @@ def test_outputs_not_unique_outputs_unique(file: str) -> None:
     ],
 )
 def test_outputs_not_unique_outputs_not_unique(file: str, msg_count: str) -> None:
+    """
+    This case tests a recipe with non-unique output names, which is invalid.
+    """
     assert_lint_messages(
         recipe_file=file, lint_check="outputs_not_unique", msg_title="Output name is not unique", msg_count=msg_count
     )
