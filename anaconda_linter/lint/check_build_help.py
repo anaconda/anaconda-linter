@@ -387,11 +387,14 @@ class python_build_tool_in_run(LintCheck):
         problem_paths: set[str] = set()
         for output in all_deps:
             for dep in all_deps[output]:
-                if dep.data.name in PYTHON_BUILD_TOOLS and dep.type == DependencySection.RUN:
-                    if dep.path in problem_paths:
-                        continue
-                    self.message(dep.data.name, section=dep.path, severity=Severity.WARNING)
-                    problem_paths.add(dep.path)
+                if (
+                    dep.path in problem_paths
+                    or dep.data.name not in PYTHON_BUILD_TOOLS
+                    or dep.type != DependencySection.RUN
+                ):
+                    continue
+                self.message(dep.data.name, section=dep.path, severity=Severity.WARNING)
+                problem_paths.add(dep.path)
 
 
 class missing_python_build_tool(LintCheck):
