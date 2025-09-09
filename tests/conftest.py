@@ -189,7 +189,7 @@ def read_recipe_content(recipe_file: str) -> str:
 def assert_lint_messages(  # pylint: disable=too-many-positional-arguments
     recipe_file: str,
     lint_check: str,
-    msg_title: str,
+    msg_title: str | list[str],
     msg_count: int = 1,
     arch: str = "linux-64",
     feedstock_dir: Optional[Path] = None,
@@ -209,7 +209,9 @@ def assert_lint_messages(  # pylint: disable=too-many-positional-arguments
         messages: Final = check_dir(lint_check, feedstock_dir, read_recipe_content(recipe_file_path), arch=arch)
     else:
         messages: Final = check(lint_check, read_recipe_content(recipe_file_path), arch=arch)
-    assert len(messages) == msg_count and all(msg_title in msg.title for msg in messages)
+    if isinstance(msg_title, str):
+        msg_title = [msg_title]
+    assert len(messages) == msg_count and all(any(title in msg.title for title in msg_title) for msg in messages)
 
 
 # TODO: Passing a specific arch is not a good idea long-term, we should use a more generic approach.
