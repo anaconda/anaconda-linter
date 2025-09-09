@@ -641,29 +641,40 @@ def test_documentation_overspecified_bad(base_yaml: str) -> None:
     assert len(messages) == 1 and "doc_url and doc_source_url is overspecified" in messages[0].title
 
 
-def test_missing_dev_url_good(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        about:
-          dev_url: https://sqlite.com/
-        """
-    )
-    lint_check = "missing_dev_url"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
+@pytest.mark.parametrize(
+    "recipe_file",
+    [
+        "lint_check/streamlit-folium.yaml",
+        "lint_check/about/about_multi_output_complete.yaml",
+    ],
+)
+def test_no_missing_dev_url(recipe_file: str) -> None:
+    assert_no_lint_message(recipe_file, "missing_dev_url")
 
 
-def test_missing_dev_url_bad(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        about:
-        """
-    )
-    lint_check = "missing_dev_url"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "dev_url" in messages[0].title
+@pytest.mark.parametrize(
+    ("recipe_file", "msg_count"),
+    [
+        ("lint_check/dev_url/dev_url_empty.yaml", 1),
+        ("lint_check/dev_url/dev_url_missing.yaml", 1),
+        ("lint_check/about/about_multi_output_empty_root_and_all_empty_outputs.yaml", 2),
+        ("lint_check/about/about_multi_output_empty_root_and_all_outputs.yaml", 1),
+        ("lint_check/about/about_multi_output_empty_root.yaml", 1),
+        ("lint_check/about/about_multi_output_missing_all.yaml", 2),
+        ("lint_check/about/about_multi_output_missing_root_and_all_empty_outputs.yaml", 2),
+        ("lint_check/about/about_multi_output_missing_root_and_one_empty_output.yaml", 1),
+        ("lint_check/about/about_multi_output_missing_root_and_one_output.yaml", 1),
+        ("lint_check/about/about_multi_output_missing_root.yaml", 1),
+    ],
+)
+def test_missing_dev_url(recipe_file: str, msg_count: int) -> None:
+    """
+    Test that the missing_dev_url lint check works correctly when the recipe does not have a description.
+
+    :param recipe_file: Path to the recipe file to read
+    :param msg_count: Number of lint messages to expect
+    """
+    assert_lint_messages(recipe_file, "missing_dev_url", "missing a dev_url", msg_count)
 
 
 @pytest.mark.parametrize(
