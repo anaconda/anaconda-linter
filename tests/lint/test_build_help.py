@@ -350,78 +350,40 @@ def test_stdlib_must_be_in_build_in_host_run(file: str, msg_count: int) -> None:
     )
 
 
-@pytest.mark.parametrize("tool", BUILD_TOOLS)
-def test_build_tools_must_be_in_build_good(base_yaml: str, tool: str) -> None:
-    yaml_str = (
-        base_yaml
-        + f"""
-        requirements:
-          build:
-            - {tool}
-        """
+@pytest.mark.parametrize(
+    "file,",
+    [
+        "build_tools_must_be_in_build/all_in_build.yaml",
+        "build_tools_must_be_in_build/all_in_build_multi.yaml",
+    ],
+)
+def test_build_tools_must_be_in_build_valid(file: str) -> None:
+    """
+    Test that the build_tools_must_be_in_build lint check passes when the recipe
+    has all build tools in the build section.
+    """
+    assert_no_lint_message(recipe_file=file, lint_check="build_tools_must_be_in_build")
+
+
+@pytest.mark.parametrize(
+    "file,msg_count",
+    [
+        ("build_tools_must_be_in_build/all_in_host_and_run.yaml", len(BUILD_TOOLS) * 2),
+        ("build_tools_must_be_in_build/all_in_host_and_run_multi.yaml", len(BUILD_TOOLS) * 6),
+    ],
+)
+def test_build_tools_must_be_in_build_invalid(file: str, msg_count: int) -> None:
+    """
+    Test that the build_tools_must_be_in_build lint check fails when the recipe
+    does not have all build tools in the build section.
+    """
+    msg_title = [f"The build tool {tool} is not in the build section" for tool in BUILD_TOOLS]
+    assert_lint_messages(
+        recipe_file=file,
+        lint_check="build_tools_must_be_in_build",
+        msg_title=msg_title,
+        msg_count=msg_count,
     )
-    lint_check = "build_tools_must_be_in_build"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
-
-
-@pytest.mark.parametrize("tool", BUILD_TOOLS)
-def test_build_tools_must_be_in_build_good_multi(base_yaml: str, tool: str) -> None:
-    yaml_str = (
-        base_yaml
-        + f"""
-        outputs:
-          - name: output1
-            requirements:
-              build:
-                - {tool}
-          - name: output2
-            requirements:
-              build:
-                - {tool}
-        """
-    )
-    lint_check = "build_tools_must_be_in_build"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
-
-
-@pytest.mark.parametrize("section", ("host", "run"))
-@pytest.mark.parametrize("tool", BUILD_TOOLS)
-def test_build_tools_must_be_in_build_bad(base_yaml: str, section: str, tool: str) -> None:
-    yaml_str = (
-        base_yaml
-        + f"""
-        requirements:
-          {section}:
-            - {tool}
-        """
-    )
-    lint_check = "build_tools_must_be_in_build"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and f"build tool {tool} is not in the build section" in messages[0].title
-
-
-@pytest.mark.parametrize("section", ("host", "run"))
-@pytest.mark.parametrize("tool", BUILD_TOOLS)
-def test_build_tools_must_be_in_build_bad_multi(base_yaml: str, section: str, tool: str) -> None:
-    yaml_str = (
-        base_yaml
-        + f"""
-        outputs:
-          - name: output1
-            requirements:
-              {section}:
-                - {tool}
-          - name: output2
-            requirements:
-              {section}:
-                - {tool}
-        """
-    )
-    lint_check = "build_tools_must_be_in_build"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 2 and all(f"build tool {tool} is not in the build section" in msg.title for msg in messages)
 
 
 @pytest.mark.parametrize(
