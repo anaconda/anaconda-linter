@@ -103,6 +103,10 @@ def test_outputs_not_unique_bad(base_yaml: str) -> None:
     "file,", ["no_global_test/no_global_test.yaml", "no_global_test/global_test_single_output.yaml"]
 )
 def test_no_global_test_valid(file: str) -> None:
+    """
+    This case tests a multi-output recipe with no global test or a global test in a
+    single-output recipe, which is valid.
+    """
     assert_no_lint_message(recipe_file=file, lint_check="no_global_test")
 
 
@@ -113,6 +117,9 @@ def test_no_global_test_valid(file: str) -> None:
     ],
 )
 def test_no_global_test_invalid(file: str) -> None:
+    """
+    This case tests a multi-output recipe with a global test, which is invalid.
+    """
     assert_lint_messages(
         recipe_file=file,
         lint_check="no_global_test",
