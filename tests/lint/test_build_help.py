@@ -397,6 +397,8 @@ def test_m2w64_must_be_updated_to_ucrt64_valid(file: str) -> None:
     """
     Test that the m2w64_must_be_updated_to_ucrt64 lint check passes when the recipe
     has all ucrt64 tools in the build section.
+
+    :param file: The file to test
     """
     assert_no_lint_message(recipe_file=file, lint_check="m2w64_must_be_updated_to_ucrt64")
 
@@ -411,6 +413,8 @@ def test_m2w64_must_be_updated_to_ucrt64_invalid(file: str) -> None:
     """
     Test that the m2w64_must_be_updated_to_ucrt64 lint check fails when the recipe
     has m2w64 tools in the build section.
+
+    :param file: The file to test
     """
     m2w64_tools: Final = ["m2w64-toolchain", "m2w64-sysroot"]
     msg_title: Final = [f"The m2w64-* package {tool} should be updated to ucrt64-*" for tool in m2w64_tools]
