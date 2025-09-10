@@ -10,7 +10,7 @@ source:
   sha256: 2908c98487e914493c730fb71c70fa6dfb1e482a404b7c10b7511579358701c1
 
 build:
-  number: 
+  number:
   script: {{ PYTHON }} -m pip install . --no-deps --no-build-isolation -vv
   skip: true  # [py<38 or s390x]
 
@@ -41,8 +41,7 @@ about:
   license: MIT
   license_family: MIT
   license_file: LICENSE
-  description: |
-
+  description:
   doc_url: https://github.com/randyzwitch/streamlit-folium/blob/master/README.md
   dev_url: https://github.com/randyzwitch/streamlit-folium
 
