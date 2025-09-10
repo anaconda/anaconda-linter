@@ -195,7 +195,7 @@ def test_no_missing_summary(recipe_file: str) -> None:
 )
 def test_missing_summary(recipe_file: str, msg_count: int) -> None:
     """
-    Test that the missing_build_number lint check works correctly when the recipe does not have a build number.
+    Test that the missing_build_number lint check works correctly when the recipe does not have a summary.
 
     :param recipe_file: Path to the recipe file to read
     :param msg_count: Number of lint messages to expect
@@ -668,11 +668,7 @@ def test_missing_dev_url_bad(base_yaml: str) -> None:
 
 @pytest.mark.parametrize(
     "recipe_file",
-    [
-        "lint_check/streamlit-folium.yaml",
-        "lint_check/description/description_in_some_outputs.yaml",  # this should fail? only has one output, and
-        "lint_check/description/description_in_only_multi_outputs.yaml",
-    ],
+    ["lint_check/streamlit-folium.yaml", "lint_check/about/about_multi_output_complete.yaml"],
 )
 def test_no_missing_description(recipe_file: str) -> None:
     """
@@ -686,13 +682,17 @@ def test_no_missing_description(recipe_file: str) -> None:
 @pytest.mark.parametrize(
     ("recipe_file", "msg_count"),
     [
-        ("lint_check/description/description_missing.yaml", 1),
         ("lint_check/description/description_empty.yaml", 1),
-        ("lint_check/description/description_empty_none.yaml", 1),
-        ("lint_check/description/description_multi_output_missing.yaml", 2),
-        ("lint_check/description/description_multi_output_in_one_output.yaml", 1),
-        ("lint_check/description/description_multi_output_empty_outputs.yaml", 2),
-        ("lint_check/description/description_multi_output_empty_root.yaml", 1),
+        ("lint_check/description/description_missing.yaml", 1),
+        ("lint_check/description/description_empty_with_literal.yaml", 1),
+        ("lint_check/about/about_multi_output_empty_root_and_all_empty_outputs.yaml", 2),
+        ("lint_check/about/about_multi_output_empty_root_and_all_outputs.yaml", 1),
+        ("lint_check/about/about_multi_output_empty_root.yaml", 1),
+        ("lint_check/about/about_multi_output_missing_all.yaml", 2),
+        ("lint_check/about/about_multi_output_missing_root_and_all_empty_outputs.yaml", 2),
+        ("lint_check/about/about_multi_output_missing_root_and_one_empty_output.yaml", 1),
+        ("lint_check/about/about_multi_output_missing_root_and_one_output.yaml", 1),
+        ("lint_check/about/about_multi_output_missing_root.yaml", 1),
     ],
 )
 def test_missing_description(recipe_file: str, msg_count: int) -> None:

@@ -72,6 +72,17 @@ test:
   commands:
     - pip check
     - test -f $SP_DIR/toml-stubs/__init__.pyi  # [unix]
+
+about:
+  home:
+  summary:
+  description:
+  license:
+  license_file:
+  license_family:
+  dev_url:
+  doc_url:
+
 extra:
   recipe-maintainers:
     - fhoehle
