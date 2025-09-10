@@ -2,6 +2,8 @@ avoid_noarch
 
 build_tools_must_be_in_build
 
+msys2_for_windows_only
+
 compilers_must_be_in_build
 
 conda_render_failure
