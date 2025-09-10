@@ -414,7 +414,7 @@ class missing_dev_url(LintCheck):
         :param value: Value to be checked
         """
         if isinstance(value, str):
-            return len(value.strip()) > 0
+            return bool(value.strip())
         return False
 
     def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:

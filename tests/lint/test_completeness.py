@@ -649,6 +649,11 @@ def test_documentation_overspecified_bad(base_yaml: str) -> None:
     ],
 )
 def test_no_missing_dev_url(recipe_file: str) -> None:
+    """
+    Test that the missing_dev_url lint check works correctly when the recipe has a dev_url.
+
+    :param recipe_file: Path to the recipe file to read
+    """
     assert_no_lint_message(recipe_file, "missing_dev_url")
 
 
