@@ -41,7 +41,8 @@ about:
   license: MIT
   license_family: MIT
   license_file: LICENSE
-  description:
+  description: |
+  
   doc_url: https://github.com/randyzwitch/streamlit-folium/blob/master/README.md
   dev_url: https://github.com/randyzwitch/streamlit-folium
 
