@@ -404,8 +404,8 @@ def test_msys2_must_be_in_build_valid(file: str) -> None:
 @pytest.mark.parametrize(
     "file,msg_count",
     [
-        ("msys2_must_be_in_build/all_in_host_and_run.yaml", 5 * 2),
-        ("msys2_must_be_in_build/all_in_host_and_run_multi.yaml", 5 * 6),
+        ("msys2_must_be_in_build/all_in_host_and_run.yaml", 10 * 2),
+        ("msys2_must_be_in_build/all_in_host_and_run_multi.yaml", 10 * 6),
     ],
 )
 def test_msys2_must_be_in_build_invalid(file: str, msg_count: int) -> None:
@@ -413,7 +413,18 @@ def test_msys2_must_be_in_build_invalid(file: str, msg_count: int) -> None:
     Test that the msys2_must_be_in_build lint check fails when the recipe
     does not have all msys2 tools in the build section.
     """
-    msys2_tools = ["msys2-bison", "msys2-diffutils", "msys2-flex", "msys2-patch", "msys2-posix"]
+    msys2_tools = [
+        "msys2-bison",
+        "msys2-diffutils",
+        "msys2-flex",
+        "msys2-patch",
+        "msys2-posix",
+        "ucrt64-bzip2",
+        "ucrt64-gcc-ada",
+        "ucrt64-gcc-toolchain",
+        "ucrt64-xz",
+        "ucrt64-zlib",
+    ]
     msg_title = [f"The build tool {tool} is not in the build section" for tool in msys2_tools]
     assert_lint_messages(
         recipe_file=file, lint_check="msys2_must_be_in_build", msg_title=msg_title, msg_count=msg_count

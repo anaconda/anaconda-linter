@@ -9,3 +9,8 @@ requirements:
     - msys2-flex
     - msys2-patch
     - msys2-posix
+    - ucrt64-bzip2
+    - ucrt64-gcc-ada
+    - ucrt64-gcc-toolchain
+    - ucrt64-xz
+    - ucrt64-zlib

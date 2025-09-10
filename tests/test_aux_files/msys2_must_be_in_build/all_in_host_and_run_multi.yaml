@@ -9,12 +9,22 @@ requirements:
     - msys2-flex
     - msys2-patch
     - msys2-posix
+    - ucrt64-bzip2
+    - ucrt64-gcc-ada
+    - ucrt64-gcc-toolchain
+    - ucrt64-xz
+    - ucrt64-zlib
   run:
     - msys2-bison
     - msys2-diffutils
     - msys2-flex
     - msys2-patch
     - msys2-posix
+    - ucrt64-bzip2
+    - ucrt64-gcc-ada
+    - ucrt64-gcc-toolchain
+    - ucrt64-xz
+    - ucrt64-zlib
 
 outputs:
   - name: output1
@@ -25,12 +35,22 @@ outputs:
         - msys2-flex
         - msys2-patch
         - msys2-posix
+        - ucrt64-bzip2
+        - ucrt64-gcc-ada
+        - ucrt64-gcc-toolchain
+        - ucrt64-xz
+        - ucrt64-zlib
       run:
         - msys2-bison
         - msys2-diffutils
         - msys2-flex
         - msys2-patch
         - msys2-posix
+        - ucrt64-bzip2
+        - ucrt64-gcc-ada
+        - ucrt64-gcc-toolchain
+        - ucrt64-xz
+        - ucrt64-zlib
   - name: output2
     requirements:
       host:
@@ -39,9 +59,19 @@ outputs:
         - msys2-flex
         - msys2-patch
         - msys2-posix
+        - ucrt64-bzip2
+        - ucrt64-gcc-ada
+        - ucrt64-gcc-toolchain
+        - ucrt64-xz
+        - ucrt64-zlib
       run:
         - msys2-bison
         - msys2-diffutils
         - msys2-flex
         - msys2-patch
         - msys2-posix
+        - ucrt64-bzip2
+        - ucrt64-gcc-ada
+        - ucrt64-gcc-toolchain
+        - ucrt64-xz
+        - ucrt64-zlib
