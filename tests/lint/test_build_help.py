@@ -396,6 +396,8 @@ def test_m2_must_be_updated_to_msys2_valid(file: str) -> None:
     """
     Test that the m2_must_be_updated_to_msys2 lint check passes when the recipe
     has all msys2 tools in the build section.
+
+    :param file: The file to test
     """
     assert_no_lint_message(recipe_file=file, lint_check="m2_must_be_updated_to_msys2")
 
@@ -410,6 +412,8 @@ def test_m2_must_be_updated_to_msys2_invalid(file: str) -> None:
     """
     Test that the m2_must_be_updated_to_msys2 lint check fails when the recipe
     has m2 tools in the build section.
+
+    :param file: The file to test
     """
     m2_tools = ["m2-bison", "m2-diffutils", "m2-flex", "m2-patch", "posix"]
     msg_title = [f"The m2-* package {tool} should be updated to msys2-*" for tool in m2_tools]
