@@ -395,7 +395,7 @@ class m2_must_be_updated_to_msys2(LintCheck):
         problem_paths: set[str] = set()
         for output in all_deps:
             for dep in all_deps[output]:
-                if dep.path in problem_paths or not dep.data.name.startswith("m2-"):
+                if dep.path in problem_paths or not (dep.data.name.startswith("m2-") or dep.data.name == "posix"):
                     continue
                 self.message(dep.data.name, section=dep.path)
                 problem_paths.add(dep.path)
