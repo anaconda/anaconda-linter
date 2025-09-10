@@ -2,6 +2,8 @@ avoid_noarch
 
 build_tools_must_be_in_build
 
+m2w64_must_be_updated_to_ucrt64
+
 m2_must_be_updated_to_msys2
 
 compilers_must_be_in_build

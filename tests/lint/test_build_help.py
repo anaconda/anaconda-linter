@@ -390,6 +390,42 @@ def test_build_tools_must_be_in_build_invalid(file: str, msg_count: int) -> None
 @pytest.mark.parametrize(
     "file,",
     [
+        "m2w64_must_be_updated_to_ucrt64/all_ucrt64.yaml",
+    ],
+)
+def test_m2w64_must_be_updated_to_ucrt64_valid(file: str) -> None:
+    """
+    Test that the m2w64_must_be_updated_to_ucrt64 lint check passes when the recipe
+    has all ucrt64 tools in the build section.
+
+    :param file: The file to test
+    """
+    assert_no_lint_message(recipe_file=file, lint_check="m2w64_must_be_updated_to_ucrt64")
+
+
+@pytest.mark.parametrize(
+    "file,",
+    [
+        "m2w64_must_be_updated_to_ucrt64/all_m2w64.yaml",
+    ],
+)
+def test_m2w64_must_be_updated_to_ucrt64_invalid(file: str) -> None:
+    """
+    Test that the m2w64_must_be_updated_to_ucrt64 lint check fails when the recipe
+    has m2w64 tools in the build section.
+
+    :param file: The file to test
+    """
+    m2w64_tools: Final = ["m2w64-toolchain", "m2w64-xz"]
+    msg_title: Final = [f"The m2w64-* package {tool} should be updated to ucrt64-*" for tool in m2w64_tools]
+    assert_lint_messages(
+        recipe_file=file, lint_check="m2w64_must_be_updated_to_ucrt64", msg_title=msg_title, msg_count=len(m2w64_tools)
+    )
+
+
+@pytest.mark.parametrize(
+    "file,",
+    [
         "m2_must_be_updated_to_msys2/all_msys2.yaml",
     ],
 )
