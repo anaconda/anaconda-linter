@@ -364,9 +364,18 @@ class missing_documentation(LintCheck):
 
     """
 
-    def check_recipe_legacy(self, recipe: Recipe) -> None:
-        if not recipe.get("about/doc_url", "") and not recipe.get("about/doc_source_url", ""):
-            self.message(section="about")
+    def _validate_value(self, value: any) -> bool:
+        """
+        Checks if value is a non-empty string
+
+        :param value: Value to be checked
+        """
+        if isinstance(value, str):
+            return len(value.strip()) > 0
+        return False
+
+    def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
+        self._validate_if_recipe_path_is_missing("/about/doc_url")
 
 
 class documentation_overspecified(LintCheck):

@@ -561,30 +561,38 @@ def test_non_url_source_bad(base_yaml: str, src_type: str) -> None:
     assert len(messages) == 1 and "not a valid type" in messages[0].title
 
 
-@pytest.mark.parametrize("doc_type", ("doc_url", "doc_source_url"))
-def test_missing_documentation_good(base_yaml: str, doc_type: str) -> None:
-    yaml_str = (
-        base_yaml
-        + f"""
-        about:
-          {doc_type}: https://sqlite.com/
-        """
-    )
-    lint_check = "missing_documentation"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
+@pytest.mark.parametrize(
+    "recipe_file",
+    [
+        "lint_check/streamlit-folium.yaml",
+        "lint_check/about/about_multi_output_complete.yaml",
+    ],
+)
+def test_no_missing_documentation(recipe_file: str) -> None:
+    assert_no_lint_message(recipe_file, "missing_documentation")
 
 
-def test_missing_documentation_bad(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        about:
-        """
-    )
-    lint_check = "missing_documentation"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 1 and "doc_url or doc_source_url" in messages[0].title
+@pytest.mark.parametrize(
+    ("recipe_file", "msg_count"),
+    [
+        ("lint_check/about/about_multi_output_empty_root_and_all_empty_outputs.yaml", 2),
+        ("lint_check/about/about_multi_output_empty_root_and_all_outputs.yaml", 1),
+        ("lint_check/about/about_multi_output_empty_root.yaml", 1),
+        ("lint_check/about/about_multi_output_missing_all.yaml", 2),
+        ("lint_check/about/about_multi_output_missing_root_and_all_empty_outputs.yaml", 2),
+        ("lint_check/about/about_multi_output_missing_root_and_one_empty_output.yaml", 1),
+        ("lint_check/about/about_multi_output_missing_root_and_one_output.yaml", 1),
+        ("lint_check/about/about_multi_output_missing_root.yaml", 1),
+    ],
+)
+def test_missing_documentation(recipe_file: str, msg_count: int) -> None:
+    """
+    Test that the missing_description lint check works correctly when the recipe does not have a missing documentation.
+
+    :param recipe_file: Path to the recipe file to read
+    :param msg_count: Number of lint messages to expect
+    """
+    assert_lint_messages(recipe_file, "missing_documentation", "doc_url", msg_count)
 
 
 def test_documentation_specifies_language(base_yaml: str) -> None:
