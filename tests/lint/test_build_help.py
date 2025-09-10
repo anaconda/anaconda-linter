@@ -412,7 +412,7 @@ def test_m2_must_be_updated_to_msys2_invalid(file: str) -> None:
     has m2 tools in the build section.
     """
     m2_tools = ["m2-bison", "m2-diffutils", "m2-flex", "m2-patch", "m2-posix"]
-    msg_title = [f"The m2 tool {tool} should be updated to msys2" for tool in m2_tools]
+    msg_title = [f"The m2-* package {tool} should be updated to msys2-*" for tool in m2_tools]
     assert_lint_messages(
         recipe_file=file,
         lint_check="m2_must_be_updated_to_msys2",

@@ -385,7 +385,7 @@ class build_tools_must_be_in_build(LintCheck):
 
 class m2_must_be_updated_to_msys2(LintCheck):
     """
-    The m2 tool {} should be updated to msys2.
+    The m2-* package {} should be updated to msys2-*.
     """
 
     def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
