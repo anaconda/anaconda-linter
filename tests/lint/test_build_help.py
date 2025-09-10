@@ -6,6 +6,7 @@ Description:    Tests build section rules
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Final
 
 import pytest
 from conftest import assert_lint_messages, assert_no_lint_message, check, check_dir
@@ -411,8 +412,8 @@ def test_m2w64_must_be_updated_to_ucrt64_invalid(file: str) -> None:
     Test that the m2w64_must_be_updated_to_ucrt64 lint check fails when the recipe
     has m2w64 tools in the build section.
     """
-    m2w64_tools = ["m2w64-toolchain", "m2w64-sysroot"]
-    msg_title = [f"The m2w64-* package {tool} should be updated to ucrt64-*" for tool in m2w64_tools]
+    m2w64_tools: Final = ["m2w64-toolchain", "m2w64-sysroot"]
+    msg_title: Final = [f"The m2w64-* package {tool} should be updated to ucrt64-*" for tool in m2w64_tools]
     assert_lint_messages(
         recipe_file=file, lint_check="m2w64_must_be_updated_to_ucrt64", msg_title=msg_title, msg_count=len(m2w64_tools)
     )
