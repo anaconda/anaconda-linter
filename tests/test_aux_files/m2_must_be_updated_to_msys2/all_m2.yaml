@@ -8,4 +8,3 @@ requirements:
     - m2-diffutils
     - m2-flex
     - m2-patch
-    - m2-posix
