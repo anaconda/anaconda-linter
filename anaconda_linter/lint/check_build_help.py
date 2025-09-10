@@ -386,6 +386,9 @@ class build_tools_must_be_in_build(LintCheck):
 class m2w64_must_be_updated_to_ucrt64(LintCheck):
     """
     The m2w64-* package {} should be updated to ucrt64-*.
+
+    Exception:
+    - m2w64-toolchain -> ucrt64-gcc-toolchain
     """
 
     def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
