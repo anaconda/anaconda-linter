@@ -669,7 +669,7 @@ def test_no_missing_dev_url(recipe_file: str) -> None:
 )
 def test_missing_dev_url(recipe_file: str, msg_count: int) -> None:
     """
-    Test that the missing_dev_url lint check works correctly when the recipe does not have a description.
+    Test that the missing_dev_url lint check works correctly when the recipe does not have a dev_url.
 
     :param recipe_file: Path to the recipe file to read
     :param msg_count: Number of lint messages to expect
