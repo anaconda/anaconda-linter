@@ -389,6 +389,41 @@ def test_build_tools_must_be_in_build_invalid(file: str, msg_count: int) -> None
 @pytest.mark.parametrize(
     "file,",
     [
+        "m2_must_be_updated_to_msys2/all_msys2.yaml",
+    ],
+)
+def test_m2_must_be_updated_to_msys2_valid(file: str) -> None:
+    """
+    Test that the m2_must_be_updated_to_msys2 lint check passes when the recipe
+    has all msys2 tools in the build section.
+    """
+    assert_no_lint_message(recipe_file=file, lint_check="m2_must_be_updated_to_msys2")
+
+
+@pytest.mark.parametrize(
+    "file,",
+    [
+        "m2_must_be_updated_to_msys2/all_m2.yaml",
+    ],
+)
+def test_m2_must_be_updated_to_msys2_invalid(file: str) -> None:
+    """
+    Test that the m2_must_be_updated_to_msys2 lint check fails when the recipe
+    has m2 tools in the build section.
+    """
+    m2_tools = ["m2-bison", "m2-diffutils", "m2-flex", "m2-patch", "m2-posix"]
+    msg_title = [f"The m2 tool {tool} should be updated to msys2" for tool in m2_tools]
+    assert_lint_messages(
+        recipe_file=file,
+        lint_check="m2_must_be_updated_to_msys2",
+        msg_title=msg_title,
+        msg_count=len(m2_tools),
+    )
+
+
+@pytest.mark.parametrize(
+    "file,",
+    [
         "python_build_tool_in_run/single_output_in_host.yaml",
         "python_build_tool_in_run/multi_output_in_host.yaml",
     ],
