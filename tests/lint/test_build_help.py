@@ -6,6 +6,7 @@ Description:    Tests build section rules
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Final
 
 import pytest
 from conftest import assert_lint_messages, assert_no_lint_message, check, check_dir
@@ -415,8 +416,8 @@ def test_m2_must_be_updated_to_msys2_invalid(file: str) -> None:
 
     :param file: The file to test
     """
-    m2_tools = ["m2-bison", "m2-diffutils", "m2-flex", "m2-patch", "posix"]
-    msg_title = [f"The m2-* package {tool} should be updated to msys2-*" for tool in m2_tools]
+    m2_tools: Final = ["m2-bison", "m2-diffutils", "m2-flex", "m2-patch", "posix"]
+    msg_title: Final = [f"The m2-* package {tool} should be updated to msys2-*" for tool in m2_tools]
     assert_lint_messages(
         recipe_file=file,
         lint_check="m2_must_be_updated_to_msys2",
