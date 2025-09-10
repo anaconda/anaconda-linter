@@ -5,4 +5,4 @@ package:
 requirements:
   build:
     - m2w64-toolchain
-    - m2w64-sysroot
+    - m2w64-xz
