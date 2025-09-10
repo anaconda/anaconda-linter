@@ -1,0 +1,29 @@
+package:
+  name: test
+  version: 0.1.0
+
+requirements:
+  build:
+    - msys2-bison
+    - msys2-diffutils
+    - msys2-flex
+    - msys2-patch
+    - msys2-posix
+
+outputs:
+  - name: output1
+    requirements:
+      build:
+        - msys2-bison
+        - msys2-diffutils
+        - msys2-flex
+        - msys2-patch
+        - msys2-posix
+  - name: output2
+    requirements:
+      build:
+        - msys2-bison
+        - msys2-diffutils
+        - msys2-flex
+        - msys2-patch
+        - msys2-posix

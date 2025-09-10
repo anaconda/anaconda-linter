@@ -1,0 +1,17 @@
+package:
+  name: test
+  version: 0.1.0
+
+requirements:
+  host:
+    - msys2-bison
+    - msys2-diffutils
+    - msys2-flex
+    - msys2-patch
+    - msys2-posix
+  run:
+    - msys2-bison
+    - msys2-diffutils
+    - msys2-flex
+    - msys2-patch
+    - msys2-posix

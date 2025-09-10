@@ -383,6 +383,33 @@ class build_tools_must_be_in_build(LintCheck):
                 problem_paths.add(dep.path)
 
 
+class msys2_must_be_in_build(LintCheck):
+    """
+    The build tool {} is not in the build section.
+
+    Please add::
+        requirements:
+          build:
+            - {}
+    """
+
+    def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
+        all_deps: Final = self._get_all_dependencies(recipe)
+        if all_deps is None:
+            return
+        problem_paths: set[str] = set()
+        for output in all_deps:
+            for dep in all_deps[output]:
+                if not (
+                    dep.path not in problem_paths
+                    and (dep.data.name.startswith("msys2-") or dep.data.name.startswith("ucrt64-"))
+                    and dep.type != DependencySection.BUILD
+                ):
+                    continue
+                self.message(dep.data.name, section=dep.path)
+                problem_paths.add(dep.path)
+
+
 class python_build_tool_in_run(LintCheck):
     """
     The python build tool {} is in run depends
