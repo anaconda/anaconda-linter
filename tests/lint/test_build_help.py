@@ -6,6 +6,7 @@ Description:    Tests build section rules
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Final
 
 import pytest
 from conftest import assert_lint_messages, assert_no_lint_message, check, check_dir
@@ -435,6 +436,81 @@ def test_msys2_must_be_in_build_invalid(file: str, msg_count: int) -> None:
     msg_title = [f"The build tool {tool} is not in the build section" for tool in msys2_tools]
     assert_lint_messages(
         recipe_file=file, lint_check="msys2_must_be_in_build", msg_title=msg_title, msg_count=msg_count
+    )
+
+
+@pytest.mark.parametrize(
+    "file,",
+    [
+        "m2w64_must_be_updated_to_ucrt64/all_ucrt64.yaml",
+    ],
+)
+def test_m2w64_must_be_updated_to_ucrt64_valid(file: str) -> None:
+    """
+    Test that the m2w64_must_be_updated_to_ucrt64 lint check passes when the recipe
+    has all ucrt64 tools in the build section.
+
+    :param file: The file to test
+    """
+    assert_no_lint_message(recipe_file=file, lint_check="m2w64_must_be_updated_to_ucrt64")
+
+
+@pytest.mark.parametrize(
+    "file,",
+    [
+        "m2w64_must_be_updated_to_ucrt64/all_m2w64.yaml",
+    ],
+)
+def test_m2w64_must_be_updated_to_ucrt64_invalid(file: str) -> None:
+    """
+    Test that the m2w64_must_be_updated_to_ucrt64 lint check fails when the recipe
+    has m2w64 tools in the build section.
+
+    :param file: The file to test
+    """
+    m2w64_tools: Final = ["m2w64-toolchain", "m2w64-xz"]
+    msg_title: Final = [f"The m2w64-* package {tool} should be updated to ucrt64-*" for tool in m2w64_tools]
+    assert_lint_messages(
+        recipe_file=file, lint_check="m2w64_must_be_updated_to_ucrt64", msg_title=msg_title, msg_count=len(m2w64_tools)
+    )
+
+
+@pytest.mark.parametrize(
+    "file,",
+    [
+        "m2_must_be_updated_to_msys2/all_msys2.yaml",
+    ],
+)
+def test_m2_must_be_updated_to_msys2_valid(file: str) -> None:
+    """
+    Test that the m2_must_be_updated_to_msys2 lint check passes when the recipe
+    has all msys2 tools in the build section.
+
+    :param file: The file to test
+    """
+    assert_no_lint_message(recipe_file=file, lint_check="m2_must_be_updated_to_msys2")
+
+
+@pytest.mark.parametrize(
+    "file,",
+    [
+        "m2_must_be_updated_to_msys2/all_m2.yaml",
+    ],
+)
+def test_m2_must_be_updated_to_msys2_invalid(file: str) -> None:
+    """
+    Test that the m2_must_be_updated_to_msys2 lint check fails when the recipe
+    has m2 tools in the build section.
+
+    :param file: The file to test
+    """
+    m2_tools: Final = ["m2-bison", "m2-diffutils", "m2-flex", "m2-patch", "posix"]
+    msg_title: Final = [f"The m2-* package {tool} should be updated to msys2-*" for tool in m2_tools]
+    assert_lint_messages(
+        recipe_file=file,
+        lint_check="m2_must_be_updated_to_msys2",
+        msg_title=msg_title,
+        msg_count=len(m2_tools),
     )
 
 
