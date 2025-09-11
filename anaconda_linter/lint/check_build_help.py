@@ -422,6 +422,37 @@ class m2_must_be_updated_to_msys2(LintCheck):
                 problem_paths.add(dep.path)
 
 
+class msys2_for_windows_only(LintCheck):
+    """
+    The msys2-* or ucrt64-* package {} should only be used on Windows.
+
+    Please add a selector to the dependency to only include it on Windows:
+      requirements:
+        build:
+          - {} # [win]
+    """
+
+    def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
+        if arch_name.startswith("win"):
+            return
+        all_deps: Final = self._get_all_dependencies(recipe)
+        if all_deps is None:
+            return
+        problem_paths: set[str] = set()
+        for output in all_deps:
+            for dep in all_deps[output]:
+                if dep.path in problem_paths or not (
+                    dep.data.name.startswith("msys2-")
+                    or dep.data.name.startswith("ucrt64-")
+                    or dep.data.name == "posix"
+                    or dep.data.name.startswith("m2-")
+                    or dep.data.name.startswith("m2w64-")
+                ):
+                    continue
+                self.message(dep.data.name, section=dep.path)
+                problem_paths.add(dep.path)
+
+
 class python_build_tool_in_run(LintCheck):
     """
     The python build tool {} is in run depends
