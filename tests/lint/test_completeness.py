@@ -175,14 +175,19 @@ def test_missing_home_bad(base_yaml: str) -> None:
     ],
 )
 def test_no_missing_summary(recipe_file: str) -> None:
+    """
+    Test that the missing_summary lint check works correctly when the recipe has a summary.
+
+    :param recipe_file: Path to the recipe file to read
+    """
     assert_no_lint_message(recipe_file, "missing_summary")
 
 
 @pytest.mark.parametrize(
     ("recipe_file", "msg_count"),
     [
-        ("lint_check/summary/summary_empty.yaml", 1),
-        ("lint_check/summary/summary_missing.yaml", 1),
+        ("lint_check/about/about_single_output_empty.yaml", 1),
+        ("lint_check/about/about_single_output_missing.yaml", 1),
         ("lint_check/about/about_multi_output_empty_root_and_all_empty_outputs.yaml", 2),
         ("lint_check/about/about_multi_output_empty_root_and_all_outputs.yaml", 1),
         ("lint_check/about/about_multi_output_empty_root.yaml", 1),
@@ -589,7 +594,8 @@ def test_no_missing_documentation(recipe_file: str) -> None:
 )
 def test_missing_documentation(recipe_file: str, msg_count: int) -> None:
     """
-    Test that the missing_description lint check works correctly when the recipe does not have a missing documentation.
+    Test that the missing_documentation lint check works correctly when the recipe
+    does not have a missing documentation.
 
     :param recipe_file: Path to the recipe file to read
     :param msg_count: Number of lint messages to expect
@@ -670,8 +676,8 @@ def test_no_missing_dev_url(recipe_file: str) -> None:
 @pytest.mark.parametrize(
     ("recipe_file", "msg_count"),
     [
-        ("lint_check/dev_url/dev_url_empty.yaml", 1),
-        ("lint_check/dev_url/dev_url_missing.yaml", 1),
+        ("lint_check/about/about_single_output_empty.yaml", 1),
+        ("lint_check/about/about_single_output_missing.yaml", 1),
         ("lint_check/about/about_multi_output_empty_root_and_all_empty_outputs.yaml", 2),
         ("lint_check/about/about_multi_output_empty_root_and_all_outputs.yaml", 1),
         ("lint_check/about/about_multi_output_empty_root.yaml", 1),
@@ -708,9 +714,9 @@ def test_no_missing_description(recipe_file: str) -> None:
 @pytest.mark.parametrize(
     ("recipe_file", "msg_count"),
     [
-        ("lint_check/description/description_empty.yaml", 1),
-        ("lint_check/description/description_missing.yaml", 1),
         ("lint_check/description/description_empty_with_literal.yaml", 1),
+        ("lint_check/about/about_single_output_empty.yaml", 1),
+        ("lint_check/about/about_single_output_missing.yaml", 1),
         ("lint_check/about/about_multi_output_empty_root_and_all_empty_outputs.yaml", 2),
         ("lint_check/about/about_multi_output_empty_root_and_all_outputs.yaml", 1),
         ("lint_check/about/about_multi_output_empty_root.yaml", 1),
