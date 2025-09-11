@@ -575,6 +575,8 @@ def test_no_missing_documentation(recipe_file: str) -> None:
 @pytest.mark.parametrize(
     ("recipe_file", "msg_count"),
     [
+        ("lint_check/about/about_single_output_empty.yaml", 1),
+        ("lint_check/about/about_single_output_missing.yaml", 1),
         ("lint_check/about/about_multi_output_empty_root_and_all_empty_outputs.yaml", 2),
         ("lint_check/about/about_multi_output_empty_root_and_all_outputs.yaml", 1),
         ("lint_check/about/about_multi_output_empty_root.yaml", 1),
