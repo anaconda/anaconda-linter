@@ -465,6 +465,66 @@ def test_m2_must_be_updated_to_msys2_invalid(file: str) -> None:
 @pytest.mark.parametrize(
     "file,",
     [
+        "msys2_for_windows_only/all_msys2_ucrt64_on_win.yaml",
+        "msys2_for_windows_only/all_msys2_ucrt64_on_win_multi.yaml",
+    ],
+)
+def test_msys2_for_windows_only_valid(file: str) -> None:
+    """
+    Test that the msys2_for_windows_only lint check passes when the recipe
+    has all msys2/ucrt64 tools on Windows.
+
+    :param file: The file to test
+    """
+    assert_no_lint_message(recipe_file=file, lint_check="msys2_for_windows_only", arch="linux-64")
+
+
+@pytest.mark.parametrize(
+    "file,msg_count",
+    [
+        ("msys2_for_windows_only/some_msys2_ucrt64_on_non_win.yaml", 3),
+        ("msys2_for_windows_only/some_msys2_ucrt64_on_non_win_multi.yaml", 4),
+    ],
+)
+def test_msys2_for_windows_only_invalid(file: str, msg_count: int) -> None:
+    """
+    Test that the msys2_for_windows_only lint check fails when the recipe
+    has some msys2/ucrt64 tools on non-Windows platforms, for Windows arch.
+
+    :param file: The file to test
+    :param msg_count: The number of messages expected
+    """
+    msys2_ucrt64_tools: Final = ["msys2-patch", "msys2-posix", "ucrt64-gcc-toolchain", "ucrt64-xz"]
+    msg_title: Final = [
+        f"The msys2-* or ucrt64-* package {tool} should only be used on Windows" for tool in msys2_ucrt64_tools
+    ]
+    assert_lint_messages(
+        recipe_file=file, lint_check="msys2_for_windows_only", msg_title=msg_title, msg_count=msg_count, arch="linux-64"
+    )
+
+
+@pytest.mark.parametrize(
+    "file,",
+    [
+        "msys2_for_windows_only/all_msys2_ucrt64_on_win.yaml",
+        "msys2_for_windows_only/all_msys2_ucrt64_on_win_multi.yaml",
+        "msys2_for_windows_only/some_msys2_ucrt64_on_non_win.yaml",
+        "msys2_for_windows_only/some_msys2_ucrt64_on_non_win_multi.yaml",
+    ],
+)
+def test_msys2_for_windows_only_valid_on_non_win(file: str) -> None:
+    """
+    Test that the msys2_for_windows_only lint check passes when the recipe
+    has msys2/ucrt64 tools on non-Windows platforms, for non-Windows arch.
+
+    :param file: The file to test
+    """
+    assert_no_lint_message(recipe_file=file, lint_check="msys2_for_windows_only", arch="win-64")
+
+
+@pytest.mark.parametrize(
+    "file,",
+    [
         "python_build_tool_in_run/single_output_in_host.yaml",
         "python_build_tool_in_run/multi_output_in_host.yaml",
     ],

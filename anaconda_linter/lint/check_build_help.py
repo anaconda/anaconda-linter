@@ -433,7 +433,7 @@ class msys2_for_windows_only(LintCheck):
     """
 
     def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
-        if not arch_name.startswith("win"):
+        if arch_name.startswith("win"):
             return
         all_deps: Final = self._get_all_dependencies(recipe)
         if all_deps is None:
