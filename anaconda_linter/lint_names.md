@@ -2,6 +2,8 @@ avoid_noarch
 
 cdts_must_be_in_build
 
+cdts_for_linux_only
+
 build_tools_must_be_in_build
 
 m2w64_must_be_updated_to_ucrt64

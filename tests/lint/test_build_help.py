@@ -364,6 +364,37 @@ def test_cdts_must_be_in_build_invalid(file: str, msg_count: int) -> None:
     assert_lint_messages(recipe_file=file, lint_check="cdts_must_be_in_build", msg_title=msg_title, msg_count=msg_count)
 
 
+# @pytest.mark.parametrize(
+#     "file",
+#     [
+#         "cdts_for_linux_only/cdts_for_non_linux.yaml",
+#     ],
+# )
+# def test_cdts_for_linux_only_valid(file: str) -> None:
+#     """
+#     Test that the cdts_for_linux_only lint check passes when the recipe has a CDT for Linux only.
+#     """
+#     assert_no_lint_message(recipe_file=file, lint_check="cdts_for_linux_only")
+
+
+# @pytest.mark.parametrize(
+#     "file,msg_count",
+#     [
+#         ("cdts_for_linux_only/cdts_for_non_linux.yaml", 9),
+#     ],
+# )
+# def test_cdts_for_linux_only_invalid(file: str, msg_count: int) -> None:
+#     """
+#     Test that the cdts_for_linux_only lint check fails when the recipe has a CDT for non-Linux platforms.
+#     """
+#     assert_lint_messages(
+#         recipe_file=file,
+#         lint_check="cdts_for_linux_only",
+#         msg_title="The CDT package {cdt} should only be included for Linux",
+#         msg_count=msg_count,
+#     )
+
+
 @pytest.mark.parametrize(
     "file",
     [

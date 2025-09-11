@@ -14,6 +14,8 @@ from conda_recipe_manager.parser.dependency import Dependency, DependencySection
 from conda_recipe_manager.parser.enums import SelectorConflictMode
 from conda_recipe_manager.parser.recipe_parser_deps import RecipeParserDeps
 from conda_recipe_manager.parser.recipe_reader_deps import RecipeReaderDeps
+from conda_recipe_manager.parser.selector_parser import SelectorParser
+from conda_recipe_manager.parser.selector_query import SelectorQuery
 from percy.render.recipe import Recipe
 
 from anaconda_linter import utils as _utils
@@ -381,6 +383,39 @@ class cdts_must_be_in_build(CDTCheck):
                     dep.path in problem_paths
                     or dep.type in {DependencySection.BUILD, DependencySection.TESTS}
                     or not self._detect_cdt(dep.data.name)
+                ):
+                    continue
+                self.message(dep.data.name, section=dep.path)
+                problem_paths.add(dep.path)
+
+
+class cdts_for_linux_only(CDTCheck):
+    """
+    The CDT package {} should only be included for Linux.
+
+    Please add a selector for Linux.
+
+    Example:
+    - {{ cdt('libudev-devel') }}  # [linux]
+    """
+
+    def _applies_outside_linux(self, selector: SelectorParser) -> bool:
+        print("SELECTOR: ", selector)
+        # return any(selector.does_selector_apply(SelectorQuery(platform=plat)) for plat in {"osx-arm64", "win-64"})
+        return True
+
+    def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
+        all_deps: Final = self._get_all_dependencies(self.unrendered_recipe)
+        if all_deps is None:
+            return
+        problem_paths: set[str] = set()
+        for output in all_deps:
+            for dep in all_deps[output]:
+                print("DEP: ", dep)
+                if (
+                    dep.path in problem_paths
+                    or not self._detect_cdt(dep.data.name)
+                    or not self._applies_outside_linux(dep.selector)
                 ):
                     continue
                 self.message(dep.data.name, section=dep.path)
