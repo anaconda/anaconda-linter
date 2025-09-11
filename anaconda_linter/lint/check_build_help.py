@@ -399,7 +399,7 @@ class msys2_must_be_in_build(LintCheck):
             return
         problem_paths: set[str] = set()
         for output in all_deps:
-            if any(output.startswith(x) for x in ["r-", "m2w64-", "msys2-"]):
+            if output == "posix" or any(output.startswith(x) for x in ["r-", "m2w64-", "ucrt64-", "msys2-", "m2-"]):
                 continue
             for dep in all_deps[output]:
                 if not (
