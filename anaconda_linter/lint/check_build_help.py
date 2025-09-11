@@ -379,7 +379,7 @@ class cdts_must_be_in_build(CDTCheck):
             for dep in all_deps[output]:
                 if (
                     dep.path in problem_paths
-                    or dep.type in {DependencySection.BUILD, DependencySection.TESTS}
+                    or dep.type == DependencySection.BUILD
                     or not self._detect_cdt(dep.data.name)
                 ):
                     continue
