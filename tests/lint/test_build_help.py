@@ -338,6 +338,7 @@ def test_cdts_must_be_in_build_valid(file: str) -> None:
     "file,msg_count",
     [
         ("cdts_must_be_in_build/all_in_host_and_run.yaml", 10),
+        ("cdts_must_be_in_build/all_in_host_and_run_multi.yaml", 15),
     ],
 )
 def test_cdts_must_be_in_build_invalid(file: str, msg_count: int) -> None:
