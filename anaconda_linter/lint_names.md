@@ -8,6 +8,8 @@ m2w64_must_be_updated_to_ucrt64
 
 m2_must_be_updated_to_msys2
 
+msys2_for_windows_only
+
 compilers_must_be_in_build
 
 conda_render_failure
