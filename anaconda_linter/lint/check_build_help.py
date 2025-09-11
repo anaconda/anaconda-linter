@@ -383,14 +383,12 @@ class build_tools_must_be_in_build(LintCheck):
                 problem_paths.add(dep.path)
 
 
-class python_build_tool_in_run(LintCheck):
+class m2w64_must_be_updated_to_ucrt64(LintCheck):
     """
-    The python build tool {} is in run depends
+    The m2w64-* package {} should be updated to ucrt64-*.
 
-    Most Python packages only need python build tools during installation.
-    Check if the package really needs this build tool (e.g. because it uses
-    pkg_resources or setuptools console scripts).
-
+    Exception:
+    - m2w64-toolchain -> ucrt64-gcc-toolchain
     """
 
     def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
@@ -400,13 +398,27 @@ class python_build_tool_in_run(LintCheck):
         problem_paths: set[str] = set()
         for output in all_deps:
             for dep in all_deps[output]:
-                if (
-                    dep.path in problem_paths
-                    or dep.data.name not in PYTHON_BUILD_TOOLS
-                    or dep.type != DependencySection.RUN
-                ):
+                if dep.path in problem_paths or not dep.data.name.startswith("m2w64-"):
                     continue
-                self.message(dep.data.name, section=dep.path, severity=Severity.WARNING)
+                self.message(dep.data.name, section=dep.path)
+                problem_paths.add(dep.path)
+
+
+class m2_must_be_updated_to_msys2(LintCheck):
+    """
+    The m2-* package {} should be updated to msys2-*.
+    """
+
+    def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
+        all_deps: Final = self._get_all_dependencies(recipe)
+        if all_deps is None:
+            return
+        problem_paths: set[str] = set()
+        for output in all_deps:
+            for dep in all_deps[output]:
+                if dep.path in problem_paths or not (dep.data.name.startswith("m2-") or dep.data.name == "posix"):
+                    continue
+                self.message(dep.data.name, section=dep.path)
                 problem_paths.add(dep.path)
 
 
@@ -434,6 +446,33 @@ class msys2_for_windows_only(LintCheck):
                 ):
                     continue
                 self.message(dep.data.name, section=dep.path)
+                problem_paths.add(dep.path)
+
+
+class python_build_tool_in_run(LintCheck):
+    """
+    The python build tool {} is in run depends
+
+    Most Python packages only need python build tools during installation.
+    Check if the package really needs this build tool (e.g. because it uses
+    pkg_resources or setuptools console scripts).
+
+    """
+
+    def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
+        all_deps: Final = self._get_all_dependencies(recipe)
+        if all_deps is None:
+            return
+        problem_paths: set[str] = set()
+        for output in all_deps:
+            for dep in all_deps[output]:
+                if (
+                    dep.path in problem_paths
+                    or dep.data.name not in PYTHON_BUILD_TOOLS
+                    or dep.type != DependencySection.RUN
+                ):
+                    continue
+                self.message(dep.data.name, section=dep.path, severity=Severity.WARNING)
                 problem_paths.add(dep.path)
 
 

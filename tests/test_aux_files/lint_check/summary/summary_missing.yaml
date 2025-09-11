@@ -10,7 +10,7 @@ source:
   sha256: 2908c98487e914493c730fb71c70fa6dfb1e482a404b7c10b7511579358701c1
 
 build:
-  number: 
+  number: 0
   script: {{ PYTHON }} -m pip install . --no-deps --no-build-isolation -vv
   skip: true  # [py<38 or s390x]
 
@@ -37,12 +37,11 @@ test:
 
 about:
   home: https://github.com/randyzwitch/streamlit-folium
-  summary: Render Folium objects in Streamlit
   license: MIT
   license_family: MIT
   license_file: LICENSE
   description: |
-
+    streamlit-folium integrates two great open-source projects in the Python ecosystem: Streamlit and Folium!
   doc_url: https://github.com/randyzwitch/streamlit-folium/blob/master/README.md
   dev_url: https://github.com/randyzwitch/streamlit-folium
 
