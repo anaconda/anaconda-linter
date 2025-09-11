@@ -1,0 +1,35 @@
+package:
+  name: test
+  version: 0.1.0
+
+requirements:
+  build:
+    - msys2-patch # [win]
+    - msys2-posix # [win]
+    - ucrt64-gcc-toolchain  # [win]
+    - ucrt64-xz  # [win]
+    - posix # [win]
+    - m2-patch # [win]
+    - m2w64-toolchain # [win]
+
+outputs:
+  - name: output1
+    requirements:
+      build:
+        - msys2-patch # [win]
+        - msys2-posix # [win]
+        - ucrt64-gcc-toolchain  # [win]
+        - ucrt64-xz  # [win]
+        - posix # [win]
+        - m2-patch # [win]
+        - m2w64-toolchain # [win]
+  - name: output2
+    requirements:
+      build:
+        - msys2-patch # [win]
+        - msys2-posix # [win]
+        - ucrt64-gcc-toolchain  # [win]
+        - ucrt64-xz  # [win]
+        - posix # [win]
+        - m2-patch # [win]
+        - m2w64-toolchain # [win]
