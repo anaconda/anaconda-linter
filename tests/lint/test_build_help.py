@@ -321,6 +321,48 @@ def test_compilers_must_be_in_build_multi_output_not_in_build(file: str, msg_cou
 @pytest.mark.parametrize(
     "file",
     [
+        "cdts_must_be_in_build/all_in_build.yaml",
+        "cdts_must_be_in_build/all_in_test.yaml",
+    ],
+)
+def test_cdts_must_be_in_build_valid(file: str) -> None:
+    """
+    Test that the cdts_must_be_in_build lint check passes when the recipe has a CDT in the build section.
+
+    :param file: The file to test
+    """
+    assert_no_lint_message(recipe_file=file, lint_check="cdts_must_be_in_build")
+
+
+@pytest.mark.parametrize(
+    "file,msg_count",
+    [
+        ("cdts_must_be_in_build/all_in_host_and_run.yaml", 10),
+    ],
+)
+def test_cdts_must_be_in_build_invalid(file: str, msg_count: int) -> None:
+    """
+    Test that the cdts_must_be_in_build lint check fails when the recipe has a CDT in the host or run section.
+    """
+    cdts = [
+        "libudev-devel",
+        "libglvnd-egl",
+        "libglvnd-glx",
+        "libglvnd-opengl",
+        "libglvnd",
+        "mesa-libegl-devel",
+        "mesa-libegl",
+        "mesa-libgl-devel",
+        "mesa-libgl",
+        "mesa-libgbm",
+    ]
+    msg_title = [f"The CDT package {{{{ cdt('{cdt}') }}}} is not in the build section" for cdt in cdts]
+    assert_lint_messages(recipe_file=file, lint_check="cdts_must_be_in_build", msg_title=msg_title, msg_count=msg_count)
+
+
+@pytest.mark.parametrize(
+    "file",
+    [
         "stdlib_must_be_in_build/single_output_in_build.yaml",
         "stdlib_must_be_in_build/multi_output_in_build.yaml",
     ],

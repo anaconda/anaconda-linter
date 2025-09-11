@@ -1,0 +1,88 @@
+{% set name = "pyqtgraph" %}
+{% set version = "0.13.7" %}
+
+package:
+  name: {{ name|lower }}
+  version: {{ version }}
+
+source:
+  url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz
+  sha256: 64f84f1935c6996d0e09b1ee66fe478a7771e3ca6f3aaa05f00f6e068321d9e3
+
+build:
+  number: 0
+  script: {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
+  skip: True  # [py<39]
+
+requirements:
+  host:
+    - python
+    - pip
+    - setuptools
+    - wheel
+  run:
+    - python
+    - numpy >=1.22.0
+  run_constrained:
+    - pyside2 >=5.15
+    - pyqt >=5.15
+
+# >       assert r_ebi.height() > r_empty_ebi.height()
+# E       assert 4.387322709707185 > 4.387322709707185
+{% set tests_to_skip = "test_ErrorBarItem_defer_data" %}  # [win]
+# >       assert roi.pos() == pg.Point(initial_x, 19)
+# E       assert Point(20.000000, 20.000000) == Point(20.000000, 19.000000)
+{% set tests_to_skip = tests_to_skip + " or test_mouseDragEventSnap" %}  # [win]
+# >       assert not br.containsPoint(pos + 3 * px, QtCore.Qt.FillRule.OddEvenFill)
+# E       AssertionError: assert not True
+{% set tests_to_skip = tests_to_skip + " or test_InfiniteLine" %}  # [win]
+
+test:
+  source_files:
+    - tests
+  commands:
+    - pip check
+    # Add runtime path of libEGL.so.1 so Qt libraries can find it as they're loaded in.
+    # This must be done before the python interpreter starts up.
+    - export LD_LIBRARY_PATH="$PREFIX/x86_64-conda-linux-gnu/sysroot/usr/lib64:${LD_LIBRARY_PATH}"  # [linux and x86_64]
+    - export LD_LIBRARY_PATH="$PREFIX/aarch64-conda-linux-gnu/sysroot/usr/lib64:${LD_LIBRARY_PATH}"  # [linux and aarch64]
+    - python -c "import pyqtgraph; print('Success')"
+    # All tests are using GUI, skipped them for the build target. Tests successfully work locally.
+    #- pytest -v {{ ignore_tests }} tests  # [not win or not linux]
+    #- pytest -v -k "not ({{ tests_to_skip }})" tests  # [win]
+  requires:
+    - pip
+    - pytest
+    - pyqt >=5.15
+    - {{ cdt('libglvnd-egl') }}               # [linux and aarch64]
+    - {{ cdt('libglvnd-glx') }}               # [linux and aarch64]
+    - {{ cdt('libglvnd-opengl') }}            # [linux and aarch64]
+    - {{ cdt('libglvnd') }}                   # [linux and aarch64]
+    - {{ cdt('mesa-libegl-devel') }}          # [linux]
+    - {{ cdt('mesa-libegl') }}                # [linux]
+    - {{ cdt('mesa-libgl-devel') }}           # [linux]
+    - {{ cdt('mesa-libgl') }}                 # [linux]
+    - {{ cdt('mesa-libgbm') }}                # [linux]
+
+about:
+  home: https://www.pyqtgraph.org
+  license: MIT
+  license_family: MIT
+  license_file: LICENSE.txt
+  summary: Scientific Graphics and GUI Library for Python
+  description: |
+    PyQtGraph is a pure-python graphics and GUI library built on PyQt4 / 
+    PySide and numpy. It is intended for use in mathematics / scientific / 
+    engineering applications. Despite being written entirely in python, the
+    library is very fast due to its heavy leverage of numpy for number
+    crunching and Qt's GraphicsView framework for fast display.
+  doc_url: https://pyqtgraph.readthedocs.io/
+  dev_url: https://github.com/pyqtgraph/pyqtgraph
+
+extra:
+  recipe-maintainers:
+    - astaric
+    - marcelotrevisani
+    - ksunden
+  skip-lints:
+    - missing_imports_or_run_test_py

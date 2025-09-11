@@ -87,6 +87,7 @@ import importlib
 import inspect
 import logging
 import pkgutil
+import re
 from dataclasses import dataclass
 from enum import IntEnum, auto
 from io import StringIO
@@ -237,7 +238,7 @@ class LintCheckMeta(abc.ABCMeta):
         Creates LintCheck classes
         """
         typ = super().__new__(mcs, name, bases, namespace, **kwargs)
-        if name not in {"LintCheck", "ScriptCheck"}:  # don't register base classes
+        if name not in {"LintCheck", "ScriptCheck", "CDTCheck"}:  # don't register base classes
             mcs.registry.append(typ)
         return typ
 
@@ -643,6 +644,20 @@ class ScriptCheck(LintCheck):
                 "value": "{{ PYTHON }} -m pip install . --no-deps --no-build-isolation",
             }
         )
+
+
+class CDTCheck(LintCheck):
+    """
+    Base class for CDT checks
+    """
+
+    def _detect_cdt(self, cdt: str) -> bool:
+        """
+        Detect a string that is a CDT macro such as {{ cdt('libudev-devel') }}
+        using regex
+        """
+        pattern = r"{{ cdt\('[^']*'\) }}"
+        return bool(re.match(pattern, cdt))
 
 
 class linter_failure(LintCheck):
