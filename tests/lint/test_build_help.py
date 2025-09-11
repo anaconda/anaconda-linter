@@ -391,12 +391,15 @@ def test_build_tools_must_be_in_build_invalid(file: str, msg_count: int) -> None
     [
         "msys2_must_be_in_build/all_in_build.yaml",
         "msys2_must_be_in_build/all_in_build_multi.yaml",
+        "msys2_must_be_in_build/all_in_host_and_run_exception.yaml",
     ],
 )
 def test_msys2_must_be_in_build_valid(file: str) -> None:
     """
     Test that the msys2_must_be_in_build lint check passes when the recipe
-    has all msys2 tools in the build section.
+    has all msys2 tools in the build section, or is an exception.
+
+    :param file: The recipe file to test.
     """
     assert_no_lint_message(recipe_file=file, lint_check="msys2_must_be_in_build")
 
@@ -406,12 +409,16 @@ def test_msys2_must_be_in_build_valid(file: str) -> None:
     [
         ("msys2_must_be_in_build/all_in_host_and_run.yaml", 10 * 2),
         ("msys2_must_be_in_build/all_in_host_and_run_multi.yaml", 10 * 6),
+        ("msys2_must_be_in_build/all_in_host_and_run_exception_multi.yaml", 10 * 4),
     ],
 )
 def test_msys2_must_be_in_build_invalid(file: str, msg_count: int) -> None:
     """
     Test that the msys2_must_be_in_build lint check fails when the recipe
     does not have all msys2 tools in the build section.
+
+    :param file: The recipe file to test.
+    :param msg_count: The number of messages expected.
     """
     msys2_tools = [
         "msys2-bison",
