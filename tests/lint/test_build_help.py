@@ -433,7 +433,7 @@ def test_msys2_must_be_in_build_invalid(file: str, msg_count: int) -> None:
         "ucrt64-xz",
         "ucrt64-zlib",
     ]
-    msg_title = [f"The build tool {tool} is not in the build section" for tool in msys2_tools]
+    msg_title: Final = [f"The build tool {tool} is not in the build section" for tool in msys2_tools]
     assert_lint_messages(
         recipe_file=file, lint_check="msys2_must_be_in_build", msg_title=msg_title, msg_count=msg_count
     )
