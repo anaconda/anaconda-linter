@@ -8,3 +8,6 @@ requirements:
     - msys2-posix # [win]
     - ucrt64-gcc-toolchain  # [win]
     - ucrt64-xz  # [win]
+    - posix # [win]
+    - m2-patch # [win]
+    - m2w64-toolchain # [win]

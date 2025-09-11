@@ -482,8 +482,8 @@ def test_msys2_for_windows_only_valid(file: str) -> None:
 @pytest.mark.parametrize(
     "file,msg_count",
     [
-        ("msys2_for_windows_only/some_msys2_ucrt64_on_non_win.yaml", 3),
-        ("msys2_for_windows_only/some_msys2_ucrt64_on_non_win_multi.yaml", 4),
+        ("msys2_for_windows_only/some_msys2_ucrt64_on_non_win.yaml", 6),
+        ("msys2_for_windows_only/some_msys2_ucrt64_on_non_win_multi.yaml", 13),
     ],
 )
 def test_msys2_for_windows_only_invalid(file: str, msg_count: int) -> None:
@@ -494,7 +494,15 @@ def test_msys2_for_windows_only_invalid(file: str, msg_count: int) -> None:
     :param file: The file to test
     :param msg_count: The number of messages expected
     """
-    msys2_ucrt64_tools: Final = ["msys2-patch", "msys2-posix", "ucrt64-gcc-toolchain", "ucrt64-xz"]
+    msys2_ucrt64_tools: Final = [
+        "msys2-patch",
+        "msys2-posix",
+        "ucrt64-gcc-toolchain",
+        "ucrt64-xz",
+        "posix",
+        "m2-patch",
+        "m2w64-toolchain",
+    ]
     msg_title: Final = [
         f"The msys2-* or ucrt64-* package {tool} should only be used on Windows" for tool in msys2_ucrt64_tools
     ]

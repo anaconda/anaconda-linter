@@ -442,7 +442,11 @@ class msys2_for_windows_only(LintCheck):
         for output in all_deps:
             for dep in all_deps[output]:
                 if dep.path in problem_paths or not (
-                    dep.data.name.startswith("msys2-") or dep.data.name.startswith("ucrt64-")
+                    dep.data.name.startswith("msys2-")
+                    or dep.data.name.startswith("ucrt64-")
+                    or dep.data.name == "posix"
+                    or dep.data.name.startswith("m2-")
+                    or dep.data.name.startswith("m2w64-")
                 ):
                     continue
                 self.message(dep.data.name, section=dep.path)
