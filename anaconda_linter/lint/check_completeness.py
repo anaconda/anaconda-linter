@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import os
 import re
+from typing import Final
 
 import conda_build.license_family
 from conda_recipe_manager.parser.recipe_reader_deps import RecipeReaderDeps
@@ -364,9 +365,37 @@ class missing_documentation(LintCheck):
 
     """
 
-    def check_recipe_legacy(self, recipe: Recipe) -> None:
-        if not recipe.get("about/doc_url", "") and not recipe.get("about/doc_source_url", ""):
-            self.message(section="about")
+    def _validate_value(self, value: any) -> bool:
+        """
+        Checks if value is a non-empty string
+
+        :param value: Value to be checked
+        """
+        if isinstance(value, str):
+            return len(value.strip()) > 0
+        return False
+
+    def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
+        doc_url: Final = "/about/doc_url"
+        doc_source_url: Final = "/about/doc_source_url"
+
+        # Helper function to determine which path exists
+        def which_path(path: str) -> bool:
+            if recipe.contains_value(path):
+                return True
+            if recipe.is_multi_output():
+                for package_path in recipe.get_package_paths():
+                    if package_path == "/":
+                        continue
+                    candidate: Final = recipe.append_to_path(package_path, path)
+                    if recipe.contains_value(candidate):
+                        return True
+            return False
+
+        chosen_path: Final = (
+            doc_url if which_path(doc_url) else (doc_source_url if which_path(doc_source_url) else doc_url)
+        )
+        self._validate_if_recipe_path_is_missing(chosen_path)
 
 
 class documentation_overspecified(LintCheck):
