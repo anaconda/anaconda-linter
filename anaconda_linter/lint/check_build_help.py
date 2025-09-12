@@ -380,7 +380,7 @@ class cdts_must_be_in_build(CDTCheck):
                 if (
                     dep.path in problem_paths
                     or dep.type == DependencySection.BUILD
-                    or not self._detect_cdt(dep.data.name)
+                    or self._detect_cdt(dep.data.name) is None
                 ):
                     continue
                 self.message(dep.data.name, section=dep.path)

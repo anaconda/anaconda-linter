@@ -651,18 +651,19 @@ class CDTCheck(LintCheck):
     Base class for CDT checks
     """
 
-    cdt_pattern = re.compile(r"{{ cdt\('[^']*'\) }}")
+    cdt_pattern = re.compile(r"{{ cdt\('([^']*)'\) }}")
 
     @staticmethod
-    def _detect_cdt(cdt: str) -> bool:
+    def _detect_cdt(cdt: str) -> str | None:
         """
         Detect a string that is a CDT macro such as {{ cdt('libudev-devel') }}
         using regex
 
         :param cdt: The string to examine
-        :returns: True if the string is a CDT macro, False otherwise
+        :returns: The package name from inside the CDT macro if found, None otherwise
         """
-        return bool(re.match(CDTCheck.cdt_pattern, cdt))
+        match = re.match(CDTCheck.cdt_pattern, cdt)
+        return match.group(1) if match else None
 
 
 class linter_failure(LintCheck):
