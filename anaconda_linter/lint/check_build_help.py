@@ -15,7 +15,6 @@ from conda_recipe_manager.parser.enums import SelectorConflictMode
 from conda_recipe_manager.parser.recipe_parser_deps import RecipeParserDeps
 from conda_recipe_manager.parser.recipe_reader_deps import RecipeReaderDeps
 from conda_recipe_manager.parser.selector_parser import SelectorParser
-from conda_recipe_manager.parser.selector_query import SelectorQuery
 from percy.render.recipe import Recipe
 
 from anaconda_linter import utils as _utils
@@ -405,7 +404,7 @@ class cdts_for_linux_only(CDTCheck):
         return True
 
     def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
-        all_deps: Final = self._get_all_dependencies(self.unrendered_recipe)
+        all_deps: Final = self._get_all_dependencies(self.unrendered_recipe, include_test_dependencies=True)
         if all_deps is None:
             return
         problem_paths: set[str] = set()
