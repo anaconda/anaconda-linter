@@ -375,7 +375,23 @@ class missing_documentation(LintCheck):
         return False
 
     def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
-        self._validate_if_recipe_path_is_missing("/about/doc_url")
+        doc_url = "/about/doc_url"
+        doc_source_url = "/about/doc_source_url"
+
+        def which_path(path: str) -> bool:
+            if recipe.contains_value(path):
+                return True
+            if recipe.is_multi_output():
+                for package_path in recipe.get_package_paths():
+                    if package_path == "/":
+                        continue
+                    candidate = recipe.append_to_path(package_path, path)
+                    if recipe.contains_value(candidate):
+                        return True
+            return False
+
+        chosen_path = doc_url if which_path(doc_url) else (doc_source_url if which_path(doc_source_url) else doc_url)
+        self._validate_if_recipe_path_is_missing(chosen_path)
 
 
 class documentation_overspecified(LintCheck):
