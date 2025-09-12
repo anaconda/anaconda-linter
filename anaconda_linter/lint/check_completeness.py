@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import os
 import re
+from typing import Final
 
 import conda_build.license_family
 from conda_recipe_manager.parser.recipe_reader_deps import RecipeReaderDeps
@@ -378,6 +379,7 @@ class missing_documentation(LintCheck):
         doc_url = "/about/doc_url"
         doc_source_url = "/about/doc_source_url"
 
+        # Helper function to determine which path exists
         def which_path(path: str) -> bool:
             if recipe.contains_value(path):
                 return True
@@ -385,12 +387,14 @@ class missing_documentation(LintCheck):
                 for package_path in recipe.get_package_paths():
                     if package_path == "/":
                         continue
-                    candidate = recipe.append_to_path(package_path, path)
+                    candidate: Final = recipe.append_to_path(package_path, path)
                     if recipe.contains_value(candidate):
                         return True
             return False
 
-        chosen_path = doc_url if which_path(doc_url) else (doc_source_url if which_path(doc_source_url) else doc_url)
+        chosen_path: Final = (
+            doc_url if which_path(doc_url) else (doc_source_url if which_path(doc_source_url) else doc_url)
+        )
         self._validate_if_recipe_path_is_missing(chosen_path)
 
 
