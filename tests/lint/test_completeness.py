@@ -148,23 +148,46 @@ def test_missing_package_version_bad(base_yaml: str) -> None:  # pylint: disable
     assert len(messages) == 1 and "missing a package version" in messages[0].title
 
 
-def test_missing_home_good(base_yaml: str) -> None:
-    yaml_str = (
-        base_yaml
-        + """
-        about:
-          home: https://www.sqlite.org/
-        """
-    )
-    lint_check = "missing_home"
-    messages = check(lint_check, yaml_str)
-    assert len(messages) == 0
+@pytest.mark.parametrize(
+    "recipe_file",
+    [
+        "lint_check/streamlit-folium.yaml",
+        "lint_check/about/about_multi_output_complete.yaml",
+        "lint_check/about/about_multi_output_with_all_outputs_only.yaml",
+    ],
+)
+def test_no_missing_home(recipe_file: str) -> None:
+    """
+    Test that the missing_home lint check works correctly when the recipe has a home.
+
+    :param recipe_file: Path to the recipe file to read
+    """
+    assert_no_lint_message(recipe_file, "missing_home")
 
 
-def test_missing_home_bad(base_yaml: str) -> None:
-    lint_check = "missing_home"
-    messages = check(lint_check, base_yaml)
-    assert len(messages) == 1 and "missing a homepage" in messages[0].title
+@pytest.mark.parametrize(
+    ("recipe_file", "msg_count"),
+    [
+        ("lint_check/about/about_single_output_empty.yaml", 1),
+        ("lint_check/about/about_single_output_missing.yaml", 1),
+        ("lint_check/about/about_multi_output_empty_root_and_all_empty_outputs.yaml", 2),
+        ("lint_check/about/about_multi_output_empty_root_and_all_outputs.yaml", 1),
+        ("lint_check/about/about_multi_output_empty_root.yaml", 1),
+        ("lint_check/about/about_multi_output_missing_all.yaml", 2),
+        ("lint_check/about/about_multi_output_missing_root_and_all_empty_outputs.yaml", 2),
+        ("lint_check/about/about_multi_output_missing_root_and_one_empty_output.yaml", 1),
+        ("lint_check/about/about_multi_output_missing_root_and_one_output.yaml", 1),
+        ("lint_check/about/about_multi_output_semi_missing_root_and_all_outputs.yaml", 1),
+    ],
+)
+def test_missing_home(recipe_file: str, msg_count: int) -> None:
+    """
+    Test that the missing_home lint check works correctly when the recipe does not have a home.
+
+    :param recipe_file: Path to the recipe file to read
+    :param msg_count: Number of lint messages to expect
+    """
+    assert_lint_messages(recipe_file, "missing_home", "missing a homepage URL", msg_count)
 
 
 @pytest.mark.parametrize(
