@@ -376,8 +376,8 @@ class missing_documentation(LintCheck):
         return False
 
     def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
-        doc_url = "/about/doc_url"
-        doc_source_url = "/about/doc_source_url"
+        doc_url: Final = "/about/doc_url"
+        doc_source_url: Final = "/about/doc_source_url"
 
         # Helper function to determine which path exists
         def which_path(path: str) -> bool:
