@@ -17,7 +17,7 @@ from conda_recipe_manager.parser.recipe_reader_deps import RecipeReaderDeps
 from percy.render.recipe import Recipe
 
 from anaconda_linter import utils as _utils
-from anaconda_linter.lint import LintCheck, ScriptCheck, Severity
+from anaconda_linter.lint import CDTCheck, LintCheck, ScriptCheck, Severity
 
 # Does not include m2-tools, which should be checked using wild cards.
 BUILD_TOOLS: Final[tuple] = (
@@ -358,6 +358,33 @@ class stdlib_must_be_in_build(LintCheck):
                 if dep.data.name.startswith("stdlib_") and dep.type != DependencySection.BUILD:
                     self.message(section=dep.path)
                     problem_paths.add(dep.path)
+
+
+class cdts_must_be_in_build(CDTCheck):
+    """
+    The CDT package {} is not in the build section.
+
+    Please add::
+        requirements:
+          build:
+            - {}
+    """
+
+    def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
+        all_deps: Final = self._get_all_dependencies(self.unrendered_recipe)
+        if all_deps is None:
+            return
+        problem_paths: set[str] = set()
+        for output in all_deps:
+            for dep in all_deps[output]:
+                if (
+                    dep.path in problem_paths
+                    or dep.type == DependencySection.BUILD
+                    or self._detect_cdt(dep.data.name) is None
+                ):
+                    continue
+                self.message(dep.data.name, section=dep.path)
+                problem_paths.add(dep.path)
 
 
 class build_tools_must_be_in_build(LintCheck):
