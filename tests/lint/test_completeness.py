@@ -172,6 +172,7 @@ def test_missing_home_bad(base_yaml: str) -> None:
     [
         "lint_check/streamlit-folium.yaml",
         "lint_check/about/about_multi_output_complete.yaml",
+        "lint_check/about/about_multi_output_with_all_outputs_only.yaml",
     ],
 )
 def test_no_missing_summary(recipe_file: str) -> None:
@@ -195,7 +196,7 @@ def test_no_missing_summary(recipe_file: str) -> None:
         ("lint_check/about/about_multi_output_missing_root_and_all_empty_outputs.yaml", 2),
         ("lint_check/about/about_multi_output_missing_root_and_one_empty_output.yaml", 1),
         ("lint_check/about/about_multi_output_missing_root_and_one_output.yaml", 1),
-        ("lint_check/about/about_multi_output_missing_root.yaml", 1),
+        ("lint_check/about/about_multi_output_semi_missing_root_and_all_outputs.yaml", 1),
     ],
 )
 def test_missing_summary(recipe_file: str, msg_count: int) -> None:
@@ -571,6 +572,7 @@ def test_non_url_source_bad(base_yaml: str, src_type: str) -> None:
     [
         "lint_check/streamlit-folium.yaml",
         "lint_check/about/about_multi_output_complete.yaml",
+        "lint_check/about/about_multi_output_with_all_outputs_only.yaml",
     ],
 )
 def test_no_missing_documentation(recipe_file: str) -> None:
@@ -589,7 +591,7 @@ def test_no_missing_documentation(recipe_file: str) -> None:
         ("lint_check/about/about_multi_output_missing_root_and_all_empty_outputs.yaml", 2),
         ("lint_check/about/about_multi_output_missing_root_and_one_empty_output.yaml", 1),
         ("lint_check/about/about_multi_output_missing_root_and_one_output.yaml", 1),
-        ("lint_check/about/about_multi_output_missing_root.yaml", 1),
+        ("lint_check/about/about_multi_output_semi_missing_root_and_all_outputs.yaml", 1),
     ],
 )
 def test_missing_documentation(recipe_file: str, msg_count: int) -> None:
@@ -662,6 +664,7 @@ def test_documentation_overspecified_bad(base_yaml: str) -> None:
     [
         "lint_check/streamlit-folium.yaml",
         "lint_check/about/about_multi_output_complete.yaml",
+        "lint_check/about/about_multi_output_with_all_outputs_only.yaml",
     ],
 )
 def test_no_missing_dev_url(recipe_file: str) -> None:
@@ -685,7 +688,7 @@ def test_no_missing_dev_url(recipe_file: str) -> None:
         ("lint_check/about/about_multi_output_missing_root_and_all_empty_outputs.yaml", 2),
         ("lint_check/about/about_multi_output_missing_root_and_one_empty_output.yaml", 1),
         ("lint_check/about/about_multi_output_missing_root_and_one_output.yaml", 1),
-        ("lint_check/about/about_multi_output_missing_root.yaml", 1),
+        ("lint_check/about/about_multi_output_semi_missing_root_and_all_outputs.yaml", 1),
     ],
 )
 def test_missing_dev_url(recipe_file: str, msg_count: int) -> None:
@@ -700,7 +703,11 @@ def test_missing_dev_url(recipe_file: str, msg_count: int) -> None:
 
 @pytest.mark.parametrize(
     "recipe_file",
-    ["lint_check/streamlit-folium.yaml", "lint_check/about/about_multi_output_complete.yaml"],
+    [
+        "lint_check/streamlit-folium.yaml",
+        "lint_check/about/about_multi_output_complete.yaml",
+        "lint_check/about/about_multi_output_with_all_outputs_only.yaml",
+    ],
 )
 def test_no_missing_description(recipe_file: str) -> None:
     """
@@ -724,7 +731,7 @@ def test_no_missing_description(recipe_file: str) -> None:
         ("lint_check/about/about_multi_output_missing_root_and_all_empty_outputs.yaml", 2),
         ("lint_check/about/about_multi_output_missing_root_and_one_empty_output.yaml", 1),
         ("lint_check/about/about_multi_output_missing_root_and_one_output.yaml", 1),
-        ("lint_check/about/about_multi_output_missing_root.yaml", 1),
+        ("lint_check/about/about_multi_output_semi_missing_root_and_all_outputs.yaml", 1),
     ],
 )
 def test_missing_description(recipe_file: str, msg_count: int) -> None:
