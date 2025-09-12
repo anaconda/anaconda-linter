@@ -267,7 +267,7 @@ class should_use_compilers(LintCheck):
     compilers = COMPILERS
 
     def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
-        all_deps: Final = self._get_all_dependencies(recipe)
+        all_deps: Final = self._get_all_dependencies(recipe, include_test_dependencies=True)
         if all_deps is None:
             return
         problem_paths: set[str] = set()
@@ -392,7 +392,7 @@ class m2w64_must_be_updated_to_ucrt64(LintCheck):
     """
 
     def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
-        all_deps: Final = self._get_all_dependencies(recipe)
+        all_deps: Final = self._get_all_dependencies(recipe, include_test_dependencies=True)
         if all_deps is None:
             return
         problem_paths: set[str] = set()
@@ -410,7 +410,7 @@ class m2_must_be_updated_to_msys2(LintCheck):
     """
 
     def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
-        all_deps: Final = self._get_all_dependencies(recipe)
+        all_deps: Final = self._get_all_dependencies(recipe, include_test_dependencies=True)
         if all_deps is None:
             return
         problem_paths: set[str] = set()
@@ -435,7 +435,7 @@ class msys2_for_windows_only(LintCheck):
     def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
         if arch_name.startswith("win"):
             return
-        all_deps: Final = self._get_all_dependencies(recipe)
+        all_deps: Final = self._get_all_dependencies(recipe, include_test_dependencies=True)
         if all_deps is None:
             return
         problem_paths: set[str] = set()

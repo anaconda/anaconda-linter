@@ -424,15 +424,18 @@ class LintCheck(metaclass=LintCheckMeta):
                     continue
             self.message(section=path, severity=severity)
 
-    def _get_all_dependencies(self, recipe: RecipeReaderDeps | RecipeParserDeps) -> Optional[DependencyMap]:
+    def _get_all_dependencies(
+        self, recipe: RecipeReaderDeps | RecipeParserDeps, include_test_dependencies: bool = False
+    ) -> Optional[DependencyMap]:
         """
         Get all dependencies from the recipe
 
         :param recipe: The recipe to get the dependencies from
+        :param include_test_dependencies: Whether to include test dependencies
         :returns: A dictionary of dependencies, or None if an error occurred
         """
         try:
-            return recipe.get_all_dependencies()
+            return recipe.get_all_dependencies(include_test_dependencies=include_test_dependencies)
         except (KeyError, ValueError):
             self.message(title_in=_utils.GET_ALL_DEPENDENCIES_ERROR_MESSAGE)
             return None
