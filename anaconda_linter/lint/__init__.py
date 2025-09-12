@@ -662,7 +662,7 @@ class CDTCheck(LintCheck):
         :param cdt: The string to examine
         :returns: The package name from inside the CDT macro if found, None otherwise
         """
-        match = re.match(CDTCheck.cdt_pattern, cdt)
+        match = CDTCheck.cdt_pattern.match(cdt)
         return match.group(1) if match else None
 
 
