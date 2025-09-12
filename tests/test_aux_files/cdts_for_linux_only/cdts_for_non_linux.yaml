@@ -57,9 +57,9 @@ test:
     - {{ cdt('libglvnd-egl') }}               # [(linux and aarch64) or win]
     - {{ cdt('libglvnd-glx') }}               # [osx]
     - {{ cdt('libglvnd-opengl') }}            # [osx]
-    - {{ cdt('libglvnd') }}                   # [osx-64]
-    - {{ cdt('mesa-libegl-devel') }}          # [win-32]
-    - {{ cdt('mesa-libegl') }}                # [win-64]
+    - {{ cdt('libglvnd') }}                   # [osx and arm64]
+    - {{ cdt('mesa-libegl-devel') }}
+    - {{ cdt('mesa-libegl') }}                # [win]
     - {{ cdt('mesa-libgl-devel') }}
     - {{ cdt('mesa-libgl') }}                 # [linux]
     - {{ cdt('mesa-libgbm') }}                # [linux and aarch64]

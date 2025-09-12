@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import os
 import re
+from tempfile import TemporaryFile
 from typing import Final
 
 from conda.models.match_spec import MatchSpec
@@ -14,7 +15,7 @@ from conda_recipe_manager.parser.dependency import Dependency, DependencySection
 from conda_recipe_manager.parser.enums import SelectorConflictMode
 from conda_recipe_manager.parser.recipe_parser_deps import RecipeParserDeps
 from conda_recipe_manager.parser.recipe_reader_deps import RecipeReaderDeps
-from conda_recipe_manager.parser.selector_parser import SelectorParser
+from percy.render._renderer import render as percy_render
 from percy.render.recipe import Recipe
 
 from anaconda_linter import utils as _utils
@@ -398,26 +399,60 @@ class cdts_for_linux_only(CDTCheck):
     - {{ cdt('libudev-devel') }}  # [linux]
     """
 
-    def _applies_outside_linux(self, selector: SelectorParser) -> bool:
-        print("SELECTOR: ", selector)
-        # return any(selector.does_selector_apply(SelectorQuery(platform=plat)) for plat in {"osx-arm64", "win-64"})
-        return True
+    def _get_percy_render(self, cdt: str) -> str:
+        """
+        Get the Percy rendered CDT name.
+
+        :param cdt: The CDT name to render
+        :raises: ValueError if the CDT name is not found
+        :returns: The Percy rendered CDT name
+        """
+        with TemporaryFile(mode="w", encoding="utf-8") as temp_file:
+            meta_yaml = f"""
+                name: test
+                version: 1.0.0
+                requirements:
+                    build:
+                        - {cdt}
+                """
+            temp_file.write(meta_yaml)
+            temp_file.flush()
+            output = percy_render(temp_file.name, meta_yaml, self.percy_recipe.selector_dict)
+            try:
+                return output.get("requirements").get("build")[0]
+            except (KeyError, IndexError) as exc:
+                raise ValueError(f"CDT name {cdt} not found") from exc
+
+    def _get_cdt_names(self) -> dict[str, str]:
+        """
+        Get the set of all rendered CDT names.
+
+        :raises: ValueError if a CDT name is not found
+        :returns: The dict of all rendered CDT names
+        """
+        all_deps_unrendered: Final = self._get_all_dependencies(self.unrendered_recipe, include_test_dependencies=True)
+        if all_deps_unrendered is None:
+            return {}
+        cdt_names: Final[dict[str, str]] = {}
+        for output in all_deps_unrendered:
+            for dep in all_deps_unrendered[output]:
+                if self._detect_cdt(dep.data.name) is not None:
+                    cdt_names[self._get_percy_render(dep.data.name)] = dep.data.name
+        return cdt_names
 
     def check_recipe(self, recipe_name: str, arch_name: str, recipe: RecipeReaderDeps) -> None:
-        all_deps: Final = self._get_all_dependencies(self.unrendered_recipe, include_test_dependencies=True)
+        if arch_name.startswith("linux"):
+            return
+        cdt_names: Final[dict[str, str]] = self._get_cdt_names()
+        all_deps: Final = self._get_all_dependencies(recipe, include_test_dependencies=True)
         if all_deps is None:
             return
         problem_paths: set[str] = set()
         for output in all_deps:
             for dep in all_deps[output]:
-                print("DEP: ", dep)
-                if (
-                    dep.path in problem_paths
-                    or not self._detect_cdt(dep.data.name)
-                    or not self._applies_outside_linux(dep.selector)
-                ):
+                if dep.path in problem_paths or dep.data.name not in cdt_names:
                     continue
-                self.message(dep.data.name, section=dep.path)
+                self.message(cdt_names[dep.data.name], section=dep.path)
                 problem_paths.add(dep.path)
 
 
